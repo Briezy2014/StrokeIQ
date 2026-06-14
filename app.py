@@ -39,9 +39,6 @@ def load_data() -> pd.DataFrame:
 
     return df
 
-return df
-
-
 def append_entry(row: dict[str, object]) -> None:
     supabase_row = {
         "date": row["date"],
