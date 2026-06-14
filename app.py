@@ -5,11 +5,13 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
-import streamlit as st
+import streamlit as st from supabase import create_client
 
 DATA_PATH = Path("data/swim_data.csv")
 RAW_COLUMNS = ["date", "swimmer", "stroke", "distance_m", "time_s", "stroke_count"]
-
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+supabase = create_client (SUPABASE_URL, SUPABASE_KEY)
 
 def ensure_data_file() -> None:
     DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -18,21 +20,37 @@ def ensure_data_file() -> None:
 
 
 def load_data() -> pd.DataFrame:
-    ensure_data_file()
-    df = pd.read_csv(DATA_PATH, parse_dates=["date"])
+    response = supabase.table("race_logs").select("*").execute()
+    df = pd.DataFrame(response.data)
+
     if df.empty:
-        return df
+        return pd.DataFrame(columns=RAW_COLUMNS)
+
+    df = df.rename(columns={
+        "swimmer_name": "swimmer",
+        "distance": "distance_m",
+        "time_seconds": "time_s",
+    })
+
     df["date"] = pd.to_datetime(df["date"]).dt.date
     df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
     df["dps"] = df["distance_m"] / df["stroke_count"]
     df["time_per_100m"] = df["time_s"] / (df["distance_m"] / 100)
+
     return df
 
 
 def append_entry(row: dict[str, object]) -> None:
-    df = pd.DataFrame([row])
-    df.to_csv(DATA_PATH, mode="a", header=not DATA_PATH.exists(), index=False)
+    supabase_row = {
+        "date": row["date"],
+        "swimmer_name": row["swimmer"],
+        "event": row["stroke"],
+        "distance": row["distance_m"],
+        "time_seconds": row["time_s"],
+        "stroke_count": row["stroke_count"],
+    }
 
+    supabase.table("race_logs").insert(supabase_row).execute()
 
 def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
