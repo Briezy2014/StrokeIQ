@@ -41,7 +41,7 @@ def load_data() -> pd.DataFrame:
 
 
 def append_entry(row: dict[str, object]) -> None:
-        supabase_row = {
+    supabase_row = {
         "date": row["date"],
         "swimmer": row["swimmer"],
         "event": row["stroke"],
@@ -51,7 +51,7 @@ def append_entry(row: dict[str, object]) -> None:
         "time_seconds": row["time_s"],
         "notes": f"Stroke count: {row['stroke_count']}",
     }
-        supabase.table("race_logs").insert(supabase_row).execute()
+    supabase.table("race_logs").insert(supabase_row).execute()
 
     def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
