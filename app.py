@@ -18,8 +18,7 @@ def ensure_data_file() -> None:
     DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not DATA_PATH.exists():
         pd.DataFrame(columns=RAW_COLUMNS).to_csv(DATA_PATH, index=False)
-
-
+        
 def load_data() -> pd.DataFrame:
     response = supabase.table("race_logs").select("*").execute()
     df = pd.DataFrame(response.data)
@@ -28,15 +27,17 @@ def load_data() -> pd.DataFrame:
         return pd.DataFrame(columns=RAW_COLUMNS)
 
     df = df.rename(columns={
-    "distance": "distance_m",
-    "time_seconds": "time_s",
-})
+        "distance": "distance_m",
+        "time_seconds": "time_s",
+    })
 
-df["date"] = pd.to_datetime(df["date"]).dt.date
-df["stroke_count"] = df["notes"].str.extract(r"Stroke count: (\d+)").astype(float)
-df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
-df["dps"] = df["distance_m"] / df["stroke_count"]
-df["time_per_100m"] = df["time_s"] / (df["distance_m"] / 100)
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    df["stroke_count"] = df["notes"].str.extract(r"Stroke count: (\d+)").astype(float)
+    df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
+    df["dps"] = df["distance_m"] / df["stroke_count"]
+    df["time_per_100m"] = df["time_s"] / (df["distance_m"] / 100)
+
+    return df
 
 return df
 
