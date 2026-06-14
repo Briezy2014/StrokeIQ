@@ -54,8 +54,9 @@ def append_entry(row: dict[str, object]) -> None:
     supabase.table("race_logs").insert(supabase_row).execute()
 
 def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty:
-            return pd.DataFrame()
+    def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame()
 
     records = (
         df.groupby(["swimmer", "stroke"]).agg(
@@ -67,6 +68,7 @@ def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
         .sort_values(["swimmer", "stroke"])
     )
+
     return records
 
 
