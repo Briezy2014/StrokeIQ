@@ -28,10 +28,9 @@ def load_data() -> pd.DataFrame:
         return pd.DataFrame(columns=RAW_COLUMNS)
 
     df = df.rename(columns={
-        "swimmer_name": "swimmer",
-        "distance": "distance_m",
-        "time_seconds": "time_s",
-    })
+    "distance": "distance_m",
+    "time_seconds": "time_s",
+})
 
     df["date"] = pd.to_datetime(df["date"]).dt.date
     df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
@@ -43,14 +42,16 @@ def load_data() -> pd.DataFrame:
 
 def append_entry(row: dict[str, object]) -> None:
     supabase_row = {
-        "date": row["date"],
-        "swimmer_name": row["swimmer"],
-        "event": row["stroke"],
-        "distance": row["distance_m"],
-        "time_seconds": row["time_s"],
-        "stroke_count": row["stroke_count"],
-    }
-
+        supabase_row = {
+    "date": row["date"],
+    "swimmer": row["swimmer"],
+    "event": row["stroke"],
+    "distance": row["distance_m"],
+    "stroke": row["stroke"],
+    "course": "SCY",
+    "time_seconds": row["time_s"],
+    "notes": f"Stroke count: {row['stroke_count']}",
+}
     supabase.table("race_logs").insert(supabase_row).execute()
 
 def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
