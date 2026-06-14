@@ -33,8 +33,9 @@ def load_data() -> pd.DataFrame:
 })
 
     df["date"] = pd.to_datetime(df["date"]).dt.date
-    df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
-    df["dps"] = df["distance_m"] / df["stroke_count"]
+    df["stroke_count"] = df["notes"].str.extract(r"Stroke count: (\d+)").astype(float)
+df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
+df["dps"] = df["distance_m"] / df["stroke_count"]
     df["time_per_100m"] = df["time_s"] / (df["distance_m"] / 100)
 
     return df
