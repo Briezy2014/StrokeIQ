@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
-import streamlit as st from supabase import create_client
+import streamlit as st
+from supabase import create_client
 
 DATA_PATH = Path("data/swim_data.csv")
 RAW_COLUMNS = ["date", "swimmer", "stroke", "distance_m", "time_s", "stroke_count"]
