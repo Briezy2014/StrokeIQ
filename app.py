@@ -1,4 +1,4 @@
-"""StrokeIQ """SwimIQ Swim Analytics Dashboard."""
+"""SwimIQ Swim Analytics Dashboard."""
 
 from datetime import date
 from pathlib import Path
