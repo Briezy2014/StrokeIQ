@@ -1,4 +1,4 @@
-"""StrokeIQ Swim Analytics Dashboard."""
+"""StrokeIQ """SwimIQ Swim Analytics Dashboard."""
 
 from datetime import date
 from pathlib import Path
@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from supabase import create_client
 
 DATA_PATH = Path("data/swim_data.csv")
 RAW_COLUMNS = ["date", "swimmer", "stroke", "distance_m", "time_s", "stroke_count"]
@@ -203,8 +204,8 @@ def render_dashboard(df: pd.DataFrame) -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="StrokeIQ", page_icon="🏊", layout="wide")
-    st.title("StrokeIQ Swim Analytics Dashboard")
+    st.set_page_config(page_title="SwimIQ", page_icon="🏊", layout="wide")
+    st.title("SwimIQ Swim Analytics Dashboard")
     st.markdown(
         "Track swim sessions, compare performance over time, and discover efficiency insights for each stroke style."
     )
@@ -231,6 +232,32 @@ def main() -> None:
                 }
                 append_entry(entry)
                 st.success("Swim session logged successfully.")
+                st.rerun()
+
+        st.divider()
+
+        st.header("Add Goal")
+        with st.form("goal_entry_form"):
+            goal_swimmer = st.text_input("Goal swimmer name", value="Aspyn")
+            goal_event = st.text_input("Event", value="100 Fly")
+            current_time = st.text_input("Current time", value="1:12.00")
+            goal_time = st.text_input("Goal time", value="1:08.00")
+            course = st.selectbox("Course", ["SCY", "LCM", "SCM"], key="goal_course")
+            target_date = st.date_input("Target date", value=date.today(), key="goal_target_date")
+            goal_submitted = st.form_submit_button("Save goal")
+
+            if goal_submitted:
+                goal_entry = {
+                    "swimmer_name": goal_swimmer.strip() or "Aspyn",
+                    "event": goal_event.strip(),
+                    "current_time": current_time.strip(),
+                    "goal_time": goal_time.strip(),
+                    "course": course,
+                    "target_date": target_date.isoformat(),
+                }
+
+                supabase.table("goals").insert(goal_entry).execute()
+                st.success("Goal saved successfully.")
                 st.rerun()
 
     data = load_data()
