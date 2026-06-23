@@ -1,297 +1,294 @@
-"""SwimIQ Swim Analytics Dashboard."""
+"""SwimIQ Version 1 Public Beta App."""
 
 from datetime import date
-from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 from supabase import create_client
 
-DATA_PATH = Path("data/swim_data.csv")
-RAW_COLUMNS = ["date", "swimmer", "stroke", "distance_m", "time_s", "stroke_count"]
+
+st.set_page_config(
+    page_title="SwimIQ Beta",
+    page_icon="🏊‍♀️",
+    layout="wide",
+)
+
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-supabase = create_client (SUPABASE_URL, SUPABASE_KEY)
 
-def ensure_data_file() -> None:
-    DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if not DATA_PATH.exists():
-        pd.DataFrame(columns=RAW_COLUMNS).to_csv(DATA_PATH, index=False)
-        
-def load_data() -> pd.DataFrame:
-    response = supabase.table("race_logs").select("*").execute()
-    df = pd.DataFrame(response.data)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    if df.empty:
-        return pd.DataFrame(columns=RAW_COLUMNS)
 
-    df = df.rename(columns={
-        "distance": "distance_m",
-        "time_seconds": "time_s",
-    })
+# -----------------------------
+# Helpers
+# -----------------------------
 
-    df["date"] = pd.to_datetime(df["date"]).dt.date
-    df["stroke_count"] = df["notes"].str.extract(r"Stroke count: (\d+)").astype(float)
-    df["stroke_rate"] = df["stroke_count"] / (df["time_s"] / 60)
-    df["dps"] = df["distance_m"] / df["stroke_count"]
-    df["time_per_100m"] = df["time_s"] / (df["distance_m"] / 100)
-    
-    return df
+def normalize_name(name: str) -> str:
+    return name.strip()
 
-def append_entry(row: dict[str, object]) -> None:
-    supabase_row = {
-        "date": row["date"],
-        "swimmer": row["swimmer"],
-        "event": row["stroke"],
-        "distance": row["distance_m"],
-        "stroke": row["stroke"],
-        "course": "SCY",
-        "time_seconds": row["time_s"],
-        "notes": f"Stroke count: {row['stroke_count']}",
-    }
-    supabase.table("race_logs").insert(supabase_row).execute()
 
-def build_personal_records(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty:    
+def load_table(table_name: str, swimmer: str | None = None) -> pd.DataFrame:
+    try:
+        query = supabase.table(table_name).select("*")
+        if swimmer:
+            query = query.eq("swimmer", swimmer)
+        response = query.execute()
+        return pd.DataFrame(response.data)
+    except Exception:
         return pd.DataFrame()
 
-    records = (
-        df.groupby(["swimmer", "stroke"]).agg(
-            best_dps=("dps", "max"),
-            best_stroke_rate=("stroke_rate", "max"),
-            best_time_per_100m=("time_per_100m", "min"),
-            best_distance=("distance_m", "max"),
-        )
-        .reset_index()
-        .sort_values(["swimmer", "stroke"])
+
+def insert_row(table_name: str, row: dict):
+    return supabase.table(table_name).insert(row).execute()
+
+
+def calculate_dps(distance_m, stroke_count):
+    if stroke_count and stroke_count > 0:
+        return round(distance_m / stroke_count, 2)
+    return 0
+
+
+def calculate_stroke_rate(time_s, stroke_count):
+    if time_s and time_s > 0:
+        return round((stroke_count / time_s) * 60, 2)
+    return 0
+
+
+# -----------------------------
+# Header
+# -----------------------------
+
+st.title("🏊‍♀️ SwimIQ Beta")
+st.caption("Version 1 testing dashboard for swimmers, parents, and coaches.")
+
+st.info(
+    "Welcome to the SwimIQ Beta. Enter your swimmer name or code to begin. "
+    "Only the data connected to that swimmer name/code will show."
+)
+
+
+# -----------------------------
+# Swimmer Start Screen
+# -----------------------------
+
+if "active_swimmer" not in st.session_state:
+    st.session_state.active_swimmer = ""
+
+with st.container():
+    swimmer_input = st.text_input(
+        "Enter swimmer name or code",
+        placeholder="Example: Emma12, JackFish, Aspyn",
+        value=st.session_state.active_swimmer,
     )
 
-    return records
+    start_button = st.button("Start SwimIQ")
+
+    if start_button:
+        clean_name = normalize_name(swimmer_input)
+        if clean_name:
+            st.session_state.active_swimmer = clean_name
+            st.rerun()
+        else:
+            st.warning("Please enter a swimmer name or code first.")
+
+if not st.session_state.active_swimmer:
+    st.stop()
 
 
-def compute_weekly_improvement(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty:
-        return pd.DataFrame()
+active_swimmer = st.session_state.active_swimmer
 
-    weekly = (
-        df.assign(week=lambda x: pd.to_datetime(x["date"]).dt.to_period("W").apply(lambda p: p.start_time))
-        .groupby("week")
-        .agg(
-            avg_dps=("dps", "mean"),
-            avg_stroke_rate=("stroke_rate", "mean"),
-            avg_time_per_100m=("time_per_100m", "mean"),
-        )
-        .sort_index()
-    )
-    if len(weekly) < 2:
-        return weekly
+st.success(f"Current swimmer: {active_swimmer}")
 
-    weekly["dps_change_pct"] = weekly["avg_dps"].pct_change() * 100
-    weekly["stroke_rate_change_pct"] = weekly["avg_stroke_rate"].pct_change() * 100
-    weekly["time_change_pct"] = weekly["avg_time_per_100m"].pct_change() * 100
-    return weekly
+if st.button("Switch swimmer"):
+    st.session_state.active_swimmer = ""
+    st.rerun()
 
 
-def build_recommendations(df: pd.DataFrame) -> list[str]:
-    if df.empty:
-        return [
-            "Add swim sessions to start seeing personalized recommendations.",
-            "Use the form above to log distance, time, stroke count, and stroke style.",
-        ]
+# -----------------------------
+# Tabs
+# -----------------------------
 
-    avg_dps = df["dps"].mean()
-    avg_stroke_rate = df["stroke_rate"].mean()
-    avg_time_100 = df["time_per_100m"].mean()
-    avg_stroke_count = df["stroke_count"].mean()
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["📊 Dashboard", "➕ Add Swim Session", "🎯 Goals", "🏁 Meet Results"]
+)
 
-    recommendations: list[str] = []
-    if avg_dps < 1.8:
-        recommendations.append(
-            "Work on longer, more efficient strokes to raise your distance per stroke (DPS)."
-        )
+
+# -----------------------------
+# Dashboard
+# -----------------------------
+
+with tab1:
+    st.subheader("Swimmer Dashboard")
+
+    race_logs = load_table("race_logs", active_swimmer)
+
+    if race_logs.empty:
+        st.warning("No swim sessions yet. Add a swim session to start building the dashboard.")
     else:
-        recommendations.append("Your DPS is strong. Keep focusing on consistent stroke length.")
+        race_logs["date"] = pd.to_datetime(race_logs["date"], errors="coerce")
 
-    if avg_stroke_rate > 36:
-        recommendations.append(
-            "Your stroke rate is high; try to swim with smoother technique to reduce wasted energy."
+        if "distance_m" in race_logs.columns and "time_s" in race_logs.columns:
+            total_sessions = len(race_logs)
+            best_time = race_logs["time_s"].min()
+            avg_time = race_logs["time_s"].mean()
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Sessions", total_sessions)
+            col2.metric("Best Time", f"{best_time:.2f} sec")
+            col3.metric("Average Time", f"{avg_time:.2f} sec")
+
+        if "stroke_count" in race_logs.columns:
+            race_logs["dps"] = race_logs.apply(
+                lambda row: calculate_dps(row.get("distance_m", 0), row.get("stroke_count", 0)),
+                axis=1,
+            )
+            race_logs["stroke_rate"] = race_logs.apply(
+                lambda row: calculate_stroke_rate(row.get("time_s", 0), row.get("stroke_count", 0)),
+                axis=1,
+            )
+
+            col4, col5 = st.columns(2)
+            col4.metric("Best DPS", f"{race_logs['dps'].max():.2f}")
+            col5.metric("Avg Stroke Rate", f"{race_logs['stroke_rate'].mean():.2f}")
+
+        st.dataframe(race_logs, use_container_width=True)
+
+        if {"date", "time_s", "stroke"}.issubset(race_logs.columns):
+            fig = px.line(
+                race_logs.sort_values("date"),
+                x="date",
+                y="time_s",
+                color="stroke",
+                markers=True,
+                title="Time Progress",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+
+# -----------------------------
+# Add Swim Session
+# -----------------------------
+
+with tab2:
+    st.subheader("Add Swim Session")
+
+    with st.form("add_swim_session"):
+        stroke = st.selectbox(
+            "Stroke",
+            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
         )
-    else:
-        recommendations.append("Your stroke rate is in a comfortable range for endurance work.")
 
-    if avg_time_100 > 70:
-        recommendations.append(
-            "Aim to lower your 100m pace by improving technique or increasing interval intensity."
-        )
+        distance_m = st.number_input("Distance", min_value=25, step=25)
+        time_s = st.number_input("Time in seconds", min_value=0.00, step=0.01)
+        stroke_count = st.number_input("Stroke count", min_value=0, step=1)
+        session_date = st.date_input("Date", value=date.today())
 
-    if avg_stroke_count > 32:
-        recommendations.append(
-            "Reduce stroke count by lengthening each pull and maintaining better body position."
-        )
-    else:
-        recommendations.append("Maintain your stroke economy and continue refining efficiency.")
+        submitted = st.form_submit_button("Save Swim Session")
 
-    recommendations.append(
-        "Track weekly progress and celebrate personal bests in DPS and stroke rate."
-    )
-    return recommendations
+        if submitted:
+            row = {
+                "date": str(session_date),
+                "swimmer": active_swimmer,
+                "stroke": stroke,
+                "distance_m": int(distance_m),
+                "time_s": float(time_s),
+                "stroke_count": int(stroke_count),
+            }
 
-
-def render_dashboard(df: pd.DataFrame) -> None:
-    st.header("Swim Performance Dashboard")
-
-    if df.empty:
-        st.info("No swim sessions have been logged yet. Use the form above to add a swim.")
-        return
-
-    stats = {
-        "Total Sessions": len(df),
-        "Average DPS": f"{df['dps'].mean():.2f}",
-        "Average Stroke Rate": f"{df['stroke_rate'].mean():.1f}",
-        "Best DPS": f"{df['dps'].max():.2f}",
-    }
-
-    cols = st.columns(4)
-    for index, (column, value) in enumerate(stats.items()):
-        cols[index].metric(column, value)
-
-    with st.expander("Session data preview"):
-        st.dataframe(df.sort_values(["date"], ascending=False).reset_index(drop=True))
-
-    line_cols = st.columns(2)
-    with line_cols[0]:
-        fig_dps = px.line(
-            df,
-            x="date",
-            y="dps",
-            color="swimmer",
-            markers=True,
-            title="Distance Per Stroke (DPS) Trend",
-        )
-        st.plotly_chart(fig_dps, use_container_width=True)
-
-    with line_cols[1]:
-        fig_rate = px.line(
-            df,
-            x="date",
-            y="stroke_rate",
-            color="stroke",
-            markers=True,
-            title="Stroke Rate Trend",
-        )
-        st.plotly_chart(fig_rate, use_container_width=True)
-
-    perf_cols = st.columns(2)
-    with perf_cols[0]:
-        fig_time = px.line(
-            df,
-            x="date",
-            y="time_per_100m",
-            color="swimmer",
-            markers=True,
-            title="Average 100m Pace",
-        )
-        st.plotly_chart(fig_time, use_container_width=True)
-
-    with perf_cols[1]:
-        fig_distance = px.bar(
-            df,
-            x="date",
-            y="distance_m",
-            color="stroke",
-            title="Distance per Session",
-        )
-        st.plotly_chart(fig_distance, use_container_width=True)
-
-    st.subheader("Personal Records")
-    records = build_personal_records(df)
-    st.dataframe(records)
-
-    st.subheader("Weekly Improvements")
-    weekly = compute_weekly_improvement(df)
-    if weekly.empty or len(weekly) < 2:
-        st.info("Add at least two weeks of swim data to see improvement percentages.")
-        st.dataframe(weekly.reset_index())
-    else:
-        st.dataframe(weekly.reset_index())
-
-    st.subheader("Recommendations")
-    for rec in build_recommendations(df):
-        st.markdown(f"- {rec}")
-
-
-def main() -> None:
-    st.set_page_config(page_title="SwimIQ", page_icon="🏊", layout="wide")
-    st.title("SwimIQ Swim Analytics Dashboard")
-    st.markdown(
-        "Track swim sessions, compare performance over time, and discover efficiency insights for each stroke style."
-    )
-
-    with st.sidebar:
-        st.header("Add Swim Session")
-        with st.form("swim_entry_form"):
-            swimmer = st.text_input("Swimmer name", value="Aspyn")
-            stroke = st.selectbox("Stroke", ["Free", "Back", "Breast", "Fly"])
-            distance_m = st.number_input("Distance (meters)", min_value=50, max_value=10000, value=1000, step=25)
-            time_s = st.number_input("Time (seconds)", min_value=10, max_value=10000, value=600, step=5)
-            stroke_count = st.number_input("Stroke count", min_value=10, max_value=2000, value=320, step=1)
-            swim_date = st.date_input("Date", value=date.today())
-            submitted = st.form_submit_button("Log session")
-
-            if submitted:
-                entry = {
-                    "date": swim_date.isoformat(),
-                    "swimmer": swimmer.strip() or "Aspyn",
-                    "stroke": stroke,
-                    "distance_m": int(distance_m),
-                    "time_s": int(time_s),
-                    "stroke_count": int(stroke_count),
-                }
-                append_entry(entry)
-                st.success("Swim session logged successfully.")
+            try:
+                insert_row("race_logs", row)
+                st.success("Swim session saved.")
                 st.rerun()
-
-        st.divider()
-
-       st.header("Add Goal")
-
-with st.form("goal_entry_form"):
-    goal_swimmer = st.text_input("Swimmer name", value="Aspyn")
-    goal_event = st.text_input("Event", value="100 Free")
-    current_time = st.text_input("Current time", value="1:10.00")
-    goal_time = st.text_input("Goal time", value="1:05.00")
-    course = st.selectbox("Course", ["SCY", "LCM", "SCM"])
-    target_date = st.date_input("Target date")
-    goal_submitted = st.form_submit_button("Save goal")
-
-    if goal_submitted:
-        goal_entry = {
-            "swimmer_name": goal_swimmer.strip() or "Aspyn",
-            "event": goal_event.strip(),
-            "current_time": current_time.strip(),
-            "goal_time": goal_time.strip(),
-            "course": course,
-            "target_date": target_date.isoformat(),
-        }
-
-        supabase.table("goals").insert(goal_entry).execute()
-        st.success("Goal saved successfully.")
-        st.rerun()
-
-st.subheader("Current Goals")
-
-goals_response = supabase.table("goals").select("*").execute()
-goals_data = pd.DataFrame(goals_response.data)
-
-if goals_data.empty:
-    st.info("No goals saved yet.")
-else:
-    st.dataframe(goals_data, width="stretch")
-
-    data = load_data()
-    render_dashboard(data)
+            except Exception as e:
+                st.error(f"Could not save session: {e}")
 
 
-if __name__ == "__main__":
-    main()
+# -----------------------------
+# Goals
+# -----------------------------
+
+with tab3:
+    st.subheader("Swimmer Goals")
+
+    goals = load_table("goals", active_swimmer)
+
+    with st.form("add_goal"):
+        goal_stroke = st.selectbox(
+            "Goal Stroke",
+            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
+        )
+
+        goal_distance = st.number_input("Goal Distance", min_value=25, step=25)
+        target_time_s = st.number_input("Target Time in Seconds", min_value=0.00, step=0.01)
+        course = st.selectbox("Course", ["SCY", "SCM", "LCM"])
+        target_date = st.date_input("Target Date", value=date.today())
+
+        submitted_goal = st.form_submit_button("Save Goal")
+
+        if submitted_goal:
+            row = {
+                "swimmer": active_swimmer,
+                "stroke": goal_stroke,
+                "distance_m": int(goal_distance),
+                "target_time_s": float(target_time_s),
+                "course": course,
+                "target_date": str(target_date),
+            }
+
+            try:
+                insert_row("goals", row)
+                st.success("Goal saved.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Could not save goal: {e}")
+
+    st.divider()
+
+    if goals.empty:
+        st.warning("No goals yet.")
+    else:
+        st.dataframe(goals, use_container_width=True)
+
+
+# -----------------------------
+# Meet Results
+# -----------------------------
+
+with tab4:
+    st.subheader("Meet Results")
+
+    meet_results = load_table("meet_results", active_swimmer)
+
+    with st.form("add_meet_result"):
+        meet_name = st.text_input("Meet Name")
+        meet_date = st.date_input("Meet Date", value=date.today())
+        event_name = st.text_input("Event", placeholder="Example: 100 Butterfly")
+        result_time_s = st.number_input("Result Time in Seconds", min_value=0.00, step=0.01)
+        result_course = st.selectbox("Result Course", ["SCY", "SCM", "LCM"])
+
+        submitted_result = st.form_submit_button("Save Meet Result")
+
+        if submitted_result:
+            row = {
+                "swimmer": active_swimmer,
+                "meet_name": meet_name,
+                "meet_date": str(meet_date),
+                "event": event_name,
+                "time_s": float(result_time_s),
+                "course": result_course,
+            }
+
+            try:
+                insert_row("meet_results", row)
+                st.success("Meet result saved.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Could not save meet result: {e}")
+
+    st.divider()
+
+    if meet_results.empty:
+        st.warning("No meet results yet.")
+    else:
+        st.dataframe(meet_results, use_container_width=True)
