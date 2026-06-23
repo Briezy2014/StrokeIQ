@@ -254,29 +254,40 @@ def main() -> None:
 
         st.divider()
 
-        st.header("Add Goal")
-        with st.form("goal_entry_form"):
-            goal_swimmer = st.text_input("Goal swimmer name", value="Aspyn")
-            goal_event = st.text_input("Event", value="100 Fly")
-            current_time = st.text_input("Current time", value="1:12.00")
-            goal_time = st.text_input("Goal time", value="1:08.00")
-            course = st.selectbox("Course", ["SCY", "LCM", "SCM"], key="goal_course")
-            target_date = st.date_input("Target date", value=date.today(), key="goal_target_date")
-            goal_submitted = st.form_submit_button("Save goal")
+       st.header("Add Goal")
 
-            if goal_submitted:
-                goal_entry = {
-                    "swimmer_name": goal_swimmer.strip() or "Aspyn",
-                    "event": goal_event.strip(),
-                    "current_time": current_time.strip(),
-                    "goal_time": goal_time.strip(),
-                    "course": course,
-                    "target_date": target_date.isoformat(),
-                }
+with st.form("goal_entry_form"):
+    goal_swimmer = st.text_input("Swimmer name", value="Aspyn")
+    goal_event = st.text_input("Event", value="100 Free")
+    current_time = st.text_input("Current time", value="1:10.00")
+    goal_time = st.text_input("Goal time", value="1:05.00")
+    course = st.selectbox("Course", ["SCY", "LCM", "SCM"])
+    target_date = st.date_input("Target date")
+    goal_submitted = st.form_submit_button("Save goal")
 
-                supabase.table("goals").insert(goal_entry).execute()
-                st.success("Goal saved successfully.")
-                st.rerun()
+    if goal_submitted:
+        goal_entry = {
+            "swimmer_name": goal_swimmer.strip() or "Aspyn",
+            "event": goal_event.strip(),
+            "current_time": current_time.strip(),
+            "goal_time": goal_time.strip(),
+            "course": course,
+            "target_date": target_date.isoformat(),
+        }
+
+        supabase.table("goals").insert(goal_entry).execute()
+        st.success("Goal saved successfully.")
+        st.rerun()
+
+st.subheader("Current Goals")
+
+goals_response = supabase.table("goals").select("*").execute()
+goals_data = pd.DataFrame(goals_response.data)
+
+if goals_data.empty:
+    st.info("No goals saved yet.")
+else:
+    st.dataframe(goals_data, width="stretch")
 
     data = load_data()
     render_dashboard(data)
