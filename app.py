@@ -113,9 +113,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.caption("Version 1 testing dashboard for swimmers, parents, and coaches.")
 st.info(
-    "Welcome to the SwimIQ Beta. Enter your swimmer name or code to begin. "
+    st.info(
+    "Welcome to SwimIQ Beta. Built in the Water. Driven by Possibilities."
+)
     "Only the data connected to that swimmer name/code will show."
 )
 
@@ -344,3 +345,12 @@ with tab4:
         st.warning("No meet results yet.")
     else:
         st.dataframe(meet_results, use_container_width=True)
+        st.markdown("---")
+st.markdown(
+    """
+    <div style="text-align:center; font-size:14px;">
+        © 2026 SwimIQ · Founded by Aspyn Briez
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
