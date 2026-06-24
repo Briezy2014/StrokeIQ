@@ -88,12 +88,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.set_page_config(
-    page_title="SwimIQ Beta",
-    page_icon="🏊‍♀️",
-    layout="centered",
-)
+LOGO_PATH = Path("assets/swimiq_logo.png")
+logo_base64 = ""
+if LOGO_PATH.exists():
+    with open(LOGO_PATH, "rb") as logo_file:
+        logo_base64 = base64.b64encode(logo_file.read()).decode()
 
+if logo_base64:
     st.markdown(
         f"""
         <div style="text-align: center; width: 100%; margin: 0 auto;">
