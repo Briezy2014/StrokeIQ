@@ -106,7 +106,7 @@ if logo_base64:
 
 st.markdown(
     """
-    <div class="tagline">Built in the Water. Driven by Possibilities.</div>
+    <div class="tagline">Built in the Water. Driven by Possibility.</div>
     <div class="founder">Founded by Aspyn Briez</div>
     <hr>
     """,
