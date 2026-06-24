@@ -2,6 +2,7 @@
 
 from datetime import date
 
+import base64
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -57,6 +58,7 @@ def calculate_stroke_rate(time_s, stroke_count):
 
 # -----------------------------
 # -----------------------------
+# -----------------------------
 # Header
 # -----------------------------
 from pathlib import Path
@@ -66,60 +68,41 @@ LOGO_PATH = Path("assets/swimiq_logo.png")
 st.markdown(
     """
     <style>
-        .main-logo-wrap {
-            text-align: center;
-            padding-top: 10px;
-            padding-bottom: 20px;
-        }
-
-        .main-logo-wrap img {
-            width: 520px;
-            max-width: 90%;
-        }
-
         .tagline {
             text-align: center;
             color: #0B5CAD;
             font-size: 30px;
             font-weight: 700;
-            margin-top: 0px;
+            margin-top: 8px;
         }
 
         .founder {
             text-align: center;
             color: #222222;
             font-size: 22px;
-            margin-top: -10px;
+            margin-top: -8px;
             margin-bottom: 25px;
         }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-        .dashboard-card {
-            background-color: #0B1320;
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid #1E3A5F;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
+st.set_page_config(
+    page_title="SwimIQ Beta",
+    page_icon="🏊‍♀️",
+    layout="centered",
 )
-st.markdown(
-    """
-    <style>
-    [data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-if LOGO_PATH.exists():
-    st.image(
-        str(LOGO_PATH),
-        width=700,
-        use_container_width=False,
+
+    st.markdown(
+        f"""
+        <div style="text-align: center; width: 100%; margin: 0 auto;">
+            <img src="data:image/png;base64,{logo_base64}" style="width: 700px; max-width: 90%;">
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+
 st.markdown(
     """
     <div class="tagline">Built in the Water. Driven by Possibilities.</div>
@@ -130,7 +113,6 @@ st.markdown(
 )
 
 st.caption("Version 1 testing dashboard for swimmers, parents, and coaches.")
-
 st.info(
     "Welcome to the SwimIQ Beta. Enter your swimmer name or code to begin. "
     "Only the data connected to that swimmer name/code will show."
