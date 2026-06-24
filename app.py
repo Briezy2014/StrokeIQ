@@ -58,8 +58,23 @@ def calculate_stroke_rate(time_s, stroke_count):
 # -----------------------------
 # Header
 # -----------------------------
+from pathlib import Path
 
-st.title("🏊‍♀️ SwimIQ Beta")
+LOGO_PATH = Path("assets/swimiq_logo.png")
+
+if LOGO_PATH.exists():
+    st.image(str(LOGO_PATH), width=260)
+
+st.markdown(
+    """
+    <div style="text-align:center; padding: 10px 0 20px 0;">
+        <h1 style="margin-bottom: 0;">🏊‍♀️ SwimIQ Beta</h1>
+        <h3 style="margin-top: 5px;">Built in the Water. Driven by Possibilities.</h3>
+        <p style="font-size: 18px;">Founded by Aspyn Briez</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 st.caption("Version 1 testing dashboard for swimmers, parents, and coaches.")
 
 st.info(
