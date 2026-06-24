@@ -114,7 +114,7 @@ st.markdown(
 )
 
 st.info(
-    "Welcome to SwimIQ Beta. Built in the Water. Driven by Possibilities."
+    "Welcome to SwimIQ Beta. Built in the Water. Driven by Possibity."
     )
 
 
