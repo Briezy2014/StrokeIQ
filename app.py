@@ -56,25 +56,68 @@ def calculate_stroke_rate(time_s, stroke_count):
 
 
 # -----------------------------
+# -----------------------------
 # Header
 # -----------------------------
 from pathlib import Path
 
 LOGO_PATH = Path("assets/swimiq_logo.png")
 
+st.markdown(
+    """
+    <style>
+        .main-logo-wrap {
+            text-align: center;
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+
+        .main-logo-wrap img {
+            width: 520px;
+            max-width: 90%;
+        }
+
+        .tagline {
+            text-align: center;
+            color: #0B5CAD;
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 0px;
+        }
+
+        .founder {
+            text-align: center;
+            color: #222222;
+            font-size: 22px;
+            margin-top: -10px;
+            margin-bottom: 25px;
+        }
+
+        .dashboard-card {
+            background-color: #0B1320;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #1E3A5F;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 if LOGO_PATH.exists():
-    st.image(str(LOGO_PATH), width=260)
+    st.markdown('<div class="main-logo-wrap">', unsafe_allow_html=True)
+    st.image(str(LOGO_PATH), width=520)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown(
     """
-    <div style="text-align:center; padding: 10px 0 20px 0;">
-        <h1 style="margin-bottom: 0;">🏊‍♀️ SwimIQ Beta</h1>
-        <h3 style="margin-top: 5px;">Built in the Water. Driven by Possibilities.</h3>
-        <p style="font-size: 18px;">Founded by Aspyn Briez</p>
-    </div>
+    <div class="tagline">Built in the Water. Driven by Possibilities.</div>
+    <div class="founder">Founded by Aspyn Briez</div>
+    <hr>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
+
 st.caption("Version 1 testing dashboard for swimmers, parents, and coaches.")
 
 st.info(
