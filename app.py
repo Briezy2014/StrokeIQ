@@ -335,7 +335,7 @@ with tab4:
                 st.success("Meet result saved.")
                 st.rerun()
             except Exception as e:
-                st.error(if"Could not save meet result: {e}")
+                st.error(f"Could not save meet result: {e}")
 
     st.divider()
 
