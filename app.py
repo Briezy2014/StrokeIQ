@@ -115,8 +115,7 @@ st.markdown(
 
 st.info(
     "Welcome to SwimIQ Beta. Built in the Water. Driven by Possibilities."
-    " Only the data connected to that swimmer name/code will show."
-)
+    )
 
 
 # -----------------------------
