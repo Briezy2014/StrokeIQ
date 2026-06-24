@@ -103,12 +103,23 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
+st.markdown(
+    """
+    <style>
+    [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 if LOGO_PATH.exists():
-    st.markdown('<div class="main-logo-wrap">', unsafe_allow_html=True)
-    st.image(str(LOGO_PATH), width=520)
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    st.image(
+        str(LOGO_PATH),
+        width=700,
+        use_container_width=False,
+    )
 st.markdown(
     """
     <div class="tagline">Built in the Water. Driven by Possibilities.</div>
