@@ -7,8 +7,8 @@ import streamlit as st
 from supabase import create_client
 
 
-_page_config(
-    page_title=st.caption("SwimIQ Version 2: Athlete Performance"),
+st.set_page_config(
+    page_title="SwimIQ Version 2: Athlete Performance",
     page_icon="🏊‍♀️",
     layout="wide",
 )
