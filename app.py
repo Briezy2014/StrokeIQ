@@ -1,4 +1,4 @@
-"""SwimIQ Version 1 Public Beta App."""
+st.caption("SwimIQ Version 2: Athlete Performance Edition")
 
 from datetime import date
 
@@ -10,7 +10,7 @@ from supabase import create_client
 
 
 st.set_page_config(
-    page_title="SwimIQ Beta",
+    page_title=st.caption("SwimIQ Version 2: Athlete Performance"),
     page_icon="🏊‍♀️",
     layout="wide",
 )
@@ -114,7 +114,7 @@ st.markdown(
 )
 
 st.info(
-    "Welcome to SwimIQ Beta. Built in the Water. Driven by Possibity."
+    "Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibity."
     )
 
 
@@ -230,6 +230,11 @@ with tab2:
         )
 
         distance_m = st.number_input("Distance", min_value=25, step=25)
+        course = st.selectbox(
+            "Course",
+            ["SCY", "SCM", "LCM"],
+        )
+
         time_s = st.number_input("Time in seconds", min_value=0.00, step=0.01)
         stroke_count = st.number_input("Stroke count", min_value=0, step=1)
         session_date = st.date_input("Date", value=date.today())
@@ -242,10 +247,10 @@ with tab2:
                 "swimmer": active_swimmer,
                 "stroke": stroke,
                 "distance_m": int(distance_m),
+                "course": course,
                 "time_s": float(time_s),
                 "stroke_count": int(stroke_count),
             }
-
             try:
                 insert_row("race_logs", row)
                 st.success("Swim session saved.")
