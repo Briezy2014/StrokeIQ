@@ -52,7 +52,14 @@ def calculate_stroke_rate(time_s, stroke_count):
     if time_s and time_s > 0:
         return round((stroke_count / time_s) * 60, 2)
     return 0
+def swim_time_to_seconds(time_text: str) -> float:
+    time_text = time_text.strip()
 
+    if ":" in time_text:
+        minutes, seconds = time_text.split(":")
+        return round((int(minutes) * 60) + float(seconds), 2)
+
+    return round(float(time_text), 2)
 
 # -----------------------------
 # -----------------------------
@@ -232,30 +239,38 @@ with tab2:
             ["SCY", "SCM", "LCM"],
         )
 
-        time_s = st.number_input("Time in seconds", min_value=0.00, step=0.01)
+        time_text = st.text_input(
+    "Time",
+    placeholder="Example: 35.43 or 1:24.32",
+)
         stroke_count = st.number_input("Stroke count", min_value=0, step=1)
         session_date = st.date_input("Date", value=date.today())
 
         submitted = st.form_submit_button("Save Swim Session")
 
         if submitted:
-            row = {
-                "date": str(session_date),
-                "swimmer": active_swimmer,
-                "stroke": stroke,
-                "distance_m": int(distance_m),
-                "course": course,
-                "time_s": float(time_s),
-                "stroke_count": int(stroke_count),
-            }
-            try:
-                insert_row("race_logs", row)
-                st.success("Swim session saved.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Could not save session: {e}")
+           try:
+    time_seconds = swim_time_to_seconds(time_text)
 
+    row = {
+        "date": str(session_date),
+        "swimmer": active_swimmer,
+        "event": f"{int(distance_m)} {stroke}",
+        "distance": int(distance_m),
+        "stroke": stroke,
+        "course": course,
+        "time_seconds": float(time_seconds),
+        "stroke_count": int(stroke_count),
+    }
 
+    insert_row("race_logs", row)
+    st.success("Swim session saved.")
+    st.rerun()
+
+except ValueError:
+    st.error("Please enter time like 35.43, 1:24.32, or 5:31.43.")
+except Exception as e:
+    st.error(f"Could not save session: {e}")
 # -----------------------------
 # Goals
 # -----------------------------
