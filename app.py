@@ -60,7 +60,6 @@ def calculate_stroke_rate(time_s, stroke_count):
 # Header
 # -----------------------------
 from pathlib import Path
-st.set
 LOGO_PATH = Path("assets/swimiq_logo.png")
 
 st.markdown(
