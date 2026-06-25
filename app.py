@@ -240,9 +240,9 @@ with tab2:
         )
 
         time_text = st.text_input(
-    "Time",
-    placeholder="Example: 35.43 or 1:24.32",
-)
+            "Time",
+            placeholder="Example: 35.43 or 1:24.32",
+        )
         stroke_count = st.number_input("Stroke count", min_value=0, step=1)
         session_date = st.date_input("Date", value=date.today())
 
