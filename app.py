@@ -1,5 +1,3 @@
-st.caption("SwimIQ Version 2: Athlete Performance Edition")
-
 from datetime import date
 
 import base64
@@ -116,7 +114,7 @@ st.markdown(
 st.info(
     "Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibity."
     )
-
+st.caption("SwimIQ Version 2: Athlete Performance Edition")
 
 # -----------------------------
 # Swimmer Start Screen
