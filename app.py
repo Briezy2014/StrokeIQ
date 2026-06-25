@@ -249,28 +249,28 @@ with tab2:
         submitted = st.form_submit_button("Save Swim Session")
 
         if submitted:
-           try:
-    time_seconds = swim_time_to_seconds(time_text)
+            try:
+                time_seconds = swim_time_to_seconds(time_text)
 
-    row = {
-        "date": str(session_date),
-        "swimmer": active_swimmer,
-        "event": f"{int(distance_m)} {stroke}",
-        "distance": int(distance_m),
-        "stroke": stroke,
-        "course": course,
-        "time_seconds": float(time_seconds),
-        "stroke_count": int(stroke_count),
-    }
+                row = {
+                    "date": str(session_date),
+                    "swimmer": active_swimmer,
+                    "event": f"{int(distance_m)} {stroke}",
+                    "distance": int(distance_m),
+                    "stroke": stroke,
+                    "course": course,
+                    "time_seconds": float(time_seconds),
+                    "stroke_count": int(stroke_count),
+                }
 
-    insert_row("race_logs", row)
-    st.success("Swim session saved.")
-    st.rerun()
+                insert_row("race_logs", row)
+                st.success("Swim session saved.")
+                st.rerun()
 
-except ValueError:
-    st.error("Please enter time like 35.43, 1:24.32, or 5:31.43.")
-except Exception as e:
-    st.error(f"Could not save session: {e}")
+            except ValueError:
+                st.error("Please enter time like 35.43, 1:24.32, or 5:31.43.")
+            except Exception as e:
+                st.error(f"Could not save session: {e}")
 # -----------------------------
 # Goals
 # -----------------------------
