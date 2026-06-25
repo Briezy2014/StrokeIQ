@@ -7,7 +7,7 @@ import streamlit as st
 from supabase import create_client
 
 
-st.set_page_config(
+_page_config(
     page_title=st.caption("SwimIQ Version 2: Athlete Performance"),
     page_icon="🏊‍♀️",
     layout="wide",
@@ -60,7 +60,7 @@ def calculate_stroke_rate(time_s, stroke_count):
 # Header
 # -----------------------------
 from pathlib import Path
-
+st.set
 LOGO_PATH = Path("assets/swimiq_logo.png")
 
 st.markdown(
@@ -112,7 +112,7 @@ st.markdown(
 )
 
 st.info(
-    "Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibity."
+    "Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibility."
     )
 st.caption("SwimIQ Version 2: Athlete Performance Edition")
 
