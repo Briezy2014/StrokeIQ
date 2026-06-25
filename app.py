@@ -260,7 +260,7 @@ with tab2:
                     "stroke": stroke,
                     "course": course,
                     "time_seconds": float(time_seconds),
-                    "stroke_count": int(stroke_count),
+                    
                 }
 
                 insert_row("race_logs", row)
