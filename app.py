@@ -1,6 +1,7 @@
 from datetime import date
-
+from pathlib import Path
 import base64
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -42,16 +43,6 @@ def insert_row(table_name: str, row: dict):
     return supabase.table(table_name).insert(row).execute()
 
 
-def calculate_dps(distance_m, stroke_count):
-    if stroke_count and stroke_count > 0:
-        return round(distance_m / stroke_count, 2)
-    return 0
-
-
-def calculate_stroke_rate(time_s, stroke_count):
-    if time_s and time_s > 0:
-        return round((stroke_count / time_s) * 60, 2)
-    return 0
 def swim_time_to_seconds(time_text: str) -> float:
     time_text = time_text.strip()
 
@@ -61,12 +52,25 @@ def swim_time_to_seconds(time_text: str) -> float:
 
     return round(float(time_text), 2)
 
-# -----------------------------
-# -----------------------------
+
+def seconds_to_swim_time(seconds) -> str:
+    try:
+        seconds = float(seconds)
+        minutes = int(seconds // 60)
+        remaining = seconds % 60
+
+        if minutes > 0:
+            return f"{minutes}:{remaining:05.2f}"
+
+        return f"{remaining:.2f}"
+    except Exception:
+        return ""
+
+
 # -----------------------------
 # Header
 # -----------------------------
-from pathlib import Path
+
 LOGO_PATH = Path("assets/swimiq_logo.png")
 
 st.markdown(
@@ -92,13 +96,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-LOGO_PATH = Path("assets/swimiq_logo.png")
-logo_base64 = ""
 if LOGO_PATH.exists():
-    with open(LOGO_PATH, "rb") as logo_file:
-        logo_base64 = base64.b64encode(logo_file.read()).decode()
-
-if logo_base64:
+    logo_base64 = base64.b64encode(LOGO_PATH.read_bytes()).decode()
     st.markdown(
         f"""
         <div style="text-align: center; width: 100%; margin: 0 auto;">
@@ -117,10 +116,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.info(
-    "Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibility."
-    )
+st.info("Welcome to SwimIQ Version 2 Beta. Built in the Water. Driven by Possibility.")
 st.caption("SwimIQ Version 2: Athlete Performance Edition")
+
 
 # -----------------------------
 # Swimmer Start Screen
@@ -148,7 +146,6 @@ with st.container():
 
 if not st.session_state.active_swimmer:
     st.stop()
-
 
 active_swimmer = st.session_state.active_swimmer
 
@@ -182,37 +179,28 @@ with tab1:
     else:
         race_logs["date"] = pd.to_datetime(race_logs["date"], errors="coerce")
 
-        if "distance_m" in race_logs.columns and "time_s" in race_logs.columns:
+        if "distance" in race_logs.columns and "time_seconds" in race_logs.columns:
             total_sessions = len(race_logs)
-            best_time = race_logs["time_s"].min()
-            avg_time = race_logs["time_s"].mean()
+            best_time = race_logs["time_seconds"].min()
+            avg_time = race_logs["time_seconds"].mean()
 
             col1, col2, col3 = st.columns(3)
             col1.metric("Total Sessions", total_sessions)
-            col2.metric("Best Time", f"{best_time:.2f} sec")
-            col3.metric("Average Time", f"{avg_time:.2f} sec")
+            col2.metric("Best Time", seconds_to_swim_time(best_time))
+            col3.metric("Average Time", seconds_to_swim_time(avg_time))
 
-        if "stroke_count" in race_logs.columns:
-            race_logs["dps"] = race_logs.apply(
-                lambda row: calculate_dps(row.get("distance_m", 0), row.get("stroke_count", 0)),
-                axis=1,
-            )
-            race_logs["stroke_rate"] = race_logs.apply(
-                lambda row: calculate_stroke_rate(row.get("time_s", 0), row.get("stroke_count", 0)),
-                axis=1,
-            )
+        display_logs = race_logs.copy()
 
-            col4, col5 = st.columns(2)
-            col4.metric("Best DPS", f"{race_logs['dps'].max():.2f}")
-            col5.metric("Avg Stroke Rate", f"{race_logs['stroke_rate'].mean():.2f}")
+        if "time_seconds" in display_logs.columns:
+            display_logs["formatted_time"] = display_logs["time_seconds"].apply(seconds_to_swim_time)
 
-        st.dataframe(race_logs, use_container_width=True)
+        st.dataframe(display_logs, use_container_width=True)
 
-        if {"date", "time_s", "stroke"}.issubset(race_logs.columns):
+        if {"date", "time_seconds", "stroke"}.issubset(race_logs.columns):
             fig = px.line(
                 race_logs.sort_values("date"),
                 x="date",
-                y="time_s",
+                y="time_seconds",
                 color="stroke",
                 markers=True,
                 title="Time Progress",
@@ -233,7 +221,8 @@ with tab2:
             ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
         )
 
-        distance_m = st.number_input("Distance", min_value=25, step=25)
+        distance = st.number_input("Distance", min_value=25, step=25)
+
         course = st.selectbox(
             "Course",
             ["SCY", "SCM", "LCM"],
@@ -243,7 +232,12 @@ with tab2:
             "Time",
             placeholder="Example: 35.43 or 1:24.32",
         )
-        stroke_count = st.number_input("Stroke count", min_value=0, step=1)
+
+        notes = st.text_area(
+            "Notes optional",
+            placeholder="Optional: stroke count, race notes, splits, how the swim felt, etc.",
+        )
+
         session_date = st.date_input("Date", value=date.today())
 
         submitted = st.form_submit_button("Save Swim Session")
@@ -255,12 +249,12 @@ with tab2:
                 row = {
                     "date": str(session_date),
                     "swimmer": active_swimmer,
-                    "event": f"{int(distance_m)} {stroke}",
-                    "distance": int(distance_m),
+                    "event": f"{int(distance)} {stroke}",
+                    "distance": int(distance),
                     "stroke": stroke,
                     "course": course,
                     "time_seconds": float(time_seconds),
-                    
+                    "notes": notes,
                 }
 
                 insert_row("race_logs", row)
@@ -271,6 +265,8 @@ with tab2:
                 st.error("Please enter time like 35.43, 1:24.32, or 5:31.43.")
             except Exception as e:
                 st.error(f"Could not save session: {e}")
+
+
 # -----------------------------
 # Goals
 # -----------------------------
@@ -287,26 +283,36 @@ with tab3:
         )
 
         goal_distance = st.number_input("Goal Distance", min_value=25, step=25)
-        target_time_s = st.number_input("Target Time in Seconds", min_value=0.00, step=0.01)
-        course = st.selectbox("Course", ["SCY", "SCM", "LCM"])
+
+        target_time_text = st.text_input(
+            "Target Time",
+            placeholder="Example: 35.43 or 1:24.32",
+        )
+
+        course = st.selectbox("Goal Course", ["SCY", "SCM", "LCM"])
         target_date = st.date_input("Target Date", value=date.today())
 
         submitted_goal = st.form_submit_button("Save Goal")
 
         if submitted_goal:
-            row = {
-                "swimmer": active_swimmer,
-                "stroke": goal_stroke,
-                "distance_m": int(goal_distance),
-                "target_time_s": float(target_time_s),
-                "course": course,
-                "target_date": str(target_date),
-            }
-
             try:
+                target_time_s = swim_time_to_seconds(target_time_text)
+
+                row = {
+                    "swimmer": active_swimmer,
+                    "stroke": goal_stroke,
+                    "distance_m": int(goal_distance),
+                    "target_time_s": float(target_time_s),
+                    "course": course,
+                    "target_date": str(target_date),
+                }
+
                 insert_row("goals", row)
                 st.success("Goal saved.")
                 st.rerun()
+
+            except ValueError:
+                st.error("Please enter target time like 35.43, 1:24.32, or 5:31.43.")
             except Exception as e:
                 st.error(f"Could not save goal: {e}")
 
@@ -331,25 +337,35 @@ with tab4:
         meet_name = st.text_input("Meet Name")
         meet_date = st.date_input("Meet Date", value=date.today())
         event_name = st.text_input("Event", placeholder="Example: 100 Butterfly")
-        result_time_s = st.number_input("Result Time in Seconds", min_value=0.00, step=0.01)
+
+        result_time_text = st.text_input(
+            "Result Time",
+            placeholder="Example: 35.43 or 1:24.32",
+        )
+
         result_course = st.selectbox("Result Course", ["SCY", "SCM", "LCM"])
 
         submitted_result = st.form_submit_button("Save Meet Result")
 
         if submitted_result:
-            row = {
-                "swimmer": active_swimmer,
-                "meet_name": meet_name,
-                "meet_date": str(meet_date),
-                "event": event_name,
-                "time_s": float(result_time_s),
-                "course": result_course,
-            }
-
             try:
+                result_time_s = swim_time_to_seconds(result_time_text)
+
+                row = {
+                    "swimmer": active_swimmer,
+                    "meet_name": meet_name,
+                    "meet_date": str(meet_date),
+                    "event": event_name,
+                    "time_s": float(result_time_s),
+                    "course": result_course,
+                }
+
                 insert_row("meet_results", row)
                 st.success("Meet result saved.")
                 st.rerun()
+
+            except ValueError:
+                st.error("Please enter result time like 35.43, 1:24.32, or 5:31.43.")
             except Exception as e:
                 st.error(f"Could not save meet result: {e}")
 
@@ -359,7 +375,13 @@ with tab4:
         st.warning("No meet results yet.")
     else:
         st.dataframe(meet_results, use_container_width=True)
-        st.markdown("---")
+
+
+# -----------------------------
+# Footer
+# -----------------------------
+
+st.markdown("---")
 st.markdown(
     """
     <div style="text-align:center; font-size:14px;">
