@@ -160,8 +160,8 @@ if st.button("Switch swimmer"):
 # Tabs
 # -----------------------------
 
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["📊 Dashboard", "➕ Add Swim Session", "🎯 Goals", "🏁 Meet Results"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["📊 Dashboard", "🏆 Personal Bests", "➕ Add Swim Session", "🎯 Goals", "🏁 Meet Results"]
 )
 
 
@@ -209,10 +209,53 @@ with tab1:
 
 
 # -----------------------------
-# Add Swim Session
+# Personal Bests
 # -----------------------------
 
 with tab2:
+    st.subheader("Personal Bests")
+
+    race_logs = load_table("race_logs", active_swimmer)
+
+    if race_logs.empty:
+        st.warning("No swim sessions yet. Add swim sessions to unlock personal bests.")
+
+    elif {"stroke", "distance", "course", "time_seconds", "date"}.issubset(race_logs.columns):
+
+        pb_rows = (
+            race_logs.sort_values("time_seconds")
+            .groupby(["stroke", "distance", "course"], as_index=False)
+            .first()
+        )
+
+        pb_rows["Best Time"] = pb_rows["time_seconds"].apply(seconds_to_swim_time)
+
+        st.dataframe(
+            pb_rows[
+                [
+                    "stroke",
+                    "distance",
+                    "course",
+                    "Best Time",
+                    "date",
+                ]
+            ],
+            use_container_width=True,
+        )
+
+    else:
+        st.warning("Personal Bests cannot be calculated yet.")
+
+
+# -----------------------------
+# Add Swim Session
+# -----------------------------
+
+# -----------------------------
+# Add Swim Session
+# -----------------------------
+
+with tab3:
     st.subheader("Add Swim Session")
 
     with st.form("add_swim_session"):
@@ -271,7 +314,7 @@ with tab2:
 # Goals
 # -----------------------------
 
-with tab3:
+with tab4:
     st.subheader("Swimmer Goals")
 
     goals = load_table("goals", active_swimmer)
@@ -328,7 +371,7 @@ with tab3:
 # Meet Results
 # -----------------------------
 
-with tab4:
+with tab5:
     st.subheader("Meet Results")
 
     meet_results = load_table("meet_results", active_swimmer)
