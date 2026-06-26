@@ -174,6 +174,7 @@ with tab1:
 
     race_logs = load_table("race_logs", active_swimmer)
 
+
     if race_logs.empty:
         st.warning("No swim sessions yet. Add a swim session to start building the dashboard.")
     else:
@@ -285,15 +286,7 @@ with tab3:
 
         submitted = st.form_submit_button("Save Swim Session")
 
-        if submitted:
-            try:
-                time_seconds = swim_time_to_seconds(time_text)
-
-                row = {
-                    "date": str(session_date),
-                    "swimmer": active_swimmer,
-                    "event": f"{int(distance)} {stroke}",
-                    "distance": int(distance),
+       int(distance),
                     "stroke": stroke,
                     "course": course,
                     "time_seconds": float(time_seconds),
@@ -321,7 +314,15 @@ with tab4:
 
     with st.form("add_goal"):
         goal_stroke = st.selectbox(
-            "Goal Stroke",
+            "Goal Stroke", if submitted:
+            try:
+                time_seconds = swim_time_to_seconds(time_text)
+
+                row = {
+                    "date": str(session_date),
+                    "swimmer": active_swimmer,
+                    "event": f"{int(distance)} {stroke}",
+                    "distance": 
             ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
         )
 
@@ -390,28 +391,58 @@ with tab5:
 
         submitted_result = st.form_submit_button("Save Meet Result")
 
-        if submitted_result:
+                if submitted:
             try:
-                result_time_s = swim_time_to_seconds(result_time_text)
+                time_seconds = swim_time_to_seconds(time_text)
+
+                previous_logs = load_table("race_logs", active_swimmer)
+
+                is_personal_best = False
+
+                if not previous_logs.empty and {
+                    "stroke",
+                    "distance",
+                    "course",
+                    "time_seconds",
+                }.issubset(previous_logs.columns):
+                    matching_swims = previous_logs[
+                        (previous_logs["stroke"] == stroke)
+                        & (previous_logs["distance"] == int(distance))
+                        & (previous_logs["course"] == course)
+                    ]
+
+                    if matching_swims.empty:
+                        is_personal_best = True
+                    else:
+                        previous_best = matching_swims["time_seconds"].min()
+                        is_personal_best = time_seconds < previous_best
+                else:
+                    is_personal_best = True
 
                 row = {
+                    "date": str(session_date),
                     "swimmer": active_swimmer,
-                    "meet_name": meet_name,
-                    "meet_date": str(meet_date),
-                    "event": event_name,
-                    "time_s": float(result_time_s),
-                    "course": result_course,
+                    "event": f"{int(distance)} {stroke}",
+                    "distance": int(distance),
+                    "stroke": stroke,
+                    "course": course,
+                    "time_seconds": float(time_seconds),
+                    "notes": notes,
                 }
 
-                insert_row("meet_results", row)
-                st.success("Meet result saved.")
+                insert_row("race_logs", row)
+
+                if is_personal_best:
+                    st.success("🔥 New Personal Best!")
+                else:
+                    st.success("Swim session saved.")
+
                 st.rerun()
 
             except ValueError:
-                st.error("Please enter result time like 35.43, 1:24.32, or 5:31.43.")
+                st.error("Please enter time like 35.43, 1:24.32, or 5:31.43.")
             except Exception as e:
-                st.error(f"Could not save meet result: {e}")
-
+                st.error(f"Could not save session: {e}")
     st.divider()
 
     if meet_results.empty:
