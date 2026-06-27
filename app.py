@@ -582,7 +582,7 @@ with tab5:
 
         result_course = st.selectbox("Result Course", ["SCY", "SCM", "LCM"])
 
-                submitted_result = st.form_submit_button("Save Meet Result")
+        submitted_result = st.form_submit_button("Save Meet Result")
 
         if submitted_result:
             try:
@@ -606,6 +606,7 @@ with tab5:
 
             except Exception as e:
                 st.error(f"Could not save meet result: {e}")
+
     st.divider()
 
     if meet_results.empty:
@@ -613,13 +614,11 @@ with tab5:
     else:
         display_results = add_formatted_time_column(
             meet_results,
-            source_column="swim_time",
+            source_column="time_s",
             new_column="formatted_time",
         )
 
         st.dataframe(display_results, use_container_width=True)
-
-
 # ============================================================
 # Footer
 # ============================================================
