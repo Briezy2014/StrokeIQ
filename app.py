@@ -474,7 +474,7 @@ with tab3:
 
                 row = {
                     "date": str(session_date),
-                    "swimmer_name": active_swimmer,
+                    "swimmer": active_swimmer,
                     "event": f"{int(distance)} {stroke}",
                     "distance": int(distance),
                     "stroke": stroke,
@@ -588,14 +588,14 @@ with tab5:
             try:
                 result_time_s = swim_time_to_seconds(result_time_text)
 
-                row = {
-                    "swimmer_name": active_swimmer,
-                    "meet_name": meet_name,
-                    "meet_date": str(meet_date),
-                    "event": event_name,
-                    "time_s": float(result_time_s),
-                    "course": result_course,
-                }
+               row = {
+    "swimmer": active_swimmer,
+    "meet_name": meet_name,
+    "meet_date": str(meet_date),
+    "event": event_name,
+    "time_s": float(result_time_s),
+    "course": result_course,
+}
 
                 insert_row("meet_results", row)
 
@@ -613,7 +613,7 @@ with tab5:
     else:
         display_results = add_formatted_time_column(
             meet_results,
-            source_column="time_s",
+            source_column="swim_time",
             new_column="formatted_time",
         )
 
