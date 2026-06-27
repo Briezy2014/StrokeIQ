@@ -527,13 +527,13 @@ with tab4:
                 target_time_s = swim_time_to_seconds(target_time_text)
 
                 row = {
-                    "swimmer": active_swimmer,
-                    "stroke": goal_stroke,
-                    "distance_m": int(goal_distance),
-                    "target_time_s": float(target_time_s),
-                    "course": goal_course,
-                    "target_date": str(target_date),
-                }
+    "swimmer_name": active_swimmer,
+    "event": f"{int(goal_distance)} {goal_stroke}",
+    "current_time": None,
+    "goal_time": float(target_time_s),
+    "course": goal_course,
+    "target_date": str(target_date),
+}
 
                 insert_row("goals", row)
 
@@ -551,8 +551,8 @@ with tab4:
     else:
         display_goals = add_formatted_time_column(
             goals,
-            source_column="target_time_s",
-            new_column="formatted_target_time",
+            source_column="goal_time",
+            new_column="formatted_goal_time",
         )
 
         st.dataframe(display_goals, use_container_width=True)
