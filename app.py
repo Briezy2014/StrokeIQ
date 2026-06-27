@@ -593,7 +593,7 @@ with tab5:
                     "meet_name": meet_name,
                     "meet_date": str(meet_date),
                     "event": event_name,
-                    "time_s": float(result_time_s),
+                    "swim_time": float(result_time_s),
                     "course": result_course,
                 }
 
