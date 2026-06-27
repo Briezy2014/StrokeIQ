@@ -52,7 +52,7 @@ def load_table(table_name: str, swimmer: str | None = None) -> pd.DataFrame:
 
 
 def insert_row(table_name: str, row: dict):
-    """Insert one row into Supabase."""
+    """Insert one row into a Supabase table."""
     return supabase.table(table_name).insert(row).execute()
 
 
@@ -73,7 +73,6 @@ def swim_time_to_seconds(time_text: str) -> float:
         parts = time_text.split(":")
         if len(parts) != 2:
             raise ValueError("Use M:SS.hh format.")
-
         minutes, seconds = parts
         return round((int(minutes) * 60) + float(seconds), 2)
 
@@ -81,7 +80,7 @@ def swim_time_to_seconds(time_text: str) -> float:
 
 
 def seconds_to_swim_time(seconds) -> str:
-    """Convert seconds into swim-time format."""
+    """Format seconds as swim time."""
     try:
         seconds = float(seconds)
         minutes = int(seconds // 60)
@@ -103,10 +102,7 @@ def get_personal_bests(race_logs: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
 
     clean_logs = race_logs.copy()
-    clean_logs["time_seconds"] = pd.to_numeric(
-        clean_logs["time_seconds"],
-        errors="coerce",
-    )
+    clean_logs["time_seconds"] = pd.to_numeric(clean_logs["time_seconds"], errors="coerce")
     clean_logs = clean_logs.dropna(subset=["time_seconds"])
 
     if clean_logs.empty:
@@ -118,9 +114,7 @@ def get_personal_bests(race_logs: pd.DataFrame) -> pd.DataFrame:
         .first()
     )
 
-    personal_bests["Best Time"] = personal_bests["time_seconds"].apply(
-        seconds_to_swim_time
-    )
+    personal_bests["Best Time"] = personal_bests["time_seconds"].apply(seconds_to_swim_time)
 
     return personal_bests
 
@@ -139,10 +133,7 @@ def is_new_personal_best(
         return True
 
     clean_logs = previous_logs.copy()
-    clean_logs["time_seconds"] = pd.to_numeric(
-        clean_logs["time_seconds"],
-        errors="coerce",
-    )
+    clean_logs["time_seconds"] = pd.to_numeric(clean_logs["time_seconds"], errors="coerce")
     clean_logs = clean_logs.dropna(subset=["time_seconds"])
 
     matching_swims = clean_logs[
@@ -161,8 +152,8 @@ def is_new_personal_best(
 def calculate_swimiq_score(race_logs: pd.DataFrame, goals: pd.DataFrame) -> int:
     """
     Version 2 SwimIQ Score.
-    Simple and explainable:
-    - Starts at 500 once the swimmer has logs
+    Simple, explainable, and safe:
+    - Starts at 500 once a swimmer has logs
     - Adds points for sessions, goals, and PBs
     - Caps at 1000
     """
@@ -200,12 +191,8 @@ def safe_metric_time(df: pd.DataFrame, column: str, metric: str) -> str:
     return "—"
 
 
-def add_formatted_time_column(
-    df: pd.DataFrame,
-    source_column: str,
-    new_column: str,
-) -> pd.DataFrame:
-    """Return a DataFrame copy with a formatted swim-time column."""
+def add_formatted_time_column(df: pd.DataFrame, source_column: str, new_column: str) -> pd.DataFrame:
+    """Return copy of DataFrame with a formatted time column."""
     display_df = df.copy()
 
     if source_column in display_df.columns:
@@ -250,7 +237,6 @@ st.markdown(
 
 if LOGO_PATH.exists():
     logo_base64 = base64.b64encode(LOGO_PATH.read_bytes()).decode()
-
     st.markdown(
         f"""
         <div style="text-align: center; width: 100%; margin: 0 auto;">
@@ -291,7 +277,6 @@ with st.container():
 
     if start_button:
         clean_name = normalize_name(swimmer_input)
-
         if clean_name:
             st.session_state.active_swimmer = clean_name
             st.rerun()
@@ -317,6 +302,8 @@ if st.button("Switch swimmer"):
 race_logs = load_table("race_logs", active_swimmer)
 goals = load_table("goals", active_swimmer)
 meet_results = load_table("meet_results", active_swimmer)
+
+
 # ============================================================
 # Tabs
 # ============================================================
@@ -345,10 +332,7 @@ with tab1:
         dashboard_logs = race_logs.copy()
 
         if "date" in dashboard_logs.columns:
-            dashboard_logs["date"] = pd.to_datetime(
-                dashboard_logs["date"],
-                errors="coerce",
-            )
+            dashboard_logs["date"] = pd.to_datetime(dashboard_logs["date"], errors="coerce")
 
         swim_iq_score = calculate_swimiq_score(dashboard_logs, goals)
         total_sessions = len(dashboard_logs)
@@ -362,14 +346,8 @@ with tab1:
         col4.metric("Active Goals", active_goals)
 
         col5, col6 = st.columns(2)
-        col5.metric(
-            "Best Time",
-            safe_metric_time(dashboard_logs, "time_seconds", "min"),
-        )
-        col6.metric(
-            "Average Time",
-            safe_metric_time(dashboard_logs, "time_seconds", "mean"),
-        )
+        col5.metric("Best Time", safe_metric_time(dashboard_logs, "time_seconds", "min"))
+        col6.metric("Average Time", safe_metric_time(dashboard_logs, "time_seconds", "mean"))
 
         display_logs = add_formatted_time_column(
             dashboard_logs,
@@ -380,9 +358,7 @@ with tab1:
         st.dataframe(display_logs, use_container_width=True)
 
         if {"date", "time_seconds", "stroke"}.issubset(dashboard_logs.columns):
-            chart_logs = dashboard_logs.dropna(
-                subset=["date", "time_seconds"]
-            ).sort_values("date")
+            chart_logs = dashboard_logs.dropna(subset=["date", "time_seconds"]).sort_values("date")
 
             if not chart_logs.empty:
                 fig = px.line(
@@ -393,7 +369,6 @@ with tab1:
                     markers=True,
                     title="Time Progress",
                 )
-
                 st.plotly_chart(fig, use_container_width=True)
 
 
@@ -410,24 +385,17 @@ with tab2:
         st.warning("No personal bests yet. Add swim sessions to unlock this page.")
     else:
         st.dataframe(
-            personal_bests[
-                [
-                    "stroke",
-                    "distance",
-                    "course",
-                    "Best Time",
-                    "date",
-                ]
-            ],
+            personal_bests[["stroke", "distance", "course", "Best Time", "date"]],
             use_container_width=True,
         )
-        # ============================================================
+
+
+# ============================================================
 # Add Swim Session
 # ============================================================
 
 with tab3:
     st.subheader("Add Swim Session")
-
     st.markdown(
         '<div class="section-note">Enter times like 35.43, 1:24.32, or 5:31.43.</div>',
         unsafe_allow_html=True,
@@ -517,7 +485,6 @@ with tab4:
         )
 
         goal_course = st.selectbox("Goal Course", ["SCY", "SCM", "LCM"])
-
         target_date = st.date_input("Target Date", value=date.today())
 
         submitted_goal = st.form_submit_button("Save Goal")
@@ -536,7 +503,6 @@ with tab4:
                 }
 
                 insert_row("goals", row)
-
                 st.success("Goal saved.")
 
             except ValueError:
@@ -567,13 +533,8 @@ with tab5:
 
     with st.form("add_meet_result"):
         meet_name = st.text_input("Meet Name")
-
         meet_date = st.date_input("Meet Date", value=date.today())
-
-        event_name = st.text_input(
-            "Event",
-            placeholder="Example: 100 Butterfly",
-        )
+        event_name = st.text_input("Event", placeholder="Example: 100 Butterfly")
 
         result_time_text = st.text_input(
             "Result Time",
@@ -598,7 +559,6 @@ with tab5:
                 }
 
                 insert_row("meet_results", row)
-
                 st.success("Meet result saved.")
 
             except ValueError:
@@ -625,7 +585,6 @@ with tab5:
 # ============================================================
 
 st.markdown("---")
-
 st.markdown(
     """
     <div style="text-align:center; font-size:14px;">
