@@ -589,7 +589,7 @@ with tab5:
                 result_time_s = swim_time_to_seconds(result_time_text)
 
                 row = {
-                    "swimmer": active_swimmer,
+                    "swimmer_name": active_swimmer,
                     "meet_name": meet_name,
                     "meet_date": str(meet_date),
                     "event": event_name,
