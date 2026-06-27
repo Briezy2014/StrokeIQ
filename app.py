@@ -585,27 +585,26 @@ with tab5:
         submitted_result = st.form_submit_button("Save Meet Result")
 
         if submitted_result:
-            try:
-                result_time_s = swim_time_to_seconds(result_time_text)
+    try:
+        result_time_s = swim_time_to_seconds(result_time_text)
 
-               row = {
-    "swimmer": active_swimmer,
-    "meet_name": meet_name,
-    "meet_date": str(meet_date),
-    "event": event_name,
-    "time_s": float(result_time_s),
-    "course": result_course,
-}
+        row = {
+            "swimmer": active_swimmer,
+            "meet_name": meet_name,
+            "meet_date": str(meet_date),
+            "event": event_name,
+            "time_s": float(result_time_s),
+            "course": result_course,
+        }
 
-                insert_row("meet_results", row)
+        insert_row("meet_results", row)
 
-                st.success("Meet result saved.")
+        st.success("Meet result saved.")
 
-            except ValueError:
-                st.error("Please enter result time like 35.43, 1:24.32, or 5:31.43.")
-            except Exception as e:
-                st.error(f"Could not save meet result: {e}")
-
+    except ValueError:
+        st.error("Please enter result time like 35.43, 1:24.32, or 5:31.43.")
+    except Exception as e:
+        st.error(f"Could not save meet result: {e}")
     st.divider()
 
     if meet_results.empty:
