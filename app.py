@@ -321,13 +321,14 @@ meet_results = load_table("meet_results", active_swimmer)
 # Tabs
 # ============================================================
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
     [
         "📊 Dashboard",
         "🏆 Personal Bests",
         "➕ Add Swim Session",
         "🎯 Goals",
         "🏁 Meet Results",
+        "👤 Athlete Passport",
     ]
 )
 
@@ -619,6 +620,151 @@ with tab5:
         )
 
         st.dataframe(display_results, use_container_width=True)
+# ============================================================
+# Athlete Passport
+# ============================================================
+
+with tab6:
+    st.subheader("Athlete Passport™")
+
+    try:
+        profile_response = (
+            supabase.table("swimmers")
+            .select("*")
+            .eq("swimmer_name", active_swimmer)
+            .execute()
+        )
+
+        profile_data = profile_response.data
+
+    except Exception:
+        profile_data = []
+
+    existing_profile = profile_data[0] if profile_data else {}
+
+    st.markdown("### Athlete Identity")
+
+    with st.form("athlete_passport_form"):
+        first_name = st.text_input(
+            "First Name",
+            value=existing_profile.get("first_name", ""),
+        )
+
+        last_name = st.text_input(
+            "Last Name",
+            value=existing_profile.get("last_name", ""),
+        )
+
+        preferred_name = st.text_input(
+            "Preferred Name",
+            value=existing_profile.get("preferred_name", active_swimmer),
+        )
+
+        birthday = st.date_input(
+            "Birthday",
+            value=date.today(),
+        )
+
+        graduation_year = st.number_input(
+            "Graduation Year",
+            min_value=2026,
+            max_value=2045,
+            value=int(existing_profile.get("graduation_year") or 2032),
+            step=1,
+        )
+
+        club_team = st.text_input(
+            "Club Team",
+            value=existing_profile.get("team", ""),
+        )
+
+        coach_name = st.text_input(
+            "Coach",
+            value=existing_profile.get("coach_name", ""),
+        )
+
+        primary_stroke = st.selectbox(
+            "Primary Stroke",
+            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
+            index=3,
+        )
+
+        secondary_stroke = st.selectbox(
+            "Secondary Stroke",
+            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
+            index=0,
+        )
+
+        favorite_event = st.text_input(
+            "Favorite Event",
+            value=existing_profile.get("favorite_event", ""),
+            placeholder="Example: 100 Butterfly",
+        )
+
+        usa_swimming_id = st.text_input(
+            "USA Swimming ID",
+            value=existing_profile.get("usa_swimming_id", ""),
+        )
+
+        school = st.text_input(
+            "School",
+            value=existing_profile.get("school", ""),
+        )
+
+        athlete_notes = st.text_area(
+            "Athlete Notes",
+            value=existing_profile.get("athlete_notes", ""),
+            placeholder="Example: Strong butterfly swimmer, working on back-half speed.",
+        )
+
+        submitted_passport = st.form_submit_button("Save Athlete Passport")
+
+        if submitted_passport:
+            try:
+                passport_row = {
+                    "swimmer_name": active_swimmer,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "preferred_name": preferred_name,
+                    "birthday": str(birthday),
+                    "graduation_year": int(graduation_year),
+                    "team": club_team,
+                    "coach_name": coach_name,
+                    "primary_stroke": primary_stroke,
+                    "secondary_stroke": secondary_stroke,
+                    "favorite_event": favorite_event,
+                    "usa_swimming_id": usa_swimming_id,
+                    "school": school,
+                    "athlete_notes": athlete_notes,
+                }
+
+                if existing_profile.get("id"):
+                    supabase.table("swimmers").update(passport_row).eq(
+                        "id",
+                        existing_profile["id"],
+                    ).execute()
+                else:
+                    supabase.table("swimmers").insert(passport_row).execute()
+
+                st.success("Athlete Passport saved.")
+
+            except Exception as e:
+                st.error(f"Could not save Athlete Passport: {e}")
+
+    st.divider()
+
+    if existing_profile:
+        st.markdown("### Current Athlete Passport")
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Athlete", existing_profile.get("preferred_name") or active_swimmer)
+        col2.metric("Graduation Year", existing_profile.get("graduation_year", "—"))
+        col3.metric("Primary Stroke", existing_profile.get("primary_stroke", "—"))
+
+        st.dataframe(pd.DataFrame([existing_profile]), use_container_width=True)
+    else:
+        st.info("No Athlete Passport saved yet.")
 # ============================================================
 # Footer
 # ============================================================
