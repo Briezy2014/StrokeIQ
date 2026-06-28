@@ -9,13 +9,17 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def load_table(table_name: str, swimmer: str | None = None) -> pd.DataFrame:
+def load_table(
+    table_name: str,
+    swimmer: str | None = None,
+    swimmer_column: str = "swimmer",
+) -> pd.DataFrame:
     """Load a Supabase table into a pandas DataFrame."""
     try:
         query = supabase.table(table_name).select("*")
 
         if swimmer:
-            query = query.eq("swimmer", swimmer)
+            query = query.eq(swimmer_column, swimmer)
 
         response = query.execute()
         return pd.DataFrame(response.data)
