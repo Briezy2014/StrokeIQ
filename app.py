@@ -641,6 +641,61 @@ with tab6:
         profile_data = []
 
     existing_profile = profile_data[0] if profile_data else {}
+        # -----------------------------
+    # Athlete Passport Dashboard
+    # -----------------------------
+
+    display_name = (
+        existing_profile.get("preferred_name")
+        or f"{existing_profile.get('first_name', '')} {existing_profile.get('last_name', '')}".strip()
+        or active_swimmer
+    )
+
+    athlete_team = existing_profile.get("team", "Not added yet")
+    athlete_coach = existing_profile.get("coach_name", "Not added yet")
+    athlete_primary_stroke = existing_profile.get("primary_stroke", "Not added yet")
+    athlete_favorite_event = existing_profile.get("favorite_event", "Not added yet")
+    athlete_graduation_year = existing_profile.get("graduation_year", "Not added yet")
+
+    st.markdown(
+        f"""
+        <div style="
+            background: linear-gradient(135deg, #061A40, #0B5CAD);
+            padding: 28px;
+            border-radius: 22px;
+            color: white;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0px 4px 18px rgba(0,0,0,0.20);
+        ">
+            <div style="font-size: 42px;">🏊‍♀️</div>
+            <div style="font-size: 18px; letter-spacing: 2px; margin-top: 8px;">
+                ATHLETE PASSPORT™
+            </div>
+            <div style="font-size: 38px; font-weight: 800; margin-top: 10px;">
+                {display_name}
+            </div>
+            <div style="font-size: 18px; margin-top: 6px;">
+                Built in the Water. Driven by Possibility.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Club", athlete_team)
+    col2.metric("Coach", athlete_coach)
+    col3.metric("Graduation", athlete_graduation_year)
+
+    col4, col5, col6 = st.columns(3)
+
+    col4.metric("Primary Stroke", athlete_primary_stroke)
+    col5.metric("Favorite Event", athlete_favorite_event)
+    col6.metric("SwimIQ Score™", "Coming Soon")
+
+    st.divider()
 
     st.markdown("### Athlete Identity")
 
