@@ -1,6 +1,7 @@
 from datetime import date
 from pathlib import Path
 import base64
+from xxlimited import new
 
 import pandas as pd
 import plotly.express as px
@@ -714,11 +715,14 @@ with tab6:
             "Preferred Name",
             value=existing_profile.get("preferred_name", active_swimmer),
         )
-
         birthday = st.date_input(
             "Birthday",
-            value=date.today(),
+            value=date(2012, 1, 1),
+            min_value=date(2000, 1, 1),
+            max_value=date.today(),
+            format="MM/DD/YYYY",
         )
+       
 
         graduation_year = st.number_input(
             "Graduation Year",
