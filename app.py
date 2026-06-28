@@ -624,10 +624,11 @@ with tab5:
 # ============================================================
 # Athlete Passport
 # ============================================================
+# ============================================================
+# Athlete Passport
+# ============================================================
 
 with tab6:
-    st.subheader("Athlete Passport™")
-
     try:
         profile_response = (
             supabase.table("swimmers")
@@ -635,16 +636,20 @@ with tab6:
             .eq("swimmer_name", active_swimmer)
             .execute()
         )
-
         profile_data = profile_response.data
-
     except Exception:
         profile_data = []
 
     existing_profile = profile_data[0] if profile_data else {}
-        # -----------------------------
-    # Athlete Passport Dashboard
-    # -----------------------------
+
+    def get_profile_value(field_name, fallback="Not added yet"):
+        value = existing_profile.get(field_name)
+        return value if value not in [None, ""] else fallback
+
+    def select_index(options, current_value, default_index=0):
+        if current_value in options:
+            return options.index(current_value)
+        return default_index
 
     display_name = (
         existing_profile.get("preferred_name")
@@ -652,53 +657,284 @@ with tab6:
         or active_swimmer
     )
 
-    athlete_team = existing_profile.get("team", "Not added yet")
-    athlete_coach = existing_profile.get("coach_name", "Not added yet")
-    athlete_primary_stroke = existing_profile.get("primary_stroke", "Not added yet")
-    athlete_favorite_event = existing_profile.get("favorite_event", "Not added yet")
-    athlete_graduation_year = existing_profile.get("graduation_year", "Not added yet")
+    athlete_team = get_profile_value("team")
+    athlete_coach = get_profile_value("coach_name")
+    athlete_primary_stroke = get_profile_value("primary_stroke")
+    athlete_secondary_stroke = get_profile_value("secondary_stroke")
+    athlete_favorite_event = get_profile_value("favorite_event")
+    athlete_graduation_year = get_profile_value("graduation_year")
+    usa_swimming_id = get_profile_value("usa_swimming_id")
+
+    total_goals = 0 if goals.empty else len(goals)
+    total_sessions = 0 if race_logs.empty else len(race_logs)
+    total_meets = 0 if meet_results.empty else len(meet_results)
+
+    if not race_logs.empty and {"stroke", "distance", "course", "time_seconds"}.issubset(race_logs.columns):
+        pb_logs = race_logs.copy()
+        pb_logs["time_seconds"] = pd.to_numeric(pb_logs["time_seconds"], errors="coerce")
+        pb_logs = pb_logs.dropna(subset=["time_seconds"])
+
+        total_pbs = (
+            pb_logs.sort_values("time_seconds")
+            .groupby(["stroke", "distance", "course"], as_index=False)
+            .first()
+            .shape[0]
+        )
+    else:
+        total_pbs = 0
+
+    st.markdown(
+        """
+        <style>
+            .passport-hero {
+                background: linear-gradient(135deg, #0B5CAD 0%, #1A8FE3 55%, #DFF3FF 100%);
+                padding: 34px;
+                border-radius: 28px;
+                color: white;
+                text-align: center;
+                margin-bottom: 24px;
+                box-shadow: 0px 8px 28px rgba(11, 92, 173, 0.28);
+                border: 1px solid rgba(255,255,255,0.35);
+            }
+
+            .passport-avatar {
+                width: 108px;
+                height: 108px;
+                border-radius: 999px;
+                background: rgba(255,255,255,0.94);
+                color: #0B5CAD;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 46px;
+                margin: 0 auto 16px auto;
+                box-shadow: 0px 6px 18px rgba(0,0,0,0.20);
+            }
+
+            .passport-kicker {
+                font-size: 14px;
+                letter-spacing: 2.4px;
+                font-weight: 800;
+                opacity: 0.96;
+                text-transform: uppercase;
+            }
+
+            .passport-name {
+                font-size: 42px;
+                line-height: 1.05;
+                font-weight: 900;
+                margin-top: 10px;
+                margin-bottom: 8px;
+            }
+
+            .passport-subtitle {
+                font-size: 18px;
+                opacity: 0.96;
+                font-weight: 600;
+            }
+
+            .passport-badge-row {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 18px;
+            }
+
+            .passport-badge {
+                background: rgba(255,255,255,0.22);
+                border: 1px solid rgba(255,255,255,0.38);
+                border-radius: 999px;
+                padding: 8px 14px;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .passport-section-title {
+                font-size: 22px;
+                font-weight: 850;
+                color: #0B5CAD;
+                margin-top: 14px;
+                margin-bottom: 10px;
+            }
+
+            .passport-card {
+                background: #FFFFFF;
+                border-radius: 20px;
+                padding: 20px;
+                border: 1px solid #E6EEF7;
+                box-shadow: 0px 4px 16px rgba(6, 42, 86, 0.08);
+                min-height: 112px;
+                margin-bottom: 14px;
+            }
+
+            .passport-card-label {
+                color: #5C6F82;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                font-weight: 800;
+                margin-bottom: 8px;
+            }
+
+            .passport-card-value {
+                color: #0B2D4D;
+                font-size: 22px;
+                font-weight: 900;
+                word-break: break-word;
+            }
+
+            .passport-coming {
+                background: #F5FAFF;
+                border: 1px dashed #7CBDF2;
+                border-radius: 20px;
+                padding: 20px;
+                margin-top: 16px;
+                color: #0B2D4D;
+                line-height: 1.65;
+            }
+
+            .passport-edit-box {
+                background: #FFFFFF;
+                border: 1px solid #E6EEF7;
+                border-radius: 22px;
+                padding: 22px;
+                box-shadow: 0px 4px 16px rgba(6, 42, 86, 0.06);
+                margin-top: 16px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown(
         f"""
-        <div style="
-            background: linear-gradient(135deg, #061A40, #0B5CAD);
-            padding: 28px;
-            border-radius: 22px;
-            color: white;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0px 4px 18px rgba(0,0,0,0.20);
-        ">
-            <div style="font-size: 42px;">🏊‍♀️</div>
-            <div style="font-size: 18px; letter-spacing: 2px; margin-top: 8px;">
-                ATHLETE PASSPORT™
-            </div>
-            <div style="font-size: 38px; font-weight: 800; margin-top: 10px;">
-                {display_name}
-            </div>
-            <div style="font-size: 18px; margin-top: 6px;">
-                Built in the Water. Driven by Possibility.
+        <div class="passport-hero">
+            <div class="passport-avatar">🏊‍♀️</div>
+            <div class="passport-kicker">Athlete Passport™</div>
+            <div class="passport-name">{display_name}</div>
+            <div class="passport-subtitle">Built in the Water. Driven by Possibility.</div>
+
+            <div class="passport-badge-row">
+                <div class="passport-badge">🇺🇸 USA Swimming Athlete</div>
+                <div class="passport-badge">🏊 {athlete_primary_stroke}</div>
+                <div class="passport-badge">🎓 Class of {athlete_graduation_year}</div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown('<div class="passport-section-title">Performance Snapshot</div>', unsafe_allow_html=True)
 
-    col1.metric("Club", athlete_team)
-    col2.metric("Coach", athlete_coach)
-    col3.metric("Graduation", athlete_graduation_year)
+    stat1, stat2, stat3, stat4 = st.columns(4)
+    stat1.metric("SwimIQ Score™", "Coming Soon")
+    stat2.metric("Current Goals", total_goals)
+    stat3.metric("Personal Bests", total_pbs)
+    stat4.metric("Training Sessions", total_sessions)
 
-    col4, col5, col6 = st.columns(3)
+    stat5, stat6 = st.columns(2)
+    stat5.metric("Meet Results", total_meets)
+    stat6.metric("Athlete Passport", "Active")
 
-    col4.metric("Primary Stroke", athlete_primary_stroke)
-    col5.metric("Favorite Event", athlete_favorite_event)
-    col6.metric("SwimIQ Score™", "Coming Soon")
+    st.markdown('<div class="passport-section-title">Athlete Summary</div>', unsafe_allow_html=True)
+
+    summary1, summary2, summary3 = st.columns(3)
+
+    with summary1:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">Club Team</div>
+                <div class="passport-card-value">{athlete_team}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary2:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">Coach</div>
+                <div class="passport-card-value">{athlete_coach}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary3:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">Favorite Event</div>
+                <div class="passport-card-value">{athlete_favorite_event}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    summary4, summary5, summary6 = st.columns(3)
+
+    with summary4:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">Primary Stroke</div>
+                <div class="passport-card-value">{athlete_primary_stroke}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary5:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">Secondary Stroke</div>
+                <div class="passport-card-value">{athlete_secondary_stroke}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary6:
+        st.markdown(
+            f"""
+            <div class="passport-card">
+                <div class="passport-card-label">USA Swimming ID</div>
+                <div class="passport-card-value">{usa_swimming_id}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        """
+        <div class="passport-coming">
+            <strong>Coming Soon to Athlete Passport™</strong><br><br>
+            🤖 AI Coach &nbsp;&nbsp;|&nbsp;&nbsp;
+            🧬 SwimDNA™ &nbsp;&nbsp;|&nbsp;&nbsp;
+            🎓 Recruiting Center &nbsp;&nbsp;|&nbsp;&nbsp;
+            🎥 Video Lab &nbsp;&nbsp;|&nbsp;&nbsp;
+            🏁 Race Intelligence™
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.divider()
 
-    st.markdown("### Athlete Identity")
+    st.markdown('<div class="passport-section-title">Edit Athlete Passport</div>', unsafe_allow_html=True)
+
+    existing_birthday = existing_profile.get("birthday")
+    if existing_birthday:
+        try:
+            birthday_value = pd.to_datetime(existing_birthday).date()
+        except Exception:
+            birthday_value = date(2012, 1, 1)
+    else:
+        birthday_value = date(2012, 1, 1)
 
     with st.form("athlete_passport_form"):
         first_name = st.text_input(
@@ -715,14 +951,14 @@ with tab6:
             "Preferred Name",
             value=existing_profile.get("preferred_name", active_swimmer),
         )
+
         birthday = st.date_input(
             "Birthday",
-            value=date(2012, 1, 1),
+            value=birthday_value,
             min_value=date(2000, 1, 1),
             max_value=date.today(),
             format="MM/DD/YYYY",
         )
-       
 
         graduation_year = st.number_input(
             "Graduation Year",
@@ -742,16 +978,18 @@ with tab6:
             value=existing_profile.get("coach_name", ""),
         )
 
+        stroke_options = ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"]
+
         primary_stroke = st.selectbox(
             "Primary Stroke",
-            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
-            index=3,
+            stroke_options,
+            index=select_index(stroke_options, existing_profile.get("primary_stroke"), 3),
         )
 
         secondary_stroke = st.selectbox(
             "Secondary Stroke",
-            ["Freestyle", "Backstroke", "Breaststroke", "Butterfly", "IM"],
-            index=0,
+            stroke_options,
+            index=select_index(stroke_options, existing_profile.get("secondary_stroke"), 0),
         )
 
         favorite_event = st.text_input(
@@ -760,7 +998,7 @@ with tab6:
             placeholder="Example: 100 Butterfly",
         )
 
-        usa_swimming_id = st.text_input(
+        usa_swimming_id_form = st.text_input(
             "USA Swimming ID",
             value=existing_profile.get("usa_swimming_id", ""),
         )
@@ -792,7 +1030,7 @@ with tab6:
                     "primary_stroke": primary_stroke,
                     "secondary_stroke": secondary_stroke,
                     "favorite_event": favorite_event,
-                    "usa_swimming_id": usa_swimming_id,
+                    "usa_swimming_id": usa_swimming_id_form,
                     "school": school,
                     "athlete_notes": athlete_notes,
                 }
@@ -810,20 +1048,6 @@ with tab6:
             except Exception as e:
                 st.error(f"Could not save Athlete Passport: {e}")
 
-    st.divider()
-
-    if existing_profile:
-        st.markdown("### Current Athlete Passport")
-
-        col1, col2, col3 = st.columns(3)
-
-        col1.metric("Athlete", existing_profile.get("preferred_name") or active_swimmer)
-        col2.metric("Graduation Year", existing_profile.get("graduation_year", "—"))
-        col3.metric("Primary Stroke", existing_profile.get("primary_stroke", "—"))
-
-        st.dataframe(pd.DataFrame([existing_profile]), use_container_width=True)
-    else:
-        st.info("No Athlete Passport saved yet.")
 # ============================================================
 # Footer
 # ============================================================
