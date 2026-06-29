@@ -540,6 +540,7 @@ with tab4:
                 insert_row("goals", row)
 
                 st.success("Goal saved.")
+                st.rerun()
 
             except ValueError:
                 st.error("Please enter target time like 35.43, 1:24.32, or 5:31.43.")
@@ -602,6 +603,7 @@ with tab5:
                 insert_row("meet_results", row)
 
                 st.success("Meet result saved.")
+                st.rerun()
 
             except ValueError:
                 st.error("Please enter result time like 35.43, 1:24.32, or 5:31.43.")
@@ -1097,6 +1099,7 @@ with tab6:
                     supabase.table("swimmers").insert(passport_row).execute()
 
                 st.success("Athlete Passport saved.")
+                st.rerun()
 
             except Exception as e:
                 st.error(f"Could not save Athlete Passport: {e}")
