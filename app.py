@@ -682,250 +682,9 @@ with tab6:
         )
     else:
         total_pbs = 0
-
-    st.markdown(
-        """
-        <style>
-            .passport-hero {
-                background: linear-gradient(135deg, #0B5CAD 0%, #1A8FE3 55%, #DFF3FF 100%);
-                padding: 34px;
-                border-radius: 28px;
-                color: white;
-                text-align: center;
-                margin-bottom: 24px;
-                box-shadow: 0px 8px 28px rgba(11, 92, 173, 0.28);
-                border: 1px solid rgba(255,255,255,0.35);
-            }
-
-            .passport-avatar {
-                width: 108px;
-                height: 108px;
-                border-radius: 999px;
-                background: rgba(255,255,255,0.94);
-                color: #0B5CAD;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 46px;
-                margin: 0 auto 16px auto;
-                box-shadow: 0px 6px 18px rgba(0,0,0,0.20);
-            }
-
-            .passport-kicker {
-                font-size: 14px;
-                letter-spacing: 2.4px;
-                font-weight: 800;
-                opacity: 0.96;
-                text-transform: uppercase;
-            }
-
-            .passport-name {
-                font-size: 42px;
-                line-height: 1.05;
-                font-weight: 900;
-                margin-top: 10px;
-                margin-bottom: 8px;
-            }
-
-            .passport-subtitle {
-                font-size: 18px;
-                opacity: 0.96;
-                font-weight: 600;
-            }
-
-            .passport-badge-row {
-                display: flex;
-                justify-content: center;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-top: 18px;
-            }
-
-            .passport-badge {
-                background: rgba(255,255,255,0.22);
-                border: 1px solid rgba(255,255,255,0.38);
-                border-radius: 999px;
-                padding: 8px 14px;
-                font-size: 14px;
-                font-weight: 700;
-            }
-
-            .passport-section-title {
-                font-size: 22px;
-                font-weight: 850;
-                color: #0B5CAD;
-                margin-top: 14px;
-                margin-bottom: 10px;
-            }
-
-            .passport-card {
-                background: #FFFFFF;
-                border-radius: 20px;
-                padding: 20px;
-                border: 1px solid #E6EEF7;
-                box-shadow: 0px 4px 16px rgba(6, 42, 86, 0.08);
-                min-height: 112px;
-                margin-bottom: 14px;
-            }
-
-            .passport-card-label {
-                color: #5C6F82;
-                font-size: 13px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                font-weight: 800;
-                margin-bottom: 8px;
-            }
-
-            .passport-card-value {
-                color: #0B2D4D;
-                font-size: 22px;
-                font-weight: 900;
-                word-break: break-word;
-            }
-
-            .passport-coming {
-                background: #F5FAFF;
-                border: 1px dashed #7CBDF2;
-                border-radius: 20px;
-                padding: 20px;
-                margin-top: 16px;
-                color: #0B2D4D;
-                line-height: 1.65;
-            }
-
-            .passport-edit-box {
-                background: #FFFFFF;
-                border: 1px solid #E6EEF7;
-                border-radius: 22px;
-                padding: 22px;
-                box-shadow: 0px 4px 16px rgba(6, 42, 86, 0.06);
-                margin-top: 16px;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f"""
-        <div class="passport-hero">
-            <div class="passport-avatar">🏊‍♀️</div>
-            <div class="passport-kicker">Athlete Passport™</div>
-            <div class="passport-name">{display_name}</div>
-            <div class="passport-subtitle">Built in the Water. Driven by Possibility.</div>
-
-            <div class="passport-badge-row">
-                <div class="passport-badge">🇺🇸 USA Swimming Athlete</div>
-                <div class="passport-badge">🏊 {athlete_primary_stroke}</div>
-                <div class="passport-badge">🎓 Class of {athlete_graduation_year}</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown('<div class="passport-section-title">Performance Snapshot</div>', unsafe_allow_html=True)
-
-    stat1, stat2, stat3, stat4 = st.columns(4)
-    stat1.metric("SwimIQ Score™", "Coming Soon")
-    stat2.metric("Current Goals", total_goals)
-    stat3.metric("Personal Bests", total_pbs)
-    stat4.metric("Training Sessions", total_sessions)
-
-    stat5, stat6 = st.columns(2)
-    stat5.metric("Meet Results", total_meets)
-    stat6.metric("Athlete Passport", "Active")
-
-    st.markdown('<div class="passport-section-title">Athlete Summary</div>', unsafe_allow_html=True)
-
-    summary1, summary2, summary3 = st.columns(3)
-
-    with summary1:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">Club Team</div>
-                <div class="passport-card-value">{athlete_team}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with summary2:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">Coach</div>
-                <div class="passport-card-value">{athlete_coach}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with summary3:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">Favorite Event</div>
-                <div class="passport-card-value">{athlete_favorite_event}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    summary4, summary5, summary6 = st.columns(3)
-
-    with summary4:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">Primary Stroke</div>
-                <div class="passport-card-value">{athlete_primary_stroke}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with summary5:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">Secondary Stroke</div>
-                <div class="passport-card-value">{athlete_secondary_stroke}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with summary6:
-        st.markdown(
-            f"""
-            <div class="passport-card">
-                <div class="passport-card-label">USA Swimming ID</div>
-                <div class="passport-card-value">{usa_swimming_id}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.markdown(
-        """
-        <div class="passport-coming">
-            <strong>Coming Soon to Athlete Passport™</strong><br><br>
-            🤖 AI Coach &nbsp;&nbsp;|&nbsp;&nbsp;
-            🧬 SwimDNA™ &nbsp;&nbsp;|&nbsp;&nbsp;
-            🎓 Recruiting Center &nbsp;&nbsp;|&nbsp;&nbsp;
-            🎥 Video Lab &nbsp;&nbsp;|&nbsp;&nbsp;
-            🏁 Race Intelligence™
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.divider()
-
-    st.markdown('<div class="passport-section-title">Edit Athlete Passport</div>', unsafe_allow_html=True)
+        # -----------------------------
+    # Athlete Passport UI
+    # -----------------------------
 
     existing_birthday = existing_profile.get("birthday")
     if existing_birthday:
@@ -935,6 +694,467 @@ with tab6:
             birthday_value = date(2012, 1, 1)
     else:
         birthday_value = date(2012, 1, 1)
+
+    try:
+        today = date.today()
+        age_years = today.year - birthday_value.year - (
+            (today.month, today.day) < (birthday_value.month, birthday_value.day)
+        )
+        age_label = f"{age_years} years old"
+        birthday_label = birthday_value.strftime("%m/%d/%Y")
+    except Exception:
+        age_label = "Not added yet"
+        birthday_label = "Not added yet"
+
+    athlete_school = get_profile_value("school")
+    athlete_notes_display = get_profile_value(
+        "athlete_notes",
+        "No athlete notes added yet.",
+    )
+
+    if athlete_favorite_event != "Not added yet":
+        current_focus = athlete_favorite_event
+    elif athlete_primary_stroke != "Not added yet":
+        current_focus = athlete_primary_stroke
+    else:
+        current_focus = "Add focus event"
+
+    st.markdown(
+        """
+        <style>
+            .passport-shell {
+                background: #F3FAFF;
+                border-radius: 28px;
+                padding: 26px;
+                margin-bottom: 24px;
+                border: 1px solid #D7EEFF;
+            }
+
+            .passport-hero-clean {
+                background: linear-gradient(135deg, #009CFF 0%, #38B6FF 58%, #EAF8FF 100%);
+                border-radius: 30px;
+                padding: 42px 34px;
+                text-align: center;
+                color: white;
+                box-shadow: 0px 10px 30px rgba(0, 156, 255, 0.26);
+                border: 1px solid rgba(255,255,255,0.45);
+            }
+
+            .passport-avatar-clean {
+                width: 112px;
+                height: 112px;
+                border-radius: 999px;
+                background: rgba(255,255,255,0.96);
+                color: #009CFF;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 48px;
+                margin: 0 auto 18px auto;
+                box-shadow: 0px 8px 24px rgba(0,0,0,0.18);
+            }
+
+            .passport-eyebrow {
+                font-size: 13px;
+                letter-spacing: 3px;
+                font-weight: 900;
+                text-transform: uppercase;
+                opacity: 0.95;
+                margin-bottom: 10px;
+            }
+
+            .passport-name-clean {
+                font-size: 46px;
+                font-weight: 950;
+                line-height: 1.05;
+                margin-bottom: 8px;
+            }
+
+            .passport-sub-clean {
+                font-size: 18px;
+                font-weight: 700;
+                opacity: 0.96;
+                margin-bottom: 6px;
+            }
+
+            .passport-small-clean {
+                font-size: 15px;
+                font-weight: 600;
+                opacity: 0.92;
+            }
+
+            .passport-section-title {
+                font-size: 23px;
+                font-weight: 900;
+                color: #0077C8;
+                margin-top: 24px;
+                margin-bottom: 12px;
+            }
+
+            .status-card {
+                background: #FFFFFF;
+                border-radius: 22px;
+                padding: 22px;
+                border: 1px solid #DDEEFF;
+                box-shadow: 0px 5px 18px rgba(0, 75, 135, 0.08);
+                min-height: 132px;
+                margin-bottom: 14px;
+            }
+
+            .status-label {
+                font-size: 12px;
+                letter-spacing: 1.4px;
+                text-transform: uppercase;
+                font-weight: 900;
+                color: #5C7894;
+                margin-bottom: 8px;
+            }
+
+            .status-value {
+                font-size: 28px;
+                font-weight: 950;
+                color: #0B2D4D;
+                line-height: 1.08;
+                margin-bottom: 6px;
+            }
+
+            .status-note {
+                font-size: 14px;
+                font-weight: 650;
+                color: #5F7082;
+                line-height: 1.35;
+            }
+
+            .detail-card {
+                background: #FFFFFF;
+                border-radius: 22px;
+                padding: 24px;
+                border: 1px solid #DDEEFF;
+                box-shadow: 0px 5px 18px rgba(0, 75, 135, 0.07);
+                margin-bottom: 16px;
+            }
+
+            .detail-title {
+                font-size: 18px;
+                font-weight: 950;
+                color: #0077C8;
+                margin-bottom: 16px;
+            }
+
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 16px;
+                border-bottom: 1px solid #EEF6FC;
+                padding: 9px 0;
+            }
+
+            .detail-row:last-child {
+                border-bottom: none;
+            }
+
+            .detail-label {
+                color: #61788F;
+                font-weight: 800;
+                font-size: 14px;
+            }
+
+            .detail-value {
+                color: #0B2D4D;
+                font-weight: 850;
+                font-size: 14px;
+                text-align: right;
+            }
+
+            .future-panel {
+                background: linear-gradient(135deg, #EAF8FF, #FFFFFF);
+                border: 1px dashed #66C7FF;
+                border-radius: 24px;
+                padding: 22px;
+                margin-top: 18px;
+                margin-bottom: 18px;
+                color: #0B2D4D;
+            }
+
+            .future-title {
+                font-size: 19px;
+                font-weight: 950;
+                color: #0077C8;
+                margin-bottom: 10px;
+            }
+
+            .future-text {
+                font-size: 15px;
+                line-height: 1.75;
+                font-weight: 650;
+            }
+
+            .edit-panel {
+                background: #FFFFFF;
+                border-radius: 24px;
+                padding: 24px;
+                border: 1px solid #DDEEFF;
+                box-shadow: 0px 5px 18px rgba(0, 75, 135, 0.07);
+                margin-top: 12px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+        <div class="passport-shell">
+            <div class="passport-hero-clean">
+                <div class="passport-avatar-clean">🏊‍♀️</div>
+                <div class="passport-eyebrow">Athlete Passport™</div>
+                <div class="passport-name-clean">{display_name}</div>
+                <div class="passport-sub-clean">{athlete_team}</div>
+                <div class="passport-small-clean">
+                    Coach: {athlete_coach} · {athlete_primary_stroke} Specialist · Class of {athlete_graduation_year}
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="passport-section-title">Athlete Status</div>',
+        unsafe_allow_html=True,
+    )
+
+    status1, status2, status3 = st.columns(3)
+
+    with status1:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-label">SwimIQ Score™</div>
+                <div class="status-value">Coming Soon</div>
+                <div class="status-note">A proprietary athlete score built from improvement, consistency, goals, and performance.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with status2:
+        st.markdown(
+            f"""
+            <div class="status-card">
+                <div class="status-label">Current Focus</div>
+                <div class="status-value">{current_focus}</div>
+                <div class="status-note">This will become the center of the athlete's active training block.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with status3:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-label">Highest Achievement</div>
+                <div class="status-value">Coming Soon</div>
+                <div class="status-note">Future home for cuts, championships, standards, and verified milestones.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    status4, status5, status6 = st.columns(3)
+
+    with status4:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-label">Next Meet</div>
+                <div class="status-value">Coming Soon</div>
+                <div class="status-note">Meet countdown, events, and race plan will appear here.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with status5:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-label">IMX / IMR</div>
+                <div class="status-value">Coming Soon</div>
+                <div class="status-note">USA Swimming IMX tracking can be added after core race data is stronger.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with status6:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-label">Readiness</div>
+                <div class="status-value">Coming Soon</div>
+                <div class="status-note">Future recovery score using sleep, wellness, training load, and athlete check-ins.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        '<div class="passport-section-title">Athlete Details</div>',
+        unsafe_allow_html=True,
+    )
+
+    detail_col1, detail_col2 = st.columns(2)
+
+    with detail_col1:
+        st.markdown(
+            f"""
+            <div class="detail-card">
+                <div class="detail-title">Athlete Identity</div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Display Name</div>
+                    <div class="detail-value">{display_name}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Birthday</div>
+                    <div class="detail-value">{birthday_label}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Age</div>
+                    <div class="detail-value">{age_label}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Graduation Year</div>
+                    <div class="detail-value">{athlete_graduation_year}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">School</div>
+                    <div class="detail-value">{athlete_school}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with detail_col2:
+        st.markdown(
+            f"""
+            <div class="detail-card">
+                <div class="detail-title">USA Swimming Profile</div>
+
+                <div class="detail-row">
+                    <div class="detail-label">USA Swimming ID</div>
+                    <div class="detail-value">{usa_swimming_id}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Club Team</div>
+                    <div class="detail-value">{athlete_team}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Coach</div>
+                    <div class="detail-value">{athlete_coach}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Primary Stroke</div>
+                    <div class="detail-value">{athlete_primary_stroke}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Secondary Stroke</div>
+                    <div class="detail-value">{athlete_secondary_stroke}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Favorite Event</div>
+                    <div class="detail-value">{athlete_favorite_event}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    detail_col3, detail_col4 = st.columns(2)
+
+    with detail_col3:
+        st.markdown(
+            f"""
+            <div class="detail-card">
+                <div class="detail-title">SwimIQ Activity</div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Current Goals</div>
+                    <div class="detail-value">{total_goals}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Personal Bests</div>
+                    <div class="detail-value">{total_pbs}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Training Sessions</div>
+                    <div class="detail-value">{total_sessions}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Meet Results</div>
+                    <div class="detail-value">{total_meets}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with detail_col4:
+        st.markdown(
+            f"""
+            <div class="detail-card">
+                <div class="detail-title">Athlete Notes</div>
+                <div style="color:#0B2D4D; font-weight:700; line-height:1.55;">
+                    {athlete_notes_display}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        """
+        <div class="future-panel">
+            <div class="future-title">Coming Soon to Athlete Passport™</div>
+            <div class="future-text">
+                🤖 AI Coach &nbsp;&nbsp;|&nbsp;&nbsp;
+                🧬 SwimDNA™ &nbsp;&nbsp;|&nbsp;&nbsp;
+                🎓 Recruiting Center &nbsp;&nbsp;|&nbsp;&nbsp;
+                🎥 Video Lab &nbsp;&nbsp;|&nbsp;&nbsp;
+                🏁 Race Intelligence™ &nbsp;&nbsp;|&nbsp;&nbsp;
+                📊 USA Swimming Standards
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
+    st.markdown(
+        '<div class="passport-section-title">Edit Athlete Passport</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="edit-panel">',
+        unsafe_allow_html=True,
+    )
 
     with st.form("athlete_passport_form"):
         first_name = st.text_input(
@@ -983,13 +1203,21 @@ with tab6:
         primary_stroke = st.selectbox(
             "Primary Stroke",
             stroke_options,
-            index=select_index(stroke_options, existing_profile.get("primary_stroke"), 3),
+            index=select_index(
+                stroke_options,
+                existing_profile.get("primary_stroke"),
+                3,
+            ),
         )
 
         secondary_stroke = st.selectbox(
             "Secondary Stroke",
             stroke_options,
-            index=select_index(stroke_options, existing_profile.get("secondary_stroke"), 0),
+            index=select_index(
+                stroke_options,
+                existing_profile.get("secondary_stroke"),
+                0,
+            ),
         )
 
         favorite_event = st.text_input(
@@ -1048,8 +1276,12 @@ with tab6:
             except Exception as e:
                 st.error(f"Could not save Athlete Passport: {e}")
 
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True,
+    )
 # ============================================================
-# Footer
+   # Footer
 # ============================================================
 
 st.markdown("---")
