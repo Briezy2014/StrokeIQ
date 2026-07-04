@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
 import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
@@ -125,6 +126,62 @@ void main() {
       expect(analysis.id, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890');
       expect(analysis.swimVideoId, 'b526aa2a-c18f-451b-b8f0-e80947d50c20');
       expect(analysis.overallScore, 80);
+    });
+  });
+
+  group('AiSwimAnalysisService', () {
+    test('builds notes-driven 50 Butterfly LCM coaching sections', () {
+      const video = SwimVideo(
+        swimmer: 'Aspyn',
+        storagePath: 'Aspyn/video.mov',
+        title: 'Denison 50 Fly',
+        stroke: 'Butterfly',
+        distance: '50',
+        course: 'LCM',
+        notes: 'Analyze reaction time and faster breakout with 6 dolphin kicks',
+      );
+
+      final analysis = AiSwimAnalysisService().analyze(
+        video: video,
+        raceLogs: const [],
+        goals: const [],
+      );
+
+      expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
+      expect(analysis.summary, contains('50 Butterfly LCM'));
+      expect(analysis.summary, contains('Analyze reaction time'));
+      expect(
+        analysis.summary,
+        contains(
+          'V1 coaching analysis based on video metadata and user notes',
+        ),
+      );
+      expect(analysis.summary, isNot(contains('consistent training history')));
+
+      final sections = analysis.coachingSections;
+      expect(sections['Reaction / dive'], contains('reaction time'));
+      expect(sections['Breakout'], isNotEmpty);
+      expect(sections['Streamline and underwater dolphin kicks'], contains('dolphin'));
+
+      expect(analysis.topPriorities, isNotEmpty);
+      expect(analysis.improvements, contains('Top 5 priorities'));
+      expect(analysis.improvements, contains('USA Swimming motivational standards'));
+    });
+
+    test('hides integration test uploads from user-facing videos', () {
+      const visible = SwimVideo(
+        swimmer: 'Aspyn',
+        storagePath: 'Aspyn/real.mov',
+        title: 'Denison 50 Fly',
+      );
+      const hidden = SwimVideo(
+        swimmer: 'Aspyn',
+        storagePath: 'Aspyn/test.mov',
+        title: 'Integration test video',
+      );
+
+      expect(visible.isUserFacing, isTrue);
+      expect(hidden.isUserFacing, isFalse);
     });
   });
 }

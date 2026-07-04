@@ -30,7 +30,21 @@ class SwimVideoAnalysis {
   final Map<String, dynamic>? analysisJson;
   final DateTime? createdAt;
 
-  String get swimmerName => swimmer;
+  Map<String, String> get coachingSections {
+    final raw = analysisJson?['sections'];
+    if (raw is! Map) return const {};
+    return raw.map(
+      (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+    );
+  }
+
+  List<String> get topPriorities {
+    final raw = analysisJson?['top_5_priorities'];
+    if (raw is! List) return const [];
+    return raw.map((item) => item.toString()).toList();
+  }
+
+  String? get disclaimer => analysisJson?['disclaimer']?.toString();
 
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(

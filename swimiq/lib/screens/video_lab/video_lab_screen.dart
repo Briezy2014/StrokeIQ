@@ -284,9 +284,32 @@ class _VideoCardState extends State<_VideoCard> {
               Text('AI Score: ${widget.analysis!.overallScore}/100',
                   style: const TextStyle(fontWeight: FontWeight.w700)),
               Text(widget.analysis!.summary),
-              const SizedBox(height: 6),
-              Text('Strengths: ${widget.analysis!.strengths}'),
-              Text('Improve: ${widget.analysis!.improvements}'),
+              const SizedBox(height: 12),
+              if (widget.analysis!.coachingSections.isNotEmpty)
+                ...widget.analysis!.coachingSections.entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(entry.value),
+                      ],
+                    ),
+                  ),
+                )
+              else ...[
+                Text(widget.analysis!.strengths),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                widget.analysis!.improvements,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ],
         ),

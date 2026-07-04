@@ -91,7 +91,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     List<UsaTimeStandard> usaStandards = [];
 
     try {
-      videos = await repository.fetchSwimVideos(swimmer);
+      videos = (await repository.fetchSwimVideos(swimmer))
+          .where((video) => video.isUserFacing)
+          .toList();
     } catch (_) {}
 
     try {
@@ -194,10 +196,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           );
 
       final current = state.value;
-      if (current != null && inserted.id != null) {
+      if (current != null && inserted.id != null && inserted.isUserFacing) {
         final updatedVideos = [
           inserted,
-          ...current.videos.where((video) => video.id != inserted.id),
+          ...current.videos
+              .where((video) => video.id != inserted.id && video.isUserFacing),
         ];
         state = AsyncData(
           current.copyWith(

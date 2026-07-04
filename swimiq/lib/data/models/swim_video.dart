@@ -40,6 +40,23 @@ class SwimVideo {
     return 'Swim Video';
   }
 
+  /// e.g. "50 Butterfly LCM"
+  String get eventLabel {
+    final distanceLabel = distance?.trim().isNotEmpty == true ? distance!.trim() : '?';
+    final strokeLabel = stroke?.trim().isNotEmpty == true ? stroke!.trim() : 'Swim';
+    final courseLabel = course?.trim();
+    if (courseLabel != null && courseLabel.isNotEmpty) {
+      return '$distanceLabel $strokeLabel $courseLabel';
+    }
+    return '$distanceLabel $strokeLabel';
+  }
+
+  /// Hide automated integration uploads from the Video Lab list.
+  bool get isUserFacing {
+    final normalizedTitle = title?.trim().toLowerCase() ?? '';
+    return normalizedTitle != 'integration test video';
+  }
+
   factory SwimVideo.fromJson(Map<String, dynamic> json) {
     return SwimVideo(
       id: parseUuid(json['id']),

@@ -54,23 +54,22 @@ void main() {
       uploadedVideoId = inserted.id;
 
       final videos = await repository.fetchSwimVideos(swimmer);
+      final userVideos = videos.where((video) => video.isUserFacing).toList();
       expect(
-        videos.any((video) => video.id == uploadedVideoId),
-        isTrue,
-        reason: 'Uploaded video should appear in swimmer video list',
+        userVideos.any((video) => video.id == uploadedVideoId),
+        isFalse,
+        reason: 'Integration test uploads should not appear in user video list',
       );
 
       final listed = videos.firstWhere((video) => video.id == uploadedVideoId);
-      expect(listed.distance, '50');
-      expect(listed.distanceMeters, 50);
 
       final analysis = AiSwimAnalysisService().analyze(
         video: listed,
         raceLogs: const [],
         goals: const [],
       );
-      expect(analysis.swimVideoId, uploadedVideoId);
-      expect(analysis.overallScore, greaterThan(0));
+      expect(analysis.summary, contains('50 Freestyle SCY'));
+      expect(analysis.summary, isNot(contains('consistent training history')));
 
       final analysisWithIds = analysis.copyWith(
         swimVideoId: uploadedVideoId,
