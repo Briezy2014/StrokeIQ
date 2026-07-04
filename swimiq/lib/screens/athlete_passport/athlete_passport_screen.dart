@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/passport_metrics.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../usa_standards/usa_standards_screen.dart';
 
 class AthletePassportScreen extends ConsumerStatefulWidget {
   const AthletePassportScreen({super.key, required this.data});
@@ -195,6 +197,23 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
     final totalPbs = SwimAnalytics.personalBests(widget.data.raceLogs).length;
     final dateFormat = DateFormat.yMMMd();
 
+    final swimIqScore = PassportMetrics.swimIqScore(
+      raceLogs: widget.data.raceLogs,
+      goals: widget.data.goals,
+    );
+    final highestCut = PassportMetrics.highestCut(
+      raceLogs: widget.data.raceLogs,
+      standards: widget.data.usaStandards,
+      profile: profile,
+    );
+    final nextMeet = PassportMetrics.nextMeet(widget.data.meetResults);
+    final imxScore = PassportMetrics.imxScore(widget.data.raceLogs);
+    final readiness = PassportMetrics.readiness(
+      raceLogs: widget.data.raceLogs,
+      goals: widget.data.goals,
+      videos: widget.data.videos,
+    );
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -222,15 +241,34 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
           crossAxisSpacing: 12,
           childAspectRatio: 1.8,
           children: [
-            const PassportStatusCard(
+            PassportStatusCard(
               title: 'SwimIQ Score™',
-              value: 'Coming Soon',
+              value: '$swimIqScore',
             ),
             PassportStatusCard(title: 'Current Focus', value: currentFocus),
-            const PassportStatusCard(title: 'Highest Cut', value: 'Coming Soon'),
-            const PassportStatusCard(title: 'Next Meet', value: 'Coming Soon'),
-            const PassportStatusCard(title: 'IMX / IMR', value: 'Coming Soon'),
-            const PassportStatusCard(title: 'Readiness', value: 'Coming Soon'),
+            PassportStatusCard(title: 'Highest Cut', value: highestCut),
+            PassportStatusCard(title: 'Next Meet', value: nextMeet),
+            PassportStatusCard(title: 'IMX / IMR', value: imxScore),
+            PassportStatusCard(title: 'Readiness', value: readiness),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          UsaStandardsScreen(data: widget.data),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.table_chart),
+                label: const Text('USA Standards'),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -272,6 +310,8 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
             'Personal Bests: $totalPbs',
             'Training Sessions: ${widget.data.raceLogs.length}',
             'Meet Results: ${widget.data.meetResults.length}',
+            'Uploaded Videos: ${widget.data.videos.length}',
+            'AI Analyses: ${widget.data.videoAnalyses.length}',
           ],
         ),
         const SizedBox(height: 12),

@@ -10,6 +10,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
 import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
+import 'video_lab/video_lab_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -86,6 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const AddSessionScreen(),
                   GoalsScreen(data: data),
                   MeetResultsScreen(data: data),
+                  VideoLabScreen(data: data),
                   AthletePassportScreen(data: data),
                 ];
 
@@ -129,6 +131,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.stadium_outlined),
             selectedIcon: Icon(Icons.stadium),
             label: 'Meets',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.videocam_outlined),
+            selectedIcon: Icon(Icons.videocam),
+            label: 'Video',
           ),
           NavigationDestination(
             icon: Icon(Icons.badge_outlined),

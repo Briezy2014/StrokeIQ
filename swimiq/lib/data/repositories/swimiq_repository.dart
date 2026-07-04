@@ -4,6 +4,7 @@ import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
 import '../models/swimmer_profile.dart';
+import '../models/swim_video.dart';
 
 class SwimIqRepository {
   SwimIqRepository(this._client);
@@ -76,5 +77,69 @@ class SwimIqRepository {
     } else {
       await _client.from('swimmers').insert(data);
     }
+  }
+
+  Future<List<SwimVideo>> fetchSwimVideos(String swimmerName) async {
+    final response = await _client
+        .from('swim_videos')
+        .select()
+        .eq('swimmer_name', swimmerName)
+        .order('created_at', ascending: false);
+
+    return (response as List)
+        .map((row) => SwimVideo.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<SwimVideo> insertSwimVideo(SwimVideo video) async {
+    final response = await _client
+        .from('swim_videos')
+        .insert(video.toInsertJson())
+        .select()
+        .single();
+    return SwimVideo.fromJson(Map<String, dynamic>.from(response));
+  }
+
+  Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmerName) async {
+    final response = await _client
+        .from('swim_video_analyses')
+        .select()
+        .eq('swimmer_name', swimmerName)
+        .order('created_at', ascending: false);
+
+    return (response as List)
+        .map((row) => SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<SwimVideoAnalysis> insertVideoAnalysis(SwimVideoAnalysis analysis) async {
+    final response = await _client
+        .from('swim_video_analyses')
+        .insert(analysis.toInsertJson())
+        .select()
+        .single();
+    return SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(response));
+  }
+
+  Future<List<UsaTimeStandard>> fetchUsaStandards() async {
+    final response = await _client
+        .from('usa_time_standards')
+        .select()
+        .order('age_group')
+        .order('stroke')
+        .order('distance');
+
+    return (response as List)
+        .map((row) => UsaTimeStandard.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<int> upsertUsaStandards(List<UsaTimeStandard> standards) async {
+    if (standards.isEmpty) return 0;
+    await _client.from('usa_time_standards').upsert(
+          standards.map((s) => s.toInsertJson()).toList(),
+          onConflict: 'age_group,gender,stroke,distance,course,standard_level',
+        );
+    return standards.length;
   }
 }
