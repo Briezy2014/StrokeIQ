@@ -4,6 +4,7 @@ import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
 import '../models/swimmer_profile.dart';
+import '../models/usa_time_standard.dart';
 import '../models/swim_video.dart';
 
 class SwimIqRepository {
@@ -79,11 +80,11 @@ class SwimIqRepository {
     }
   }
 
-  Future<List<SwimVideo>> fetchSwimVideos(String swimmerName) async {
+  Future<List<SwimVideo>> fetchSwimVideos(String swimmer) async {
     final response = await _client
         .from('swim_videos')
         .select()
-        .eq('swimmer_name', swimmerName)
+        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
     return (response as List)
@@ -100,11 +101,11 @@ class SwimIqRepository {
     return SwimVideo.fromJson(Map<String, dynamic>.from(response));
   }
 
-  Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmerName) async {
+  Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmer) async {
     final response = await _client
         .from('swim_video_analyses')
         .select()
-        .eq('swimmer_name', swimmerName)
+        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
     return (response as List)

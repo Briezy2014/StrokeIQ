@@ -1,9 +1,9 @@
-import '../../core/utils/swim_time.dart';
+import '../../core/utils/supabase_parsers.dart';
 
 class SwimVideo {
   const SwimVideo({
     this.id,
-    required this.swimmerName,
+    required this.swimmer,
     required this.storagePath,
     this.title,
     this.stroke,
@@ -15,15 +15,20 @@ class SwimVideo {
   });
 
   final String? id;
-  final String swimmerName;
+  final String swimmer;
   final String storagePath;
   final String? title;
   final String? stroke;
-  final int? distance;
+  final String? distance;
   final String? course;
   final String? videoUrl;
   final String? notes;
   final DateTime? createdAt;
+
+  /// Backward-compatible alias used across the app.
+  String get swimmerName => swimmer;
+
+  int? get distanceMeters => parseOptionalInt(distance);
 
   String get displayTitle {
     if (title != null && title!.trim().isNotEmpty) return title!.trim();
@@ -35,21 +40,21 @@ class SwimVideo {
 
   factory SwimVideo.fromJson(Map<String, dynamic> json) {
     return SwimVideo(
-      id: _parseId(json['id']),
-      swimmerName: json['swimmer_name'] as String? ?? '',
-      storagePath: json['storage_path'] as String? ?? '',
-      title: json['title'] as String?,
-      stroke: json['stroke'] as String?,
-      distance: (json['distance'] as num?)?.toInt(),
-      course: json['course'] as String?,
-      videoUrl: json['video_url'] as String?,
-      notes: json['notes'] as String?,
+      id: parseUuid(json['id']),
+      swimmer: swimmerFromJson(json),
+      storagePath: parseOptionalText(json['storage_path']) ?? '',
+      title: parseOptionalText(json['title']),
+      stroke: parseOptionalText(json['stroke']),
+      distance: parseOptionalText(json['distance']),
+      course: parseOptionalText(json['course']),
+      videoUrl: parseOptionalText(json['video_url']),
+      notes: parseOptionalText(json['notes']),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
   }
 
   Map<String, dynamic> toInsertJson() => {
-        'swimmer_name': swimmerName,
+        'swimmer': swimmer,
         'title': title,
         'stroke': stroke,
         'distance': distance,
@@ -64,7 +69,7 @@ class SwimVideoAnalysis {
   const SwimVideoAnalysis({
     this.id,
     this.swimVideoId,
-    required this.swimmerName,
+    required this.swimmer,
     required this.summary,
     required this.strengths,
     required this.improvements,
@@ -77,7 +82,7 @@ class SwimVideoAnalysis {
 
   final String? id;
   final String? swimVideoId;
-  final String swimmerName;
+  final String swimmer;
   final String summary;
   final String strengths;
   final String improvements;
@@ -87,17 +92,19 @@ class SwimVideoAnalysis {
   final Map<String, dynamic>? analysisJson;
   final DateTime? createdAt;
 
+  String get swimmerName => swimmer;
+
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(
-      id: _parseId(json['id']),
-      swimVideoId: _parseId(json['swim_video_id']),
-      swimmerName: json['swimmer_name'] as String? ?? '',
+      id: parseUuid(json['id']),
+      swimVideoId: parseUuid(json['swim_video_id']),
+      swimmer: swimmerFromJson(json),
       summary: json['summary'] as String? ?? '',
       strengths: json['strengths'] as String? ?? '',
       improvements: json['improvements'] as String? ?? '',
-      techniqueScore: (json['technique_score'] as num?)?.toInt() ?? 0,
-      paceScore: (json['pace_score'] as num?)?.toInt() ?? 0,
-      overallScore: (json['overall_score'] as num?)?.toInt() ?? 0,
+      techniqueScore: parseOptionalInt(json['technique_score']) ?? 0,
+      paceScore: parseOptionalInt(json['pace_score']) ?? 0,
+      overallScore: parseOptionalInt(json['overall_score']) ?? 0,
       analysisJson: json['analysis_json'] is Map<String, dynamic>
           ? json['analysis_json'] as Map<String, dynamic>
           : null,
@@ -107,7 +114,7 @@ class SwimVideoAnalysis {
 
   Map<String, dynamic> toInsertJson() => {
         'swim_video_id': swimVideoId,
-        'swimmer_name': swimmerName,
+        'swimmer': swimmer,
         'summary': summary,
         'strengths': strengths,
         'improvements': improvements,
@@ -116,57 +123,4 @@ class SwimVideoAnalysis {
         'overall_score': overallScore,
         'analysis_json': analysisJson,
       };
-}
-
-class UsaTimeStandard {
-  const UsaTimeStandard({
-    this.id,
-    required this.ageGroup,
-    required this.gender,
-    required this.stroke,
-    required this.distance,
-    required this.course,
-    required this.standardLevel,
-    required this.timeSeconds,
-  });
-
-  final int? id;
-  final String ageGroup;
-  final String gender;
-  final String stroke;
-  final int distance;
-  final String course;
-  final String standardLevel;
-  final double timeSeconds;
-
-  String get eventLabel => '$distance $stroke';
-
-  factory UsaTimeStandard.fromJson(Map<String, dynamic> json) {
-    return UsaTimeStandard(
-      id: json['id'] as int?,
-      ageGroup: json['age_group'] as String? ?? '',
-      gender: json['gender'] as String? ?? '',
-      stroke: json['stroke'] as String? ?? '',
-      distance: (json['distance'] as num?)?.toInt() ?? 0,
-      course: json['course'] as String? ?? '',
-      standardLevel: json['standard_level'] as String? ?? '',
-      timeSeconds: SwimTime.parseStoredTime(json['time_seconds']) ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toInsertJson() => {
-        'age_group': ageGroup,
-        'gender': gender,
-        'stroke': stroke,
-        'distance': distance,
-        'course': course,
-        'standard_level': standardLevel,
-        'time_seconds': timeSeconds,
-      };
-}
-
-String? _parseId(dynamic value) {
-  if (value == null) return null;
-  if (value is String) return value;
-  return value.toString();
 }

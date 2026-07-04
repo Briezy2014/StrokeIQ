@@ -17,18 +17,18 @@ class VideoStorageService {
   final _uuid = const Uuid();
 
   Future<SwimVideo> uploadSwimVideo({
-    required String swimmerName,
+    required String swimmer,
     required String fileName,
     required Uint8List bytes,
     String? title,
     String? stroke,
-    int? distance,
+    String? distance,
     String? course,
     String? notes,
   }) async {
     final ext = p.extension(fileName);
     final storagePath =
-        '$swimmerName/${_uuid.v4()}${ext.isEmpty ? '.mp4' : ext}';
+        '$swimmer/${_uuid.v4()}${ext.isEmpty ? '.mp4' : ext}';
 
     await _client.storage.from(bucketName).uploadBinary(
           storagePath,
@@ -39,7 +39,7 @@ class VideoStorageService {
     final publicUrl = _client.storage.from(bucketName).getPublicUrl(storagePath);
 
     final video = SwimVideo(
-      swimmerName: swimmerName,
+      swimmer: swimmer,
       title: title ?? fileName,
       stroke: stroke,
       distance: distance,

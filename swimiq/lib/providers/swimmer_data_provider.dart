@@ -6,6 +6,7 @@ import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swimmer_profile.dart';
+import '../data/models/usa_time_standard.dart';
 import '../data/models/swim_video.dart';
 import 'app_providers.dart';
 
@@ -141,7 +142,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     required List<int> bytes,
     String? title,
     String? stroke,
-    int? distance,
+    String? distance,
     String? course,
     String? notes,
   }) async {
@@ -150,7 +151,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
     try {
       await ref.read(videoStorageServiceProvider).uploadSwimVideo(
-            swimmerName: swimmer,
+            swimmer: swimmer,
             fileName: fileName,
             bytes: Uint8List.fromList(bytes),
             title: title,

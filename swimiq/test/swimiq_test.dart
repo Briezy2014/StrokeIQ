@@ -3,6 +3,7 @@ import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
+import 'package:swimiq/data/models/swim_video.dart';
 
 void main() {
   group('SwimTime', () {
@@ -65,6 +66,38 @@ void main() {
         ],
       );
       expect(score, 555);
+    });
+  });
+
+  group('SwimVideo', () {
+    test('parses uuid id and text distance from Supabase', () {
+      final video = SwimVideo.fromJson({
+        'id': '11bff29b-a27b-4ab1-8f62-97aea04d3f0b',
+        'swimmer': 'Aspyn',
+        'title': 'Denison 50 Fly',
+        'stroke': 'Butterfly',
+        'distance': '50',
+        'course': 'LCM',
+        'storage_path': 'Aspyn/video.mov',
+        'video_url': 'https://example.com/video.mov',
+      });
+
+      expect(video.id, '11bff29b-a27b-4ab1-8f62-97aea04d3f0b');
+      expect(video.swimmer, 'Aspyn');
+      expect(video.distance, '50');
+      expect(video.distanceMeters, 50);
+    });
+
+    test('falls back to swimmer_name when swimmer is null', () {
+      final video = SwimVideo.fromJson({
+        'id': '71f4f63b-99a6-4e50-b102-ea2c64f11e68',
+        'swimmer': null,
+        'swimmer_name': 'Aspyn',
+        'distance': '100',
+        'storage_path': 'Aspyn/video.mov',
+      });
+
+      expect(video.swimmer, 'Aspyn');
     });
   });
 }

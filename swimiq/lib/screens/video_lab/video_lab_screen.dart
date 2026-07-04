@@ -60,7 +60,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
               ? file.name
               : _titleController.text.trim(),
           stroke: _stroke,
-          distance: _distance,
+          distance: '$_distance',
           course: _course,
           notes: _notesController.text.trim(),
         );
