@@ -132,7 +132,7 @@ void main() {
   });
 
   group('AiSwimAnalysisService', () {
-    test('builds notes-driven 50 Butterfly LCM coaching sections', () {
+    test('builds interpreted coaching sections for 50 Butterfly LCM', () {
       const video = SwimVideo(
         swimmer: 'Aspyn',
         storagePath: 'Aspyn/video.mov',
@@ -155,22 +155,34 @@ void main() {
 
       expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
       expect(analysis.summary, contains('50 Butterfly LCM'));
-      expect(analysis.summary, contains('Reaction time 0.71'));
-      expect(analysis.summary, isNot(contains('Coaching focus')));
+      expect(
+        analysis.disclaimer,
+        contains('Frame-by-frame AI vision is not active yet'),
+      );
       expect(analysis.summary, isNot(contains('consistent training history')));
+      expect(analysis.summary, isNot(contains('Your notes:')));
 
       final sections = analysis.coachingSections;
-      expect(sections['Reaction / dive'], contains('Reaction time 0.71'));
-      expect(sections['Breakout'], contains('Breakout at 11m'));
-      expect(sections['Breathing'], contains('Breathing every stroke'));
-      expect(sections['Stroke count'], contains('Stroke count 17'));
-      expect(sections['Tempo'], contains('Tempo rushed'));
-      expect(sections['Finish'], contains('full extension'));
+      expect(sections.keys, contains('Reaction / dive'));
+      expect(sections.keys, contains('Streamline and underwater dolphin kicks'));
+      expect(sections.keys, contains('Recommended drills'));
+
+      final reaction = sections['Reaction / dive']!;
+      expect(reaction, contains('Look for:'));
+      expect(reaction, contains('Performance impact:'));
+      expect(reaction, contains('Correction:'));
+      expect(reaction, contains('0.71'));
+      expect(reaction, isNot(contains('Reaction time 0.71 off the block')));
+
+      expect(sections['Breakout'], contains('11m'));
+      expect(sections['Stroke length and stroke count'], contains('17'));
+      expect(sections['Tempo and rhythm'], contains('Look for:'));
+      expect(sections['Breathing and head position'], contains('Look for:'));
+      expect(sections['Finish'], contains('Look for:'));
 
       expect(analysis.topPriorities, isNotEmpty);
-      expect(analysis.topPriorities.first, contains('Reaction time 0.71'));
-      expect(analysis.improvements, contains('Top priorities from your notes'));
-      expect(analysis.summary, isNot(contains('Coaching focus')));
+      expect(analysis.topPriorities.first, isNot(contains('Reaction time 0.71')));
+      expect(analysis.improvements, contains('Top 5 priorities'));
       expect(analysis.summary, isNot(contains('Overall readiness score')));
     });
 
