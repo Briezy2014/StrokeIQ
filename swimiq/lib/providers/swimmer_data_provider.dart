@@ -6,8 +6,9 @@ import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swimmer_profile.dart';
-import '../data/models/usa_time_standard.dart';
 import '../data/models/swim_video.dart';
+import '../data/models/swim_video_analysis.dart';
+import '../data/models/usa_time_standard.dart';
 import 'app_providers.dart';
 
 class SwimmerData {
@@ -36,14 +37,46 @@ class SwimmerData {
     }
     return null;
   }
+
+  SwimmerData copyWith({
+    List<RaceLog>? raceLogs,
+    List<SwimGoal>? goals,
+    List<MeetResult>? meetResults,
+    SwimmerProfile? profile,
+    List<SwimVideo>? videos,
+    List<SwimVideoAnalysis>? videoAnalyses,
+    List<UsaTimeStandard>? usaStandards,
+  }) {
+    return SwimmerData(
+      raceLogs: raceLogs ?? this.raceLogs,
+      goals: goals ?? this.goals,
+      meetResults: meetResults ?? this.meetResults,
+      profile: profile ?? this.profile,
+      videos: videos ?? this.videos,
+      videoAnalyses: videoAnalyses ?? this.videoAnalyses,
+      usaStandards: usaStandards ?? this.usaStandards,
+    );
+  }
 }
 
 class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
+  final Map<String, SwimVideoAnalysis> _localAnalysesByVideoId = {};
+
   @override
   Future<SwimmerData?> build() async {
     final swimmer = ref.watch(activeSwimmerProvider);
     if (swimmer == null || swimmer.isEmpty) return null;
     return _load(swimmer);
+  }
+
+  List<SwimVideoAnalysis> _mergeAnalyses(List<SwimVideoAnalysis> remote) {
+    final merged = <String, SwimVideoAnalysis>{
+      for (final analysis in remote)
+        if (analysis.swimVideoId != null && analysis.swimVideoId!.isNotEmpty)
+          analysis.swimVideoId!: analysis,
+    };
+    merged.addAll(_localAnalysesByVideoId);
+    return merged.values.toList();
   }
 
   Future<SwimmerData> _load(String swimmer) async {
@@ -82,7 +115,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       meetResults: meetResults,
       profile: profile,
       videos: videos,
-      videoAnalyses: videoAnalyses,
+      videoAnalyses: _mergeAnalyses(videoAnalyses),
       usaStandards: usaStandards,
     );
   }
@@ -150,7 +183,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (swimmer == null) return 'No swimmer selected.';
 
     try {
-      await ref.read(videoStorageServiceProvider).uploadSwimVideo(
+      final inserted = await ref.read(videoStorageServiceProvider).uploadSwimVideo(
             swimmer: swimmer,
             fileName: fileName,
             bytes: Uint8List.fromList(bytes),
@@ -160,10 +193,25 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             course: course,
             notes: notes,
           );
+
+      final current = state.value;
+      if (current != null && inserted.id != null) {
+        final updatedVideos = [
+          inserted,
+          ...current.videos.where((video) => video.id != inserted.id),
+        ];
+        state = AsyncData(
+          current.copyWith(
+            videos: updatedVideos,
+            videoAnalyses: _mergeAnalyses(current.videoAnalyses),
+          ),
+        );
+      }
+
       try {
         await refresh();
       } catch (_) {
-        // Upload succeeded even if refresh fails; next manual refresh will retry.
+        // Upload succeeded; optimistic state already contains the new video.
       }
       return null;
     } catch (error) {
@@ -174,6 +222,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   Future<String?> analyzeVideo(SwimVideo video) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
+
+    final videoId = video.id;
+    if (videoId == null || videoId.isEmpty) {
+      return 'Video must have a UUID before running analysis.';
+    }
 
     final current = state.value;
     if (current == null) return 'No swimmer data loaded.';
@@ -187,8 +240,34 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             standards: current.usaStandards,
           );
 
-      await ref.read(swimIqRepositoryProvider).insertVideoAnalysis(analysis);
-      await refresh();
+      final analysisWithIds = analysis.copyWith(
+        swimVideoId: videoId,
+        swimmer: video.swimmer,
+      );
+
+      try {
+        final saved = await ref
+            .read(swimIqRepositoryProvider)
+            .insertVideoAnalysis(analysisWithIds);
+        _localAnalysesByVideoId[videoId] = saved;
+      } catch (_) {
+        _localAnalysesByVideoId[videoId] = analysisWithIds.copyWith(
+          id: 'local-$videoId',
+        );
+      }
+
+      final refreshed = state.value ?? current;
+      state = AsyncData(
+        refreshed.copyWith(
+          videoAnalyses: _mergeAnalyses(refreshed.videoAnalyses),
+        ),
+      );
+
+      try {
+        await refresh();
+      } catch (_) {
+        // Local analysis remains available even if remote refresh fails.
+      }
       return null;
     } catch (error) {
       return error.toString();

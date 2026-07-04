@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../data/models/swim_video.dart';
+import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 

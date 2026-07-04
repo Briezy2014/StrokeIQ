@@ -84,6 +84,7 @@ class SwimVideo {
 
   Map<String, dynamic> toInsertJson() => {
         'swimmer': swimmer,
+        'swimmer_name': swimmer,
         'title': title,
         'stroke': stroke,
         'distance': distance?.toString(),
@@ -91,69 +92,5 @@ class SwimVideo {
         'storage_path': storagePath,
         'video_url': videoUrl,
         'notes': notes,
-      };
-}
-
-class SwimVideoAnalysis {
-  const SwimVideoAnalysis({
-    this.id,
-    this.swimVideoId,
-    required this.swimmer,
-    required this.summary,
-    required this.strengths,
-    required this.improvements,
-    required this.techniqueScore,
-    required this.paceScore,
-    required this.overallScore,
-    this.analysisJson,
-    this.createdAt,
-  });
-
-  final String? id;
-  final String? swimVideoId;
-  final String swimmer;
-  final String summary;
-  final String strengths;
-  final String improvements;
-  final int techniqueScore;
-  final int paceScore;
-  final int overallScore;
-  final Map<String, dynamic>? analysisJson;
-  final DateTime? createdAt;
-
-  String get swimmerName => swimmer;
-
-  factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
-    return SwimVideoAnalysis(
-      id: parseUuid(json['id']),
-      swimVideoId: parseUuid(json['swim_video_id']),
-      swimmer: swimmerFromJson(json),
-      summary: parseOptionalText(json['summary']) ?? '',
-      strengths: parseOptionalText(json['strengths']) ?? '',
-      improvements: parseOptionalText(json['improvements']) ?? '',
-      techniqueScore: parseOptionalInt(json['technique_score']) ?? 0,
-      paceScore: parseOptionalInt(json['pace_score']) ?? 0,
-      overallScore: parseOptionalInt(json['overall_score']) ?? 0,
-      analysisJson: json['analysis_json'] is Map
-          ? Map<String, dynamic>.from(json['analysis_json'] as Map)
-          : null,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
-    );
-  }
-
-  factory SwimVideoAnalysis.fromSupabaseRow(dynamic row) {
-    return SwimVideoAnalysis.fromJson(supabaseRowToMap(row));
-  }
-
-  Map<String, dynamic> toInsertJson() => {
-        'swim_video_id': swimVideoId,
-        'swimmer': swimmer,
-        'summary': summary,
-        'strengths': strengths,
-        'improvements': improvements,
-        'technique_score': techniqueScore,
-        'pace_score': paceScore,
-        'overall_score': overallScore,
-        'analysis_json': analysisJson,
       };
 }

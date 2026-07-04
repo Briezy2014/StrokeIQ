@@ -7,6 +7,7 @@ import '../models/swim_goal.dart';
 import '../models/swimmer_profile.dart';
 import '../models/usa_time_standard.dart';
 import '../models/swim_video.dart';
+import '../models/swim_video_analysis.dart';
 
 class SwimIqRepository {
   SwimIqRepository(this._client);
@@ -122,6 +123,16 @@ class SwimIqRepository {
     return supabaseRowsToMaps(response)
         .map(SwimVideoAnalysis.fromJson)
         .toList();
+  }
+
+  Future<SwimVideoAnalysis?> insertVideoAnalysisOptional(
+    SwimVideoAnalysis analysis,
+  ) async {
+    try {
+      return await insertVideoAnalysis(analysis);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<SwimVideoAnalysis> insertVideoAnalysis(SwimVideoAnalysis analysis) async {

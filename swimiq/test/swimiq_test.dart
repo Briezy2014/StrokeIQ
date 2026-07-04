@@ -4,6 +4,7 @@ import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swim_video.dart';
+import 'package:swimiq/data/models/swim_video_analysis.dart';
 
 void main() {
   group('SwimTime', () {

@@ -4,6 +4,7 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/usa_time_standard.dart';
 import '../../data/models/swim_video.dart';
+import '../../data/models/swim_video_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 
 /// Rule-based swim analysis for V1. Can be replaced by a Supabase Edge Function later.
