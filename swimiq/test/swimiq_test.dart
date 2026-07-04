@@ -140,7 +140,11 @@ void main() {
         stroke: 'Butterfly',
         distance: '50',
         course: 'LCM',
-        notes: 'Analyze reaction time and faster breakout with 6 dolphin kicks',
+        notes:
+            'Reaction time 0.71 off the block. Breakout at 11m after 6 dolphin kicks. '
+            'Breathing every stroke on the second 25. Stroke count 17 per length. '
+            'Tempo rushed in the last 15 meters. Finish with full extension. '
+            'Race strategy: hold breakout speed into the first fly stroke.',
       );
 
       final analysis = AiSwimAnalysisService().analyze(
@@ -151,23 +155,38 @@ void main() {
 
       expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
       expect(analysis.summary, contains('50 Butterfly LCM'));
-      expect(analysis.summary, contains('Analyze reaction time'));
-      expect(
-        analysis.summary,
-        contains(
-          'V1 coaching analysis based on video metadata and user notes',
-        ),
-      );
+      expect(analysis.summary, contains('Reaction time 0.71'));
+      expect(analysis.summary, isNot(contains('Coaching focus')));
       expect(analysis.summary, isNot(contains('consistent training history')));
 
       final sections = analysis.coachingSections;
-      expect(sections['Reaction / dive'], contains('reaction time'));
-      expect(sections['Breakout'], isNotEmpty);
-      expect(sections['Streamline and underwater dolphin kicks'], contains('dolphin'));
+      expect(sections['Reaction / dive'], contains('Reaction time 0.71'));
+      expect(sections['Breakout'], contains('Breakout at 11m'));
+      expect(sections['Breathing'], contains('Breathing every stroke'));
+      expect(sections['Stroke count'], contains('Stroke count 17'));
+      expect(sections['Tempo'], contains('Tempo rushed'));
+      expect(sections['Finish'], contains('full extension'));
 
       expect(analysis.topPriorities, isNotEmpty);
-      expect(analysis.improvements, contains('Top 5 priorities'));
-      expect(analysis.improvements, contains('USA Swimming motivational standards'));
+      expect(analysis.topPriorities.first, contains('Reaction time 0.71'));
+      expect(analysis.improvements, contains('Top priorities from your notes'));
+      expect(analysis.summary, isNot(contains('Coaching focus')));
+      expect(analysis.summary, isNot(contains('Overall readiness score')));
+    });
+
+    test('detects legacy rules-engine analyses', () {
+      const legacy = SwimVideoAnalysis(
+        swimmer: 'Aspyn',
+        summary: 'Overall readiness score 85/100',
+        strengths: 'Consistent training history with 20 logged sessions.',
+        improvements: 'Film side angles',
+        techniqueScore: 85,
+        paceScore: 85,
+        overallScore: 85,
+        analysisJson: {'engine': 'swimiq-v1-rules'},
+      );
+      expect(legacy.isLegacyRulesEngine, isTrue);
+      expect(legacy.isNotesDriven, isFalse);
     });
 
     test('hides integration test uploads from user-facing videos', () {
@@ -180,6 +199,7 @@ void main() {
         swimmer: 'Aspyn',
         storagePath: 'Aspyn/test.mov',
         title: 'Integration test video',
+        notes: 'stroke count test',
       );
 
       expect(visible.isUserFacing, isTrue);

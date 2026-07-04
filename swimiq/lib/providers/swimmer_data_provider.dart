@@ -34,7 +34,10 @@ class SwimmerData {
   SwimVideoAnalysis? analysisForVideo(String? videoId) {
     if (videoId == null || videoId.isEmpty) return null;
     for (final analysis in videoAnalyses) {
-      if (analysis.swimVideoId == videoId) return analysis;
+      if (analysis.swimVideoId == videoId) {
+        if (analysis.isLegacyRulesEngine) return null;
+        return analysis;
+      }
     }
     return null;
   }
@@ -48,6 +51,7 @@ class SwimmerData {
     return videoAnalyses
         .where(
           (analysis) =>
+              !analysis.isLegacyRulesEngine &&
               analysis.swimVideoId != null &&
               videoIds.contains(analysis.swimVideoId),
         )
@@ -142,6 +146,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       videoAnalyses = _mergeAnalyses(remoteAnalyses)
           .where(
             (analysis) =>
+                !analysis.isLegacyRulesEngine &&
                 analysis.swimVideoId != null &&
                 videos.any((video) => video.id == analysis.swimVideoId),
           )

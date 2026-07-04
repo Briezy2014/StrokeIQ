@@ -54,7 +54,12 @@ class SwimVideo {
   /// Hide automated integration uploads from the Video Lab list.
   bool get isUserFacing {
     final normalizedTitle = title?.trim().toLowerCase() ?? '';
-    return normalizedTitle != 'integration test video';
+    if (normalizedTitle.contains('integration test')) return false;
+
+    final normalizedNotes = notes?.trim().toLowerCase() ?? '';
+    if (normalizedNotes == 'stroke count test') return false;
+
+    return true;
   }
 
   factory SwimVideo.fromJson(Map<String, dynamic> json) {

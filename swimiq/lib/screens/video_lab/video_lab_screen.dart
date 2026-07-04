@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/video_event_inference.dart';
 import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -20,9 +21,9 @@ class VideoLabScreen extends ConsumerStatefulWidget {
 class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   final _titleController = TextEditingController();
   final _notesController = TextEditingController();
-  String _stroke = AppConstants.strokes.first;
-  String _course = AppConstants.courses.first;
-  int _distance = 100;
+  final _distanceController = TextEditingController(text: '50');
+  String _stroke = 'Butterfly';
+  String _course = 'LCM';
   bool _uploading = false;
   String? _analyzingVideoId;
 
@@ -30,7 +31,17 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   void dispose() {
     _titleController.dispose();
     _notesController.dispose();
+    _distanceController.dispose();
     super.dispose();
+  }
+
+  void _applyEventInference(String? title) {
+    final inferred = VideoEventInference.fromTitle(title);
+    if (inferred.stroke != null) _stroke = inferred.stroke!;
+    if (inferred.course != null) _course = inferred.course!;
+    if (inferred.distance != null) {
+      _distanceController.text = '${inferred.distance}';
+    }
   }
 
   Future<void> _pickAndUpload() async {
@@ -41,6 +52,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (result == null || result.files.isEmpty) return;
 
     final file = result.files.first;
+    final fileName = file.name;
+    if (_titleController.text.trim().isEmpty) {
+      _titleController.text = fileName;
+    }
+    _applyEventInference(fileName);
+    setState(() {});
+
     if (file.bytes == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,14 +70,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
 
     setState(() => _uploading = true);
+    final distance = int.tryParse(_distanceController.text.trim()) ?? 50;
     final error = await ref.read(swimmerDataProvider.notifier).uploadVideo(
-          fileName: file.name,
+          fileName: fileName,
           bytes: file.bytes!,
           title: _titleController.text.trim().isEmpty
-              ? file.name
+              ? fileName
               : _titleController.text.trim(),
           stroke: _stroke,
-          distance: '$_distance',
+          distance: '$distance',
           course: _course,
           notes: _notesController.text.trim(),
         );
@@ -69,10 +88,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          error ??
-              'Video uploaded. If upload failed, run the Supabase migration and create the swim-videos bucket.',
-        ),
+        content: Text(error ?? 'Video uploaded.'),
       ),
     );
 
@@ -116,6 +132,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         TextFormField(
           controller: _titleController,
           decoration: const InputDecoration(labelText: 'Video title'),
+          onChanged: _applyEventInference,
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -128,13 +145,9 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         ),
         const SizedBox(height: 12),
         TextFormField(
-          initialValue: '100',
+          controller: _distanceController,
           decoration: const InputDecoration(labelText: 'Distance'),
           keyboardType: TextInputType.number,
-          onChanged: (v) {
-            final parsed = int.tryParse(v);
-            if (parsed != null) _distance = parsed;
-          },
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -149,10 +162,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         TextFormField(
           controller: _notesController,
           decoration: const InputDecoration(
-            labelText: 'Notes',
-            hintText: 'Stroke count, splits, race notes...',
+            labelText: 'Race notes',
+            hintText:
+                'Reaction time, breakout, breathing, stroke count, tempo, finish, race strategy...',
           ),
-          maxLines: 2,
+          maxLines: 4,
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
@@ -287,9 +301,15 @@ class _VideoCardState extends State<_VideoCard> {
               )
             else ...[
               const SizedBox(height: 8),
-              Text('AI Score: ${widget.analysis!.overallScore}/100',
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text(widget.analysis!.summary),
+              Text(
+                'AI Score: ${widget.analysis!.overallScore}/100',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.analysis!.summary,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 12),
               if (widget.analysis!.coachingSections.isNotEmpty)
                 ...widget.analysis!.coachingSections.entries.map(
@@ -307,15 +327,30 @@ class _VideoCardState extends State<_VideoCard> {
                       ],
                     ),
                   ),
-                )
-              else ...[
-                Text(widget.analysis!.strengths),
+                ),
+              if (widget.analysis!.topPriorities.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Top priorities',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                ...widget.analysis!.topPriorities.map(
+                  (priority) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('• $priority'),
+                  ),
+                ),
               ],
-              const SizedBox(height: 8),
-              Text(
-                widget.analysis!.improvements,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              if (widget.analysis!.disclaimer != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.analysis!.disclaimer!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ],
           ],
         ),

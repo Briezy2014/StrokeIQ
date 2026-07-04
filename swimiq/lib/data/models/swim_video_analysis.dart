@@ -46,6 +46,23 @@ class SwimVideoAnalysis {
 
   String? get disclaimer => analysisJson?['disclaimer']?.toString();
 
+  String? get analysisEngine => analysisJson?['engine']?.toString();
+
+  /// Old rule-based engine stored in Supabase before notes-driven V1.
+  bool get isLegacyRulesEngine {
+    final engine = analysisEngine;
+    if (engine == 'swimiq-v1-rules') return true;
+    final summaryLower = summary.toLowerCase();
+    if (summaryLower.contains('overall readiness score')) return true;
+    if (summaryLower.contains('consistent training history')) return true;
+    if (engine != 'swimiq-v1-notes' && coachingSections.isEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  bool get isNotesDriven => analysisEngine == 'swimiq-v1-notes';
+
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(
       id: parseUuid(json['id']),
