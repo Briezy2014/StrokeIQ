@@ -23,8 +23,9 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
   final _meetNameController = TextEditingController();
   final _eventController = TextEditingController();
   final _timeController = TextEditingController();
+  final _courseController =
+      TextEditingController(text: AppConstants.courses.first);
 
-  String _course = AppConstants.courses.first;
   DateTime _meetDate = DateTime.now();
   bool _isSaving = false;
 
@@ -33,6 +34,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     _meetNameController.dispose();
     _eventController.dispose();
     _timeController.dispose();
+    _courseController.dispose();
     super.dispose();
   }
 
@@ -57,13 +59,17 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     setState(() => _isSaving = true);
 
     try {
+      final course = _courseController.text.trim().isEmpty
+          ? AppConstants.courses.first
+          : _courseController.text.trim();
+
       final swimTime = SwimTime.toSeconds(_timeController.text);
       final result = MeetResult(
         swimmerName: swimmer,
         meetName: _meetNameController.text.trim(),
         event: _eventController.text.trim(),
         swimTime: swimTime,
-        course: _course,
+        course: course,
         meetDate: _meetDate,
       );
 
@@ -166,19 +172,12 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _course,
-                    decoration:
-                        const InputDecoration(labelText: 'Result Course'),
-                    items: AppConstants.courses
-                        .map((course) => DropdownMenuItem(
-                              value: course,
-                              child: Text(course),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _course = value);
-                    },
+                  TextFormField(
+                    controller: _courseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Result Course',
+                      hintText: 'SCY, SCM, or LCM',
+                    ),
                   ),
                   const SizedBox(height: 20),
                   SwimIqSaveButton(

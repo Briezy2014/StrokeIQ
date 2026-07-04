@@ -18,7 +18,13 @@ class UsaStandardsScreen extends ConsumerStatefulWidget {
 
 class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   bool _importing = false;
-  String _filterStroke = 'All';
+  final _filterStrokeController = TextEditingController(text: 'All');
+
+  @override
+  void dispose() {
+    _filterStrokeController.dispose();
+    super.dispose();
+  }
 
   Future<void> _importStandards() async {
     setState(() => _importing = true);
@@ -43,14 +49,14 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
         final pbs = data.personalBests;
         final ageGroup = SwimIqAgeGroup.fromProfile(data.profile);
         final summary = data.passportSnapshot(swimmer).usaStandardsSummary;
-        final strokes = {
-          'All',
-          ...standards.map((s) => s.stroke),
-        }.toList();
 
-        final filtered = _filterStroke == 'All'
+        final filterStroke = _filterStrokeController.text.trim().isEmpty
+            ? 'All'
+            : _filterStrokeController.text.trim();
+
+        final filtered = filterStroke == 'All'
             ? standards
-            : standards.where((s) => s.stroke == _filterStroke).toList();
+            : standards.where((s) => s.stroke == filterStroke).toList();
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -67,13 +73,13 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               onPressed: _importStandards,
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _filterStroke,
-              decoration: const InputDecoration(labelText: 'Filter by stroke'),
-              items: strokes
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                  .toList(),
-              onChanged: (v) => setState(() => _filterStroke = v!),
+            TextFormField(
+              controller: _filterStrokeController,
+              decoration: const InputDecoration(
+                labelText: 'Filter by stroke',
+                hintText: 'All, Freestyle, Backstroke, Breaststroke, ...',
+              ),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
             Text('Your PB Cuts', style: Theme.of(context).textTheme.titleMedium),

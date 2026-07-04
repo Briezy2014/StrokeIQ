@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
@@ -22,8 +21,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   final _titleController = TextEditingController();
   final _notesController = TextEditingController();
   final _distanceController = TextEditingController(text: '50');
-  String _stroke = 'Butterfly';
-  String _course = 'LCM';
+  final _strokeController = TextEditingController(text: 'Butterfly');
+  final _courseController = TextEditingController(text: 'LCM');
   bool _uploading = false;
   String? _analyzingVideoId;
 
@@ -32,13 +31,27 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     _titleController.dispose();
     _notesController.dispose();
     _distanceController.dispose();
+    _strokeController.dispose();
+    _courseController.dispose();
     super.dispose();
   }
 
+  String get _stroke => _strokeController.text.trim().isEmpty
+      ? 'Butterfly'
+      : _strokeController.text.trim();
+
+  String get _course => _courseController.text.trim().isEmpty
+      ? 'LCM'
+      : _courseController.text.trim();
+
   void _applyEventInference(String? title) {
     final inferred = VideoEventInference.fromTitle(title);
-    if (inferred.stroke != null) _stroke = inferred.stroke!;
-    if (inferred.course != null) _course = inferred.course!;
+    if (inferred.stroke != null) {
+      _strokeController.text = inferred.stroke!;
+    }
+    if (inferred.course != null) {
+      _courseController.text = inferred.course!;
+    }
     if (inferred.distance != null) {
       _distanceController.text = '${inferred.distance}';
     }
@@ -135,13 +148,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           onChanged: _applyEventInference,
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: _stroke,
-          decoration: const InputDecoration(labelText: 'Stroke'),
-          items: AppConstants.strokes
-              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-              .toList(),
-          onChanged: (v) => setState(() => _stroke = v!),
+        TextFormField(
+          controller: _strokeController,
+          decoration: const InputDecoration(
+            labelText: 'Stroke',
+            hintText:
+                'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+          ),
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -150,13 +163,12 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: _course,
-          decoration: const InputDecoration(labelText: 'Course'),
-          items: AppConstants.courses
-              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-              .toList(),
-          onChanged: (v) => setState(() => _course = v!),
+        TextFormField(
+          controller: _courseController,
+          decoration: const InputDecoration(
+            labelText: 'Course',
+            hintText: 'SCY, SCM, or LCM',
+          ),
         ),
         const SizedBox(height: 12),
         TextFormField(

@@ -21,9 +21,11 @@ class GoalsScreen extends ConsumerStatefulWidget {
 class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
+  final _strokeController =
+      TextEditingController(text: AppConstants.strokes.first);
+  final _courseController =
+      TextEditingController(text: AppConstants.courses.first);
 
-  String _stroke = AppConstants.strokes.first;
-  String _course = AppConstants.courses.first;
   int _distance = 100;
   DateTime _targetDate = DateTime.now();
   bool _isSaving = false;
@@ -31,6 +33,8 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   @override
   void dispose() {
     _timeController.dispose();
+    _strokeController.dispose();
+    _courseController.dispose();
     super.dispose();
   }
 
@@ -55,12 +59,19 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     setState(() => _isSaving = true);
 
     try {
+      final stroke = _strokeController.text.trim().isEmpty
+          ? AppConstants.strokes.first
+          : _strokeController.text.trim();
+      final course = _courseController.text.trim().isEmpty
+          ? AppConstants.courses.first
+          : _courseController.text.trim();
+
       final goalTime = SwimTime.toSeconds(_timeController.text);
       final goal = SwimGoal(
         swimmerName: swimmer,
-        event: '$_distance $_stroke',
+        event: '$_distance $stroke',
         goalTime: goalTime,
-        course: _course,
+        course: course,
         targetDate: _targetDate,
       );
 
@@ -113,19 +124,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  DropdownButtonFormField<String>(
-                    value: _stroke,
-                    decoration:
-                        const InputDecoration(labelText: 'Goal Stroke'),
-                    items: AppConstants.strokes
-                        .map((stroke) => DropdownMenuItem(
-                              value: stroke,
-                              child: Text(stroke),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _stroke = value);
-                    },
+                  TextFormField(
+                    controller: _strokeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Goal Stroke',
+                      hintText:
+                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -167,19 +172,12 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _course,
-                    decoration:
-                        const InputDecoration(labelText: 'Goal Course'),
-                    items: AppConstants.courses
-                        .map((course) => DropdownMenuItem(
-                              value: course,
-                              child: Text(course),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _course = value);
-                    },
+                  TextFormField(
+                    controller: _courseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Goal Course',
+                      hintText: 'SCY, SCM, or LCM',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ListTile(

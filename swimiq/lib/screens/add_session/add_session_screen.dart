@@ -22,9 +22,11 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
   final _notesController = TextEditingController();
+  final _strokeController =
+      TextEditingController(text: AppConstants.strokes.first);
+  final _courseController =
+      TextEditingController(text: AppConstants.courses.first);
 
-  String _stroke = AppConstants.strokes.first;
-  String _course = AppConstants.courses.first;
   int _distance = 100;
   DateTime _sessionDate = DateTime.now();
   bool _isSaving = false;
@@ -33,6 +35,8 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
   void dispose() {
     _timeController.dispose();
     _notesController.dispose();
+    _strokeController.dispose();
+    _courseController.dispose();
     super.dispose();
   }
 
@@ -61,20 +65,27 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
       final currentData = ref.read(swimmerDataProvider).value;
       final previousLogs = currentData?.raceLogs ?? [];
 
+      final stroke = _strokeController.text.trim().isEmpty
+          ? AppConstants.strokes.first
+          : _strokeController.text.trim();
+      final course = _courseController.text.trim().isEmpty
+          ? AppConstants.courses.first
+          : _courseController.text.trim();
+
       final isPb = SwimAnalytics.isNewPersonalBest(
         previousLogs: previousLogs,
-        stroke: _stroke,
+        stroke: stroke,
         distance: _distance,
-        course: _course,
+        course: course,
         timeSeconds: timeSeconds,
       );
 
       final log = RaceLog(
         swimmer: swimmer,
-        event: '$_distance $_stroke',
+        event: '$_distance $stroke',
         distance: _distance,
-        stroke: _stroke,
-        course: _course,
+        stroke: stroke,
+        course: course,
         timeSeconds: timeSeconds,
         date: _sessionDate,
         notes: _notesController.text.trim(),
@@ -135,18 +146,13 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  DropdownButtonFormField<String>(
-                    value: _stroke,
-                    decoration: const InputDecoration(labelText: 'Stroke'),
-                    items: AppConstants.strokes
-                        .map((stroke) => DropdownMenuItem(
-                              value: stroke,
-                              child: Text(stroke),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _stroke = value);
-                    },
+                  TextFormField(
+                    controller: _strokeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Stroke',
+                      hintText:
+                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -168,18 +174,12 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _course,
-                    decoration: const InputDecoration(labelText: 'Course'),
-                    items: AppConstants.courses
-                        .map((course) => DropdownMenuItem(
-                              value: course,
-                              child: Text(course),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _course = value);
-                    },
+                  TextFormField(
+                    controller: _courseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Course',
+                      hintText: 'SCY, SCM, or LCM',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(

@@ -22,15 +22,26 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const _screens = [
-    DashboardScreen(),
-    PersonalBestsScreen(),
-    AddSessionScreen(),
-    GoalsScreen(),
-    MeetResultsScreen(),
-    VideoLabScreen(),
-    AthletePassportScreen(),
-  ];
+  Widget _screenAt(int index) {
+    switch (index) {
+      case 0:
+        return const DashboardScreen();
+      case 1:
+        return const PersonalBestsScreen();
+      case 2:
+        return const AddSessionScreen();
+      case 3:
+        return const GoalsScreen();
+      case 4:
+        return const MeetResultsScreen();
+      case 5:
+        return const VideoLabScreen();
+      case 6:
+        return const AthletePassportScreen();
+      default:
+        return const DashboardScreen();
+    }
+  }
 
   void _switchSwimmer() {
     ref.read(activeSwimmerProvider.notifier).state = null;
@@ -69,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
-              child: _screens[_selectedIndex],
+              child: _screenAt(_selectedIndex),
             ),
           ),
           const SwimIqFooter(),
