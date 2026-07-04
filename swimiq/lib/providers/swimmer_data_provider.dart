@@ -37,6 +37,21 @@ class SwimmerData {
     return null;
   }
 
+  List<SwimVideo> get userFacingVideos =>
+      videos.where((video) => video.isUserFacing).toList();
+
+  List<SwimVideoAnalysis> get userFacingVideoAnalyses {
+    final videoIds =
+        userFacingVideos.map((video) => video.id).whereType<String>().toSet();
+    return videoAnalyses
+        .where(
+          (analysis) =>
+              analysis.swimVideoId != null &&
+              videoIds.contains(analysis.swimVideoId),
+        )
+        .toList();
+  }
+
   SwimmerData copyWith({
     List<RaceLog>? raceLogs,
     List<SwimGoal>? goals,

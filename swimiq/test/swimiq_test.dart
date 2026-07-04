@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
+import 'package:swimiq/core/utils/passport_metrics.dart';
 import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
+import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/data/models/video_models.dart';
 
 void main() {
@@ -182,6 +184,56 @@ void main() {
 
       expect(visible.isUserFacing, isTrue);
       expect(hidden.isUserFacing, isFalse);
+    });
+  });
+
+  group('PassportMetrics', () {
+    test('builds passport snapshot from real swimmer data only', () {
+      final snapshot = PassportMetrics.build(
+        swimmerName: 'Aspyn',
+        profile: const SwimmerProfile(
+          swimmerName: 'Aspyn',
+          preferredName: 'Aspyn',
+          favoriteEvent: '50 Butterfly LCM',
+        ),
+        raceLogs: [
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '50 Butterfly',
+            distance: 50,
+            stroke: 'Butterfly',
+            course: 'LCM',
+            timeSeconds: 32.5,
+            date: DateTime(2026, 6, 1),
+          ),
+        ],
+        goals: const [],
+        meetResults: const [],
+        videos: const [
+          SwimVideo(
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/fly.mov',
+            title: 'Denison 50 Fly',
+            stroke: 'Butterfly',
+            distance: '50',
+            course: 'LCM',
+          ),
+          SwimVideo(
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/test.mov',
+            title: 'Integration test video',
+          ),
+        ],
+        videoAnalyses: const [],
+        standards: const [],
+      );
+
+      expect(snapshot.displayName, 'Aspyn');
+      expect(snapshot.currentFocus, '50 Butterfly LCM');
+      expect(snapshot.videoCount, 1);
+      expect(snapshot.personalBests.first, contains('50 Butterfly'));
+      expect(snapshot.swimIqExplanation, contains('logged sessions'));
+      expect(snapshot.swimIqExplanation, isNot(contains('consistent training')));
     });
   });
 }

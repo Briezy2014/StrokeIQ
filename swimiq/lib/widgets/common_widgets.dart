@@ -47,10 +47,12 @@ class PassportStatusCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
+    this.subtitle,
   });
 
   final String title;
   final String value;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +73,25 @@ class PassportStatusCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               value,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w900,
                   ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle!,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
           ],
         ),
       ),
