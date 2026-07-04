@@ -1,1 +1,11 @@
 /__pycache__
+
+# Flutter
+swimiq/.dart_tool/
+swimiq/.flutter-plugins
+swimiq/.flutter-plugins-dependencies
+swimiq/.packages
+swimiq/build/
+swimiq/.idea/
+swimiq/*.iml
+swimiq/.metadata
