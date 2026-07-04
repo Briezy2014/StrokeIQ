@@ -176,7 +176,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ...widget.data.videos.map(
             (video) => _VideoCard(
               video: video,
-              analysis: widget.data.analysisForVideo(video.id ?? -1),
+              analysis: widget.data.analysisForVideo(video.id),
               dateFormat: dateFormat,
               analyzing: _analyzing,
               onAnalyze: () => _runAnalysis(video),

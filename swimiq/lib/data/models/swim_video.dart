@@ -14,7 +14,7 @@ class SwimVideo {
     this.createdAt,
   });
 
-  final int? id;
+  final String? id;
   final String swimmerName;
   final String storagePath;
   final String? title;
@@ -35,7 +35,7 @@ class SwimVideo {
 
   factory SwimVideo.fromJson(Map<String, dynamic> json) {
     return SwimVideo(
-      id: json['id'] as int?,
+      id: _parseId(json['id']),
       swimmerName: json['swimmer_name'] as String? ?? '',
       storagePath: json['storage_path'] as String? ?? '',
       title: json['title'] as String?,
@@ -75,8 +75,8 @@ class SwimVideoAnalysis {
     this.createdAt,
   });
 
-  final int? id;
-  final int? swimVideoId;
+  final String? id;
+  final String? swimVideoId;
   final String swimmerName;
   final String summary;
   final String strengths;
@@ -89,8 +89,8 @@ class SwimVideoAnalysis {
 
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(
-      id: json['id'] as int?,
-      swimVideoId: json['swim_video_id'] as int?,
+      id: _parseId(json['id']),
+      swimVideoId: _parseId(json['swim_video_id']),
       swimmerName: json['swimmer_name'] as String? ?? '',
       summary: json['summary'] as String? ?? '',
       strengths: json['strengths'] as String? ?? '',
@@ -163,4 +163,10 @@ class UsaTimeStandard {
         'standard_level': standardLevel,
         'time_seconds': timeSeconds,
       };
+}
+
+String? _parseId(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return value;
+  return value.toString();
 }

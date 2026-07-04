@@ -28,7 +28,8 @@ class SwimmerData {
   final List<SwimVideoAnalysis> videoAnalyses;
   final List<UsaTimeStandard> usaStandards;
 
-  SwimVideoAnalysis? analysisForVideo(int videoId) {
+  SwimVideoAnalysis? analysisForVideo(String? videoId) {
+    if (videoId == null) return null;
     for (final analysis in videoAnalyses) {
       if (analysis.swimVideoId == videoId) return analysis;
     }
