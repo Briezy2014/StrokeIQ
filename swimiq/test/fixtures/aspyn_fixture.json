@@ -1,0 +1,43 @@
+{
+  "swimmer": "Aspyn",
+  "displayName": "Aspyn",
+  "swimIqScore": 920,
+  "raceLogCount": 20,
+  "personalBestCount": 8,
+  "goalCount": 6,
+  "meetResultCount": 3,
+  "userFacingVideoCount": 6,
+  "analysisCount": 0,
+  "currentFocus": "100 Butterfly",
+  "nextMeet": "2026 OSU Summer Invite",
+  "usaStandardsSummary": "Highest cut achieved: No motivational cut matched yet.",
+  "latestAnalysisSummary": "Upload complete. Run AI analysis on your latest video.",
+  "goalLines": [
+    "100 Butterfly (SCY) → best 1:12.00, need 6.00 faster for 1:06.00",
+    "100 Butterfly (SCY) → best 1:12.00, need 6.00 faster for 1:06.00",
+    "100 Butterfly (SCY) → best 1:12.00, need 6.00 faster for 1:06.00",
+    "100 Butterfly (SCY) → best 1:12.00, need 6.00 faster for 1:06.00",
+    "200 Butterfly (LCM) → best 3:10.23, need 11.23 faster for 2:59.00"
+  ],
+  "personalBestTitles": [
+    "100 Butterfly",
+    "200 Butterfly",
+    "50 Fly",
+    "100 Fly",
+    "100 Free",
+    "400 Free",
+    "400 Free",
+    "1000 Free"
+  ],
+  "meetNames": [
+    "2026 OSU Summer Invite"
+  ],
+  "videoTitles": [
+    "50 FLY.mov",
+    "Denison 50 Fly",
+    "Denison 50 Fky",
+    "Denison 50 Fky",
+    "Denison 50 Fly",
+    "Denison 50 Fly"
+  ]
+}
