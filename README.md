@@ -1,8 +1,17 @@
-# StrokeIQ
+# SwimIQ / StrokeIQ
 
-Streamlit-based swim analytics dashboard for tracking stroke efficiency, timing, and personal bests.
+Swim analytics platform for tracking athlete performance, personal bests, goals, and meet results.
 
-## Files
+## Apps
+
+| App | Platform | Directory |
+|-----|----------|-----------|
+| **SwimIQ V2 (Web)** | Streamlit | `app.py` |
+| **SwimIQ V1 (Mobile)** | Flutter (Android + iOS) | `swimiq_app/` |
+
+Both apps connect to the same Supabase backend.
+
+## Web app (Streamlit)
 
 - `app.py` - Streamlit dashboard and swim entry form.
 - `requirements.txt` - Python dependencies.
@@ -35,3 +44,13 @@ python -m streamlit run app.py
 - Displays trend charts for DPS, stroke rate, pace, and distance.
 - Tracks personal records by swimmer and stroke.
 - Shows weekly improvement percentages and efficiency recommendations.
+
+## Mobile app (Flutter)
+
+See [`swimiq_app/README.md`](swimiq_app/README.md) for setup and run instructions.
+
+```bash
+cd swimiq_app
+flutter pub get
+flutter run
+```
