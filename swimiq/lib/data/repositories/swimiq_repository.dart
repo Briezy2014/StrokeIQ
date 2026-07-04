@@ -1,10 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/supabase_parsers.dart';
 import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
 import '../models/swimmer_profile.dart';
-import '../models/swim_video.dart';
+import '../models/usa_time_standard.dart';
+import '../models/video_models.dart';
 
 class SwimIqRepository {
   SwimIqRepository(this._client);
@@ -79,15 +81,15 @@ class SwimIqRepository {
     }
   }
 
-  Future<List<SwimVideo>> fetchSwimVideos(String swimmerName) async {
+  Future<List<SwimVideo>> fetchSwimVideos(String swimmer) async {
     final response = await _client
         .from('swim_videos')
         .select()
-        .eq('swimmer_name', swimmerName)
+        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((row) => SwimVideo.fromJson(Map<String, dynamic>.from(row)))
+    return supabaseRowsToMaps(response)
+        .map(SwimVideo.fromJson)
         .toList();
   }
 
@@ -97,19 +99,39 @@ class SwimIqRepository {
         .insert(video.toInsertJson())
         .select()
         .single();
-    return SwimVideo.fromJson(Map<String, dynamic>.from(response));
+
+    final row = supabaseRowToMap(response);
+    try {
+      return SwimVideo.fromJson(row);
+    } catch (_) {
+      return video.copyWith(
+        id: parseUuid(row['id']),
+        swimmer: swimmerFromJson(row).isEmpty ? video.swimmer : swimmerFromJson(row),
+        videoUrl: parseOptionalText(row['video_url']) ?? video.videoUrl,
+      );
+    }
   }
 
-  Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmerName) async {
+  Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmer) async {
     final response = await _client
         .from('swim_video_analyses')
         .select()
-        .eq('swimmer_name', swimmerName)
+        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((row) => SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(row)))
+    return supabaseRowsToMaps(response)
+        .map(SwimVideoAnalysis.fromJson)
         .toList();
+  }
+
+  Future<SwimVideoAnalysis?> insertVideoAnalysisOptional(
+    SwimVideoAnalysis analysis,
+  ) async {
+    try {
+      return await insertVideoAnalysis(analysis);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<SwimVideoAnalysis> insertVideoAnalysis(SwimVideoAnalysis analysis) async {
@@ -118,7 +140,7 @@ class SwimIqRepository {
         .insert(analysis.toInsertJson())
         .select()
         .single();
-    return SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(response));
+    return SwimVideoAnalysis.fromSupabaseRow(response);
   }
 
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {

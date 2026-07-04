@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../data/models/swim_video.dart';
+import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 
@@ -60,7 +60,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
               ? file.name
               : _titleController.text.trim(),
           stroke: _stroke,
-          distance: _distance,
+          distance: '$_distance',
           course: _course,
           notes: _notesController.text.trim(),
         );
@@ -176,7 +176,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ...widget.data.videos.map(
             (video) => _VideoCard(
               video: video,
-              analysis: widget.data.analysisForVideo(video.id ?? -1),
+              analysis: widget.data.analysisForVideo(video.id),
               dateFormat: dateFormat,
               analyzing: _analyzing,
               onAnalyze: () => _runAnalysis(video),

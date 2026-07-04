@@ -2,7 +2,8 @@ import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
-import '../../data/models/swim_video.dart';
+import '../../data/models/usa_time_standard.dart';
+import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 
 /// Rule-based swim analysis for V1. Can be replaced by a Supabase Edge Function later.
@@ -15,7 +16,7 @@ class AiSwimAnalysisService {
     List<UsaTimeStandard> standards = const [],
   }) {
     final stroke = video.stroke ?? profile?.primaryStroke ?? 'Freestyle';
-    final distance = video.distance ?? 100;
+    final distance = video.distanceMeters ?? 100;
     final course = video.course ?? 'SCY';
 
     final matchingLogs = raceLogs.where(
@@ -95,7 +96,7 @@ class AiSwimAnalysisService {
 
     return SwimVideoAnalysis(
       swimVideoId: video.id,
-      swimmerName: video.swimmerName,
+      swimmer: video.swimmer,
       summary: summary.toString(),
       strengths: strengths.isEmpty
           ? 'Keep uploading videos to build your analysis profile.'

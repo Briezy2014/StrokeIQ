@@ -3,7 +3,8 @@ import '../../core/services/usa_standards_service.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
-import '../../data/models/swim_video.dart';
+import '../../data/models/video_models.dart';
+import '../../data/models/usa_time_standard.dart';
 import '../../data/models/swimmer_profile.dart';
 
 class PassportMetrics {

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../../data/models/swim_video.dart';
+import '../../data/models/usa_time_standard.dart';
 import '../../data/repositories/swimiq_repository.dart';
 
 class UsaStandardsService {
