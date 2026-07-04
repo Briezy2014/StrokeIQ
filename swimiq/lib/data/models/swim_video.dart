@@ -25,7 +25,6 @@ class SwimVideo {
   final String? notes;
   final DateTime? createdAt;
 
-  /// Backward-compatible alias used across the app.
   String get swimmerName => swimmer;
 
   int? get distanceMeters => parseOptionalInt(distance);
@@ -53,11 +52,41 @@ class SwimVideo {
     );
   }
 
+  factory SwimVideo.fromSupabaseRow(dynamic row) {
+    return SwimVideo.fromJson(supabaseRowToMap(row));
+  }
+
+  SwimVideo copyWith({
+    String? id,
+    String? swimmer,
+    String? storagePath,
+    String? title,
+    String? stroke,
+    String? distance,
+    String? course,
+    String? videoUrl,
+    String? notes,
+    DateTime? createdAt,
+  }) {
+    return SwimVideo(
+      id: id ?? this.id,
+      swimmer: swimmer ?? this.swimmer,
+      storagePath: storagePath ?? this.storagePath,
+      title: title ?? this.title,
+      stroke: stroke ?? this.stroke,
+      distance: distance ?? this.distance,
+      course: course ?? this.course,
+      videoUrl: videoUrl ?? this.videoUrl,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   Map<String, dynamic> toInsertJson() => {
         'swimmer': swimmer,
         'title': title,
         'stroke': stroke,
-        'distance': distance,
+        'distance': distance?.toString(),
         'course': course,
         'storage_path': storagePath,
         'video_url': videoUrl,
@@ -99,17 +128,21 @@ class SwimVideoAnalysis {
       id: parseUuid(json['id']),
       swimVideoId: parseUuid(json['swim_video_id']),
       swimmer: swimmerFromJson(json),
-      summary: json['summary'] as String? ?? '',
-      strengths: json['strengths'] as String? ?? '',
-      improvements: json['improvements'] as String? ?? '',
+      summary: parseOptionalText(json['summary']) ?? '',
+      strengths: parseOptionalText(json['strengths']) ?? '',
+      improvements: parseOptionalText(json['improvements']) ?? '',
       techniqueScore: parseOptionalInt(json['technique_score']) ?? 0,
       paceScore: parseOptionalInt(json['pace_score']) ?? 0,
       overallScore: parseOptionalInt(json['overall_score']) ?? 0,
-      analysisJson: json['analysis_json'] is Map<String, dynamic>
-          ? json['analysis_json'] as Map<String, dynamic>
+      analysisJson: json['analysis_json'] is Map
+          ? Map<String, dynamic>.from(json['analysis_json'] as Map)
           : null,
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
+  }
+
+  factory SwimVideoAnalysis.fromSupabaseRow(dynamic row) {
+    return SwimVideoAnalysis.fromJson(supabaseRowToMap(row));
   }
 
   Map<String, dynamic> toInsertJson() => {

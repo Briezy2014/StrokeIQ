@@ -30,7 +30,7 @@ class SwimmerData {
   final List<UsaTimeStandard> usaStandards;
 
   SwimVideoAnalysis? analysisForVideo(String? videoId) {
-    if (videoId == null) return null;
+    if (videoId == null || videoId.isEmpty) return null;
     for (final analysis in videoAnalyses) {
       if (analysis.swimVideoId == videoId) return analysis;
     }
@@ -160,7 +160,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             course: course,
             notes: notes,
           );
-      await refresh();
+      try {
+        await refresh();
+      } catch (_) {
+        // Upload succeeded even if refresh fails; next manual refresh will retry.
+      }
       return null;
     } catch (error) {
       return error.toString();

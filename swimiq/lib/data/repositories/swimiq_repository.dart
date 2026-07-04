@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/supabase_parsers.dart';
 import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
@@ -87,8 +88,8 @@ class SwimIqRepository {
         .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((row) => SwimVideo.fromJson(Map<String, dynamic>.from(row)))
+    return supabaseRowsToMaps(response)
+        .map(SwimVideo.fromJson)
         .toList();
   }
 
@@ -98,7 +99,17 @@ class SwimIqRepository {
         .insert(video.toInsertJson())
         .select()
         .single();
-    return SwimVideo.fromJson(Map<String, dynamic>.from(response));
+
+    final row = supabaseRowToMap(response);
+    try {
+      return SwimVideo.fromJson(row);
+    } catch (_) {
+      return video.copyWith(
+        id: parseUuid(row['id']),
+        swimmer: swimmerFromJson(row).isEmpty ? video.swimmer : swimmerFromJson(row),
+        videoUrl: parseOptionalText(row['video_url']) ?? video.videoUrl,
+      );
+    }
   }
 
   Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmer) async {
@@ -108,8 +119,8 @@ class SwimIqRepository {
         .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((row) => SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(row)))
+    return supabaseRowsToMaps(response)
+        .map(SwimVideoAnalysis.fromJson)
         .toList();
   }
 
@@ -119,7 +130,7 @@ class SwimIqRepository {
         .insert(analysis.toInsertJson())
         .select()
         .single();
-    return SwimVideoAnalysis.fromJson(Map<String, dynamic>.from(response));
+    return SwimVideoAnalysis.fromSupabaseRow(response);
   }
 
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {

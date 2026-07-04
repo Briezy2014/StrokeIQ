@@ -88,16 +88,43 @@ void main() {
       expect(video.distanceMeters, 50);
     });
 
-    test('falls back to swimmer_name when swimmer is null', () {
-      final video = SwimVideo.fromJson({
-        'id': '71f4f63b-99a6-4e50-b102-ea2c64f11e68',
+    test('parses exact Supabase row shape for reported UUID upload', () {
+      final video = SwimVideo.fromSupabaseRow({
+        'id': 'b526aa2a-c18f-451b-b8f0-e80947d50c20',
         'swimmer': null,
         'swimmer_name': 'Aspyn',
-        'distance': '100',
-        'storage_path': 'Aspyn/video.mov',
+        'title': 'Denison 50 Fky',
+        'stroke': 'Butterfly',
+        'distance': '50',
+        'course': 'LCM',
+        'notes': 'Analyze reaction time',
+        'video_url':
+            'https://bryurwyeosbffvfpdpbv.supabase.co/storage/v1/object/public/swim-videos/Aspyn/528f7bd3.mov',
+        'storage_path': 'Aspyn/528f7bd3-b5db-43d5-80a0-64190943c5c7.mov',
+        'created_at': '2026-07-04T20:37:50.547436+00:00',
       });
 
+      expect(video.id, 'b526aa2a-c18f-451b-b8f0-e80947d50c20');
       expect(video.swimmer, 'Aspyn');
+      expect(video.distance, '50');
+    });
+
+    test('parses SwimVideoAnalysis UUID ids', () {
+      final analysis = SwimVideoAnalysis.fromJson({
+        'id': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        'swim_video_id': 'b526aa2a-c18f-451b-b8f0-e80947d50c20',
+        'swimmer': 'Aspyn',
+        'summary': 'Good tempo',
+        'strengths': 'Strong kick',
+        'improvements': 'Earlier breath',
+        'technique_score': '82',
+        'pace_score': '78',
+        'overall_score': '80',
+      });
+
+      expect(analysis.id, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+      expect(analysis.swimVideoId, 'b526aa2a-c18f-451b-b8f0-e80947d50c20');
+      expect(analysis.overallScore, 80);
     });
   });
 }
