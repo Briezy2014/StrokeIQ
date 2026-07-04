@@ -1,1 +1,9 @@
 /__pycache__
+
+# Android
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+*.iml
+.idea/
