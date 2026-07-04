@@ -1,1 +1,45 @@
-/__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Secrets & environment
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+*.pem
+*.key
+
+# Flutter / Dart
+swimiq/.dart_tool/
+swimiq/.flutter-plugins
+swimiq/.flutter-plugins-dependencies
+swimiq/.packages
+swimiq/build/
+swimiq/.pub-cache/
+swimiq/.pub/
+swimiq/**/doc/api/
+swimiq/**/ios/Pods/
+swimiq/**/ios/.symlinks/
+swimiq/**/android/.gradle/
+swimiq/**/android/local.properties
+swimiq/**/android/key.properties
+swimiq/**/*.iml
+swimiq/.idea/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
