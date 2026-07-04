@@ -8,11 +8,11 @@ import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
 class MeetResultsScreen extends ConsumerStatefulWidget {
-  const MeetResultsScreen({super.key, required this.data});
-
-  final SwimmerData data;
+  const MeetResultsScreen({super.key});
 
   @override
   ConsumerState<MeetResultsScreen> createState() => _MeetResultsScreenState();
@@ -101,121 +101,111 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat.yMMMd();
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
+        final dateFormat = DateFormat.yMMMd();
+        final snapshot = data.passportSnapshot(swimmer);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Meet Results',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-        ),
-        const SizedBox(height: 16),
-        Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _meetNameController,
-                decoration: const InputDecoration(labelText: 'Meet Name'),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Meet Date'),
-                subtitle: Text(dateFormat.format(_meetDate)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: _pickDate,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _eventController,
-                decoration: const InputDecoration(
-                  labelText: 'Event',
-                  hintText: 'Example: 100 Butterfly',
-                ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _timeController,
-                decoration: const InputDecoration(
-                  labelText: 'Result Time',
-                  hintText: 'Example: 35.43 or 1:24.32',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Result time is required';
-                  }
-                  try {
-                    SwimTime.toSeconds(value);
-                  } on FormatException {
-                    return 'Use 35.43 or M:SS.hh format';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _course,
-                decoration: const InputDecoration(labelText: 'Result Course'),
-                items: AppConstants.courses
-                    .map((course) => DropdownMenuItem(
-                          value: course,
-                          child: Text(course),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) setState(() => _course = value);
-                },
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _saveResult,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Meet Result'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 16),
-        if (widget.data.meetResults.isEmpty)
-          const EmptyStateMessage(message: 'No meet results yet.')
-        else
-          ...widget.data.meetResults.map(
-            (result) => Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                title: Text(result.event),
-                subtitle: Text(
-                  '${result.meetName} · ${result.course} · '
-                  '${dateFormat.format(result.meetDate)}',
-                ),
-                trailing: Text(
-                  SwimTime.fromSeconds(result.swimTime),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            SwimIqScreenHeader(
+              title: 'Meet Results',
+              subtitle: 'Latest meet: ${snapshot.nextMeet}',
+            ),
+            const SizedBox(height: 16),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _meetNameController,
+                    decoration:
+                        const InputDecoration(labelText: 'Meet Name'),
+                    validator: (value) =>
+                        value == null || value.trim().isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Meet Date'),
+                    subtitle: Text(dateFormat.format(_meetDate)),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.calendar_today),
+                      onPressed: _pickDate,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _eventController,
+                    decoration: const InputDecoration(
+                      labelText: 'Event',
+                      hintText: 'Example: 100 Butterfly',
+                    ),
+                    validator: (value) =>
+                        value == null || value.trim().isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _timeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Result Time',
+                      hintText: 'Example: 35.43 or 1:24.32',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Result time is required';
+                      }
+                      try {
+                        SwimTime.toSeconds(value);
+                      } on FormatException {
+                        return 'Use 35.43 or M:SS.hh format';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: _course,
+                    decoration:
+                        const InputDecoration(labelText: 'Result Course'),
+                    items: AppConstants.courses
+                        .map((course) => DropdownMenuItem(
+                              value: course,
+                              child: Text(course),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => _course = value);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  SwimIqSaveButton(
+                    label: 'Save Meet Result',
+                    isSaving: _isSaving,
+                    onPressed: _saveResult,
+                  ),
+                ],
               ),
             ),
-          ),
-      ],
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            if (data.meetResults.isEmpty)
+              const EmptyStateMessage(message: 'No meet results yet.')
+            else
+              ...data.meetResults.map(
+                (result) => SwimIqEventListTile(
+                  title: result.event,
+                  subtitle:
+                      '${result.meetName} · ${result.course} · ${dateFormat.format(result.meetDate)}',
+                  trailing: SwimTime.fromSeconds(result.swimTime),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

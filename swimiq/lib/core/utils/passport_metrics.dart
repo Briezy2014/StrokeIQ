@@ -1,5 +1,6 @@
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_standards_service.dart';
+import '../../core/utils/swimiq_age_group.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
@@ -190,7 +191,7 @@ class PassportMetrics {
 
     final pbs = SwimAnalytics.personalBests(raceLogs);
     String? bestLevel;
-    final ageGroup = _ageGroup(profile);
+    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
 
     for (final pb in pbs) {
       final level = UsaStandardsService.highestCutForTime(
@@ -416,7 +417,7 @@ class PassportMetrics {
     required List<UsaTimeStandard> standards,
     SwimmerProfile? profile,
   }) {
-    final ageGroup = _ageGroup(profile);
+    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
     _ClosestCut? closest;
 
     for (final pb in personalBests) {
@@ -457,15 +458,6 @@ class PassportMetrics {
 
   static String _formatDate(DateTime date) =>
       '${date.month}/${date.day}/${date.year}';
-
-  static String _ageGroup(SwimmerProfile? profile) {
-    final age = profile?.age;
-    if (age == null) return '11-12';
-    if (age <= 10) return '10 & Under';
-    if (age <= 12) return '11-12';
-    if (age <= 14) return '13-14';
-    return '15-16';
-  }
 
   static int _levelRank(String level) {
     const order = ['AAAA', 'AAA', 'AA', 'A', 'BB', 'B'];

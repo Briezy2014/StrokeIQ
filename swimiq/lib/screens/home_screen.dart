@@ -22,6 +22,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
+  static const _screens = [
+    DashboardScreen(),
+    PersonalBestsScreen(),
+    AddSessionScreen(),
+    GoalsScreen(),
+    MeetResultsScreen(),
+    VideoLabScreen(),
+    AthletePassportScreen(),
+  ];
+
   void _switchSwimmer() {
     ref.read(activeSwimmerProvider.notifier).state = null;
   }
@@ -33,7 +43,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final swimmer = ref.watch(activeSwimmerProvider)!;
-    final dataAsync = ref.watch(swimmerDataProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,44 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             actions: const [SizedBox.shrink()],
           ),
           Expanded(
-            child: dataAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Could not load swimmer data: $error'),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: _refresh,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              data: (data) {
-                if (data == null) {
-                  return const Center(child: Text('No swimmer selected.'));
-                }
-
-                final screens = [
-                  DashboardScreen(data: data),
-                  PersonalBestsScreen(data: data),
-                  const AddSessionScreen(),
-                  GoalsScreen(data: data),
-                  MeetResultsScreen(data: data),
-                  VideoLabScreen(data: data),
-                  AthletePassportScreen(data: data),
-                ];
-
-                return RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: screens[_selectedIndex],
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: _screens[_selectedIndex],
             ),
           ),
           const SwimIqFooter(),

@@ -1,60 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
-import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
-class PersonalBestsScreen extends StatelessWidget {
-  const PersonalBestsScreen({super.key, required this.data});
-
-  final SwimmerData data;
+class PersonalBestsScreen extends ConsumerWidget {
+  const PersonalBestsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final personalBests = SwimAnalytics.personalBests(data.raceLogs);
-    final dateFormat = DateFormat.yMMMd();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
+        final personalBests = data.personalBests;
+        final dateFormat = DateFormat.yMMMd();
 
-    if (personalBests.isEmpty) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const EmptyStateMessage(
-            message:
-                'No personal bests yet. Add swim sessions to unlock this page.',
-          ),
-        ],
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Personal Bests',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+        if (personalBests.isEmpty) {
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              SwimIqScreenHeader(
+                title: 'Personal Bests',
+                subtitle: 'Fastest logged times for ${data.displayName(swimmer)}',
               ),
-        ),
-        const SizedBox(height: 16),
-        ...personalBests.map(
-          (log) => Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              title: Text('${log.distance} ${log.stroke}'),
-              subtitle: Text('${log.course} · ${dateFormat.format(log.date)}'),
-              trailing: Text(
-                SwimTime.fromSeconds(log.timeSeconds),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                ),
+              const SizedBox(height: 16),
+              const EmptyStateMessage(
+                message:
+                    'No personal bests yet. Add swim sessions to unlock this page.',
+              ),
+            ],
+          );
+        }
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            SwimIqScreenHeader(
+              title: 'Personal Bests',
+              subtitle:
+                  '${personalBests.length} events tracked for ${data.displayName(swimmer)}',
+            ),
+            const SizedBox(height: 16),
+            ...personalBests.map(
+              (log) => SwimIqEventListTile(
+                title: '${log.distance} ${log.stroke}',
+                subtitle: '${log.course} · ${dateFormat.format(log.date)}',
+                trailing: SwimTime.fromSeconds(log.timeSeconds),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

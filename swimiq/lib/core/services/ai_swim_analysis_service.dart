@@ -1,4 +1,5 @@
 import '../../core/utils/swim_time.dart';
+import '../../core/utils/swimiq_age_group.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/usa_time_standard.dart';
@@ -340,7 +341,7 @@ class AiSwimAnalysisService {
       return 'Import USA Swimming motivational standards to compare $eventLabel.';
     }
 
-    final ageGroup = _inferAgeGroup(profile);
+    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
     final relevant = standards
         .where(
           (standard) =>
@@ -399,7 +400,7 @@ class AiSwimAnalysisService {
     if (swimmerTime == null || standards.isEmpty) return null;
 
     final gender = _inferGender(profile);
-    final ageGroup = _inferAgeGroup(profile);
+    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
 
     final matches = standards.where(
       (standard) =>
@@ -407,7 +408,7 @@ class AiSwimAnalysisService {
           standard.distance == distance &&
           standard.course == course &&
           (gender == null || standard.gender == gender) &&
-          (ageGroup == null || standard.ageGroup == ageGroup) &&
+          standard.ageGroup == ageGroup &&
           swimmerTime <= standard.timeSeconds,
     );
 
@@ -424,13 +425,4 @@ class AiSwimAnalysisService {
   }
 
   String? _inferGender(SwimmerProfile? profile) => null;
-
-  String? _inferAgeGroup(SwimmerProfile? profile) {
-    final age = profile?.age;
-    if (age == null) return '11-12';
-    if (age <= 10) return '10 & Under';
-    if (age <= 12) return '11-12';
-    if (age <= 14) return '13-14';
-    return '15-16';
-  }
 }

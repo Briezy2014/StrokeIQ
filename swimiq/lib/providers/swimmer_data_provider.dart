@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/passport_metrics.dart';
+import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
@@ -51,6 +53,30 @@ class SwimmerData {
         )
         .toList();
   }
+
+  List<RaceLog> get personalBests => SwimAnalytics.personalBests(raceLogs);
+
+  int get swimIqScore =>
+      SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);
+
+  String displayName(String swimmerName) {
+    final preferred = profile?.preferredName?.trim();
+    if (preferred != null && preferred.isNotEmpty) return preferred;
+    final fullName = profile?.displayName.trim();
+    if (fullName != null && fullName.isNotEmpty) return fullName;
+    return swimmerName;
+  }
+
+  PassportSnapshot passportSnapshot(String swimmerName) => PassportMetrics.build(
+        swimmerName: swimmerName,
+        profile: profile,
+        raceLogs: raceLogs,
+        goals: goals,
+        meetResults: meetResults,
+        videos: userFacingVideos,
+        videoAnalyses: userFacingVideoAnalyses,
+        standards: usaStandards,
+      );
 
   SwimmerData copyWith({
     List<RaceLog>? raceLogs,
@@ -112,7 +138,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     } catch (_) {}
 
     try {
-      videoAnalyses = await repository.fetchVideoAnalyses(swimmer);
+      final remoteAnalyses = await repository.fetchVideoAnalyses(swimmer);
+      videoAnalyses = _mergeAnalyses(remoteAnalyses)
+          .where(
+            (analysis) =>
+                analysis.swimVideoId != null &&
+                videos.any((video) => video.id == analysis.swimVideoId),
+          )
+          .toList();
     } catch (_) {}
 
     try {

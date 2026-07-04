@@ -7,12 +7,11 @@ import 'package:video_player/video_player.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
-  const VideoLabScreen({super.key, required this.data});
-
-  final SwimmerData data;
+  const VideoLabScreen({super.key});
 
   @override
   ConsumerState<VideoLabScreen> createState() => _VideoLabScreenState();
@@ -25,7 +24,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   String _course = AppConstants.courses.first;
   int _distance = 100;
   bool _uploading = false;
-  bool _analyzing = false;
+  String? _analyzingVideoId;
 
   @override
   void dispose() {
@@ -84,10 +83,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 
   Future<void> _runAnalysis(SwimVideo video) async {
-    setState(() => _analyzing = true);
+    final videoId = video.id;
+    if (videoId == null) return;
+
+    setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
-    setState(() => _analyzing = false);
+    setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(error ?? 'AI analysis saved.')),
     );
@@ -95,22 +97,22 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat.yMMMd();
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
+        final dateFormat = DateFormat.yMMMd();
+        final videos = data.userFacingVideos;
+        final snapshot = data.passportSnapshot(swimmer);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Video Lab',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Upload swim videos for playback and AI coaching analysis.',
-        ),
-        const SizedBox(height: 16),
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            SwimIqScreenHeader(
+              title: 'Video Lab',
+              subtitle:
+                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
+            ),
+            const SizedBox(height: 16),
         TextFormField(
           controller: _titleController,
           decoration: const InputDecoration(labelText: 'Video title'),
@@ -166,23 +168,27 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         ),
         const SizedBox(height: 24),
         Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(snapshot.latestAnalysisSummary),
         const SizedBox(height: 12),
-        if (widget.data.videos.isEmpty)
+        if (videos.isEmpty)
           const EmptyStateMessage(
             message:
                 'No videos yet. Upload a swim video to start AI analysis.',
           )
         else
-          ...widget.data.videos.map(
+          ...videos.map(
             (video) => _VideoCard(
               video: video,
-              analysis: widget.data.analysisForVideo(video.id),
+              analysis: data.analysisForVideo(video.id),
               dateFormat: dateFormat,
-              analyzing: _analyzing,
+              analyzing: _analyzingVideoId == video.id,
               onAnalyze: () => _runAnalysis(video),
             ),
           ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
