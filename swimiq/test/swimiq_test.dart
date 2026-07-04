@@ -132,7 +132,7 @@ void main() {
   });
 
   group('AiSwimAnalysisService', () {
-    test('builds interpreted coaching sections for 50 Butterfly LCM', () {
+    test('builds parent-friendly V1 report for 50 Butterfly LCM', () {
       const video = SwimVideo(
         swimmer: 'Aspyn',
         storagePath: 'Aspyn/video.mov',
@@ -143,8 +143,7 @@ void main() {
         notes:
             'Reaction time 0.71 off the block. Breakout at 11m after 6 dolphin kicks. '
             'Breathing every stroke on the second 25. Stroke count 17 per length. '
-            'Tempo rushed in the last 15 meters. Finish with full extension. '
-            'Race strategy: hold breakout speed into the first fly stroke.',
+            'Tempo rushed in the last 15 meters. Finish with full extension.',
       );
 
       final analysis = AiSwimAnalysisService().analyze(
@@ -154,36 +153,29 @@ void main() {
       );
 
       expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
-      expect(analysis.summary, contains('50 Butterfly LCM'));
-      expect(
-        analysis.disclaimer,
-        contains('Frame-by-frame AI vision is not active yet'),
-      );
-      expect(analysis.summary, isNot(contains('consistent training history')));
-      expect(analysis.summary, isNot(contains('Your notes:')));
+      expect(analysis.disclaimer, contains('not automatic video measurement'));
+      expect(analysis.summary, isNot(contains('Overall readiness score')));
 
       final sections = analysis.coachingSections;
-      expect(sections.keys, contains('Reaction / dive'));
-      expect(sections.keys, contains('Streamline and underwater dolphin kicks'));
-      expect(sections.keys, contains('Recommended drills'));
+      expect(sections.keys, contains('Quick Summary'));
+      expect(sections.keys, contains('What the video suggests'));
+      expect(sections.keys, contains(
+        'What cannot be confirmed yet without frame-by-frame AI',
+      ));
+      expect(sections.keys, contains('Top 3 priorities for the next practice'));
+      expect(sections.keys, contains('Estimated time savings'));
+      expect(sections.keys, contains('Coach notes for next race'));
 
-      final reaction = sections['Reaction / dive']!;
-      expect(reaction, contains('Look for:'));
-      expect(reaction, contains('Performance impact:'));
-      expect(reaction, contains('Correction:'));
-      expect(reaction, contains('0.71'));
-      expect(reaction, isNot(contains('Reaction time 0.71 off the block')));
+      expect(sections['Quick Summary'], contains('50 Butterfly LCM'));
+      expect(sections['What the video suggests'], contains('0.71'));
+      expect(sections['What the video suggests'],
+          isNot(contains('Reaction time 0.71 off the block')));
+      expect(sections['What cannot be confirmed yet without frame-by-frame AI'],
+          contains('computer vision'));
 
-      expect(sections['Breakout'], contains('11m'));
-      expect(sections['Stroke length and stroke count'], contains('17'));
-      expect(sections['Tempo and rhythm'], contains('Look for:'));
-      expect(sections['Breathing and head position'], contains('Look for:'));
-      expect(sections['Finish'], contains('Look for:'));
-
+      expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);
-      expect(analysis.topPriorities.first, isNot(contains('Reaction time 0.71')));
-      expect(analysis.improvements, contains('Top 5 priorities'));
-      expect(analysis.summary, isNot(contains('Overall readiness score')));
+      expect(sections['Estimated time savings'], contains('estimate'));
     });
 
     test('detects legacy rules-engine analyses', () {

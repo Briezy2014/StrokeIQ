@@ -300,27 +300,28 @@ class _VideoCardState extends State<_VideoCard> {
                     : const Text('Run AI Swim Analysis'),
               )
             else ...[
-              const SizedBox(height: 8),
-              Text(
-                'AI Score: ${widget.analysis!.overallScore}/100',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.analysis!.summary,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              if (widget.analysis!.disclaimer != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.analysis!.disclaimer!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
               const SizedBox(height: 12),
               if (widget.analysis!.coachingSections.isNotEmpty)
                 ...widget.analysis!.coachingSections.entries.map(
                   (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           entry.key,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(entry.value),
@@ -328,29 +329,6 @@ class _VideoCardState extends State<_VideoCard> {
                     ),
                   ),
                 ),
-              if (widget.analysis!.topPriorities.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Top priorities',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                ...widget.analysis!.topPriorities.map(
-                  (priority) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• $priority'),
-                  ),
-                ),
-              ],
-              if (widget.analysis!.disclaimer != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  widget.analysis!.disclaimer!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
             ],
           ],
         ),

@@ -39,9 +39,15 @@ class SwimVideoAnalysis {
   }
 
   List<String> get topPriorities {
-    final raw = analysisJson?['top_5_priorities'];
-    if (raw is! List) return const [];
-    return raw.map((item) => item.toString()).toList();
+    final top3 = analysisJson?['top_3_priorities'];
+    if (top3 is List) {
+      return top3.map((item) => item.toString()).toList();
+    }
+    final legacy = analysisJson?['top_5_priorities'];
+    if (legacy is List) {
+      return legacy.map((item) => item.toString()).toList();
+    }
+    return const [];
   }
 
   String? get disclaimer => analysisJson?['disclaimer']?.toString();
@@ -55,6 +61,11 @@ class SwimVideoAnalysis {
     final summaryLower = summary.toLowerCase();
     if (summaryLower.contains('overall readiness score')) return true;
     if (summaryLower.contains('consistent training history')) return true;
+    if (engine == 'swimiq-v1-notes' &&
+        coachingSections.isNotEmpty &&
+        !coachingSections.containsKey('Quick Summary')) {
+      return true;
+    }
     if (engine != 'swimiq-v1-notes' && coachingSections.isEmpty) {
       return true;
     }
