@@ -72,13 +72,26 @@ class SwimIqRepository {
     return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
   }
 
-  Future<void> saveProfile(SwimmerProfile profile) async {
-    final data = profile.toJson();
+  Future<SwimmerProfile> saveProfile(SwimmerProfile profile) async {
+    final data = Map<String, dynamic>.from(profile.toJson())
+      ..removeWhere((key, value) => value == null);
     if (profile.id != null) {
       await _client.from('swimmers').update(data).eq('id', profile.id!);
-    } else {
-      await _client.from('swimmers').insert(data);
+      return profile;
     }
+
+    final existing = await fetchProfile(profile.swimmerName);
+    if (existing?.id != null) {
+      await _client.from('swimmers').update(data).eq('id', existing!.id!);
+      return profile.copyWith(id: existing.id);
+    }
+
+    final response = await _client
+        .from('swimmers')
+        .insert(data)
+        .select()
+        .single();
+    return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
   }
 
   Future<List<SwimVideo>> fetchSwimVideos(String swimmer) async {

@@ -1,3 +1,5 @@
+import '../../core/utils/swim_stroke_utils.dart';
+
 class SwimmerProfile {
   const SwimmerProfile({
     this.id,
@@ -16,6 +18,8 @@ class SwimmerProfile {
     this.school,
     this.athleteNotes,
   });
+
+  static final _trainingGroupLine = RegExp(r'^Training Group:\s*(.+)$');
 
   final int? id;
   final String swimmerName;
@@ -41,6 +45,29 @@ class SwimmerProfile {
     return fullName.isNotEmpty ? fullName : swimmerName;
   }
 
+  /// Parsed from the first line of [athleteNotes] when stored as
+  /// `Training Group: <name>` (no dedicated Supabase column yet).
+  String? get trainingGroup {
+    final notes = athleteNotes?.trim();
+    if (notes == null || notes.isEmpty) return null;
+    final firstLine = notes.split('\n').first.trim();
+    final match = _trainingGroupLine.firstMatch(firstLine);
+    final value = match?.group(1)?.trim();
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  /// Athlete notes with the embedded training-group line removed.
+  String? get notesBody {
+    final notes = athleteNotes?.trim();
+    if (notes == null || notes.isEmpty) return null;
+    final lines = notes.split('\n');
+    if (lines.isNotEmpty && _trainingGroupLine.hasMatch(lines.first.trim())) {
+      final body = lines.skip(1).join('\n').trim();
+      return body.isEmpty ? null : body;
+    }
+    return notes;
+  }
+
   int? get age {
     if (birthday == null) return null;
     final today = DateTime.now();
@@ -55,20 +82,20 @@ class SwimmerProfile {
   factory SwimmerProfile.fromJson(Map<String, dynamic> json) {
     return SwimmerProfile(
       id: json['id'] as int?,
-      swimmerName: json['swimmer_name'] as String? ?? '',
-      firstName: json['first_name'] as String?,
-      lastName: json['last_name'] as String?,
-      preferredName: json['preferred_name'] as String?,
+      swimmerName: _nullableText(json['swimmer_name']) ?? '',
+      firstName: _nullableText(json['first_name']),
+      lastName: _nullableText(json['last_name']),
+      preferredName: _nullableText(json['preferred_name']),
       birthday: DateTime.tryParse(json['birthday']?.toString() ?? ''),
       graduationYear: (json['graduation_year'] as num?)?.toInt(),
-      team: json['team'] as String?,
-      coachName: json['coach_name'] as String?,
-      primaryStroke: json['primary_stroke'] as String?,
-      secondaryStroke: json['secondary_stroke'] as String?,
-      favoriteEvent: json['favorite_event'] as String?,
-      usaSwimmingId: json['usa_swimming_id'] as String?,
-      school: json['school'] as String?,
-      athleteNotes: json['athlete_notes'] as String?,
+      team: _nullableText(json['team']),
+      coachName: _nullableText(json['coach_name']),
+      primaryStroke: _normalizeStroke(json['primary_stroke'] as String?),
+      secondaryStroke: _normalizeStroke(json['secondary_stroke'] as String?),
+      favoriteEvent: _nullableText(json['favorite_event']),
+      usaSwimmingId: _nullableText(json['usa_swimming_id']),
+      school: _nullableText(json['school']),
+      athleteNotes: _nullableText(json['athlete_notes']),
     );
   }
 
@@ -123,6 +150,33 @@ class SwimmerProfile {
       school: school ?? this.school,
       athleteNotes: athleteNotes ?? this.athleteNotes,
     );
+  }
+
+  static String composeAthleteNotes({
+    String? trainingGroup,
+    String? notes,
+  }) {
+    final parts = <String>[];
+    final group = trainingGroup?.trim();
+    if (group != null && group.isNotEmpty) {
+      parts.add('Training Group: $group');
+    }
+    final body = notes?.trim();
+    if (body != null && body.isNotEmpty) {
+      parts.add(body);
+    }
+    return parts.join('\n');
+  }
+
+  static String? _nullableText(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static String? _normalizeStroke(String? value) {
+    final canonical = SwimStrokeUtils.canonical(value);
+    return canonical.isEmpty ? null : canonical;
   }
 
   static String _formatDate(DateTime date) =>

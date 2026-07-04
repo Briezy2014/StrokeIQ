@@ -8,6 +8,7 @@ import 'package:swimiq/core/theme/app_theme.dart';
 import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
+import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/data/models/usa_time_standard.dart';
 import 'package:swimiq/data/models/video_models.dart';
 import 'package:swimiq/providers/app_providers.dart';
@@ -100,6 +101,15 @@ SwimmerData _buildHarnessData() {
     raceLogs: raceLogs,
     goals: goals,
     meetResults: meetResults,
+    profile: const SwimmerProfile(
+      id: 4,
+      swimmerName: 'Aspyn',
+      preferredName: 'Aspyn',
+      team: 'COA',
+      coachName: 'Gunner Lehr',
+      primaryStroke: null,
+      secondaryStroke: null,
+    ),
     videos: videos,
     videoAnalyses: const [],
     usaStandards: [
@@ -159,21 +169,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
+      expect(find.text('ATHLETE PASSPORT™'), findsOneWidget);
+
       await tester.scrollUntilVisible(
-        find.textContaining('Current swimmer:'),
+        find.text('Save Athlete Passport'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Current swimmer: ${_fixture['swimmer']}'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.textContaining('Training sessions:'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(
-        find.textContaining('Current goals: ${_harnessData!.goals.length}'),
-        findsOneWidget,
-      );
+      expect(find.text('Edit Athlete Passport'), findsOneWidget);
+      expect(find.text('Club'), findsOneWidget);
+      expect(find.text('Training Group'), findsOneWidget);
     });
 
     testWidgets('Video Lab', (tester) async {

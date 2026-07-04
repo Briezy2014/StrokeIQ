@@ -216,7 +216,12 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
   Future<String?> saveProfile(SwimmerProfile profile) async {
     try {
-      await ref.read(swimIqRepositoryProvider).saveProfile(profile);
+      final saved =
+          await ref.read(swimIqRepositoryProvider).saveProfile(profile);
+      final current = state.value;
+      if (current != null) {
+        state = AsyncData(current.copyWith(profile: saved));
+      }
       await refresh();
       return null;
     } catch (error) {
