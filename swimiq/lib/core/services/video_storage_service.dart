@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../data/models/swim_video.dart';
+import '../../data/models/video_models.dart';
 import '../../data/repositories/swimiq_repository.dart';
 
 class VideoStorageService {

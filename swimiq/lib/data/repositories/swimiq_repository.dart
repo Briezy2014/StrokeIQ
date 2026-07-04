@@ -6,8 +6,7 @@ import '../models/race_log.dart';
 import '../models/swim_goal.dart';
 import '../models/swimmer_profile.dart';
 import '../models/usa_time_standard.dart';
-import '../models/swim_video.dart';
-import '../models/swim_video_analysis.dart';
+import '../models/video_models.dart';
 
 class SwimIqRepository {
   SwimIqRepository(this._client);

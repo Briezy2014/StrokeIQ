@@ -4,8 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:swimiq/config/supabase_config.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
-import 'package:swimiq/data/models/swim_video.dart';
-import 'package:swimiq/data/models/swim_video_analysis.dart';
+import 'package:swimiq/data/models/video_models.dart';
 import 'package:swimiq/data/repositories/swimiq_repository.dart';
 import 'package:uuid/uuid.dart';
 

@@ -3,8 +3,7 @@ import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
-import 'package:swimiq/data/models/swim_video.dart';
-import 'package:swimiq/data/models/swim_video_analysis.dart';
+import 'package:swimiq/data/models/video_models.dart';
 
 void main() {
   group('SwimTime', () {

@@ -1,5 +1,8 @@
 import '../../core/utils/supabase_parsers.dart';
 
+/// Canonical swim video model for Video Lab.
+///
+/// Do not duplicate this class elsewhere. Import [video_models.dart] in consumers.
 class SwimVideo {
   const SwimVideo({
     this.id,
