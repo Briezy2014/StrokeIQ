@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Branded SwimIQ™ logo asset used across gate, app bar, and passport hero.
+import 'swimiq_branding.dart';
+
+/// Square SwimIQ™ icon for app bar, passport avatar, and compact slots.
 class SwimIqLogo extends StatelessWidget {
   const SwimIqLogo({
     super.key,
@@ -11,21 +13,39 @@ class SwimIqLogo extends StatelessWidget {
   final double size;
   final double borderRadius;
 
-  static const assetPath = 'assets/branding/swimiq_logo.png';
+  @override
+  Widget build(BuildContext context) {
+    return SwimIqBrandedImage(
+      candidates: SwimIqBranding.iconCandidates,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      borderRadius: borderRadius,
+      fallback: Icon(Icons.pool, size: size * 0.7, color: Colors.white),
+    );
+  }
+}
+
+/// Wide SwimIQ™ hero banner (logo + tagline) for welcome and passport hero.
+class SwimIqHeroBanner extends StatelessWidget {
+  const SwimIqHeroBanner({
+    super.key,
+    this.height = 140,
+    this.borderRadius = 20,
+  });
+
+  final double height;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: Image.asset(
-        assetPath,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.pool, size: size * 0.7, color: Colors.white);
-        },
-      ),
+    return SwimIqBrandedImage(
+      candidates: SwimIqBranding.heroCandidates,
+      width: double.infinity,
+      height: height,
+      fit: BoxFit.contain,
+      borderRadius: borderRadius,
+      fallback: const SwimIqWordmark(fontSize: 28),
     );
   }
 }

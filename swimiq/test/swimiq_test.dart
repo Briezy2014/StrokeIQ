@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
 import 'package:swimiq/core/utils/passport_metrics.dart';
 import 'package:swimiq/core/utils/swim_analytics.dart';
+import 'package:swimiq/core/utils/swimiq_age_group.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
@@ -223,6 +224,20 @@ void main() {
     });
   });
 
+  group('SwimIqAgeGroup', () {
+    test('uses graduation year when birthday is missing', () {
+      expect(
+        SwimIqAgeGroup.fromProfile(
+          const SwimmerProfile(
+            swimmerName: 'Aspyn',
+            graduationYear: 2028,
+          ),
+        ),
+        '15-16',
+      );
+    });
+  });
+
   group('PassportMetrics', () {
     test('does not award AAAA for realistic 100 fly time', () {
       final snapshot = PassportMetrics.build(
@@ -231,6 +246,8 @@ void main() {
           swimmerName: 'Aspyn',
           preferredName: 'Aspyn',
           birthday: null,
+          graduationYear: 2028,
+          athleteNotes: 'Gender: Girls',
         ),
         raceLogs: [
           RaceLog(

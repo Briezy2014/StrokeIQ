@@ -158,6 +158,8 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
                   catalog: catalog,
                   profile: data.profile,
                   log: pb,
+                  ageGroup: _selectedAgeGroup ?? ageGroup,
+                  gender: _selectedGender ?? gender,
                 );
                 return SwimIqEventListTile(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',

@@ -12,7 +12,7 @@ class SwimIqHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 8),
-        const SwimIqLogo(size: 120, borderRadius: 24),
+        const SwimIqHeroBanner(height: 160, borderRadius: 24),
         const SizedBox(height: 12),
         Text(
           AppConstants.trademark,
