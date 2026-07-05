@@ -9,3 +9,12 @@ swimiq/build/
 swimiq/.idea/
 swimiq/*.iml
 swimiq/.metadata
+
+# Android (Kotlin)
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+*.iml
+.idea/
+android/.kotlin/
