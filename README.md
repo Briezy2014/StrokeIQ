@@ -3,50 +3,37 @@
 **Built in the Water. Driven by Possibility.**  
 Founded by Aspyn Briez
 
-SwimIQ is a swim performance platform. **Version 3 (Coach & Team)** is the current Kotlin Android app.
+SwimIQ is a swim performance platform. **Version 4 (Meets & Standards)** is the current Kotlin Android app.
 
-See the full product plan in [docs/ROADMAP.md](docs/ROADMAP.md) (Versions 1–8).
+See [docs/ROADMAP.md](docs/ROADMAP.md) for Versions 1–8.
 
-## Version 3 — Coach & Team (Kotlin Android)
+## Version 4 — Meets & Standards
 
-### Features
+### New in V4
 
-- Everything in V1 (auth, training, meets, goals, charts) and V2 (PBs, Passport, score breakdown, offline cache)
-- **Coach role** — switch between Swimmer and Coach in Settings
-- **Team creation** — coaches create teams and invite swimmers by email
-- **Roster management** — pending invites auto-link when swimmers sign up
-- **Coach dashboard** — team avg SwimIQ, attendance, top performers
-- **CSV bulk import** — import meet results for roster swimmers
-- **Notifications** — in-app alerts for PBs; upcoming goal deadlines; local Android notifications on new PBs
-
-A Flutter reference app also lives in [`swimiq/`](swimiq/).
+- **USA Swimming 2024–2028 Motivational Standards** — 1,008 SCY age-group cuts (B through AAAA) bundled from official PDF
+- **Cuts tab** — highest cut per personal best with gap analysis (e.g. `0.41s from AA`)
+- **Meet Planner** — upcoming meet calendar with location and notes
+- **Heat sheet notes** — heat/lane/event notes per planned meet
+- **Athlete Passport** — shows highest motivational cut achieved
 
 ### Supabase setup
 
-1. Run [supabase/migrations/001_swimiq_v1.sql](supabase/migrations/001_swimiq_v1.sql)
-2. Run [supabase/migrations/002_swimiq_v3_coach_team.sql](supabase/migrations/002_swimiq_v3_coach_team.sql)
-3. Enable Email auth in Supabase
+1. `supabase/migrations/001_swimiq_v1.sql`
+2. `supabase/migrations/002_swimiq_v3_coach_team.sql`
+3. `supabase/migrations/003_swimiq_v4_meets_standards.sql`
 
-### Android setup
+### Build & run
 
 ```bash
 cp android/local.properties.example android/local.properties
-# Edit sdk.dir, SUPABASE_URL, SUPABASE_KEY
-cd android
-./gradlew test assembleDebug
-adb install app/build/outputs/apk/debug/app-debug.apk
+cd android && ./gradlew test assembleDebug
 ```
 
-### Coach workflow
+### Standards data
 
-1. Sign up / sign in
-2. Settings → **Switch to Coach**
-3. Coach tab → **Create Team**
-4. **Invite Swimmer** by email
-5. Swimmer signs up with that email → auto-joins roster
-6. View team analytics and **Import Meet Results (CSV)**
-
-CSV format: `swimmer_name,meet_name,meet_date,event,swim_time,course`
+Source: USA Swimming 2024–2028 Motivational Age Group Standards (SCY).  
+Bundled asset: `android/app/src/main/assets/usa_2028_motivational_standards.json`
 
 ---
 

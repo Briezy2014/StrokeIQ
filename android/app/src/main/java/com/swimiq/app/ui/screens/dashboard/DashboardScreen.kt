@@ -46,7 +46,7 @@ fun DashboardScreen(
                     color = SwimNavy,
                 )
                 Text(
-                    text = "SwimIQ Dashboard · Version 3",
+                    text = "SwimIQ Dashboard · Version 4",
                     style = MaterialTheme.typography.bodyMedium,
                     color = SwimNavy.copy(alpha = 0.7f),
                 )

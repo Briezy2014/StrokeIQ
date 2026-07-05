@@ -8,13 +8,19 @@ import com.swimiq.app.data.local.CachedSwimData
 import com.swimiq.app.data.local.SwimCache
 import com.swimiq.app.data.model.AppNotification
 import com.swimiq.app.data.model.Goal
+import com.swimiq.app.data.model.MeetHeatNote
 import com.swimiq.app.data.model.MeetResult
+import com.swimiq.app.data.model.PersonalBestCut
+import com.swimiq.app.data.model.PlannedMeet
 import com.swimiq.app.data.model.RaceLog
 import com.swimiq.app.data.model.SwimmerProfile
+import com.swimiq.app.data.model.TimeStandard
 import com.swimiq.app.data.model.UserRole
+import com.swimiq.app.data.repository.MeetPlannerRepository
 import com.swimiq.app.data.repository.SwimRepository
 import com.swimiq.app.data.repository.TeamRepository
 import com.swimiq.app.notifications.SwimNotificationHelper
+import com.swimiq.app.util.StandardsService
 import com.swimiq.app.util.SwimAnalytics
 import com.swimiq.app.util.SwimIQScoreBreakdown
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,6 +49,10 @@ data class SwimUiState(
     val notifications: List<AppNotification> = emptyList(),
     val userEmail: String? = null,
     val userRole: String = UserRole.SWIMMER,
+    val standards: List<TimeStandard> = emptyList(),
+    val plannedMeets: List<PlannedMeet> = emptyList(),
+    val selectedPlannedMeetId: String? = null,
+    val heatNotes: List<MeetHeatNote> = emptyList(),
     val message: String? = null,
     val errorMessage: String? = null,
 ) {
@@ -79,6 +89,24 @@ data class SwimUiState(
 
     val unreadNotificationCount: Int
         get() = notifications.count { !it.read }
+
+    val standardsAgeGroup: String
+        get() = StandardsService.ageGroupFromProfile(profile)
+
+    val standardsCount: Int
+        get() = standards.size
+
+    val personalBestCuts: List<PersonalBestCut>
+        get() = StandardsService.personalBestCuts(standards, raceLogs, profile)
+
+    val overallHighestCut: String
+        get() = StandardsService.overallHighestCut(personalBestCuts)
+
+    val upcomingMeets: List<PlannedMeet>
+        get() = plannedMeets.filter { it.meetDate >= java.time.LocalDate.now().toString() }
+
+    val nextPlannedMeet: String
+        get() = upcomingMeets.firstOrNull()?.meetName ?: nextMeet
 }
 
 class AuthViewModel(
@@ -148,6 +176,7 @@ class AuthViewModel(
 class SwimViewModel(
     private val repository: SwimRepository = SwimRepository(),
     private val teamRepository: TeamRepository = TeamRepository(),
+    private val meetPlannerRepository: MeetPlannerRepository = MeetPlannerRepository(),
     private val cache: SwimCache? = null,
     private val application: Application? = null,
 ) : ViewModel() {
@@ -190,6 +219,14 @@ class SwimViewModel(
                 val goals = repository.getGoals()
                 val meets = repository.getMeetResults()
                 val notifications = runCatching { teamRepository.getNotifications() }.getOrDefault(emptyList())
+                val standards = application?.let { StandardsService.loadFromAssets(it) } ?: emptyList()
+                val plannedMeets = runCatching { meetPlannerRepository.getPlannedMeets() }.getOrDefault(emptyList())
+                val selectedMeetId = _uiState.value.selectedPlannedMeetId ?: plannedMeets.firstOrNull()?.id
+                val heatNotes = if (selectedMeetId != null) {
+                    runCatching { meetPlannerRepository.getHeatNotes(selectedMeetId) }.getOrDefault(emptyList())
+                } else {
+                    emptyList()
+                }
 
                 applyData(
                     profile = profile,
@@ -197,6 +234,10 @@ class SwimViewModel(
                     goals = goals,
                     meets = meets,
                     notifications = notifications,
+                    standards = standards,
+                    plannedMeets = plannedMeets,
+                    selectedPlannedMeetId = selectedMeetId,
+                    heatNotes = heatNotes,
                     userRole = userProfile?.role ?: UserRole.SWIMMER,
                     isFromCache = false,
                     isLoading = false,
@@ -243,6 +284,10 @@ class SwimViewModel(
         goals: List<Goal>,
         meets: List<MeetResult>,
         notifications: List<AppNotification> = _uiState.value.notifications,
+        standards: List<TimeStandard> = _uiState.value.standards,
+        plannedMeets: List<PlannedMeet> = _uiState.value.plannedMeets,
+        selectedPlannedMeetId: String? = _uiState.value.selectedPlannedMeetId,
+        heatNotes: List<MeetHeatNote> = _uiState.value.heatNotes,
         userRole: String = _uiState.value.userRole,
         isFromCache: Boolean,
         isLoading: Boolean,
@@ -258,6 +303,10 @@ class SwimViewModel(
                 goals = goals,
                 meetResults = meets,
                 notifications = notifications,
+                standards = standards,
+                plannedMeets = plannedMeets,
+                selectedPlannedMeetId = selectedPlannedMeetId,
+                heatNotes = heatNotes,
                 userEmail = repository.currentUserEmail,
                 userRole = userRole,
             )
@@ -406,6 +455,68 @@ class SwimViewModel(
                 _uiState.update {
                     it.copy(errorMessage = e.message ?: "Could not delete meet result.")
                 }
+            }
+        }
+    }
+
+    fun selectPlannedMeet(meetId: String?) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(selectedPlannedMeetId = meetId) }
+            if (meetId != null) {
+                try {
+                    val notes = meetPlannerRepository.getHeatNotes(meetId)
+                    _uiState.update { it.copy(heatNotes = notes) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(errorMessage = e.message) }
+                }
+            } else {
+                _uiState.update { it.copy(heatNotes = emptyList()) }
+            }
+        }
+    }
+
+    fun addPlannedMeet(meet: PlannedMeet) {
+        viewModelScope.launch {
+            try {
+                meetPlannerRepository.addPlannedMeet(meet)
+                refresh()
+                _uiState.update { it.copy(message = "Meet added to calendar.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
+            }
+        }
+    }
+
+    fun deletePlannedMeet(id: String) {
+        viewModelScope.launch {
+            try {
+                meetPlannerRepository.deletePlannedMeet(id)
+                refresh()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
+            }
+        }
+    }
+
+    fun addHeatNote(note: MeetHeatNote) {
+        viewModelScope.launch {
+            try {
+                meetPlannerRepository.addHeatNote(note)
+                selectPlannedMeet(note.plannedMeetId)
+                _uiState.update { it.copy(message = "Heat note saved.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
+            }
+        }
+    }
+
+    fun deleteHeatNote(id: String) {
+        viewModelScope.launch {
+            try {
+                meetPlannerRepository.deleteHeatNote(id)
+                selectPlannedMeet(_uiState.value.selectedPlannedMeetId)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
             }
         }
     }

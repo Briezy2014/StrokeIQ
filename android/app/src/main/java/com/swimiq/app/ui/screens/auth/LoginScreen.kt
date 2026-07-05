@@ -122,7 +122,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Version 3 · Founded by Aspyn Briez",
+            text = "Version 4 · Founded by Aspyn Briez",
             style = MaterialTheme.typography.labelSmall,
             color = SwimNavy.copy(alpha = 0.6f),
         )

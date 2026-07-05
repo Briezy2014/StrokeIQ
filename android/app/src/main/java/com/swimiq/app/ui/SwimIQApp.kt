@@ -28,11 +28,12 @@ import com.swimiq.app.ui.screens.charts.ChartsScreen
 import com.swimiq.app.ui.screens.coach.CoachDashboardScreen
 import com.swimiq.app.ui.screens.dashboard.DashboardScreen
 import com.swimiq.app.ui.screens.goals.GoalsScreen
-import com.swimiq.app.ui.screens.meets.MeetResultsScreen
+import com.swimiq.app.ui.screens.meets.MeetHubScreen
 import com.swimiq.app.ui.screens.notifications.NotificationsScreen
 import com.swimiq.app.ui.screens.passport.AthletePassportScreen
 import com.swimiq.app.ui.screens.personalbests.PersonalBestsScreen
 import com.swimiq.app.ui.screens.settings.SettingsScreen
+import com.swimiq.app.ui.screens.standards.StandardsScreen
 import com.swimiq.app.ui.screens.training.TrainingLogScreen
 import com.swimiq.app.ui.viewmodel.AuthViewModel
 import com.swimiq.app.ui.viewmodel.AuthViewModelFactory
@@ -144,12 +145,22 @@ private fun MainApp(onSignedOut: () -> Unit) {
                 )
             }
             composable(MainTab.Meets.route) {
-                MeetResultsScreen(
+                MeetHubScreen(
                     state = swimState,
                     contentPadding = padding,
-                    onAdd = swimViewModel::addMeetResult,
-                    onDelete = swimViewModel::deleteMeetResult,
+                    heatNotes = swimState.heatNotes,
+                    selectedPlannedMeetId = swimState.selectedPlannedMeetId,
+                    onSelectPlannedMeet = swimViewModel::selectPlannedMeet,
+                    onAddResult = swimViewModel::addMeetResult,
+                    onDeleteResult = swimViewModel::deleteMeetResult,
+                    onAddPlannedMeet = swimViewModel::addPlannedMeet,
+                    onDeletePlannedMeet = swimViewModel::deletePlannedMeet,
+                    onAddHeatNote = swimViewModel::addHeatNote,
+                    onDeleteHeatNote = swimViewModel::deleteHeatNote,
                 )
+            }
+            composable(MainTab.Standards.route) {
+                StandardsScreen(state = swimState, contentPadding = padding)
             }
             composable(MainTab.Goals.route) {
                 GoalsScreen(

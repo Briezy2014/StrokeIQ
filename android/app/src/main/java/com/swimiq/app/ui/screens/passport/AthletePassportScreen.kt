@@ -158,8 +158,9 @@ fun AthletePassportScreen(
 
         MetricCard("SwimIQ Score™", breakdown.totalScore.toString())
         MetricCard("Current Focus", state.currentFocus)
+        MetricCard("Highest Cut", state.overallHighestCut)
         MetricCard("Readiness", state.readiness)
-        MetricCard("Next Meet", state.nextMeet)
+        MetricCard("Next Meet", state.nextPlannedMeet)
         MetricCard("Personal Bests", state.personalBestCount.toString())
         MetricCard("Training Sessions", state.raceLogs.size.toString())
 

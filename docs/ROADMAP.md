@@ -3,7 +3,7 @@
 **Built in the Water. Driven by Possibility.**  
 Founded by Aspyn Briez
 
-This roadmap defines eight incremental releases. Each version ships a working product before advanced features begin. **Version 3 is the current implementation target.**
+This roadmap defines eight incremental releases. Each version ships a working product before advanced features begin. **Version 4 is the current implementation target.**
 
 ---
 
@@ -43,7 +43,7 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 
 ---
 
-## Version 3 — Coach & Team (Current)
+## Version 3 — Coach & Team (Complete)
 
 **Goal:** Support coaches managing multiple swimmers.
 
@@ -57,7 +57,7 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 
 ---
 
-## Version 4 — Meets & Standards
+## Version 4 — Meets & Standards (Current)
 
 **Goal:** Meet-centric workflows and USA Swimming standards.
 

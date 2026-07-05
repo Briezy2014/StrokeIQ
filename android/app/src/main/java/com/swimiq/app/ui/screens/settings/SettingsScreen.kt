@@ -85,7 +85,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("App", fontWeight = FontWeight.Bold, color = SwimBlueDark)
-                Text("SwimIQ Version 3.0.0", color = SwimNavy)
+                Text("SwimIQ Version 4.0.0", color = SwimNavy)
                 Text("Built in the Water. Driven by Possibility.", color = SwimNavy.copy(alpha = 0.7f))
                 Text("© 2026 SwimIQ · Founded by Aspyn Briez", color = SwimNavy.copy(alpha = 0.7f))
             }

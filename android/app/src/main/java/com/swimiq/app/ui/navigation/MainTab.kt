@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.swimiq.app.data.model.UserRole
 
@@ -24,6 +25,7 @@ sealed class MainTab(
     data object Training : MainTab("training", "Train", Icons.Default.FitnessCenter)
     data object Goals : MainTab("goals", "Goals", Icons.Default.EmojiEvents)
     data object Meets : MainTab("meets", "Meets", Icons.Default.SportsScore)
+    data object Standards : MainTab("standards", "Cuts", Icons.Default.Timer)
     data object Charts : MainTab("charts", "Charts", Icons.Default.BarChart)
     data object Passport : MainTab("passport", "Passport", Icons.Default.Badge)
     data object Coach : MainTab("coach", "Coach", Icons.Default.Groups)
@@ -37,6 +39,7 @@ sealed class MainTab(
             Training,
             Goals,
             Meets,
+            Standards,
             Charts,
             Passport,
             Alerts,
