@@ -1,5 +1,6 @@
 import '../../data/models/usa_time_standard.dart';
 import '../../data/repositories/swimiq_repository.dart';
+import '../utils/swim_stroke_utils.dart';
 import 'usa_motivational_standards_catalog.dart';
 
 class UsaStandardsService {
@@ -35,9 +36,10 @@ class UsaStandardsService {
     String? ageGroup,
     String? gender,
   }) {
+    final canonicalStroke = SwimStrokeUtils.canonical(stroke);
     final matches = standards.where(
       (standard) =>
-          standard.stroke == stroke &&
+          SwimStrokeUtils.canonical(standard.stroke) == canonicalStroke &&
           standard.distance == distance &&
           standard.course == course &&
           swimmerTime <= standard.timeSeconds &&

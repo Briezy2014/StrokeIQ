@@ -82,7 +82,7 @@ class SwimmerData {
         meetResults: meetResults,
         videos: userFacingVideos,
         videoAnalyses: userFacingVideoAnalyses,
-        standards: usaStandards,
+        motivationalStandards: motivationalStandards,
       );
 
   SwimmerData copyWith({
