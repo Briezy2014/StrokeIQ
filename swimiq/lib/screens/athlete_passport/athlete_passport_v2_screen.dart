@@ -9,6 +9,7 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../usa_standards/usa_standards_screen.dart';
+import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -199,6 +200,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               swimmerName: swimmer,
               club: profile?.team,
               coach: profile?.coachName,
+            ),
+            const SizedBox(height: 20),
+            PassportHub(
+              data: data,
+              swimmer: swimmer,
+              snapshot: snapshot,
             ),
             const SizedBox(height: 24),
             const SwimIqScreenHeader(

@@ -17,6 +17,19 @@ final swimIqRepositoryProvider = Provider<SwimIqRepository>(
 
 final activeSwimmerProvider = StateProvider<String?>((ref) => null);
 
+/// Bottom-nav tab indices for [HomeScreen].
+abstract final class HomeTab {
+  static const dashboard = 0;
+  static const personalBests = 1;
+  static const addSession = 2;
+  static const goals = 3;
+  static const meetResults = 4;
+  static const videoLab = 5;
+  static const passport = 6;
+}
+
+final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);
+
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
 );
