@@ -20,6 +20,15 @@ void main() {
       expect(profile.secondaryStroke, isNull);
     });
 
+    test('parses Postgres-style birthday strings', () {
+      final profile = SwimmerProfile.fromJson({
+        'swimmer_name': 'Aspyn',
+        'birthday': '2012-03-15',
+      });
+
+      expect(profile.birthday, DateTime(2012, 3, 15));
+    });
+
     test('round-trips structured athlete notes metadata', () {
       final profile = SwimmerProfile(
         swimmerName: 'Aspyn',

@@ -27,7 +27,18 @@ class UsaMotivationalStandardsCatalog {
 
   static Future<UsaMotivationalStandardsCatalog> loadFromAssets() async {
     final raw = await rootBundle.loadString(assetPath);
+    return parseJsonString(raw);
+  }
+
+  /// Parse a USA Swimming motivational standards JSON export.
+  static UsaMotivationalStandardsCatalog parseJsonString(String raw) {
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    return _fromDecoded(decoded);
+  }
+
+  static UsaMotivationalStandardsCatalog _fromDecoded(
+    Map<String, dynamic> decoded,
+  ) {
     final bundle = UsaMotivationalStandardsBundle.fromJson(decoded);
     final eventsByKey = <String, UsaMotivationalEventStandard>{};
 

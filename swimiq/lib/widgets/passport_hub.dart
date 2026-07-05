@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/passport_ai_recommendation.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/passport_metrics.dart';
-import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../screens/video_lab/video_lab_screen.dart';
 import '../screens/usa_standards/usa_standards_screen.dart';
 
 class PassportHub extends ConsumerWidget {
@@ -70,9 +70,8 @@ class PassportHub extends ConsumerWidget {
   ) {
     switch (destination) {
       case PassportHubDestination.videoLab:
-        ref.read(homeTabIndexProvider.notifier).state = HomeTab.videoLab;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Opened Video Lab from Athlete Passport™')),
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const VideoLabScreen()),
         );
       case PassportHubDestination.usaStandards:
         Navigator.of(context).push(

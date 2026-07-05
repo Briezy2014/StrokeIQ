@@ -95,7 +95,7 @@ class SwimmerProfile {
       firstName: _nullableText(json['first_name']),
       lastName: _nullableText(json['last_name']),
       preferredName: _nullableText(json['preferred_name']),
-      birthday: DateTime.tryParse(json['birthday']?.toString() ?? ''),
+      birthday: _parseBirthday(json['birthday']),
       graduationYear: (json['graduation_year'] as num?)?.toInt(),
       team: _nullableText(json['team']),
       coachName: _nullableText(json['coach_name']),
@@ -231,4 +231,25 @@ class SwimmerProfile {
       '${date.year.toString().padLeft(4, '0')}-'
       '${date.month.toString().padLeft(2, '0')}-'
       '${date.day.toString().padLeft(2, '0')}';
+
+  static DateTime? _parseBirthday(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+
+    final parsed = DateTime.tryParse(text);
+    if (parsed != null) return DateTime(parsed.year, parsed.month, parsed.day);
+
+    final dateOnly = RegExp(r'^(\d{4})-(\d{2})-(\d{2})');
+    final match = dateOnly.firstMatch(text);
+    if (match != null) {
+      final year = int.tryParse(match.group(1)!);
+      final month = int.tryParse(match.group(2)!);
+      final day = int.tryParse(match.group(3)!);
+      if (year != null && month != null && day != null) {
+        return DateTime(year, month, day);
+      }
+    }
+    return null;
+  }
 }

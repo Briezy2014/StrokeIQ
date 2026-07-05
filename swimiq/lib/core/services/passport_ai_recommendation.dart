@@ -13,7 +13,7 @@ class PassportAiRecommendation {
     this.suggestedEvent,
     this.priorities = const [],
     this.engineLabel =
-        'SwimIQ V1 notes engine today · Claude vision analysis coming soon',
+        'Gemini video AI + MediaPipe pose on web · USA standards from official JSON',
   });
 
   final String headline;

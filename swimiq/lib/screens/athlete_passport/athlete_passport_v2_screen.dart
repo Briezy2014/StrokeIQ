@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/swimmer_profile.dart';
@@ -28,7 +29,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _lastNameController;
   late final TextEditingController _preferredNameController;
   late final TextEditingController _usaIdController;
-  late final TextEditingController _genderController;
   late final TextEditingController _clubController;
   late final TextEditingController _coachController;
   late final TextEditingController _schoolController;
@@ -42,8 +42,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _dominantHandController;
 
   DateTime? _birthday;
+  String? _selectedGender;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
+  bool _formDirty = false;
   int? _syncedProfileId;
 
   @override
@@ -53,7 +55,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _lastNameController = TextEditingController();
     _preferredNameController = TextEditingController();
     _usaIdController = TextEditingController();
-    _genderController = TextEditingController();
     _clubController = TextEditingController();
     _coachController = TextEditingController();
     _schoolController = TextEditingController();
@@ -73,7 +74,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _lastNameController.dispose();
     _preferredNameController.dispose();
     _usaIdController.dispose();
-    _genderController.dispose();
     _clubController.dispose();
     _coachController.dispose();
     _schoolController.dispose();
@@ -100,7 +100,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   }
 
   void _syncForm(SwimmerProfile? profile) {
-    if (_syncedProfileId == profile?.id && profile?.id != null) return;
     _syncedProfileId = profile?.id;
 
     _firstNameController.text = profile?.firstName ?? '';
@@ -113,7 +112,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     }
     _preferredNameController.text = profile?.preferredName ?? '';
     _usaIdController.text = profile?.usaSwimmingId ?? '';
-    _genderController.text = profile?.gender ?? '';
+    _selectedGender = _normalizeGenderSelection(profile?.gender);
     _clubController.text = profile?.team ?? '';
     _coachController.text = profile?.coachName ?? '';
     _schoolController.text = profile?.school ?? '';
@@ -127,6 +126,16 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
     _birthday = profile?.birthday;
+    _formDirty = false;
+  }
+
+  String? _normalizeGenderSelection(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final lower = raw.trim().toLowerCase();
+    if (lower.startsWith('b') || lower.startsWith('m') || lower == 'boy') {
+      return 'Boys';
+    }
+    return 'Girls';
   }
 
   Future<void> _pickBirthday() async {
@@ -137,7 +146,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() => _birthday = picked);
+      setState(() {
+        _formDirty = true;
+        _birthday = picked;
+      });
     }
   }
 
@@ -172,10 +184,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       favoriteEvent: _optionalText(_favoriteEventController.text),
       usaSwimmingId: _optionalText(_usaIdController.text),
       athleteNotes: SwimmerProfile.composeAthleteNotes(
-        gender: _genderController.text,
+        gender: _selectedGender,
         height: _heightController.text,
         weight: _weightController.text,
         dominantHand: _dominantHandController.text,
+        trainingGroup: existing?.trainingGroup,
         profilePhotoUrl: existing?.profilePhotoUrl,
         notes: _notesController.text,
       ),
@@ -189,6 +202,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       _isSaving = false;
       if (error == null) {
         _syncedProfileId = null;
+        _formDirty = false;
       }
     });
 
@@ -241,12 +255,21 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<SwimmerData?>>(swimmerDataProvider, (previous, next) {
+      final profile = next.value?.profile;
+      final profileId = profile?.id;
+      if (!_formDirty && profileId != _syncedProfileId) {
+        _syncForm(profile);
+      }
+    });
+
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final profile = data.profile;
-        _syncForm(profile);
         final displayName = profile?.displayName ?? swimmer;
         final dateFormat = DateFormat('MM/dd/yyyy');
+        final effectiveBirthday = _birthday ?? profile?.birthday;
+        final effectiveGender = _selectedGender ?? profile?.gender;
 
         final snapshot = data.passportSnapshot(swimmer);
 
@@ -320,8 +343,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'Athlete Identity',
               lines: [
                 'Display Name: $displayName',
-                'Birthday: ${_passportLabel(profile?.birthday != null ? dateFormat.format(profile!.birthday!) : null)}',
-                'Age: ${_passportLabel(profile?.age?.toString())}',
+                'Birthday: ${_passportLabel(effectiveBirthday != null ? dateFormat.format(effectiveBirthday) : null)}',
+                'Gender: ${_passportLabel(effectiveGender)}',
+                'Age: ${_passportLabel(_ageLabel(effectiveBirthday, profile?.age))}',
                 'Graduation Year: ${_passportLabel(profile?.graduationYear?.toString())}',
                 'School: ${_passportLabel(profile?.school)}',
               ],
@@ -396,7 +420,17 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         label: 'Preferred Name',
                         hint: 'Name used on deck and in results',
                       ),
-                      _dateTile(dateFormat),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Required for USA Swimming motivational cuts',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _birthdayField(dateFormat),
+                      _genderPicker(),
                       _field(
                         controller: _graduationYearController,
                         label: 'Graduation Year',
@@ -444,11 +478,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                       _field(
                         controller: _schoolController,
                         label: 'School',
-                      ),
-                      _field(
-                        controller: _genderController,
-                        label: 'Gender',
-                        hint: 'Example: Female, Male, Non-binary',
                       ),
                       _field(
                         controller: _heightController,
@@ -500,6 +529,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
+        onChanged: (_) => _formDirty = true,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -511,23 +541,77 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     );
   }
 
-  Widget _dateTile(DateFormat dateFormat) {
+  Widget _birthdayField(DateFormat dateFormat) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Date of Birth'),
-        subtitle: Text(
-          _birthday != null ? dateFormat.format(_birthday!) : 'Not set',
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.calendar_today),
-          tooltip: 'Pick date of birth',
-          onPressed: _pickBirthday,
+      child: InkWell(
+        onTap: _pickBirthday,
+        borderRadius: BorderRadius.circular(12),
+        child: InputDecorator(
+          decoration: const InputDecoration(
+            labelText: 'Date of Birth',
+            hintText: 'Tap to pick birthday',
+            suffixIcon: Icon(Icons.calendar_today),
+            border: OutlineInputBorder(),
+          ),
+          child: Text(
+            _birthday != null
+                ? dateFormat.format(_birthday!)
+                : 'Not set — tap to choose',
+            style: TextStyle(
+              color: _birthday != null
+                  ? null
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ),
     );
   }
+
+  Widget _genderPicker() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gender (USA Swimming)',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: AppConstants.genders.map((gender) {
+              return ChoiceChip(
+                label: Text(gender),
+                selected: _selectedGender == gender,
+                onSelected: (selected) {
+                  setState(() {
+                    _formDirty = true;
+                    _selectedGender = selected ? gender : null;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _ageLabel(DateTime? birthday, int? savedAge) {
+  if (birthday == null) {
+    return savedAge?.toString();
+  }
+  final today = DateTime.now();
+  var years = today.year - birthday.year;
+  if (today.month < birthday.month ||
+      (today.month == birthday.month && today.day < birthday.day)) {
+    years--;
+  }
+  return years.toString();
 }
 
 String _passportLabel(String? value) {

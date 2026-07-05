@@ -493,7 +493,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
   Future<String?> importUsaStandards() async {
     try {
-      await ref.read(usaStandardsServiceProvider).importSeedToSupabase();
+      final catalog =
+          await ref.read(usaMotivationalStandardsCatalogProvider.future);
+      await ref
+          .read(swimIqRepositoryProvider)
+          .upsertUsaStandards(catalog.flatStandards);
       await refresh();
       return null;
     } catch (error) {

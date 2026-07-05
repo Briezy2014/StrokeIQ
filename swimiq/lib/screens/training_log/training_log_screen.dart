@@ -33,7 +33,7 @@ class TrainingLogScreen extends ConsumerWidget {
             if (logs.isEmpty)
               const EmptyStateMessage(
                 message:
-                    'No swim sessions yet. Use the Add tab to log your first training swim.',
+                    'No swim sessions yet. Tap Log Session below to record your first training swim.',
               )
             else
               ...logs.map(

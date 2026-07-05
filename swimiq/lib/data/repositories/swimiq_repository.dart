@@ -112,14 +112,24 @@ class SwimIqRepository {
     final data = Map<String, dynamic>.from(profile.toJson())
       ..removeWhere((key, value) => value == null);
     if (profile.id != null) {
-      await _client.from('swimmers').update(data).eq('id', profile.id!);
-      return profile;
+      final response = await _client
+          .from('swimmers')
+          .update(data)
+          .eq('id', profile.id!)
+          .select()
+          .single();
+      return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
     }
 
     final existing = await fetchProfile(profile.swimmerName);
     if (existing?.id != null) {
-      await _client.from('swimmers').update(data).eq('id', existing!.id!);
-      return profile.copyWith(id: existing.id);
+      final response = await _client
+          .from('swimmers')
+          .update(data)
+          .eq('id', existing!.id!)
+          .select()
+          .single();
+      return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
     }
 
     final response = await _client
