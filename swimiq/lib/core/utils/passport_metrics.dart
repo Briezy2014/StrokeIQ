@@ -1,12 +1,12 @@
 import '../../core/utils/swim_analytics.dart';
-import '../../core/services/usa_standards_service.dart';
+import '../../core/services/usa_motivational_standards_catalog.dart';
+import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/video_models.dart';
-import '../../data/models/usa_time_standard.dart';
 import '../../data/models/swimmer_profile.dart';
 import 'swim_time.dart';
 
@@ -61,7 +61,7 @@ class PassportMetrics {
     required List<MeetResult> meetResults,
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
-    required List<UsaTimeStandard> standards,
+    required UsaMotivationalStandardsCatalog motivationalStandards,
   }) {
     final userVideos = videos.where((video) => video.isUserFacing).toList();
     final userVideoIds =
@@ -98,7 +98,7 @@ class PassportMetrics {
       ),
       highestCut: highestCut(
         raceLogs: raceLogs,
-        standards: standards,
+        catalog: motivationalStandards,
         profile: profile,
       ),
       nextMeet: nextMeet(meetResults),
@@ -130,8 +130,7 @@ class PassportMetrics {
         videos: userVideos,
       ),
       usaStandardsSummary: usaStandardsSummary(
-        raceLogs: raceLogs,
-        standards: standards,
+        catalog: motivationalStandards,
         profile: profile,
         personalBests: pbs,
       ),
@@ -184,20 +183,18 @@ class PassportMetrics {
 
   static String highestCut({
     required List<RaceLog> raceLogs,
-    required List<UsaTimeStandard> standards,
+    required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
   }) {
-    if (standards.isEmpty) return 'Import USA standards to compare cuts';
     if (raceLogs.isEmpty) return 'Log sessions to compare against cuts';
 
     final pbs = SwimAnalytics.personalBests(raceLogs);
-    String? bestLevel;
     final ageGroup = SwimIqAgeGroup.fromProfile(profile);
     final gender = SwimIqGender.standardsGender(profile);
+    String? bestLevel;
 
     for (final pb in pbs) {
-      final level = UsaStandardsService.highestCutForTime(
-        standards: standards,
+      final level = catalog.highestCutForTime(
         stroke: pb.stroke,
         distance: pb.distance,
         course: pb.course,
@@ -348,27 +345,22 @@ class PassportMetrics {
   }
 
   static String usaStandardsSummary({
-    required List<RaceLog> raceLogs,
-    required List<UsaTimeStandard> standards,
+    required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
     required List<RaceLog> personalBests,
   }) {
-    if (standards.isEmpty) {
-      return 'USA standards not loaded. Open USA Standards to import motivational times.';
-    }
-
     if (personalBests.isEmpty) {
-      return '${standards.length} motivational times loaded. Log sessions to compare cuts.';
+      return '${catalog.versionLabel} loaded. Log sessions to compare cuts.';
     }
 
     final highest = highestCut(
-      raceLogs: raceLogs,
-      standards: standards,
+      raceLogs: personalBests,
+      catalog: catalog,
       profile: profile,
     );
     final closest = _closestCutGap(
       personalBests: personalBests,
-      standards: standards,
+      catalog: catalog,
       profile: profile,
     );
 
@@ -417,29 +409,32 @@ class PassportMetrics {
 
   static _ClosestCut? _closestCutGap({
     required List<RaceLog> personalBests,
-    required List<UsaTimeStandard> standards,
+    required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
   }) {
     final ageGroup = SwimIqAgeGroup.fromProfile(profile);
+    final gender = SwimIqGender.standardsGender(profile);
     _ClosestCut? closest;
 
     for (final pb in personalBests) {
-      final matches = standards.where(
-        (standard) =>
-            standard.stroke == pb.stroke &&
-            standard.distance == pb.distance &&
-            standard.course == pb.course &&
-            standard.ageGroup == ageGroup &&
-            pb.timeSeconds > standard.timeSeconds,
+      final event = catalog.eventFor(
+        ageGroup: ageGroup,
+        gender: gender,
+        stroke: SwimStrokeUtils.canonical(pb.stroke),
+        distance: pb.distance,
+        course: pb.course,
       );
+      if (event == null) continue;
 
-      for (final standard in matches) {
-        final gap = pb.timeSeconds - standard.timeSeconds;
+      for (final entry in event.cuts.entries) {
+        final cutTime = entry.value;
+        if (pb.timeSeconds <= cutTime) continue;
+        final gap = pb.timeSeconds - cutTime;
         if (closest == null || gap < closest.gapSeconds) {
           closest = _ClosestCut(
-            eventLabel: standard.eventLabel,
-            standardLevel: standard.standardLevel,
-            timeSeconds: standard.timeSeconds,
+            eventLabel: event.event,
+            standardLevel: entry.key,
+            timeSeconds: cutTime,
             gapSeconds: gap,
           );
         }

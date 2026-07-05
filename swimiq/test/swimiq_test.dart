@@ -8,7 +8,13 @@ import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/data/models/video_models.dart';
 
+import 'support/motivational_standards_test_helper.dart';
+
 void main() {
+  setUpAll(() async {
+    await loadTestMotivationalCatalog();
+  });
+
   group('SwimTime', () {
     test('parses seconds format', () {
       expect(SwimTime.toSeconds('35.43'), 35.43);
@@ -24,6 +30,12 @@ void main() {
 
     test('formats long times', () {
       expect(SwimTime.fromSeconds(84.32), '1:24.32');
+    });
+
+    test('parseStoredTime handles colon strings from Supabase', () {
+      expect(SwimTime.parseStoredTime('1:12.00'), 72.0);
+      expect(SwimTime.parseStoredTime('32.50'), 32.5);
+      expect(SwimTime.parseStoredTime(72), 72.0);
     });
   });
 
@@ -212,6 +224,36 @@ void main() {
   });
 
   group('PassportMetrics', () {
+    test('does not award AAAA for realistic 100 fly time', () {
+      final snapshot = PassportMetrics.build(
+        swimmerName: 'Aspyn',
+        profile: const SwimmerProfile(
+          swimmerName: 'Aspyn',
+          preferredName: 'Aspyn',
+          birthday: null,
+        ),
+        raceLogs: [
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '100 Butterfly',
+            distance: 100,
+            stroke: 'Butterfly',
+            course: 'SCY',
+            timeSeconds: 72.0,
+            date: DateTime(2026, 6, 1),
+          ),
+        ],
+        goals: const [],
+        meetResults: const [],
+        videos: const [],
+        videoAnalyses: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
+      expect(snapshot.highestCut, isNot('AAAA'));
+      expect(snapshot.highestCut, isNot('No motivational cut matched yet'));
+    });
+
     test('builds passport snapshot from real swimmer data only', () {
       final snapshot = PassportMetrics.build(
         swimmerName: 'Aspyn',
@@ -249,7 +291,7 @@ void main() {
           ),
         ],
         videoAnalyses: const [],
-        standards: const [],
+        motivationalStandards: testMotivationalCatalog,
       );
 
       expect(snapshot.displayName, 'Aspyn');
