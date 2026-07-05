@@ -351,14 +351,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ),
             const SizedBox(height: 12),
             SwimIqSectionCard(
-              title: 'Motivational Standards',
-              lines: [
-                snapshot.usaStandardsSummary,
-                'Standards bracket uses birthday, or graduation year when DOB is blank.',
-              ],
-            ),
-            const SizedBox(height: 12),
-            SwimIqSectionCard(
               title: 'Athlete Notes',
               lines: [
                 if (profile?.notesBody?.trim().isNotEmpty == true)
