@@ -21,13 +21,28 @@ Cross-platform swim performance tracker for **Android** and **iOS**, connected t
 ## Setup
 
 > **Note:** The Streamlit app (`app.py` on port 8501) is separate from this Flutter app.
-> Running Streamlit will **not** show Flutter changes. Use `flutter run` below.
+> Running Streamlit will **not** show Flutter changes.
+
+### Windows (paths with spaces in your username)
+
+If your folder is under `C:\Users\Kara Williams\...`, Flutter may fail with
+`'C:\Users\Kara' is not recognized`. See **[docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md)**.
+
+Quick start after running `scripts\setup-short-path.bat`:
+
+```powershell
+S:
+cd swimiq
+.\run-chrome.ps1
+```
+
+### Everyone else
 
 ```bash
 cd swimiq
 flutter pub get
 cp .env.example .env   # add SUPABASE_URL and SUPABASE_ANON_KEY
-flutter run
+flutter run -d chrome
 ```
 
 Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
@@ -37,7 +52,7 @@ Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
 Add `GEMINI_API_KEY` to Supabase Edge Function secrets and deploy `analyze-swim-video`.  
 See **[docs/GEMINI_SETUP.md](docs/GEMINI_SETUP.md)** for step-by-step instructions.
 
-Pose metrics (MediaPipe-compatible BlazePose) run on-device automatically on Android and Web.  
+Pose metrics (MediaPipe-compatible BlazePose) run in **Flutter web (Chrome)**.  
 See **[docs/POSE_AND_GEMINI.md](docs/POSE_AND_GEMINI.md)**.
 
 ## Test

@@ -170,77 +170,77 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
             ),
             const SizedBox(height: 16),
-        TextFormField(
-          controller: _titleController,
-          decoration: const InputDecoration(labelText: 'Video title'),
-          onChanged: _applyEventInference,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _strokeController,
-          decoration: const InputDecoration(
-            labelText: 'Stroke',
-            hintText:
-                'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _distanceController,
-          decoration: const InputDecoration(labelText: 'Distance'),
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _courseController,
-          decoration: const InputDecoration(
-            labelText: 'Course',
-            hintText: 'SCY, SCM, or LCM',
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Race notes',
-            hintText:
-                'Reaction time, breakout, breathing, stroke count, tempo, finish, race strategy...',
-          ),
-          maxLines: 4,
-        ),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: _uploading ? null : _pickAndUpload,
-          icon: _uploading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.upload_file),
-          label: const Text('Upload Swim Video'),
-        ),
-        const SizedBox(height: 24),
-        Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(snapshot.latestAnalysisSummary),
-        const SizedBox(height: 12),
-        if (videos.isEmpty)
-          const EmptyStateMessage(
-            message:
-                'No videos yet. Upload a swim video to start AI analysis.',
-          )
-        else
-          ...videos.map(
-            (video) => _VideoCard(
-              video: video,
-              analysis: data.analysisForVideo(video.id),
-              dateFormat: dateFormat,
-              analyzing: _analyzingVideoId == video.id,
-              onAnalyze: () => _runAnalysis(video),
-              motivationalCut: _videoMotivationalCut(data, video),
+            TextFormField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Video title'),
+              onChanged: _applyEventInference,
             ),
-          ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _strokeController,
+              decoration: const InputDecoration(
+                labelText: 'Stroke',
+                hintText:
+                    'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _distanceController,
+              decoration: const InputDecoration(labelText: 'Distance'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _courseController,
+              decoration: const InputDecoration(
+                labelText: 'Course',
+                hintText: 'SCY, SCM, or LCM',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _notesController,
+              decoration: const InputDecoration(
+                labelText: 'Race notes',
+                hintText:
+                    'Reaction time, breakout, breathing, stroke count, tempo, finish, race strategy...',
+              ),
+              maxLines: 4,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _uploading ? null : _pickAndUpload,
+              icon: _uploading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.upload_file),
+              label: const Text('Upload Swim Video'),
+            ),
+            const SizedBox(height: 24),
+            Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(snapshot.latestAnalysisSummary),
+            const SizedBox(height: 12),
+            if (videos.isEmpty)
+              const EmptyStateMessage(
+                message:
+                    'No videos yet. Upload a swim video to start AI analysis.',
+              )
+            else
+              ...videos.map(
+                (video) => _VideoCard(
+                  video: video,
+                  analysis: data.analysisForVideo(video.id),
+                  dateFormat: dateFormat,
+                  analyzing: _analyzingVideoId == video.id,
+                  onAnalyze: () => _runAnalysis(video),
+                  motivationalCut: _videoMotivationalCut(data, video),
+                ),
+              ),
           ],
         );
       },

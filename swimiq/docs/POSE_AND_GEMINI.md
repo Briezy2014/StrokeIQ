@@ -35,7 +35,9 @@ No extra signup beyond Gemini (see [GEMINI_SETUP.md](GEMINI_SETUP.md)).
 
 ## Technical note
 
-The Flutter `pose_detection` package uses Google's **BlazePose** model — the same 33-landmark body topology as MediaPipe Pose. Metrics are estimates, not official meet timing.
+The Flutter `pose_detection` package uses Google's **BlazePose** model — the same 33-landmark body topology as MediaPipe Pose. On **Chrome (Flutter web)**, frames are sampled from the HTML video element. Metrics are estimates, not official meet timing.
+
+> **Windows note:** Native OpenCV builds were removed because they fail when the user folder contains spaces (e.g. `Kara Williams`). Use `run-chrome.bat` — see [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
 ## Deploy checklist
 
