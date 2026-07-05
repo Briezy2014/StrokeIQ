@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/swim_goal.dart';
@@ -104,6 +105,59 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _deleteGoal(SwimGoal goal) async {
+    if (goal.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete goal?'),
+        content: Text('Remove goal for ${goal.event}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final error =
+        await ref.read(swimmerDataProvider.notifier).deleteGoal(goal.id!);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? 'Goal deleted.')),
+    );
+  }
+
+  String _progressText(SwimGoal goal, SwimmerData data) {
+    final best = SwimAnalytics.bestTimeForGoal(
+      goal: goal,
+      raceLogs: data.raceLogs,
+    );
+    final toGoal = SwimAnalytics.secondsToGoal(
+      goal: goal,
+      raceLogs: data.raceLogs,
+    );
+
+    if (best == null) return 'No swims logged for this event yet';
+    if (toGoal != null && toGoal <= 0) {
+      return 'Goal achieved! PB: ${SwimTime.fromSeconds(best)}';
+    }
+    if (toGoal != null) {
+      return 'Current: ${SwimTime.fromSeconds(best)} · '
+          '${SwimTime.fromSeconds(toGoal)} to go';
+    }
+    return 'Current: ${SwimTime.fromSeconds(best)}';
   }
 
   @override
@@ -224,11 +278,26 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                         course: goal.course,
                         timeSeconds: goal.goalTime,
                       );
-                return SwimIqEventListTile(
-                  title: '${goal.event} (${goal.course})',
-                  subtitle:
-                      'Target ${SwimTime.fromSeconds(goal.goalTime)} · ${cut ?? 'Below B'} cut at goal pace',
-                  trailing: dateFormat.format(goal.targetDate),
+                final progress = _progressText(goal, data);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    title: Text('${goal.event} (${goal.course})'),
+                    subtitle: Text(
+                      'Target ${SwimTime.fromSeconds(goal.goalTime)} · '
+                      '${cut ?? 'Below B'} cut\n$progress',
+                    ),
+                    isThreeLine: true,
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'delete') _deleteGoal(goal);
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      ],
+                    ),
+                  ),
                 );
               }),
           ],

@@ -107,6 +107,39 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     }
   }
 
+  Future<void> _deleteResult(MeetResult result) async {
+    if (result.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete meet result?'),
+        content: Text('Remove ${result.event} at ${result.meetName}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final error = await ref
+        .read(swimmerDataProvider.notifier)
+        .deleteMeetResult(result.id!);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? 'Meet result deleted.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SwimmerScreen(
@@ -209,11 +242,36 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                           course: result.course,
                           timeSeconds: result.swimTime,
                         );
-                  return SwimIqEventListTile(
-                    title: result.event,
-                    subtitle:
-                        '${result.meetName} · ${result.course} · ${dateFormat.format(result.meetDate)} · ${cut ?? 'Below B'} cut',
-                    trailing: SwimTime.fromSeconds(result.swimTime),
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(result.event),
+                      subtitle: Text(
+                        '${result.meetName} · ${result.course} · '
+                        '${dateFormat.format(result.meetDate)} · '
+                        '${cut ?? 'Below B'} cut',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            SwimTime.fromSeconds(result.swimTime),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'delete') _deleteResult(result);
+                            },
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

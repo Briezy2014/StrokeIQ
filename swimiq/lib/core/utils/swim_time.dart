@@ -1,7 +1,5 @@
 /// Swim time parsing and formatting utilities matching the Streamlit app.
-class SwimTime {
-  SwimTime._();
-
+abstract final class SwimTime {
   /// Converts swim time text into seconds.
   ///
   /// Accepts `35.43`, `1:24.32`, or `5:31.43`.
@@ -61,5 +59,15 @@ class SwimTime {
       return double.tryParse(trimmed);
     }
     return null;
+  }
+
+  /// Returns true if [timeText] can be parsed as a swim time.
+  static bool isValid(String timeText) {
+    try {
+      toSeconds(timeText);
+      return true;
+    } on FormatException {
+      return false;
+    }
   }
 }

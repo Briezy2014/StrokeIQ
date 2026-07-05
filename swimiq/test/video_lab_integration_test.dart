@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:swimiq/config/env.dart';
 import 'package:swimiq/config/supabase_config.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
 import 'package:swimiq/data/models/video_models.dart';
@@ -16,6 +17,7 @@ void main() {
   const uuid = Uuid();
 
   setUpAll(() {
+    if (!Env.isConfigured) return;
     client = SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey);
     repository = SwimIqRepository(client);
   });
@@ -25,6 +27,7 @@ void main() {
     String? storagePath;
 
     test('uploads video metadata, lists it, and runs AI analysis', () async {
+      if (!Env.isConfigured) return;
       storagePath = '$swimmer/${uuid.v4()}.mp4';
       final publicUrl =
           client.storage.from('swim-videos').getPublicUrl(storagePath!);
@@ -89,6 +92,7 @@ void main() {
     });
 
     tearDown(() async {
+      if (!Env.isConfigured) return;
       if (uploadedVideoId != null) {
         try {
           await client.from('swim_videos').delete().eq('id', uploadedVideoId!);

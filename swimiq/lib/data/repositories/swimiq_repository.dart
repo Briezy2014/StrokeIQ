@@ -29,6 +29,17 @@ class SwimIqRepository {
     await _client.from('race_logs').insert(log.toInsertJson());
   }
 
+  Future<void> updateRaceLog(RaceLog log) async {
+    if (log.id == null) {
+      throw ArgumentError('Race log id is required for update.');
+    }
+    await _client.from('race_logs').update(log.toInsertJson()).eq('id', log.id!);
+  }
+
+  Future<void> deleteRaceLog(int id) async {
+    await _client.from('race_logs').delete().eq('id', id);
+  }
+
   Future<List<SwimGoal>> fetchGoals(String swimmerName) async {
     final response = await _client
         .from('goals')
@@ -45,6 +56,17 @@ class SwimIqRepository {
     await _client.from('goals').insert(goal.toInsertJson());
   }
 
+  Future<void> updateGoal(SwimGoal goal) async {
+    if (goal.id == null) {
+      throw ArgumentError('Goal id is required for update.');
+    }
+    await _client.from('goals').update(goal.toInsertJson()).eq('id', goal.id!);
+  }
+
+  Future<void> deleteGoal(int id) async {
+    await _client.from('goals').delete().eq('id', id);
+  }
+
   Future<List<MeetResult>> fetchMeetResults(String swimmerName) async {
     final response = await _client
         .from('meet_results')
@@ -59,6 +81,20 @@ class SwimIqRepository {
 
   Future<void> insertMeetResult(MeetResult result) async {
     await _client.from('meet_results').insert(result.toInsertJson());
+  }
+
+  Future<void> updateMeetResult(MeetResult result) async {
+    if (result.id == null) {
+      throw ArgumentError('Meet result id is required for update.');
+    }
+    await _client
+        .from('meet_results')
+        .update(result.toInsertJson())
+        .eq('id', result.id!);
+  }
+
+  Future<void> deleteMeetResult(int id) async {
+    await _client.from('meet_results').delete().eq('id', id);
   }
 
   Future<SwimmerProfile?> fetchProfile(String swimmerName) async {
@@ -92,6 +128,23 @@ class SwimIqRepository {
         .select()
         .single();
     return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
+  }
+
+  /// Creates a minimal swimmer profile if one does not exist yet.
+  Future<SwimmerProfile> ensureSwimmerProfile({
+    required String swimmerName,
+    String? preferredName,
+    String? email,
+  }) async {
+    final existing = await fetchProfile(swimmerName);
+    if (existing != null) return existing;
+
+    final profile = SwimmerProfile(
+      swimmerName: swimmerName,
+      preferredName: preferredName ?? swimmerName,
+      athleteNotes: email != null ? 'Account: $email' : null,
+    );
+    return saveProfile(profile);
   }
 
   Future<List<SwimVideo>> fetchSwimVideos(String swimmer) async {

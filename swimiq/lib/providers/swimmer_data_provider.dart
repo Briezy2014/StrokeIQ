@@ -2,12 +2,14 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
+import '../data/models/swim_pose_metrics.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
@@ -194,6 +196,26 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<String?> updateRaceLog(RaceLog log) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateRaceLog(log);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteRaceLog(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteRaceLog(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
   Future<String?> addGoal(SwimGoal goal) async {
     try {
       await ref.read(swimIqRepositoryProvider).insertGoal(goal);
@@ -204,9 +226,67 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<String?> updateGoal(SwimGoal goal) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateGoal(goal);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteGoal(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteGoal(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
   Future<String?> addMeetResult(MeetResult result) async {
     try {
       await ref.read(swimIqRepositoryProvider).insertMeetResult(result);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> updateMeetResult(MeetResult result) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateMeetResult(result);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteMeetResult(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteMeetResult(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> ensureSwimmerProfileLinked({
+    required String swimmerName,
+    String? preferredName,
+    String? email,
+  }) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).ensureSwimmerProfile(
+            swimmerName: swimmerName,
+            preferredName: preferredName,
+            email: email,
+          );
       await refresh();
       return null;
     } catch (error) {
@@ -292,13 +372,52 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (current == null) return 'No swimmer data loaded.';
 
     try {
-      final analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
-            video: video,
-            raceLogs: current.raceLogs,
-            goals: current.goals,
-            profile: current.profile,
-            standards: current.usaStandards,
+      SwimPoseMetrics? poseMetrics;
+      final poseService = ref.read(swimPoseAnalysisServiceProvider);
+      if (poseService.isSupported) {
+        try {
+          final bytes = await ref
+              .read(videoStorageServiceProvider)
+              .downloadVideoBytes(video.storagePath);
+          poseMetrics = await poseService.analyzeVideoBytes(
+            bytes,
+            fileName: video.storagePath,
           );
+        } catch (_) {
+          // Pose metrics are optional; Gemini analysis can still run.
+        }
+      }
+
+      SwimVideoAnalysis analysis;
+
+      try {
+        analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
+              video: video,
+              raceLogs: current.raceLogs,
+              goals: current.goals,
+              profile: current.profile,
+              poseMetrics: poseMetrics,
+            );
+      } on GeminiAnalysisException catch (error) {
+        return error.message;
+      } catch (_) {
+        analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
+              video: video,
+              raceLogs: current.raceLogs,
+              goals: current.goals,
+              profile: current.profile,
+              standards: current.usaStandards,
+            );
+        if (poseMetrics != null) {
+          analysis = analysis.copyWith(
+            analysisJson: {
+              ...?analysis.analysisJson,
+              'pose_metrics': poseMetrics.toJson(),
+              'engine': 'swimiq-v1-notes-mediapipe',
+            },
+          );
+        }
+      }
 
       final analysisWithIds = analysis.copyWith(
         swimVideoId: videoId,

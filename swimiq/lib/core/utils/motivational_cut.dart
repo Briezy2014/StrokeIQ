@@ -2,6 +2,7 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../services/usa_motivational_standards_catalog.dart';
+import '../utils/swimiq_standards_profile.dart';
 import 'swimiq_age_group.dart';
 import 'swimiq_gender.dart';
 
@@ -18,13 +19,15 @@ class MotivationalCut {
     String? ageGroup,
     String? gender,
   }) {
+    if (!SwimIqStandardsProfile.isReady(profile)) return null;
+
     return catalog.highestCutForTime(
       stroke: stroke,
       distance: distance,
       course: course,
       swimmerTime: timeSeconds,
-      ageGroup: ageGroup ?? SwimIqAgeGroup.fromProfile(profile),
-      gender: gender ?? SwimIqGender.standardsGender(profile),
+      ageGroup: ageGroup ?? SwimIqAgeGroup.fromProfileOrNull(profile)!,
+      gender: gender ?? SwimIqGender.standardsGenderOrNull(profile)!,
     );
   }
 
@@ -38,6 +41,10 @@ class MotivationalCut {
     String? ageGroup,
     String? gender,
   }) {
+    if (!SwimIqStandardsProfile.isReady(profile)) {
+      return SwimIqStandardsProfile.setupMessageShort;
+    }
+
     return forSwim(
           catalog: catalog,
           profile: profile,

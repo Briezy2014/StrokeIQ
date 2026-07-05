@@ -1,4 +1,5 @@
 import '../../core/utils/supabase_parsers.dart';
+import 'swim_pose_metrics.dart';
 
 /// Canonical AI analysis model for Video Lab.
 ///
@@ -73,6 +74,17 @@ class SwimVideoAnalysis {
   }
 
   bool get isNotesDriven => analysisEngine == 'swimiq-v1-notes';
+
+  bool get isGeminiEngine => analysisEngine == 'swimiq-v2-gemini' ||
+      analysisEngine == 'swimiq-v2-gemini-mediapipe';
+
+  bool get hasPoseMetrics => analysisJson?['pose_metrics'] is Map;
+
+  SwimPoseMetrics? get poseMetrics {
+    final raw = analysisJson?['pose_metrics'];
+    if (raw is! Map) return null;
+    return SwimPoseMetrics.fromJson(Map<String, dynamic>.from(raw));
+  }
 
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(

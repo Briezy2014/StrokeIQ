@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
@@ -10,6 +11,8 @@ import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
 import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
+import 'settings/settings_screen.dart';
+import 'training_log/training_log_screen.dart';
 import 'video_lab/video_lab_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -22,27 +25,33 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _screenAt(int index) {
     switch (index) {
-      case 0:
+      case HomeTab.dashboard:
         return const DashboardScreen();
-      case 1:
+      case HomeTab.personalBests:
         return const PersonalBestsScreen();
-      case 2:
+      case HomeTab.trainingLog:
+        return const TrainingLogScreen();
+      case HomeTab.addSession:
         return const AddSessionScreen();
-      case 3:
+      case HomeTab.goals:
         return const GoalsScreen();
-      case 4:
+      case HomeTab.meetResults:
         return const MeetResultsScreen();
-      case 5:
+      case HomeTab.videoLab:
         return const VideoLabScreen();
-      case 6:
+      case HomeTab.passport:
         return const AthletePassportV2Screen();
       default:
         return const DashboardScreen();
     }
   }
 
-  void _switchSwimmer() {
-    ref.read(activeSwimmerProvider.notifier).state = null;
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
   }
 
   Future<void> _refresh() async {
@@ -53,6 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final swimmer = ref.watch(activeSwimmerProvider)!;
     final selectedIndex = ref.watch(homeTabIndexProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,16 +73,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
           ),
-          TextButton(
-            onPressed: _switchSwimmer,
-            child: const Text('Switch swimmer'),
+          IconButton(
+            tooltip: 'Settings',
+            onPressed: _openSettings,
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),
       body: Column(
         children: [
           MaterialBanner(
-            content: Text('Current swimmer: $swimmer'),
+            content: Text(
+              user?.email != null
+                  ? 'Signed in as ${user!.email}'
+                  : 'Swimmer: $swimmer',
+            ),
             backgroundColor: Colors.green.shade50,
             actions: const [SizedBox.shrink()],
           ),
@@ -100,6 +115,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.emoji_events_outlined),
             selectedIcon: Icon(Icons.emoji_events),
             label: 'PBs',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(Icons.list_alt),
+            label: 'Log',
           ),
           NavigationDestination(
             icon: Icon(Icons.add_circle_outline),

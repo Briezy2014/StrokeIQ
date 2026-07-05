@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:swimiq/config/env.dart';
 import 'package:swimiq/config/supabase_config.dart';
 import 'package:swimiq/core/constants/app_constants.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
@@ -58,6 +59,7 @@ void main() {
 
   group('Athlete Passport Supabase persistence', () {
     test('loads and saves Aspyn profile', () async {
+      if (!Env.isConfigured) return;
       final repository = SwimIqRepository(
         SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey),
       );

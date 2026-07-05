@@ -1,95 +1,57 @@
 # SwimIQ Flutter App
 
-Native iOS and Android client for **SwimIQ Version 2: Athlete Performance**, connected to the existing Supabase backend used by the Streamlit app.
+Cross-platform swim performance tracker for **Android** and **iOS**, connected to the same Supabase backend as the Streamlit reference app.
 
-> If your local folder is named `swimiq_mobile`, use the same code inside that project — the repo path is `swimiq/`.
+## Version 1 — Complete
 
-## Features
-
-- **Swimmer gate** — enter a name/code to start (no password auth, matching Streamlit)
-- **Dashboard** — SwimIQ Score, session metrics, history, and time progress chart
-- **Personal Bests** — best times by stroke, distance, and course
-- **Add Swim Session** — log training swims with PB detection
-- **Goals** — set and view target times
-- **Meet Results** — record and view competition results
-- **Video Lab** — upload swim videos to Supabase Storage, playback, AI analysis
-- **Athlete Passport** — Streamlit-style status cards, athlete details, AI Coach hub, profile editing
-- **2024–2028 USA Swimming motivational standards** — full bundled dataset (500 events)
-
-## Supabase setup (required for Video Lab + Standards import)
-
-1. Open Supabase Dashboard → **SQL Editor**
-2. Run `supabase/migrations/001_video_standards.sql`
-3. Go to **Storage** → create bucket `swim-videos` (public recommended for V1 playback)
-4. Ensure policies allow insert/select for your publishable key
-
-### Tables
-
-| Table | Purpose |
-|-------|---------|
-| `race_logs` | Training sessions (`swimmer`) |
-| `goals` | Target times (`swimmer_name`) |
-| `meet_results` | Meet results (`swimmer_name`) |
-| `swimmers` | Athlete Passport profile |
-| `swim_videos` | Uploaded video metadata |
-| `swim_video_analyses` | AI coaching analysis results |
-| `usa_time_standards` | USA Swimming motivational times |
-
-If the new tables are missing, the app still runs — standards fall back to bundled seed JSON, and video upload shows an error until migration completes.
+| Feature | Status |
+|---------|--------|
+| Splash + email/password auth | Done |
+| Dashboard with SwimIQ Score + chart | Done |
+| Training log (list, edit, delete) | Done |
+| Add swim session + PB detection | Done |
+| Personal bests | Done |
+| Goals with progress + edit/delete | Done |
+| Meet results + edit/delete | Done |
+| Athlete passport (swimmer profile) | Done |
+| Video Lab + Gemini AI video analysis | Done — [deploy setup](docs/GEMINI_SETUP.md) |
+| Settings (account, sign out) | Done |
+| Auto-link auth user to swimmer profile | Done |
 
 ## Setup
 
-### Prerequisites
-
-- Flutter SDK 3.32+
-- Android Studio (Windows/Android) and/or Xcode (iOS)
-
-### Install dependencies
+> **Note:** The Streamlit app (`app.py` on port 8501) is separate from this Flutter app.
+> Running Streamlit will **not** show Flutter changes. Use `flutter run` below.
 
 ```bash
 cd swimiq
 flutter pub get
+cp .env.example .env   # add SUPABASE_URL and SUPABASE_ANON_KEY
+flutter run
 ```
 
-### Supabase configuration
+Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
 
-```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
-  --dart-define=SUPABASE_KEY=your-publishable-key
-```
+### Gemini video analysis
 
-## Run
+Add `GEMINI_API_KEY` to Supabase Edge Function secrets and deploy `analyze-swim-video`.  
+See **[docs/GEMINI_SETUP.md](docs/GEMINI_SETUP.md)** for step-by-step instructions.
+
+Pose metrics (MediaPipe-compatible BlazePose) run on-device automatically on Android and Web.  
+See **[docs/POSE_AND_GEMINI.md](docs/POSE_AND_GEMINI.md)**.
+
+## Test
 
 ```bash
 cd swimiq
-flutter pub get
-flutter analyze
 flutter test
-flutter run -d chrome
+flutter analyze
 ```
 
-### Tomorrow quick start (after `git pull`)
+## Database schema
 
-1. `cd swimiq && flutter clean && flutter pub get`
-2. `flutter run -d chrome` (or your device)
-3. Enter swimmer **Aspyn**
-4. Check **Passport** tab: Athlete Status cards, Coming Soon hub, AI Coach recommendation
-5. Tap **Video Lab** from hub or bottom nav; run AI analysis on a video with notes
+No schema changes for V1. Auth uses `auth.users`. Swimmer data uses existing tables with `swimmer` / `swimmer_name` keys linked from the authenticated user's display name.
 
-Live Supabase tests (optional — require working credentials):
+## Reference
 
-```bash
-flutter test test/aspyn_data_live_test.dart test/video_lab_integration_test.dart
-```
-
-## AI Swim Analysis (V1)
-
-V1 uses a notes-and-metadata engine (`AiSwimAnalysisService`) that turns upload notes, goals, PBs, and standards into coaching priorities. Claude vision / frame-by-frame analysis is planned for SwimDNA™.
-
-## Build for release
-
-```bash
-flutter build apk
-flutter build ios --no-codesign
-```
+The Streamlit app (`app.py` in repo root) remains unchanged.

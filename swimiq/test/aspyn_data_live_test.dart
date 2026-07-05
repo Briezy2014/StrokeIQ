@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:swimiq/config/env.dart';
 import 'package:swimiq/config/supabase_config.dart';
 import 'package:swimiq/core/services/usa_motivational_standards_catalog.dart';
 import 'package:swimiq/data/models/usa_time_standard.dart';
@@ -71,6 +72,10 @@ void main() {
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    if (!Env.isConfigured) {
+      liveSupabase = false;
+      return;
+    }
     repository = SwimIqRepository(
       SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey),
     );

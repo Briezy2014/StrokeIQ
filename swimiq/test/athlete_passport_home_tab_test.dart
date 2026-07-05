@@ -9,6 +9,7 @@ import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
 import 'package:swimiq/screens/home_screen.dart';
+import 'package:swimiq/services/auth_service.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 
@@ -83,6 +84,7 @@ void main() {
         overrides: [
           activeSwimmerProvider.overrideWith((ref) => 'Aspyn'),
           swimmerDataProvider.overrideWith(_AspynHarness.new),
+          currentUserProvider.overrideWith((ref) => null),
         ],
         child: MaterialApp(
           theme: buildAppTheme(),

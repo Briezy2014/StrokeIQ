@@ -1,10 +1,10 @@
 name: swimiq
-description: SwimIQ — athlete performance tracking for competitive swimmers.
+description: SwimIQ — athlete swim performance tracking for Android and iOS.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: ^3.10.0
 
 dependencies:
   flutter:
@@ -12,12 +12,17 @@ dependencies:
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.9.0
   flutter_riverpod: ^2.6.1
+  flutter_dotenv: ^5.2.1
   fl_chart: ^0.70.2
   intl: ^0.20.2
   file_picker: ^8.3.7
   video_player: ^2.10.0
-  path: ^1.9.1
+  path: ^1.9.0
   uuid: ^4.5.1
+  pose_detection: ^3.5.0
+  path_provider: ^2.1.6
+  opencv_dart: ^2.2.1
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -28,4 +33,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/branding/
+    - assets/images/
+    - assets/data/usa_time_standards_seed.json
     - assets/data/usa_motivational_standards_2024_2028.json
