@@ -334,6 +334,44 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<String?> uploadProfilePhoto({
+    required String fileName,
+    required List<int> bytes,
+  }) async {
+    final swimmer = ref.read(activeSwimmerProvider);
+    if (swimmer == null) return 'No swimmer selected.';
+
+    final current = state.value;
+    final profile = current?.profile;
+    if (profile == null) {
+      return 'Save the athlete passport profile before uploading a photo.';
+    }
+
+    try {
+      final photoUrl = await ref.read(profilePhotoServiceProvider).uploadProfilePhoto(
+            swimmer: swimmer,
+            fileName: fileName,
+            bytes: Uint8List.fromList(bytes),
+          );
+
+      final updated = profile.copyWith(
+        athleteNotes: SwimmerProfile.composeAthleteNotes(
+          gender: profile.gender,
+          height: profile.height,
+          weight: profile.weight,
+          dominantHand: profile.dominantHand,
+          trainingGroup: profile.trainingGroup,
+          profilePhotoUrl: photoUrl,
+          notes: profile.notesBody,
+        ),
+      );
+
+      return saveProfile(updated);
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
   Future<String?> importUsaStandards() async {
     try {
       await ref.read(usaStandardsServiceProvider).importSeedToSupabase();

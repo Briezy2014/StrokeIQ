@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -41,6 +42,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
   DateTime? _birthday;
   bool _isSaving = false;
+  bool _isUploadingPhoto = false;
   int? _syncedProfileId;
 
   @override
@@ -173,6 +175,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         height: _heightController.text,
         weight: _weightController.text,
         dominantHand: _dominantHandController.text,
+        profilePhotoUrl: existing?.profilePhotoUrl,
         notes: _notesController.text,
       ),
     );
@@ -199,6 +202,42 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     );
   }
 
+  Future<void> _uploadProfilePhoto() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not read the selected image.')),
+      );
+      return;
+    }
+
+    setState(() => _isUploadingPhoto = true);
+    final error = await ref.read(swimmerDataProvider.notifier).uploadProfilePhoto(
+          fileName: file.name,
+          bytes: file.bytes!,
+        );
+    if (!mounted) return;
+    setState(() {
+      _isUploadingPhoto = false;
+      if (error == null) _syncedProfileId = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error == null
+              ? 'Profile photo updated.'
+              : 'Could not upload profile photo: $error',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SwimmerScreen(
@@ -220,6 +259,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               coach: profile?.coachName,
               primaryStroke: profile?.primaryStroke,
               graduationYear: profile?.graduationYear,
+              profilePhotoUrl: profile?.profilePhotoUrl,
+              isUploadingPhoto: _isUploadingPhoto,
+              onUploadPhoto: _uploadProfilePhoto,
             ),
             const SizedBox(height: 24),
             const SwimIqScreenHeader(title: 'Athlete Status'),
@@ -295,6 +337,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 'Training Sessions: ${data.raceLogs.length}',
                 'Meet Results: ${data.meetResults.length}',
                 'Video Analyses: ${data.userFacingVideoAnalyses.length}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'Motivational Standards',
+              lines: [
+                snapshot.usaStandardsSummary,
+                'Standards bracket uses birthday, or graduation year when DOB is blank.',
               ],
             ),
             const SizedBox(height: 12),
@@ -491,6 +541,9 @@ class _PassportHero extends StatelessWidget {
     this.coach,
     this.primaryStroke,
     this.graduationYear,
+    this.profilePhotoUrl,
+    this.isUploadingPhoto = false,
+    this.onUploadPhoto,
   });
 
   final String displayName;
@@ -498,6 +551,9 @@ class _PassportHero extends StatelessWidget {
   final String? coach;
   final String? primaryStroke;
   final int? graduationYear;
+  final String? profilePhotoUrl;
+  final bool isUploadingPhoto;
+  final VoidCallback? onUploadPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -548,9 +604,43 @@ class _PassportHero extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(10),
-            child: const SwimIqLogo(size: 84, borderRadius: 42),
+            clipBehavior: Clip.antiAlias,
+            child: profilePhotoUrl != null && profilePhotoUrl!.isNotEmpty
+                ? Image.network(
+                    profilePhotoUrl!,
+                    width: 104,
+                    height: 104,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: SwimIqLogo(size: 84, borderRadius: 42),
+                      );
+                    },
+                  )
+                : const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SwimIqLogo(size: 84, borderRadius: 42),
+                  ),
           ),
+          if (onUploadPhoto != null) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: isUploadingPhoto ? null : onUploadPhoto,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white70),
+              ),
+              icon: isUploadingPhoto
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.photo_camera_outlined, size: 18),
+              label: Text(isUploadingPhoto ? 'Uploading...' : 'Upload profile photo'),
+            ),
+          ],
           const SizedBox(height: 18),
           Text(
             'ATHLETE PASSPORT™',

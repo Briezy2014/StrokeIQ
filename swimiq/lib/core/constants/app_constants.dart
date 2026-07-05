@@ -4,6 +4,7 @@ class AppConstants {
   static const tagline = 'Built in the Water. Driven by Possibility.';
   static const founder = 'Founded by Aspyn Briez';
   static const copyright = '© 2026 SwimIQ™ · Founded by Aspyn Briez';
+  static const buildLabel = 'Build: Passport V2 · PR #18+ branding & standards';
 
   /// Official 2024-2028 USA Swimming age-group brackets from the motivational PDF.
   static const ageGroups = [

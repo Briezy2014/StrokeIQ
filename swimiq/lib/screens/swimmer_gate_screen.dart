@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/constants/app_constants.dart';
 import '../providers/app_providers.dart';
 import '../widgets/swimiq_header.dart';
 
@@ -78,6 +79,14 @@ class _SwimmerGateScreenState extends ConsumerState<SwimmerGateScreen> {
                 child: const Text('Start SwimIQ'),
               ),
               const SwimIqFooter(),
+              const SizedBox(height: 8),
+              Text(
+                AppConstants.buildLabel,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.grey.shade500,
+                    ),
+              ),
             ],
           ),
         ),
