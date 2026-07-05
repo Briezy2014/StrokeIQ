@@ -37,7 +37,13 @@ Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
 Add `GEMINI_API_KEY` to Supabase Edge Function secrets and deploy `analyze-swim-video`.  
 See **[docs/GEMINI_SETUP.md](docs/GEMINI_SETUP.md)** for step-by-step instructions.
 
-Pose metrics (MediaPipe-compatible BlazePose) run on-device automatically on Android and Web.  
+### Windows users (username has a space)
+
+If `flutter run -d chrome` fails with `'C:\Users\Kara' is not recognized`, see **[docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md)** or run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tool\run_chrome.ps1
+```  
 See **[docs/POSE_AND_GEMINI.md](docs/POSE_AND_GEMINI.md)**.
 
 ## Test
