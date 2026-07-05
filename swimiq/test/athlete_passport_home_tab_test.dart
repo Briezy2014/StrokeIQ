@@ -10,10 +10,7 @@ import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
 import 'package:swimiq/screens/home_screen.dart';
 
-/// Committed `athlete_passport_screen.dart` (git HEAD) assigned
-/// `value: ''` to Primary/Secondary Stroke `DropdownButtonFormField`
-/// when Supabase stored blank `primary_stroke` / `secondary_stroke`.
-/// That empty string is not in the menu items list → assertion crash.
+/// HomeScreen Passport tab uses AthletePassportV2Screen (text fields only).
 
 class _AspynHarness extends SwimmerDataNotifier {
   @override

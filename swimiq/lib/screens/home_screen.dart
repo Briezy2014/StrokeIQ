@@ -5,7 +5,7 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../widgets/swimiq_header.dart';
 import 'add_session/add_session_screen.dart';
-import 'athlete_passport/athlete_passport_screen.dart';
+import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
 import 'meet_results/meet_results_screen.dart';
@@ -37,7 +37,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 5:
         return const VideoLabScreen();
       case 6:
-        return const AthletePassportScreen();
+        return const AthletePassportV2Screen();
       default:
         return const DashboardScreen();
     }

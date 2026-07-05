@@ -8,7 +8,7 @@ import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
-import 'package:swimiq/screens/athlete_passport/athlete_passport_screen.dart';
+import 'package:swimiq/screens/athlete_passport/athlete_passport_v2_screen.dart';
 
 class _Harness extends SwimmerDataNotifier {
   _Harness(this.data);
@@ -69,7 +69,7 @@ Future<void> _pumpPassport(
       ],
       child: MaterialApp(
         theme: buildAppTheme(),
-        home: const Scaffold(body: AthletePassportScreen()),
+        home: const Scaffold(body: AthletePassportV2Screen()),
       ),
     ),
   );
@@ -104,8 +104,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Coach'), findsOneWidget);
-      expect(find.widgetWithText(TextFormField, ''), findsWidgets);
+      expect(find.text('Gender'), findsOneWidget);
+      expect(find.text('Height'), findsOneWidget);
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Dominant Hand'), findsOneWidget);
     });
 
     testWidgets('renders invalid saved strokes as text without crashing',

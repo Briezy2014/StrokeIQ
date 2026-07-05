@@ -19,15 +19,23 @@ void main() {
       expect(profile.secondaryStroke, isNull);
     });
 
-    test('round-trips training group inside athlete notes', () {
+    test('round-trips structured athlete notes metadata', () {
       final profile = SwimmerProfile(
         swimmerName: 'Aspyn',
         athleteNotes: SwimmerProfile.composeAthleteNotes(
+          gender: 'Female',
+          height: '5\'4"',
+          weight: '120 lbs',
+          dominantHand: 'Right',
           trainingGroup: 'Senior',
           notes: 'Working on fly breakout.',
         ),
       );
 
+      expect(profile.gender, 'Female');
+      expect(profile.height, '5\'4"');
+      expect(profile.weight, '120 lbs');
+      expect(profile.dominantHand, 'Right');
       expect(profile.trainingGroup, 'Senior');
       expect(profile.notesBody, 'Working on fly breakout.');
     });

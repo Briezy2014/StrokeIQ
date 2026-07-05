@@ -13,7 +13,7 @@ import 'package:swimiq/data/models/usa_time_standard.dart';
 import 'package:swimiq/data/models/video_models.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
-import 'package:swimiq/screens/athlete_passport/athlete_passport_screen.dart';
+import 'package:swimiq/screens/athlete_passport/athlete_passport_v2_screen.dart';
 import 'package:swimiq/screens/dashboard/dashboard_screen.dart';
 import 'package:swimiq/screens/goals/goals_screen.dart';
 import 'package:swimiq/screens/meet_results/meet_results_screen.dart';
@@ -165,7 +165,7 @@ void main() {
     });
 
     testWidgets('Athlete Passport', (tester) async {
-      await tester.pumpWidget(_screenHarness(const AthletePassportScreen()));
+      await tester.pumpWidget(_screenHarness(const AthletePassportV2Screen()));
       await tester.pumpAndSettle();
 
       expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
@@ -176,9 +176,10 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Edit Athlete Passport'), findsOneWidget);
-      expect(find.text('Club'), findsOneWidget);
-      expect(find.text('Training Group'), findsOneWidget);
+      expect(find.text('Save Athlete Passport'), findsOneWidget);
+      expect(find.text('Coach'), findsOneWidget);
+      expect(find.text('Gender'), findsOneWidget);
+      expect(find.text('Dominant Hand'), findsOneWidget);
     });
 
     testWidgets('Video Lab', (tester) async {

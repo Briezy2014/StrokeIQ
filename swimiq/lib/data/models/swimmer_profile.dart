@@ -19,7 +19,9 @@ class SwimmerProfile {
     this.athleteNotes,
   });
 
-  static final _trainingGroupLine = RegExp(r'^Training Group:\s*(.+)$');
+  static final _structuredNotesLine = RegExp(
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group):\s*(.+)$',
+  );
 
   final int? id;
   final String swimmerName;
@@ -45,27 +47,31 @@ class SwimmerProfile {
     return fullName.isNotEmpty ? fullName : swimmerName;
   }
 
-  /// Parsed from the first line of [athleteNotes] when stored as
-  /// `Training Group: <name>` (no dedicated Supabase column yet).
-  String? get trainingGroup {
-    final notes = athleteNotes?.trim();
-    if (notes == null || notes.isEmpty) return null;
-    final firstLine = notes.split('\n').first.trim();
-    final match = _trainingGroupLine.firstMatch(firstLine);
-    final value = match?.group(1)?.trim();
-    return value == null || value.isEmpty ? null : value;
+  String get legalName {
+    final fullName = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    return fullName.isNotEmpty ? fullName : swimmerName;
   }
 
-  /// Athlete notes with the embedded training-group line removed.
+  /// Structured metadata stored inside [athleteNotes] (no extra DB columns).
+  String? get gender => _structuredNotesValue('Gender');
+  String? get height => _structuredNotesValue('Height');
+  String? get weight => _structuredNotesValue('Weight');
+  String? get dominantHand => _structuredNotesValue('Dominant Hand');
+
+  /// Parsed from [athleteNotes] as `Training Group: <name>`.
+  String? get trainingGroup => _structuredNotesValue('Training Group');
+
+  /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
     final notes = athleteNotes?.trim();
     if (notes == null || notes.isEmpty) return null;
-    final lines = notes.split('\n');
-    if (lines.isNotEmpty && _trainingGroupLine.hasMatch(lines.first.trim())) {
-      final body = lines.skip(1).join('\n').trim();
-      return body.isEmpty ? null : body;
+    final bodyLines = <String>[];
+    for (final line in notes.split('\n')) {
+      if (_structuredNotesLine.hasMatch(line.trim())) continue;
+      bodyLines.add(line);
     }
-    return notes;
+    final body = bodyLines.join('\n').trim();
+    return body.isEmpty ? null : body;
   }
 
   int? get age {
@@ -153,19 +159,56 @@ class SwimmerProfile {
   }
 
   static String composeAthleteNotes({
+    String? gender,
+    String? height,
+    String? weight,
+    String? dominantHand,
     String? trainingGroup,
     String? notes,
   }) {
     final parts = <String>[];
-    final group = trainingGroup?.trim();
-    if (group != null && group.isNotEmpty) {
-      parts.add('Training Group: $group');
+    void addLine(String label, String? value) {
+      final text = value?.trim();
+      if (text != null && text.isNotEmpty) {
+        parts.add('$label: $text');
+      }
     }
+
+    addLine('Gender', gender);
+    addLine('Height', height);
+    addLine('Weight', weight);
+    addLine('Dominant Hand', dominantHand);
+    addLine('Training Group', trainingGroup);
+
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {
       parts.add(body);
     }
     return parts.join('\n');
+  }
+
+  static ({String? firstName, String? lastName}) splitLegalName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return (firstName: null, lastName: null);
+    }
+    final parts = trimmed.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return (firstName: parts.first, lastName: null);
+    }
+    return (firstName: parts.first, lastName: parts.sublist(1).join(' '));
+  }
+
+  String? _structuredNotesValue(String label) {
+    final notes = athleteNotes?.trim();
+    if (notes == null || notes.isEmpty) return null;
+    final pattern = RegExp('^$label:\\s*(.+)\$');
+    for (final line in notes.split('\n')) {
+      final match = pattern.firstMatch(line.trim());
+      final value = match?.group(1)?.trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
   }
 
   static String? _nullableText(dynamic value) {
