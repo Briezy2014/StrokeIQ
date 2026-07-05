@@ -171,7 +171,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             SwimIqScreenHeader(
               title: 'Video Lab',
               subtitle:
-                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
+                  'Full Gemini + MediaPipe critique — every phase: start, '
+                  'breakout, stroke, breathing, turns, and finish. '
+                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'AI Coach summarizes what to fix after you run analysis here. '
+              'Race Intelligence™ handles meet-day strategy.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -350,7 +358,7 @@ class _VideoCardState extends State<_VideoCard> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Run AI Swim Analysis'),
+                    : const Text('Run Full Analysis (Gemini + MediaPipe)'),
               )
             else ...[
               if (widget.analysis!.disclaimer != null) ...[

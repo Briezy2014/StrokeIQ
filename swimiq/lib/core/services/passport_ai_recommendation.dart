@@ -2,7 +2,13 @@ import '../../data/models/swim_video.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 
-enum PassportHubDestination { videoLab, usaStandards, comingSoon }
+enum PassportHubDestination {
+  aiCoach,
+  videoLab,
+  raceIntelligence,
+  usaStandards,
+  comingSoon,
+}
 
 class PassportAiRecommendation {
   const PassportAiRecommendation({
@@ -13,7 +19,7 @@ class PassportAiRecommendation {
     this.suggestedEvent,
     this.priorities = const [],
     this.engineLabel =
-        'Gemini video AI + MediaPipe pose on web · USA standards from official JSON',
+        'AI Coach = what to fix · Video Lab = full critique · Race Intelligence = meet plan',
   });
 
   final String headline;
@@ -36,14 +42,17 @@ class PassportAiRecommendation {
     if (unanalyzed.isNotEmpty) {
       final video = unanalyzed.first;
       return PassportAiRecommendation(
-        headline: 'Recommended next AI analysis',
+        headline: 'Video ready for full critique',
         detail:
-            'Run coaching analysis on "${video.displayTitle}". '
-            'Add race notes on upload so the AI Coach can rank your top 3 practice priorities.',
-        actionLabel: 'Analyze in Video Lab',
+            '"${video.displayTitle}" needs a Video Lab run first. Gemini + '
+            'MediaPipe will critique every phase; then AI Coach summarizes what '
+            'to fix in practice.',
+        actionLabel: 'Run full analysis in Video Lab',
         destination: PassportHubDestination.videoLab,
         suggestedEvent: video.eventLabel,
         priorities: snapshot.nextFocus.isNotEmpty ? [snapshot.nextFocus] : const [],
+        engineLabel:
+            'Step 1: Video Lab (full breakdown) → Step 2: AI Coach (corrections)',
       );
     }
 
@@ -53,24 +62,27 @@ class PassportAiRecommendation {
       final event = snapshot.latestAnalysisEvent ?? latest?.analysisJson?['event']?.toString();
 
       return PassportAiRecommendation(
-        headline: 'AI Coach — current focus',
+        headline: 'AI Coach — your top corrections',
         detail: priorities.isNotEmpty
             ? priorities.take(3).join('\n')
             : snapshot.nextFocus,
-        actionLabel: 'Open Video Lab',
-        destination: PassportHubDestination.videoLab,
+        actionLabel: 'Open AI Coach',
+        destination: PassportHubDestination.aiCoach,
         suggestedEvent: event,
         priorities: priorities,
+        engineLabel:
+            'Corrections from Video Lab · Race Intelligence handles meet strategy',
       );
     }
 
     if (videos.isNotEmpty) {
       final video = videos.first;
       return PassportAiRecommendation(
-        headline: 'Ready for AI Coach review',
+        headline: 'Run Video Lab before AI Coach',
         detail:
-            '${video.displayTitle} is uploaded. Run SwimIQ analysis to turn your notes into drills and race prep.',
-        actionLabel: 'Run analysis in Video Lab',
+            '${video.displayTitle} is uploaded. Video Lab critiques everything; '
+            'AI Coach then tells you what to try in practice.',
+        actionLabel: 'Open Video Lab',
         destination: PassportHubDestination.videoLab,
         suggestedEvent: video.eventLabel,
       );
@@ -78,11 +90,11 @@ class PassportAiRecommendation {
 
     final focus = snapshot.currentFocus;
     return PassportAiRecommendation(
-      headline: 'Start your AI Coach profile',
+      headline: 'Start with Video Lab',
       detail:
-          'Upload a $focus video in Video Lab with short race notes '
-          '(start, underwater, strokes, breathing, finish). '
-          'SwimDNA™ and Claude frame-by-frame vision will plug in here next.',
+          'Upload a $focus video with race notes. Video Lab runs the full '
+          'Gemini + MediaPipe critique; AI Coach and Race Intelligence build '
+          'from there.',
       actionLabel: 'Go to Video Lab',
       destination: PassportHubDestination.videoLab,
       suggestedEvent: focus,

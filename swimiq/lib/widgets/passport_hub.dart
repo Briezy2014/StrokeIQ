@@ -5,6 +5,8 @@ import '../core/services/passport_ai_recommendation.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/passport_metrics.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../screens/ai_coach/ai_coach_screen.dart';
+import '../screens/race_intelligence/race_intelligence_screen.dart';
 import '../screens/video_lab/video_lab_screen.dart';
 import '../screens/usa_standards/usa_standards_screen.dart';
 
@@ -69,9 +71,17 @@ class PassportHub extends ConsumerWidget {
     PassportHubDestination destination,
   ) {
     switch (destination) {
+      case PassportHubDestination.aiCoach:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AiCoachScreen()),
+        );
       case PassportHubDestination.videoLab:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const VideoLabScreen()),
+        );
+      case PassportHubDestination.raceIntelligence:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RaceIntelligenceScreen()),
         );
       case PassportHubDestination.usaStandards:
         Navigator.of(context).push(
@@ -148,10 +158,19 @@ class _HubIntro extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Coming Soon to Athlete Passport™',
+            'Athlete Passport™ Hub',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: const Color(0xFF0077C8),
                   fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'AI Coach = what to fix · Video Lab = full video critique · '
+            'Race Intelligence™ = meet strategy',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF0B2D4D),
+                  fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: 10),
@@ -193,6 +212,7 @@ class _PassportModule {
     required this.label,
     required this.status,
     this.destination,
+    this.subtitle = '',
     this.comingSoonDetail = '',
   });
 
@@ -200,6 +220,7 @@ class _PassportModule {
   final String label;
   final _PassportModuleStatus status;
   final PassportHubDestination? destination;
+  final String subtitle;
   final String comingSoonDetail;
 }
 
@@ -212,16 +233,16 @@ class _ModuleStrip extends StatelessWidget {
     _PassportModule(
       emoji: '🤖',
       label: 'AI Coach',
+      subtitle: 'What to fix',
       status: _PassportModuleStatus.live,
-      destination: PassportHubDestination.videoLab,
+      destination: PassportHubDestination.aiCoach,
     ),
     _PassportModule(
       emoji: '🧬',
       label: 'SwimDNA™',
       status: _PassportModuleStatus.comingSoon,
       comingSoonDetail:
-          'Stroke fingerprinting from your PBs, splits, and video trends — '
-          'merged with Claude vision when frame analysis ships.',
+          'Stroke fingerprinting from your PBs, splits, and video trends.',
     ),
     _PassportModule(
       emoji: '🎓',
@@ -234,19 +255,21 @@ class _ModuleStrip extends StatelessWidget {
     _PassportModule(
       emoji: '🎥',
       label: 'Video Lab',
+      subtitle: 'Full critique',
       status: _PassportModuleStatus.live,
       destination: PassportHubDestination.videoLab,
     ),
     _PassportModule(
       emoji: '🏁',
       label: 'Race Intelligence™',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'Meet-day race plans from your goals, standards gaps, and latest AI analysis.',
+      subtitle: 'Meet strategy',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.raceIntelligence,
     ),
     _PassportModule(
       emoji: '📊',
       label: 'USA Standards',
+      subtitle: 'Official cuts',
       status: _PassportModuleStatus.live,
       destination: PassportHubDestination.usaStandards,
     ),
@@ -299,7 +322,9 @@ class _ModuleStrip extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isComingSoon ? 'Coming Soon' : 'Open',
+                    isComingSoon
+                        ? 'Coming Soon'
+                        : (module.subtitle.isNotEmpty ? module.subtitle : 'Open'),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: isComingSoon
                               ? Colors.grey.shade700
