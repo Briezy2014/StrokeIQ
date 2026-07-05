@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.swimiq.app.data.model.UserRole
 import com.swimiq.app.ui.components.SectionHeader
 import com.swimiq.app.ui.theme.SwimBlueDark
 import com.swimiq.app.ui.theme.SwimNavy
@@ -26,6 +27,7 @@ fun SettingsScreen(
     state: SwimUiState,
     contentPadding: PaddingValues,
     onRefresh: () -> Unit,
+    onSetRole: (String) -> Unit,
     onSignOut: () -> Unit,
 ) {
     Column(
@@ -45,6 +47,35 @@ fun SettingsScreen(
                 Text("Account", fontWeight = FontWeight.Bold, color = SwimBlueDark)
                 Text("Email: ${state.userEmail.orEmpty()}", color = SwimNavy)
                 Text("Swimmer: ${state.displayName}", color = SwimNavy)
+                Text("Role: ${state.userRole}", color = SwimNavy)
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Role", fontWeight = FontWeight.Bold, color = SwimBlueDark)
+                Text(
+                    "Switch to Coach to manage teams, rosters, and bulk meet imports.",
+                    color = SwimNavy.copy(alpha = 0.7f),
+                )
+                if (state.isCoach) {
+                    OutlinedButton(
+                        onClick = { onSetRole(UserRole.SWIMMER) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Switch to Swimmer")
+                    }
+                } else {
+                    Button(
+                        onClick = { onSetRole(UserRole.COACH) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Switch to Coach")
+                    }
+                }
             }
         }
 
@@ -54,7 +85,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("App", fontWeight = FontWeight.Bold, color = SwimBlueDark)
-                Text("SwimIQ Version 2.0.0", color = SwimNavy)
+                Text("SwimIQ Version 3.0.0", color = SwimNavy)
                 Text("Built in the Water. Driven by Possibility.", color = SwimNavy.copy(alpha = 0.7f))
                 Text("© 2026 SwimIQ · Founded by Aspyn Briez", color = SwimNavy.copy(alpha = 0.7f))
             }

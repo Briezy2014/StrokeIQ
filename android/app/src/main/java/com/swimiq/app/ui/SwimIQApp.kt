@@ -25,15 +25,19 @@ import com.swimiq.app.ui.components.LoadingScreen
 import com.swimiq.app.ui.navigation.MainTab
 import com.swimiq.app.ui.screens.auth.LoginScreen
 import com.swimiq.app.ui.screens.charts.ChartsScreen
+import com.swimiq.app.ui.screens.coach.CoachDashboardScreen
 import com.swimiq.app.ui.screens.dashboard.DashboardScreen
 import com.swimiq.app.ui.screens.goals.GoalsScreen
 import com.swimiq.app.ui.screens.meets.MeetResultsScreen
+import com.swimiq.app.ui.screens.notifications.NotificationsScreen
 import com.swimiq.app.ui.screens.passport.AthletePassportScreen
 import com.swimiq.app.ui.screens.personalbests.PersonalBestsScreen
 import com.swimiq.app.ui.screens.settings.SettingsScreen
 import com.swimiq.app.ui.screens.training.TrainingLogScreen
 import com.swimiq.app.ui.viewmodel.AuthViewModel
 import com.swimiq.app.ui.viewmodel.AuthViewModelFactory
+import com.swimiq.app.ui.viewmodel.CoachViewModel
+import com.swimiq.app.ui.viewmodel.CoachViewModelFactory
 import com.swimiq.app.ui.viewmodel.SwimViewModel
 import com.swimiq.app.ui.viewmodel.SwimViewModelFactory
 
@@ -52,10 +56,10 @@ fun SwimIQApp() {
 @Composable
 private fun MainApp(onSignedOut: () -> Unit) {
     val application = LocalContext.current.applicationContext as Application
-    val swimViewModel: SwimViewModel = viewModel(
-        factory = SwimViewModelFactory(application),
-    )
+    val swimViewModel: SwimViewModel = viewModel(factory = SwimViewModelFactory(application))
+    val coachViewModel: CoachViewModel = viewModel(factory = CoachViewModelFactory(application))
     val swimState by swimViewModel.uiState.collectAsState()
+    val coachState by coachViewModel.uiState.collectAsState()
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val currentRoute = navController
@@ -63,6 +67,8 @@ private fun MainApp(onSignedOut: () -> Unit) {
         .value
         ?.destination
         ?.route
+
+    val tabs = MainTab.tabsForRole(swimState.userRole)
 
     LaunchedEffect(swimState.message, swimState.errorMessage) {
         swimState.message?.let {
@@ -75,6 +81,23 @@ private fun MainApp(onSignedOut: () -> Unit) {
         }
     }
 
+    LaunchedEffect(coachState.message, coachState.errorMessage) {
+        coachState.message?.let {
+            snackbarHostState.showSnackbar(it)
+            coachViewModel.clearMessage()
+        }
+        coachState.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            coachViewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(swimState.isCoach) {
+        if (swimState.isCoach) {
+            coachViewModel.refresh()
+        }
+    }
+
     if (swimState.isLoading) {
         LoadingScreen("Loading swimmer data…")
         return
@@ -84,7 +107,7 @@ private fun MainApp(onSignedOut: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             NavigationBar {
-                MainTab.tabs.forEach { tab ->
+                tabs.forEach { tab ->
                     NavigationBarItem(
                         selected = currentRoute == tab.route,
                         onClick = {
@@ -146,11 +169,31 @@ private fun MainApp(onSignedOut: () -> Unit) {
                     onSave = swimViewModel::saveProfile,
                 )
             }
+            composable(MainTab.Coach.route) {
+                CoachDashboardScreen(
+                    state = coachState,
+                    contentPadding = padding,
+                    onCreateTeam = coachViewModel::createTeam,
+                    onInvite = coachViewModel::inviteSwimmer,
+                    onRemoveMember = coachViewModel::removeMember,
+                    onImportCsv = coachViewModel::importCsv,
+                )
+            }
+            composable(MainTab.Alerts.route) {
+                NotificationsScreen(
+                    notifications = swimState.notifications,
+                    goals = swimState.goals,
+                    contentPadding = padding,
+                    onMarkAllRead = swimViewModel::markAllNotificationsRead,
+                    onMarkRead = swimViewModel::markNotificationRead,
+                )
+            }
             composable(MainTab.Settings.route) {
                 SettingsScreen(
                     state = swimState,
                     contentPadding = padding,
                     onRefresh = swimViewModel::refresh,
+                    onSetRole = swimViewModel::setUserRole,
                     onSignOut = { swimViewModel.signOut(onSignedOut) },
                 )
             }

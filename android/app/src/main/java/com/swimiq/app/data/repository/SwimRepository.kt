@@ -44,6 +44,8 @@ class SwimRepository {
     private fun requireUserId(): String =
         currentUserId ?: throw IllegalStateException("Not authenticated")
 
+    fun requireUserIdPublic(): String = requireUserId()
+
     suspend fun getProfile(): SwimmerProfile? {
         val userId = requireUserId()
         return db.from("swimmers")

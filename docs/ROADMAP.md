@@ -3,7 +3,7 @@
 **Built in the Water. Driven by Possibility.**  
 Founded by Aspyn Briez
 
-This roadmap defines eight incremental releases. Each version ships a working product before advanced features begin. **Version 2 is the current implementation target.**
+This roadmap defines eight incremental releases. Each version ships a working product before advanced features begin. **Version 3 is the current implementation target.**
 
 ---
 
@@ -28,7 +28,7 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 
 ---
 
-## Version 2 — Athlete Performance (Current)
+## Version 2 — Athlete Performance (Complete)
 
 **Goal:** Match and exceed the Streamlit “Athlete Performance Edition” experience on mobile.
 
@@ -43,7 +43,7 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 
 ---
 
-## Version 3 — Coach & Team
+## Version 3 — Coach & Team (Current)
 
 **Goal:** Support coaches managing multiple swimmers.
 
@@ -52,6 +52,8 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 - Coach dashboard: team averages, attendance, top performers
 - Bulk import of meet results (CSV)
 - Push notifications for new PBs and goal deadlines
+
+**Exit criteria:** Coach can create team, invite swimmers, view team dashboard, import CSV meet results, and receive PB/local notifications.
 
 ---
 

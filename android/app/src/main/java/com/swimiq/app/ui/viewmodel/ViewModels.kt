@@ -6,11 +6,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.swimiq.app.data.local.CachedSwimData
 import com.swimiq.app.data.local.SwimCache
+import com.swimiq.app.data.model.AppNotification
 import com.swimiq.app.data.model.Goal
 import com.swimiq.app.data.model.MeetResult
 import com.swimiq.app.data.model.RaceLog
 import com.swimiq.app.data.model.SwimmerProfile
+import com.swimiq.app.data.model.UserRole
 import com.swimiq.app.data.repository.SwimRepository
+import com.swimiq.app.data.repository.TeamRepository
+import com.swimiq.app.notifications.SwimNotificationHelper
 import com.swimiq.app.util.SwimAnalytics
 import com.swimiq.app.util.SwimIQScoreBreakdown
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +40,9 @@ data class SwimUiState(
     val raceLogs: List<RaceLog> = emptyList(),
     val goals: List<Goal> = emptyList(),
     val meetResults: List<MeetResult> = emptyList(),
+    val notifications: List<AppNotification> = emptyList(),
     val userEmail: String? = null,
+    val userRole: String = UserRole.SWIMMER,
     val message: String? = null,
     val errorMessage: String? = null,
 ) {
@@ -67,6 +73,12 @@ data class SwimUiState(
 
     val nextMeet: String
         get() = SwimAnalytics.nextMeet(meetResults)
+
+    val isCoach: Boolean
+        get() = userRole == UserRole.COACH
+
+    val unreadNotificationCount: Int
+        get() = notifications.count { !it.read }
 }
 
 class AuthViewModel(
@@ -135,7 +147,9 @@ class AuthViewModel(
 
 class SwimViewModel(
     private val repository: SwimRepository = SwimRepository(),
+    private val teamRepository: TeamRepository = TeamRepository(),
     private val cache: SwimCache? = null,
+    private val application: Application? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SwimUiState())
     val uiState: StateFlow<SwimUiState> = _uiState.asStateFlow()
@@ -169,16 +183,21 @@ class SwimViewModel(
             }
 
             try {
+                teamRepository.acceptPendingInvites()
+                val userProfile = teamRepository.getUserProfile()
                 val profile = repository.getProfile()
                 val logs = repository.getRaceLogs()
                 val goals = repository.getGoals()
                 val meets = repository.getMeetResults()
+                val notifications = runCatching { teamRepository.getNotifications() }.getOrDefault(emptyList())
 
                 applyData(
                     profile = profile,
                     logs = logs,
                     goals = goals,
                     meets = meets,
+                    notifications = notifications,
+                    userRole = userProfile?.role ?: UserRole.SWIMMER,
                     isFromCache = false,
                     isLoading = false,
                     isRefreshing = false,
@@ -223,6 +242,8 @@ class SwimViewModel(
         logs: List<RaceLog>,
         goals: List<Goal>,
         meets: List<MeetResult>,
+        notifications: List<AppNotification> = _uiState.value.notifications,
+        userRole: String = _uiState.value.userRole,
         isFromCache: Boolean,
         isLoading: Boolean,
         isRefreshing: Boolean = false,
@@ -236,8 +257,22 @@ class SwimViewModel(
                 raceLogs = logs,
                 goals = goals,
                 meetResults = meets,
+                notifications = notifications,
                 userEmail = repository.currentUserEmail,
+                userRole = userRole,
             )
+        }
+    }
+
+    fun setUserRole(role: String) {
+        viewModelScope.launch {
+            try {
+                teamRepository.saveUserProfile(role)
+                refresh()
+                _uiState.update { it.copy(message = "Role updated to $role.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message) }
+            }
         }
     }
 
@@ -274,6 +309,22 @@ class SwimViewModel(
 
                 repository.addRaceLog(log)
                 refresh()
+
+                if (isPb) {
+                    repository.currentUserId?.let { userId ->
+                        val title = "New Personal Best!"
+                        val body = "${log.distance} ${log.stroke}: ${com.swimiq.app.util.SwimTimeUtils.formatSeconds(log.timeSeconds)}"
+                        teamRepository.createNotification(userId, "personal_best", title, body)
+                        application?.let {
+                            SwimNotificationHelper.showLocalNotification(
+                                context = it,
+                                notificationId = log.hashCode(),
+                                title = title,
+                                body = body,
+                            )
+                        }
+                    }
+                }
 
                 val message = if (isPb) {
                     "🔥 New Personal Best!"
@@ -359,6 +410,20 @@ class SwimViewModel(
         }
     }
 
+    fun markAllNotificationsRead() {
+        viewModelScope.launch {
+            teamRepository.markAllNotificationsRead()
+            refresh()
+        }
+    }
+
+    fun markNotificationRead(id: String) {
+        viewModelScope.launch {
+            teamRepository.markNotificationRead(id)
+            refresh()
+        }
+    }
+
     fun signOut(onComplete: () -> Unit) {
         viewModelScope.launch {
             repository.currentUserId?.let { cache?.clear(it) }
@@ -387,6 +452,7 @@ class SwimViewModelFactory(
         if (modelClass.isAssignableFrom(SwimViewModel::class.java)) {
             return SwimViewModel(
                 cache = SwimCache(application),
+                application = application,
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
