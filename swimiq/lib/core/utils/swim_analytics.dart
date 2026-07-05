@@ -81,4 +81,38 @@ class SwimAnalytics {
     final sum = times.fold<double>(0, (a, b) => a + b);
     return SwimTime.fromSeconds(sum / times.length);
   }
+
+  /// Best time for a goal event matching stroke, distance, and course.
+  static double? bestTimeForGoal({
+    required SwimGoal goal,
+    required List<RaceLog> raceLogs,
+  }) {
+    final parts = goal.event.split(' ');
+    if (parts.length < 2) return null;
+
+    final distance = int.tryParse(parts.first);
+    final stroke = parts.sublist(1).join(' ');
+    if (distance == null) return null;
+
+    final matching = raceLogs.where(
+      (log) =>
+          log.stroke == stroke &&
+          log.distance == distance &&
+          log.course == goal.course &&
+          log.timeSeconds > 0,
+    );
+
+    if (matching.isEmpty) return null;
+    return matching.map((log) => log.timeSeconds).reduce((a, b) => a < b ? a : b);
+  }
+
+  /// Seconds remaining to reach goal; negative means goal achieved.
+  static double? secondsToGoal({
+    required SwimGoal goal,
+    required List<RaceLog> raceLogs,
+  }) {
+    final best = bestTimeForGoal(goal: goal, raceLogs: raceLogs);
+    if (best == null) return null;
+    return best - goal.goalTime;
+  }
 }

@@ -5,6 +5,7 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
+import 'settings/settings_screen.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -24,9 +25,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  Future<void> _signOut() async {
-    await ref.read(authServiceProvider).signOut();
-    ref.read(activeSwimmerProvider.notifier).state = null;
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SettingsScreen(),
+      ),
+    );
   }
 
   Future<void> _refresh() async {
@@ -49,9 +53,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: const Icon(Icons.refresh),
           ),
           IconButton(
-            tooltip: 'Sign out',
-            onPressed: _signOut,
-            icon: const Icon(Icons.logout),
+            tooltip: 'Settings',
+            onPressed: _openSettings,
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),

@@ -62,11 +62,11 @@ class DashboardScreen extends StatelessWidget {
             ),
             MetricCard(label: 'Active Goals', value: '${data.goals.length}'),
             MetricCard(
-              label: 'Best Time',
+              label: 'Fastest Session',
               value: SwimAnalytics.bestTime(logs),
             ),
             MetricCard(
-              label: 'Average Time',
+              label: 'Avg Session',
               value: SwimAnalytics.averageTime(logs),
             ),
           ],

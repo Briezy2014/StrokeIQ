@@ -99,6 +99,162 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     }
   }
 
+  Future<void> _deleteResult(MeetResult result) async {
+    if (result.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete meet result?'),
+        content: Text('Remove ${result.event} at ${result.meetName}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final error = await ref
+        .read(swimmerDataProvider.notifier)
+        .deleteMeetResult(result.id!);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? 'Meet result deleted.')),
+    );
+  }
+
+  Future<void> _editResult(MeetResult result) async {
+    if (result.id == null) return;
+
+    final meetNameController = TextEditingController(text: result.meetName);
+    final eventController = TextEditingController(text: result.event);
+    final timeController =
+        TextEditingController(text: SwimTime.fromSeconds(result.swimTime));
+    var course = result.course;
+    var meetDate = result.meetDate;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit meet result'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: meetNameController,
+                    decoration: const InputDecoration(labelText: 'Meet name'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: eventController,
+                    decoration: const InputDecoration(labelText: 'Event'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: timeController,
+                    decoration: const InputDecoration(labelText: 'Result time'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: course,
+                    decoration: const InputDecoration(labelText: 'Course'),
+                    items: AppConstants.courses
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) setDialogState(() => course = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Meet date'),
+                    subtitle: Text(DateFormat.yMMMd().format(meetDate)),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: meetDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setDialogState(() => meetDate = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (saved != true || !mounted) {
+      meetNameController.dispose();
+      eventController.dispose();
+      timeController.dispose();
+      return;
+    }
+
+    try {
+      final swimmer = ref.read(activeSwimmerProvider)!;
+      final updated = MeetResult(
+        id: result.id,
+        swimmerName: swimmer,
+        meetName: meetNameController.text.trim(),
+        event: eventController.text.trim(),
+        swimTime: SwimTime.toSeconds(timeController.text),
+        course: course,
+        meetDate: meetDate,
+      );
+
+      final error = await ref
+          .read(swimmerDataProvider.notifier)
+          .updateMeetResult(updated);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Meet result updated.')),
+      );
+    } on FormatException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a valid result time.'),
+          ),
+        );
+      }
+    } finally {
+      meetNameController.dispose();
+      eventController.dispose();
+      timeController.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.yMMMd();
@@ -208,9 +364,24 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                   '${result.meetName} · ${result.course} · '
                   '${dateFormat.format(result.meetDate)}',
                 ),
-                trailing: Text(
-                  SwimTime.fromSeconds(result.swimTime),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      SwimTime.fromSeconds(result.swimTime),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') _editResult(result);
+                        if (value == 'delete') _deleteResult(result);
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),

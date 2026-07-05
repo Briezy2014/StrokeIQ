@@ -66,5 +66,40 @@ void main() {
       );
       expect(score, 555);
     });
+
+    test('calculates seconds to goal', () {
+      final goal = SwimGoal(
+        swimmerName: 'Aspyn',
+        event: '100 Freestyle',
+        goalTime: 50,
+        course: 'SCY',
+        targetDate: DateTime(2026, 6, 1),
+      );
+
+      final toGoal = SwimAnalytics.secondsToGoal(
+        goal: goal,
+        raceLogs: logs,
+      );
+
+      expect(toGoal, 5);
+    });
+
+    test('detects achieved goal', () {
+      final goal = SwimGoal(
+        swimmerName: 'Aspyn',
+        event: '100 Freestyle',
+        goalTime: 60,
+        course: 'SCY',
+        targetDate: DateTime(2026, 6, 1),
+      );
+
+      final toGoal = SwimAnalytics.secondsToGoal(
+        goal: goal,
+        raceLogs: logs,
+      );
+
+      expect(toGoal, isNotNull);
+      expect(toGoal!, lessThanOrEqualTo(0));
+    });
   });
 }

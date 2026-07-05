@@ -135,9 +135,67 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<String?> updateGoal(SwimGoal goal) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateGoal(goal);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteGoal(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteGoal(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
   Future<String?> addMeetResult(MeetResult result) async {
     try {
       await ref.read(swimIqRepositoryProvider).insertMeetResult(result);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> updateMeetResult(MeetResult result) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateMeetResult(result);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteMeetResult(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteMeetResult(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> ensureSwimmerProfileLinked({
+    required String swimmerName,
+    String? preferredName,
+    String? email,
+  }) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).ensureSwimmerProfile(
+            swimmerName: swimmerName,
+            preferredName: preferredName,
+            email: email,
+          );
       await refresh();
       return null;
     } catch (error) {

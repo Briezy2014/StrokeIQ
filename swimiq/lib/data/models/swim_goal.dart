@@ -36,7 +36,7 @@ class SwimGoal {
   Map<String, dynamic> toInsertJson() => {
         'swimmer_name': swimmerName,
         'event': event,
-        'current_time': null,
+        'current_time': currentTime,
         'goal_time': goalTime,
         'course': course,
         'target_date': _formatDate(targetDate),

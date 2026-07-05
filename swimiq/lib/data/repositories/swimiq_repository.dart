@@ -54,6 +54,17 @@ class SwimIqRepository {
     await _client.from('goals').insert(goal.toInsertJson());
   }
 
+  Future<void> updateGoal(SwimGoal goal) async {
+    if (goal.id == null) {
+      throw ArgumentError('Goal id is required for update.');
+    }
+    await _client.from('goals').update(goal.toInsertJson()).eq('id', goal.id!);
+  }
+
+  Future<void> deleteGoal(int id) async {
+    await _client.from('goals').delete().eq('id', id);
+  }
+
   Future<List<MeetResult>> fetchMeetResults(String swimmerName) async {
     final response = await _client
         .from('meet_results')
@@ -68,6 +79,20 @@ class SwimIqRepository {
 
   Future<void> insertMeetResult(MeetResult result) async {
     await _client.from('meet_results').insert(result.toInsertJson());
+  }
+
+  Future<void> updateMeetResult(MeetResult result) async {
+    if (result.id == null) {
+      throw ArgumentError('Meet result id is required for update.');
+    }
+    await _client
+        .from('meet_results')
+        .update(result.toInsertJson())
+        .eq('id', result.id!);
+  }
+
+  Future<void> deleteMeetResult(int id) async {
+    await _client.from('meet_results').delete().eq('id', id);
   }
 
   Future<SwimmerProfile?> fetchProfile(String swimmerName) async {
@@ -88,6 +113,24 @@ class SwimIqRepository {
     } else {
       await _client.from('swimmers').insert(data);
     }
+  }
+
+  /// Creates a minimal swimmer profile if one does not exist yet.
+  Future<SwimmerProfile> ensureSwimmerProfile({
+    required String swimmerName,
+    String? preferredName,
+    String? email,
+  }) async {
+    final existing = await fetchProfile(swimmerName);
+    if (existing != null) return existing;
+
+    final profile = SwimmerProfile(
+      swimmerName: swimmerName,
+      preferredName: preferredName ?? swimmerName,
+      athleteNotes: email != null ? 'Account: $email' : null,
+    );
+    await saveProfile(profile);
+    return (await fetchProfile(swimmerName)) ?? profile;
   }
 
   Future<List<SwimVideo>> fetchSwimVideos(String swimmerName) async {
