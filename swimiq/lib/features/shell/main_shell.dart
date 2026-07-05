@@ -44,11 +44,6 @@ class MainShell extends StatelessWidget {
             label: 'Goals',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
             label: 'Settings',
@@ -72,8 +67,6 @@ class MainShell extends StatelessWidget {
       case 3:
         return 'Goals';
       case 4:
-        return 'Athlete Passport';
-      case 5:
         return 'Settings';
       default:
         return AppConstants.appName;

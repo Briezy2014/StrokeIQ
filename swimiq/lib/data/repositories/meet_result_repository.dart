@@ -42,7 +42,6 @@ final meetResultRepositoryProvider = Provider<MeetResultRepository>((ref) {
 });
 
 final meetResultsProvider = FutureProvider<List<MeetResult>>((ref) async {
-  ref.watch(swimmerBootstrapProvider);
   final swimmerKey = ref.watch(activeSwimmerKeyProvider);
   if (swimmerKey == null) return [];
 

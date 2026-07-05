@@ -35,7 +35,6 @@ final goalRepositoryProvider = Provider<GoalRepository>((ref) {
 });
 
 final goalsProvider = FutureProvider<List<Goal>>((ref) async {
-  ref.watch(swimmerBootstrapProvider);
   final swimmerKey = ref.watch(activeSwimmerKeyProvider);
   if (swimmerKey == null) return [];
 

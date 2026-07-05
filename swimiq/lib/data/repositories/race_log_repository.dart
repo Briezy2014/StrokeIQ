@@ -42,7 +42,6 @@ final raceLogRepositoryProvider = Provider<RaceLogRepository>((ref) {
 });
 
 final raceLogsProvider = FutureProvider<List<RaceLog>>((ref) async {
-  ref.watch(swimmerBootstrapProvider);
   final swimmerKey = ref.watch(activeSwimmerKeyProvider);
   if (swimmerKey == null) return [];
 

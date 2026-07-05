@@ -9,7 +9,6 @@ import '../features/auth/signup_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/goals/goals_screen.dart';
 import '../features/meets/meets_screen.dart';
-import '../features/profile/profile_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/splash/splash_screen.dart';
@@ -28,7 +27,6 @@ enum AppRoute {
   trainingAdd('/training/add'),
   meets('/meets'),
   goals('/goals'),
-  profile('/profile'),
   settings('/settings');
 
   const AppRoute(this.path);
@@ -116,14 +114,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoute.goals.path,
                 builder: (context, state) => const GoalsScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoute.profile.path,
-                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

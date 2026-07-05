@@ -81,8 +81,6 @@ lib/
 
 **No Supabase schema changes in Milestones 1–2.**
 
-The authenticated Supabase user ID is stored in the existing `swimmer` column on data tables and `swimmer_name` on the `swimmers` table. This isolates each mobile user's data without migrating columns.
+The authenticated Supabase user ID is stored in the existing `swimmer` column on data tables. This isolates each mobile user's data without migrating columns.
 
-Before enabling production RLS, we will propose optional `user_id` columns and policies.
-
-See `lib/domain/swimmer_identity.dart` for the full strategy.
+Athlete Passport / `swimmers` table integration was removed temporarily because automatic profile bootstrap was causing runtime errors. It will be re-added in a later milestone after schema and RLS are confirmed.
