@@ -1,6 +1,7 @@
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_standards_service.dart';
 import '../../core/utils/swimiq_age_group.dart';
+import '../../core/utils/swimiq_gender.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
@@ -192,6 +193,7 @@ class PassportMetrics {
     final pbs = SwimAnalytics.personalBests(raceLogs);
     String? bestLevel;
     final ageGroup = SwimIqAgeGroup.fromProfile(profile);
+    final gender = SwimIqGender.standardsGender(profile);
 
     for (final pb in pbs) {
       final level = UsaStandardsService.highestCutForTime(
@@ -201,6 +203,7 @@ class PassportMetrics {
         course: pb.course,
         swimmerTime: pb.timeSeconds,
         ageGroup: ageGroup,
+        gender: gender,
       );
       if (level != null) {
         if (bestLevel == null || _levelRank(level) < _levelRank(bestLevel)) {

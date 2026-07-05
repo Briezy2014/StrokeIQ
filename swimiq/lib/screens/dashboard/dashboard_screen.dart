@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
@@ -87,8 +88,12 @@ class DashboardScreen extends ConsumerWidget {
                   value: SwimAnalytics.bestTime(logs),
                 ),
                 SwimIqMetricCard(
-                  label: 'Current Focus',
-                  value: snapshot.currentFocus,
+                  label: 'Highest Motivational Cut',
+                  value: snapshot.highestCut,
+                ),
+                SwimIqMetricCard(
+                  label: 'Standards Version',
+                  value: data.motivationalStandards.versionId,
                 ),
               ],
             ),
@@ -101,12 +106,22 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             ...logs.map(
-              (log) => SwimIqEventListTile(
-                title: '${log.distance} ${log.stroke} · ${log.course}',
-                subtitle:
-                    '${dateFormat.format(log.date)} · ${log.event}',
-                trailing: SwimTime.fromSeconds(log.timeSeconds),
-              ),
+              (log) {
+                final cut = MotivationalCut.labelForSwim(
+                  catalog: data.motivationalStandards,
+                  profile: data.profile,
+                  stroke: log.stroke,
+                  distance: log.distance,
+                  course: log.course,
+                  timeSeconds: log.timeSeconds,
+                );
+                return SwimIqEventListTile(
+                  title: '${log.distance} ${log.stroke} · ${log.course}',
+                  subtitle:
+                      '${dateFormat.format(log.date)} · ${log.event} · $cut cut',
+                  trailing: SwimTime.fromSeconds(log.timeSeconds),
+                );
+              },
             ),
             const SizedBox(height: 24),
             Text(

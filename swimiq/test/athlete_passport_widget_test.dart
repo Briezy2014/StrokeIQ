@@ -10,6 +10,8 @@ import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
 import 'package:swimiq/screens/athlete_passport/athlete_passport_v2_screen.dart';
 
+import 'support/motivational_standards_test_helper.dart';
+
 class _Harness extends SwimmerDataNotifier {
   _Harness(this.data);
 
@@ -52,6 +54,7 @@ SwimmerData _passportHarnessData(SwimmerProfile profile) {
       ),
     ],
     profile: profile,
+    motivationalStandards: testMotivationalCatalog,
   );
 }
 
@@ -77,6 +80,10 @@ Future<void> _pumpPassport(
 }
 
 void main() {
+  setUpAll(() async {
+    await loadTestMotivationalCatalog();
+  });
+
   group('Athlete Passport form fields', () {
     testWidgets('has no dropdowns and renders blank stroke fields', (tester) async {
       await _pumpPassport(

@@ -10,6 +10,8 @@ import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
 import 'package:swimiq/screens/home_screen.dart';
 
+import 'support/motivational_standards_test_helper.dart';
+
 /// HomeScreen Passport tab uses AthletePassportV2Screen (text fields only).
 
 class _AspynHarness extends SwimmerDataNotifier {
@@ -56,11 +58,16 @@ class _AspynHarness extends SwimmerDataNotifier {
         'secondary_stroke': '',
         'graduation_year': null,
       }),
+      motivationalStandards: testMotivationalCatalog,
     );
   }
 }
 
 void main() {
+  setUpAll(() async {
+    await loadTestMotivationalCatalog();
+  });
+
   test('blank Supabase stroke strings are not valid dropdown values', () {
     const menuValues = <String?>[null, 'Butterfly'];
     const savedValue = '';

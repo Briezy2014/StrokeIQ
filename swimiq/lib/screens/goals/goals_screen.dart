@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/swim_goal.dart';
 import '../../providers/app_providers.dart';
@@ -109,7 +111,6 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
-        final goalLines = data.passportSnapshot(swimmer).goalLines;
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -211,15 +212,25 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             if (data.goals.isEmpty)
               const EmptyStateMessage(message: 'No goals yet.')
             else
-              ...goalLines.map(
-                (line) => Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(line),
-                  ),
-                ),
-              ),
+              ...data.goals.map((goal) {
+                final parts = SwimEventParser.parse(goal.event);
+                final cut = parts == null
+                    ? null
+                    : MotivationalCut.labelForSwim(
+                        catalog: data.motivationalStandards,
+                        profile: data.profile,
+                        stroke: parts.stroke,
+                        distance: parts.distance,
+                        course: goal.course,
+                        timeSeconds: goal.goalTime,
+                      );
+                return SwimIqEventListTile(
+                  title: '${goal.event} (${goal.course})',
+                  subtitle:
+                      'Target ${SwimTime.fromSeconds(goal.goalTime)} · ${cut ?? 'Below B'} cut at goal pace',
+                  trailing: dateFormat.format(goal.targetDate),
+                );
+              }),
           ],
         );
       },

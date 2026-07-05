@@ -1,28 +1,30 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
-
 import '../../data/models/usa_time_standard.dart';
 import '../../data/repositories/swimiq_repository.dart';
+import 'usa_motivational_standards_catalog.dart';
 
 class UsaStandardsService {
   UsaStandardsService(this._repository);
 
   final SwimIqRepository _repository;
 
-  Future<List<UsaTimeStandard>> loadSeedStandards() async {
-    final raw = await rootBundle
-        .loadString('assets/data/usa_time_standards_seed.json');
-    final decoded = jsonDecode(raw) as List<dynamic>;
-    return decoded
-        .map((item) => UsaTimeStandard.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+  Future<UsaMotivationalStandardsCatalog> loadMotivationalCatalog() {
+    return UsaMotivationalStandardsCatalog.loadFromAssets();
   }
 
-  Future<int> importSeedToSupabase() async {
-    final seed = await loadSeedStandards();
-    return _repository.upsertUsaStandards(seed);
+  Future<List<UsaTimeStandard>> loadBundledStandards() async {
+    final catalog = await loadMotivationalCatalog();
+    return catalog.flatStandards;
   }
+
+  @Deprecated('Use loadBundledStandards / motivational catalog instead')
+  Future<List<UsaTimeStandard>> loadSeedStandards() => loadBundledStandards();
+
+  Future<int> importBundledToSupabase() async {
+    final standards = await loadBundledStandards();
+    return _repository.upsertUsaStandards(standards);
+  }
+
+  Future<int> importSeedToSupabase() => importBundledToSupabase();
 
   static String? highestCutForTime({
     required List<UsaTimeStandard> standards,
@@ -39,7 +41,13 @@ class UsaStandardsService {
           standard.distance == distance &&
           standard.course == course &&
           swimmerTime <= standard.timeSeconds &&
-          (ageGroup == null || standard.ageGroup == ageGroup) &&
+          (ageGroup == null ||
+              UsaMotivationalStandardsCatalog.normalizeAgeGroup(
+                    standard.ageGroup,
+                  ) ==
+                  UsaMotivationalStandardsCatalog.normalizeAgeGroup(
+                    ageGroup,
+                  )) &&
           (gender == null || standard.gender == gender),
     );
 

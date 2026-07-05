@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
@@ -124,6 +126,32 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     );
   }
 
+  String? _videoMotivationalCut(SwimmerData data, SwimVideo video) {
+    final stroke = SwimStrokeUtils.canonical(video.stroke);
+    final distance = int.tryParse(video.distance ?? '');
+    final course = video.course?.trim();
+    if (stroke.isEmpty || distance == null || course == null || course.isEmpty) {
+      return null;
+    }
+
+    final matches = data.personalBests.where(
+      (log) =>
+          log.stroke == stroke &&
+          log.distance == distance &&
+          log.course == course,
+    );
+    if (matches.isEmpty) return null;
+
+    return MotivationalCut.labelForSwim(
+      catalog: data.motivationalStandards,
+      profile: data.profile,
+      stroke: stroke,
+      distance: distance,
+      course: course,
+      timeSeconds: matches.first.timeSeconds,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SwimmerScreen(
@@ -210,6 +238,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
               dateFormat: dateFormat,
               analyzing: _analyzingVideoId == video.id,
               onAnalyze: () => _runAnalysis(video),
+              motivationalCut: _videoMotivationalCut(data, video),
             ),
           ),
           ],
@@ -226,6 +255,7 @@ class _VideoCard extends StatefulWidget {
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
+    this.motivationalCut,
   });
 
   final SwimVideo video;
@@ -233,6 +263,7 @@ class _VideoCard extends StatefulWidget {
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
+  final String? motivationalCut;
 
   @override
   State<_VideoCard> createState() => _VideoCardState();
@@ -275,6 +306,11 @@ class _VideoCardState extends State<_VideoCard> {
                 style: const TextStyle(fontWeight: FontWeight.w800)),
             if (widget.video.createdAt != null)
               Text(widget.dateFormat.format(widget.video.createdAt!)),
+            if (widget.motivationalCut != null)
+              Text(
+                'Motivational cut from matching PB: ${widget.motivationalCut}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             if (_controller != null) ...[
               const SizedBox(height: 12),
               AspectRatio(

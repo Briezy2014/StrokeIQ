@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
@@ -195,12 +197,25 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
               const EmptyStateMessage(message: 'No meet results yet.')
             else
               ...data.meetResults.map(
-                (result) => SwimIqEventListTile(
-                  title: result.event,
-                  subtitle:
-                      '${result.meetName} · ${result.course} · ${dateFormat.format(result.meetDate)}',
-                  trailing: SwimTime.fromSeconds(result.swimTime),
-                ),
+                (result) {
+                  final parts = SwimEventParser.parse(result.event);
+                  final cut = parts == null
+                      ? null
+                      : MotivationalCut.labelForSwim(
+                          catalog: data.motivationalStandards,
+                          profile: data.profile,
+                          stroke: parts.stroke,
+                          distance: parts.distance,
+                          course: result.course,
+                          timeSeconds: result.swimTime,
+                        );
+                  return SwimIqEventListTile(
+                    title: result.event,
+                    subtitle:
+                        '${result.meetName} · ${result.course} · ${dateFormat.format(result.meetDate)} · ${cut ?? 'Below B'} cut',
+                    trailing: SwimTime.fromSeconds(result.swimTime),
+                  );
+                },
               ),
           ],
         );

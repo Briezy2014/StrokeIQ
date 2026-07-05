@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
@@ -21,6 +22,7 @@ class SwimmerData {
     this.videos = const [],
     this.videoAnalyses = const [],
     this.usaStandards = const [],
+    required this.motivationalStandards,
   });
 
   final List<RaceLog> raceLogs;
@@ -30,6 +32,7 @@ class SwimmerData {
   final List<SwimVideo> videos;
   final List<SwimVideoAnalysis> videoAnalyses;
   final List<UsaTimeStandard> usaStandards;
+  final UsaMotivationalStandardsCatalog motivationalStandards;
 
   SwimVideoAnalysis? analysisForVideo(String? videoId) {
     if (videoId == null || videoId.isEmpty) return null;
@@ -90,6 +93,7 @@ class SwimmerData {
     List<SwimVideo>? videos,
     List<SwimVideoAnalysis>? videoAnalyses,
     List<UsaTimeStandard>? usaStandards,
+    UsaMotivationalStandardsCatalog? motivationalStandards,
   }) {
     return SwimmerData(
       raceLogs: raceLogs ?? this.raceLogs,
@@ -99,6 +103,8 @@ class SwimmerData {
       videos: videos ?? this.videos,
       videoAnalyses: videoAnalyses ?? this.videoAnalyses,
       usaStandards: usaStandards ?? this.usaStandards,
+      motivationalStandards:
+          motivationalStandards ?? this.motivationalStandards,
     );
   }
 }
@@ -133,7 +139,6 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
     List<SwimVideo> videos = [];
     List<SwimVideoAnalysis> videoAnalyses = [];
-    List<UsaTimeStandard> usaStandards = [];
 
     try {
       videos = (await repository.fetchSwimVideos(swimmer))
@@ -153,15 +158,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           .toList();
     } catch (_) {}
 
-    try {
-      usaStandards = await repository.fetchUsaStandards();
-    } catch (_) {
-      usaStandards = await ref.read(usaStandardsServiceProvider).loadSeedStandards();
-    }
-
-    if (usaStandards.isEmpty) {
-      usaStandards = await ref.read(usaStandardsServiceProvider).loadSeedStandards();
-    }
+    final motivationalStandards =
+        await ref.read(usaMotivationalStandardsCatalogProvider.future);
+    final usaStandards = motivationalStandards.flatStandards;
 
     return SwimmerData(
       raceLogs: raceLogs,
@@ -171,6 +170,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       videos: videos,
       videoAnalyses: _mergeAnalyses(videoAnalyses),
       usaStandards: usaStandards,
+      motivationalStandards: motivationalStandards,
     );
   }
 

@@ -9,7 +9,6 @@ import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
-import 'package:swimiq/data/models/usa_time_standard.dart';
 import 'package:swimiq/data/models/video_models.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/providers/swimmer_data_provider.dart';
@@ -20,6 +19,8 @@ import 'package:swimiq/screens/meet_results/meet_results_screen.dart';
 import 'package:swimiq/screens/personal_bests/personal_bests_screen.dart';
 import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
+
+import 'support/motivational_standards_test_helper.dart';
 
 SwimmerData? _harnessData;
 late Map<String, dynamic> _fixture;
@@ -112,17 +113,8 @@ SwimmerData _buildHarnessData() {
     ),
     videos: videos,
     videoAnalyses: const [],
-    usaStandards: [
-      UsaTimeStandard(
-        ageGroup: '11-12',
-        gender: 'Girls',
-        stroke: 'Butterfly',
-        distance: 100,
-        course: 'SCY',
-        standardLevel: 'B',
-        timeSeconds: 90,
-      ),
-    ],
+    usaStandards: testMotivationalCatalog.flatStandards,
+    motivationalStandards: testMotivationalCatalog,
   );
 }
 
@@ -142,6 +134,7 @@ Widget _screenHarness(Widget screen) {
 
 void main() {
   setUpAll(() async {
+    await loadTestMotivationalCatalog();
     final raw = await File('test/fixtures/aspyn_fixture.json').readAsString();
     _fixture = jsonDecode(raw) as Map<String, dynamic>;
   });
@@ -159,9 +152,10 @@ void main() {
       expect(find.text('${data.goals.length}'), findsOneWidget);
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
       expect(
-        find.text(data.passportSnapshot(_fixture['swimmer'] as String).currentFocus),
+        find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),
         findsOneWidget,
       );
+      expect(find.text('2024-2028'), findsOneWidget);
     });
 
     testWidgets('Athlete Passport', (tester) async {
@@ -236,6 +230,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('USA Swimming Standards'), findsOneWidget);
+      expect(
+        find.textContaining('2024-2028 USA Swimming Motivational Standards'),
+        findsOneWidget,
+      );
     });
   });
 }

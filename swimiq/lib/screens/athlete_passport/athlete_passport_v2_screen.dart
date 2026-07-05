@@ -5,6 +5,10 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swimiq_age_group.dart';
+import '../../core/utils/swimiq_gender.dart';
+import '../usa_standards/usa_standards_screen.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -182,6 +186,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final displayName = profile?.displayName ?? swimmer;
         final dateFormat = DateFormat('MM/dd/yyyy');
 
+        final snapshot = data.passportSnapshot(swimmer);
+        final ageGroup = SwimIqAgeGroup.fromProfile(profile);
+        final gender = SwimIqGender.standardsGender(profile);
+
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -197,6 +205,36 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'Athlete Passport',
               subtitle:
                   'Every field loads from Supabase, edits here, and saves back.',
+            ),
+            const SizedBox(height: 16),
+            SwimIqSectionCard(
+              title: 'USA Motivational Standards',
+              lines: [
+                data.motivationalStandards.versionLabel,
+                snapshot.usaStandardsSummary,
+                'Age group: $ageGroup · Gender: $gender',
+                if (data.personalBests.isNotEmpty)
+                  'Top PB cut: ${MotivationalCut.labelForSwim(
+                    catalog: data.motivationalStandards,
+                    profile: profile,
+                    stroke: data.personalBests.first.stroke,
+                    distance: data.personalBests.first.distance,
+                    course: data.personalBests.first.course,
+                    timeSeconds: data.personalBests.first.timeSeconds,
+                  )}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const UsaStandardsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.table_chart),
+              label: const Text('Search USA Standards'),
             ),
             const SizedBox(height: 16),
             Card(

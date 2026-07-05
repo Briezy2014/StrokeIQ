@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:swimiq/config/supabase_config.dart';
+import 'package:swimiq/core/services/usa_motivational_standards_catalog.dart';
 import 'package:swimiq/data/models/usa_time_standard.dart';
 import 'package:swimiq/data/models/video_models.dart';
 import 'package:swimiq/data/repositories/swimiq_repository.dart';
@@ -11,13 +12,6 @@ import 'package:swimiq/providers/swimmer_data_provider.dart';
 
 const _swimmer = 'Aspyn';
 
-Future<List<UsaTimeStandard>> _loadSeedStandardsFromDisk() async {
-  final raw = await File('assets/data/usa_time_standards_seed.json').readAsString();
-  final decoded = jsonDecode(raw) as List<dynamic>;
-  return decoded
-      .map((item) => UsaTimeStandard.fromJson(Map<String, dynamic>.from(item)))
-      .toList();
-}
 
 Future<SwimmerData> loadAspynData(SwimIqRepository repository) async {
   final raceLogs = await repository.fetchRaceLogs(_swimmer);
@@ -28,6 +22,8 @@ Future<SwimmerData> loadAspynData(SwimIqRepository repository) async {
   List<SwimVideo> videos = [];
   List<SwimVideoAnalysis> videoAnalyses = [];
   List<UsaTimeStandard> usaStandards = [];
+  final motivationalStandards =
+      await UsaMotivationalStandardsCatalog.loadFromAssets();
 
   try {
     videos = (await repository.fetchSwimVideos(_swimmer))
@@ -51,7 +47,7 @@ Future<SwimmerData> loadAspynData(SwimIqRepository repository) async {
   } catch (_) {}
 
   if (usaStandards.isEmpty) {
-    usaStandards = await _loadSeedStandardsFromDisk();
+    usaStandards = motivationalStandards.flatStandards;
   }
 
   return SwimmerData(
@@ -62,6 +58,7 @@ Future<SwimmerData> loadAspynData(SwimIqRepository repository) async {
     videos: videos,
     videoAnalyses: videoAnalyses,
     usaStandards: usaStandards,
+    motivationalStandards: motivationalStandards,
   );
 }
 
@@ -70,6 +67,7 @@ void main() {
   late SwimIqRepository repository;
 
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     repository = SwimIqRepository(
       SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey),
     );
