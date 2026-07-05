@@ -1,37 +1,53 @@
-# StrokeIQ
+# SwimIQ
 
-Streamlit-based swim analytics dashboard for tracking stroke efficiency, timing, and personal bests.
+**Built in the Water. Driven by Possibility.**  
+Founded by Aspyn Briez
 
-## Files
+SwimIQ is a swim performance platform. **Version 3 (Coach & Team)** is the current Kotlin Android app.
 
-- `app.py` - Streamlit dashboard and swim entry form.
-- `requirements.txt` - Python dependencies.
-- `data/swim_data.csv` - Sample swim session dataset.
+See the full product plan in [docs/ROADMAP.md](docs/ROADMAP.md) (Versions 1–8).
 
-## Setup
+## Version 3 — Coach & Team (Kotlin Android)
 
-1. Create a Python virtual environment:
-   ```bash
-   python -m venv .venv
-   ```
-2. Activate the virtual environment:
-   - Windows: `./.venv/Scripts/activate`
-   - macOS/Linux: `source .venv/bin/activate`
-3. Install dependencies:
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
+### Features
 
-## Run
+- Everything in V1 (auth, training, meets, goals, charts) and V2 (PBs, Passport, score breakdown, offline cache)
+- **Coach role** — switch between Swimmer and Coach in Settings
+- **Team creation** — coaches create teams and invite swimmers by email
+- **Roster management** — pending invites auto-link when swimmers sign up
+- **Coach dashboard** — team avg SwimIQ, attendance, top performers
+- **CSV bulk import** — import meet results for roster swimmers
+- **Notifications** — in-app alerts for PBs; upcoming goal deadlines; local Android notifications on new PBs
+
+A Flutter reference app also lives in [`swimiq/`](swimiq/).
+
+### Supabase setup
+
+1. Run [supabase/migrations/001_swimiq_v1.sql](supabase/migrations/001_swimiq_v1.sql)
+2. Run [supabase/migrations/002_swimiq_v3_coach_team.sql](supabase/migrations/002_swimiq_v3_coach_team.sql)
+3. Enable Email auth in Supabase
+
+### Android setup
 
 ```bash
-python -m streamlit run app.py
+cp android/local.properties.example android/local.properties
+# Edit sdk.dir, SUPABASE_URL, SUPABASE_KEY
+cd android
+./gradlew test assembleDebug
+adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Features
+### Coach workflow
 
-- Add swim sessions with swimmer name, stroke, distance, time, stroke count, and date.
-- Calculates stroke rate and distance per stroke (DPS).
-- Displays trend charts for DPS, stroke rate, pace, and distance.
-- Tracks personal records by swimmer and stroke.
-- Shows weekly improvement percentages and efficiency recommendations.
+1. Sign up / sign in
+2. Settings → **Switch to Coach**
+3. Coach tab → **Create Team**
+4. **Invite Swimmer** by email
+5. Swimmer signs up with that email → auto-joins roster
+6. View team analytics and **Import Meet Results (CSV)**
+
+CSV format: `swimmer_name,meet_name,meet_date,event,swim_time,course`
+
+---
+
+© 2026 SwimIQ · Founded by Aspyn Briez
