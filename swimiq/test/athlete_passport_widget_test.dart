@@ -104,13 +104,13 @@ void main() {
       expect(find.byType(DropdownButton<dynamic>), findsNothing);
 
       await tester.scrollUntilVisible(
-        find.text('ATHLETE PASSPORT™ HUB'),
+        find.text('Coming Soon to Athlete Passport™'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('ATHLETE PASSPORT™ HUB'), findsOneWidget);
+      expect(find.text('Coming Soon to Athlete Passport™'), findsOneWidget);
       expect(find.text('Coming Soon'), findsWidgets);
     });
 

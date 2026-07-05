@@ -21,8 +21,8 @@ class PassportHub extends ConsumerWidget {
   final PassportSnapshot snapshot;
 
   static const hubTagline =
-      'AI Coach   |   SwimDNA™   |   Recruiting Center   |   Video Lab   |   '
-      'Race Intelligence™   |   USA Swimming Standards';
+      '🤖 AI Coach   |   🧬 SwimDNA™   |   🎓 Recruiting Center   |   '
+      '🎥 Video Lab   |   🏁 Race Intelligence™   |   📊 USA Swimming Standards';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -136,32 +136,51 @@ class _HubIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.primary.withValues(alpha: 0.06),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ATHLETE PASSPORT™ HUB',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.primaryDark,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
+    final segments = tagline.split(RegExp(r'\s{3}\|\s{3}'));
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3FAFF),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFBFE8FF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Coming Soon to Athlete Passport™',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFF0077C8),
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < segments.length; i++) ...[
+                Text(
+                  segments[i].trim(),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF0B2D4D),
+                        fontWeight: FontWeight.w700,
+                        height: 1.5,
+                      ),
+                ),
+                if (i < segments.length - 1)
+                  Text(
+                    '|',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF0077C8),
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tagline,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w600,
-                    height: 1.5,
-                  ),
-            ),
-          ],
-        ),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -5,10 +5,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swimiq_age_group.dart';
-import '../../core/utils/swimiq_gender.dart';
-import '../usa_standards/usa_standards_screen.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -25,7 +21,8 @@ class AthletePassportV2Screen extends ConsumerStatefulWidget {
 class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Screen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _nameController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
   late final TextEditingController _preferredNameController;
   late final TextEditingController _usaIdController;
   late final TextEditingController _genderController;
@@ -35,6 +32,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _graduationYearController;
   late final TextEditingController _primaryStrokeController;
   late final TextEditingController _secondaryStrokeController;
+  late final TextEditingController _favoriteEventController;
   late final TextEditingController _notesController;
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
@@ -47,7 +45,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
     _preferredNameController = TextEditingController();
     _usaIdController = TextEditingController();
     _genderController = TextEditingController();
@@ -57,6 +56,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _graduationYearController = TextEditingController();
     _primaryStrokeController = TextEditingController();
     _secondaryStrokeController = TextEditingController();
+    _favoriteEventController = TextEditingController();
     _notesController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
@@ -65,7 +65,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _preferredNameController.dispose();
     _usaIdController.dispose();
     _genderController.dispose();
@@ -75,6 +76,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _graduationYearController.dispose();
     _primaryStrokeController.dispose();
     _secondaryStrokeController.dispose();
+    _favoriteEventController.dispose();
     _notesController.dispose();
     _heightController.dispose();
     _weightController.dispose();
@@ -97,7 +99,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     if (_syncedProfileId == profile?.id && profile?.id != null) return;
     _syncedProfileId = profile?.id;
 
-    _nameController.text = profile?.legalName ?? '';
+    _firstNameController.text = profile?.firstName ?? '';
+    _lastNameController.text = profile?.lastName ?? '';
+    if (_firstNameController.text.isEmpty && _lastNameController.text.isEmpty) {
+      final legal = profile?.legalName ?? '';
+      final split = SwimmerProfile.splitLegalName(legal);
+      _firstNameController.text = split.firstName ?? '';
+      _lastNameController.text = split.lastName ?? '';
+    }
     _preferredNameController.text = profile?.preferredName ?? '';
     _usaIdController.text = profile?.usaSwimmingId ?? '';
     _genderController.text = profile?.gender ?? '';
@@ -108,6 +117,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         profile?.graduationYear?.toString() ?? '';
     _primaryStrokeController.text = profile?.primaryStroke ?? '';
     _secondaryStrokeController.text = profile?.secondaryStroke ?? '';
+    _favoriteEventController.text = profile?.favoriteEvent ?? '';
     _notesController.text = profile?.notesBody ?? '';
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
@@ -132,12 +142,21 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
     setState(() => _isSaving = true);
 
-    final legalName = SwimmerProfile.splitLegalName(_nameController.text);
+    final firstName = _optionalText(_firstNameController.text);
+    final lastName = _optionalText(_lastNameController.text);
+    if (firstName == null && lastName == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('First or last name is required.')),
+      );
+      setState(() => _isSaving = false);
+      return;
+    }
+
     final profile = SwimmerProfile(
       id: existing?.id,
       swimmerName: swimmer,
-      firstName: legalName.firstName,
-      lastName: legalName.lastName,
+      firstName: firstName,
+      lastName: lastName,
       preferredName: _optionalText(_preferredNameController.text),
       birthday: _birthday,
       graduationYear: _graduationYearFromField(),
@@ -146,6 +165,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       school: _optionalText(_schoolController.text),
       primaryStroke: _optionalText(_primaryStrokeController.text),
       secondaryStroke: _optionalText(_secondaryStrokeController.text),
+      favoriteEvent: _optionalText(_favoriteEventController.text),
       usaSwimmingId: _optionalText(_usaIdController.text),
       athleteNotes: SwimmerProfile.composeAthleteNotes(
         gender: _genderController.text,
@@ -188,8 +208,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final dateFormat = DateFormat('MM/dd/yyyy');
 
         final snapshot = data.passportSnapshot(swimmer);
-        final ageGroup = SwimIqAgeGroup.fromProfile(profile);
-        final gender = SwimIqGender.standardsGender(profile);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -197,51 +215,111 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
           children: [
             _PassportHero(
               displayName: displayName,
-              swimmerName: swimmer,
-              club: profile?.team,
+              team: profile?.team,
               coach: profile?.coachName,
+              primaryStroke: profile?.primaryStroke,
+              graduationYear: profile?.graduationYear,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            const SwimIqScreenHeader(title: 'Athlete Status'),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.35,
+              children: [
+                SwimIqMetricCard(
+                  label: 'SwimIQ Score™',
+                  value: snapshot.swimIqScore > 0
+                      ? '${snapshot.swimIqScore}'
+                      : 'Coming Soon',
+                  subtitle: snapshot.swimIqExplanation,
+                ),
+                SwimIqMetricCard(
+                  label: 'Current Focus',
+                  value: snapshot.currentFocus,
+                ),
+                SwimIqMetricCard(
+                  label: 'Highest Cut',
+                  value: snapshot.highestCut,
+                ),
+                SwimIqMetricCard(
+                  label: 'Next Meet',
+                  value: snapshot.nextMeet,
+                ),
+                SwimIqMetricCard(
+                  label: 'IMX / IMR',
+                  value: snapshot.imxScore,
+                ),
+                SwimIqMetricCard(
+                  label: 'Readiness',
+                  value: snapshot.readiness,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const SwimIqScreenHeader(title: 'Athlete Details'),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'Athlete Identity',
+              lines: [
+                'Display Name: $displayName',
+                'Birthday: ${_passportLabel(profile?.birthday != null ? dateFormat.format(profile!.birthday!) : null)}',
+                'Age: ${_passportLabel(profile?.age?.toString())}',
+                'Graduation Year: ${_passportLabel(profile?.graduationYear?.toString())}',
+                'School: ${_passportLabel(profile?.school)}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'USA Swimming Profile',
+              lines: [
+                'USA Swimming ID: ${_passportLabel(profile?.usaSwimmingId)}',
+                'Club Team: ${_passportLabel(profile?.team)}',
+                'Coach: ${_passportLabel(profile?.coachName)}',
+                'Primary Stroke: ${_passportLabel(profile?.primaryStroke)}',
+                'Secondary Stroke: ${_passportLabel(profile?.secondaryStroke)}',
+                'Favorite Event: ${_passportLabel(profile?.favoriteEvent)}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'SwimIQ Activity',
+              lines: [
+                'Current Goals: ${data.goals.length}',
+                'Personal Bests: ${data.personalBests.length}',
+                'Training Sessions: ${data.raceLogs.length}',
+                'Meet Results: ${data.meetResults.length}',
+                'Video Analyses: ${data.userFacingVideoAnalyses.length}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'Athlete Notes',
+              lines: [
+                if (profile?.notesBody?.trim().isNotEmpty == true)
+                  profile!.notesBody!.trim()
+                else
+                  'No athlete notes added yet.',
+              ],
+            ),
+            const SizedBox(height: 24),
             PassportHub(
               data: data,
               swimmer: swimmer,
               snapshot: snapshot,
             ),
             const SizedBox(height: 24),
-            const SwimIqScreenHeader(
-              title: 'Athlete Passport',
-              subtitle:
-                  'Every field loads from Supabase, edits here, and saves back.',
-            ),
+            const Divider(),
             const SizedBox(height: 16),
-            SwimIqSectionCard(
-              title: 'USA Motivational Standards',
-              lines: [
-                data.motivationalStandards.versionLabel,
-                snapshot.usaStandardsSummary,
-                'Age group: $ageGroup · Gender: $gender',
-                if (data.personalBests.isNotEmpty)
-                  'Top PB cut: ${MotivationalCut.labelForSwim(
-                    catalog: data.motivationalStandards,
-                    profile: profile,
-                    stroke: data.personalBests.first.stroke,
-                    distance: data.personalBests.first.distance,
-                    course: data.personalBests.first.course,
-                    timeSeconds: data.personalBests.first.timeSeconds,
-                  )}',
-              ],
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const UsaStandardsScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.table_chart),
-              label: const Text('Search USA Standards'),
+            const SwimIqScreenHeader(title: 'Edit Athlete Passport'),
+            const SizedBox(height: 8),
+            Text(
+              'Profile saves to Supabase for $swimmer.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
             Card(
@@ -253,44 +331,19 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _field(
-                        controller: _nameController,
-                        label: 'Name',
-                        hint: 'Legal / full name',
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                                ? 'Name is required'
-                                : null,
+                        controller: _firstNameController,
+                        label: 'First Name',
+                      ),
+                      _field(
+                        controller: _lastNameController,
+                        label: 'Last Name',
                       ),
                       _field(
                         controller: _preferredNameController,
                         label: 'Preferred Name',
                         hint: 'Name used on deck and in results',
                       ),
-                      _field(
-                        controller: _usaIdController,
-                        label: 'USA Swimming ID',
-                        hint: 'Example: 1234ABCD',
-                      ),
                       _dateTile(dateFormat),
-                      _field(
-                        controller: _genderController,
-                        label: 'Gender',
-                        hint: 'Example: Female, Male, Non-binary',
-                      ),
-                      _field(
-                        controller: _clubController,
-                        label: 'Club',
-                        hint: 'Example: COA',
-                      ),
-                      _field(
-                        controller: _coachController,
-                        label: 'Coach',
-                        hint: 'Example: Gunner Lehr',
-                      ),
-                      _field(
-                        controller: _schoolController,
-                        label: 'School',
-                      ),
                       _field(
                         controller: _graduationYearController,
                         label: 'Graduation Year',
@@ -306,6 +359,16 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         },
                       ),
                       _field(
+                        controller: _clubController,
+                        label: 'Club Team',
+                        hint: 'Example: COA',
+                      ),
+                      _field(
+                        controller: _coachController,
+                        label: 'Coach',
+                        hint: 'Example: Gunner Lehr',
+                      ),
+                      _field(
                         controller: _primaryStrokeController,
                         label: 'Primary Stroke',
                         hint: 'Freestyle, Backstroke, Breaststroke, Butterfly, IM',
@@ -314,6 +377,25 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         controller: _secondaryStrokeController,
                         label: 'Secondary Stroke',
                         hint: 'Freestyle, Backstroke, Breaststroke, Butterfly, IM',
+                      ),
+                      _field(
+                        controller: _favoriteEventController,
+                        label: 'Favorite Event',
+                        hint: 'Example: 100 Fly SCY',
+                      ),
+                      _field(
+                        controller: _usaIdController,
+                        label: 'USA Swimming ID',
+                        hint: 'Example: 1234ABCD',
+                      ),
+                      _field(
+                        controller: _schoolController,
+                        label: 'School',
+                      ),
+                      _field(
+                        controller: _genderController,
+                        label: 'Gender',
+                        hint: 'Example: Female, Male, Non-binary',
                       ),
                       _field(
                         controller: _heightController,
@@ -332,14 +414,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                       ),
                       _field(
                         controller: _notesController,
-                        label: 'Notes',
+                        label: 'Athlete Notes',
                         hint: 'Training focus, meet prep, injury history, etc.',
                         maxLines: 4,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Swimmer key: $swimmer',
-                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 20),
                       SwimIqSaveButton(
@@ -400,31 +477,36 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   }
 }
 
+String _passportLabel(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return 'Not added yet';
+  return trimmed;
+}
+
 class _PassportHero extends StatelessWidget {
   const _PassportHero({
     required this.displayName,
-    required this.swimmerName,
-    this.club,
+    this.team,
     this.coach,
+    this.primaryStroke,
+    this.graduationYear,
   });
 
   final String displayName;
-  final String swimmerName;
-  final String? club;
+  final String? team;
   final String? coach;
+  final String? primaryStroke;
+  final int? graduationYear;
 
   @override
   Widget build(BuildContext context) {
-    final subtitleParts = <String>[];
-    if (coach != null && coach!.trim().isNotEmpty) {
-      subtitleParts.add('Coach: ${coach!.trim()}');
-    }
-    if (club != null && club!.trim().isNotEmpty) {
-      subtitleParts.add(club!.trim());
-    }
-    final subtitle = subtitleParts.isEmpty
-        ? 'Swimmer: $swimmerName'
-        : subtitleParts.join(' · ');
+    final strokeLabel = _passportLabel(primaryStroke);
+    final specialist = strokeLabel == 'Not added yet'
+        ? 'Not added yet Specialist'
+        : '$strokeLabel Specialist';
+    final classOf = graduationYear?.toString() ?? 'Not added yet';
+    final coachLabel = _passportLabel(coach);
+    final subtitle = 'Coach: $coachLabel · $specialist · Class of $classOf';
 
     return Container(
       width: double.infinity,
@@ -458,7 +540,7 @@ class _PassportHero extends StatelessWidget {
               color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.badge_outlined, size: 46, color: AppColors.primary),
+            child: const Icon(Icons.pool, size: 46, color: AppColors.primary),
           ),
           const SizedBox(height: 18),
           Text(
@@ -478,6 +560,17 @@ class _PassportHero extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
           ),
+          if (team != null && team!.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              team!.trim(),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ],
           const SizedBox(height: 6),
           Text(
             subtitle,
