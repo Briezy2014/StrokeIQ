@@ -1,96 +1,105 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/constants/app_colors.dart';
-import 'core/constants/app_strings.dart';
-import 'providers/auth_provider.dart';
-import 'router/app_router.dart';
-import 'services/auth_service.dart';
+import '../config/env.dart';
+import '../core/theme/app_theme.dart';
+import '../providers/app_providers.dart';
+import '../services/auth_service.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/signup_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 
-/// Root widget and theme configuration for SwimIQ.
-class SwimIQApp extends StatefulWidget {
-  const SwimIQApp({super.key});
+/// Routes between splash, auth, and the main app based on session state.
+class SwimIqApp extends ConsumerStatefulWidget {
+  const SwimIqApp({super.key});
 
   @override
-  State<SwimIQApp> createState() => _SwimIQAppState();
+  ConsumerState<SwimIqApp> createState() => _SwimIqAppState();
 }
 
-class _SwimIQAppState extends State<SwimIQApp> {
-  late final AuthProvider _authProvider;
-  late final AppRouter _appRouter;
+class _SwimIqAppState extends ConsumerState<SwimIqApp> {
+  bool _showSignup = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _authProvider = AuthProvider(AuthService());
-    _appRouter = AppRouter(_authProvider);
-  }
-
-  @override
-  void dispose() {
-    _authProvider.dispose();
-    super.dispose();
+  void _toggleAuthMode() {
+    setState(() => _showSignup = !_showSignup);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AuthProvider>.value(
-      value: _authProvider,
-      child: MaterialApp.router(
-        title: AppStrings.appName,
+    if (!Env.isConfigured) {
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.primary,
-            primary: AppColors.primary,
-            secondary: AppColors.accent,
-            surface: AppColors.surface,
-          ),
-          scaffoldBackgroundColor: AppColors.background,
-          appBarTheme: const AppBarTheme(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        theme: buildAppTheme(),
+        home: const _ConfigErrorScreen(),
+      );
+    }
+
+    final authAsync = ref.watch(authStateProvider);
+
+    return MaterialApp(
+      title: 'SwimIQ',
+      debugShowCheckedModeBanner: false,
+      theme: buildAppTheme(),
+      home: authAsync.when(
+        loading: () => const SplashScreen(),
+        error: (error, _) => _ConfigErrorScreen(message: error.toString()),
+        data: (authState) {
+          final session = authState.session;
+          if (session == null) {
+            return _showSignup
+                ? SignupScreen(onSwitchToLogin: _toggleAuthMode)
+                : LoginScreen(onSwitchToSignup: _toggleAuthMode);
+          }
+
+          final swimmerKey = AuthService.swimmerKeyForUser(session.user);
+          final activeSwimmer = ref.watch(activeSwimmerProvider);
+
+          if (activeSwimmer != swimmerKey) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(activeSwimmerProvider.notifier).state = swimmerKey;
+            });
+            return const SplashScreen();
+          }
+
+          return const HomeScreen();
+        },
+      ),
+    );
+  }
+}
+
+class _ConfigErrorScreen extends StatelessWidget {
+  const _ConfigErrorScreen({this.message});
+
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.settings, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                'Supabase is not configured',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
               ),
-            ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.accentLight),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.accentLight.withValues(alpha: 0.5),
+              const SizedBox(height: 12),
+              Text(
+                message ??
+                    'Copy swimiq/.env.example to swimiq/.env and add your '
+                    'SUPABASE_URL and SUPABASE_ANON_KEY.',
+                textAlign: TextAlign.center,
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.accent, width: 2),
-            ),
-          ),
-          cardTheme: CardTheme(
-            color: Colors.white,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            ],
           ),
         ),
-        routerConfig: _appRouter.router,
       ),
     );
   }

@@ -12,7 +12,6 @@ class Env {
   static String? _urlFromDotenv;
   static String? _keyFromDotenv;
 
-  /// Call once after [dotenv.load] in main().
   static void loadFromDotenv(Map<String, String> env) {
     _urlFromDotenv = env['SUPABASE_URL'];
     _keyFromDotenv = env['SUPABASE_ANON_KEY'];

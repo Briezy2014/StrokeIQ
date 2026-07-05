@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/constants/app_routes.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/utils/auth_validators.dart';
-import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
 import '../../widgets/loading_button.dart';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key, required this.onSwitchToLogin});
+
+  final VoidCallback onSwitchToLogin;
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -26,6 +25,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  String? _errorMessage;
   String? _successMessage;
 
   @override
@@ -42,22 +42,21 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
       _successMessage = null;
     });
 
-    final auth = context.read<AuthProvider>();
-
     try {
-      final response = await auth.signUp(
-        email: _emailController.text,
-        password: _passwordController.text,
-        displayName: _displayNameController.text,
-      );
+      final response = await ref.read(authServiceProvider).signUp(
+            email: _emailController.text,
+            password: _passwordController.text,
+            displayName: _displayNameController.text,
+          );
 
       if (!mounted) return;
 
       if (response.session != null) {
-        context.go(AppRoutes.home);
+        // Auth state listener will route to home.
       } else {
         setState(() {
           _successMessage =
@@ -65,9 +64,9 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       }
     } on AuthException catch (e) {
-      auth.setError(AuthErrorMapper.fromException(e));
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
     } catch (e) {
-      auth.setError(AuthErrorMapper.fromException(e));
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -75,8 +74,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authError = context.watch<AuthProvider>().errorMessage;
-
     return Scaffold(
       body: AuthGradientBackground(
         child: Center(
@@ -101,28 +98,16 @@ class _SignupScreenState extends State<SignupScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          AppStrings.tagline,
+                        const Text(
+                          'Built in the Water. Driven by Possibility.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 24),
                         if (_successMessage != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.green.shade200),
-                            ),
-                            child: Text(
-                              _successMessage!,
-                              style: TextStyle(color: Colors.green.shade800),
-                            ),
-                          ),
+                          _SuccessBanner(message: _successMessage!),
                           const SizedBox(height: 16),
                         ],
-                        if (authError != null) ...[
+                        if (_errorMessage != null) ...[
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -131,7 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               border: Border.all(color: Colors.red.shade200),
                             ),
                             child: Text(
-                              authError,
+                              _errorMessage!,
                               style: TextStyle(color: Colors.red.shade800),
                             ),
                           ),
@@ -213,7 +198,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => context.go(AppRoutes.login),
+                          onPressed: widget.onSwitchToLogin,
                           child: const Text('Already have an account? Sign in'),
                         ),
                       ],
@@ -224,6 +209,28 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SuccessBanner extends StatelessWidget {
+  const _SuccessBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(color: Colors.green.shade800),
       ),
     );
   }

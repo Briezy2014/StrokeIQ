@@ -1,12 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/app.dart';
 
 void main() {
-  testWidgets('SwimIQ app renders splash screen', (tester) async {
-    await tester.pumpWidget(const SwimIQApp());
+  testWidgets('SwimIQ app shows config error without credentials', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: SwimIqApp()));
     await tester.pump();
 
-    expect(find.text('SwimIQ'), findsOneWidget);
-    expect(find.text('Built in the Water. Driven by Possibility.'), findsOneWidget);
+    expect(find.text('Supabase is not configured'), findsOneWidget);
   });
 }

@@ -35,6 +35,7 @@ swimiq/**/android/local.properties
 swimiq/**/android/key.properties
 swimiq/**/*.iml
 swimiq/.idea/
+swimiq/.metadata
 
 # IDE & OS
 .idea/

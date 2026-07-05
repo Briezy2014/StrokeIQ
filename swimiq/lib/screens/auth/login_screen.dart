@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/constants/app_routes.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/utils/auth_validators.dart';
-import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
 import '../../widgets/loading_button.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key, required this.onSwitchToSignup});
+
+  final VoidCallback onSwitchToSignup;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -34,20 +34,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    final auth = context.read<AuthProvider>();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      await auth.signIn(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      if (mounted) context.go(AppRoutes.home);
+      await ref.read(authServiceProvider).signIn(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
     } on AuthException catch (e) {
-      auth.setError(AuthErrorMapper.fromException(e));
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
     } catch (e) {
-      auth.setError(AuthErrorMapper.fromException(e));
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -55,8 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authError = context.watch<AuthProvider>().errorMessage;
-
     return Scaffold(
       body: AuthGradientBackground(
         child: Center(
@@ -81,25 +79,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          AppStrings.tagline,
+                        const Text(
+                          'Built in the Water. Driven by Possibility.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 24),
-                        if (authError != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red.shade200),
-                            ),
-                            child: Text(
-                              authError,
-                              style: TextStyle(color: Colors.red.shade800),
-                            ),
-                          ),
+                        if (_errorMessage != null) ...[
+                          _ErrorBanner(message: _errorMessage!),
                           const SizedBox(height: 16),
                         ],
                         TextFormField(
@@ -143,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => context.go(AppRoutes.signup),
+                          onPressed: widget.onSwitchToSignup,
                           child: const Text('Create an account'),
                         ),
                       ],
@@ -154,6 +140,28 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(color: Colors.red.shade800),
       ),
     );
   }

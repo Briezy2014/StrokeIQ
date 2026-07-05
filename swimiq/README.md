@@ -1,28 +1,24 @@
 # SwimIQ Flutter App
 
-Cross-platform swim performance tracker for **Android** and **iOS**, built with Flutter. This app connects to the same Supabase backend as the Streamlit reference app in the repo root.
+Cross-platform swim performance tracker for **Android** and **iOS**, connected to the same Supabase backend as the Streamlit reference app.
 
-## Milestone 2 — Auth (current)
+## Current status
 
-- Supabase initialization with secure credential loading
-- Email/password sign-up and sign-in via Supabase Auth
-- Auth-aware routing (splash → login/signup → home)
-- Sign-out support
-- Placeholder home screen (V1 screens in Milestones 3–4)
+| Milestone | Scope | Status |
+|-----------|-------|--------|
+| 1 | Foundation, secrets protection | Done |
+| 2 | Supabase + email/password auth | Done |
+| 3 | Data layer + training log CRUD | Done |
+| 4 | Remaining V1 polish (settings, charts review) | Planned |
 
-**Not yet implemented:** Training log CRUD, dashboard, goals, meets, charts, settings.
+## Features
 
-## Prerequisites
-
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.27+)
-- Xcode (for iOS) and/or Android Studio (for Android)
-- A Supabase project with **Email** auth provider enabled
-
-### Supabase setup
-
-1. In Supabase Dashboard → **Authentication** → **Providers**, enable **Email**.
-2. For development, you may disable "Confirm email" under Email settings so sign-up signs in immediately.
-3. Use your project URL and **anon** (publishable) key — never commit real keys.
+- **Email/password auth** via Supabase Auth (replaces swimmer name gate)
+- **Dashboard** — SwimIQ Score, metrics, session history, time progress chart
+- **Training Log** — list, edit, and delete swim sessions
+- **Add Swim Session** — log training swims with PB detection
+- **Personal Bests**, **Goals**, **Meet Results**, **Athlete Passport**
+- **Video Lab** and **USA Swimming Standards** (from merged main branch)
 
 ## Setup
 
@@ -33,13 +29,28 @@ cp .env.example .env   # add SUPABASE_URL and SUPABASE_ANON_KEY
 flutter run
 ```
 
-Or with dart-define:
+### Supabase
+
+1. Enable **Email** provider in Authentication → Providers
+2. For dev, optionally disable email confirmation for instant sign-in
+3. **Never commit** real keys — use `.env` (gitignored) or `--dart-define`
 
 ```bash
 flutter run \
   --dart-define=SUPABASE_URL=https://your-project.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
+
+## Database schema
+
+No schema changes for Milestone 3. Auth uses built-in `auth.users`. Swimmer data keys use the authenticated user's display name (or email prefix) as `swimmer` / `swimmer_name` in existing tables.
+
+| Table | Key column | Notes |
+|-------|------------|-------|
+| `race_logs` | `swimmer` | Training sessions |
+| `goals` | `swimmer_name` | Matches Streamlit `app.py` inserts |
+| `meet_results` | `swimmer_name` | Uses `swim_time` column |
+| `swimmers` | `swimmer_name` | Athlete passport |
 
 ## Test
 
@@ -48,46 +59,6 @@ cd swimiq
 flutter test
 flutter analyze
 ```
-
-## Project structure
-
-```
-swimiq/lib/
-├── main.dart
-├── app.dart
-├── config/env.dart
-├── core/constants/       # Colors, routes, strings
-├── core/utils/           # Swim time + auth validators
-├── providers/            # AuthProvider
-├── router/               # go_router with auth redirects
-├── services/             # Supabase + Auth services
-├── screens/
-│   ├── splash_screen.dart
-│   ├── auth/             # Login, signup
-│   └── home_placeholder_screen.dart
-└── widgets/
-```
-
-## Database schema
-
-**No schema changes in Milestone 2.** Supabase Auth uses the built-in `auth.users` table. Display names are stored in user metadata (`display_name`). Linking auth users to `swimmers` / `race_logs` rows will happen in Milestone 3.
-
-| Table | Usage |
-|-------|-------|
-| `auth.users` | Supabase Auth (email/password) |
-| `race_logs` | Training sessions (Milestone 3) |
-| `goals` | Swimmer goals (Milestone 4) |
-| `meet_results` | Meet results (Milestone 4) |
-| `swimmers` | Athlete passport (Milestone 4) |
-
-## Roadmap
-
-| Milestone | Scope | Status |
-|-----------|-------|--------|
-| 1 — Foundation | Project setup, secrets, splash | Done |
-| 2 — Auth | Supabase + email/password login | **Done** |
-| 3 — Data layer | Models, repositories, training log | Next |
-| 4 — V1 screens | Dashboard, goals, meets, charts, settings | Planned |
 
 ## Reference
 
