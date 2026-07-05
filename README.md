@@ -6,7 +6,7 @@ Swim performance tracking platform.
 
 | App | Path | Platform | Status |
 |-----|------|----------|--------|
-| **Flutter (primary)** | `swimiq/` | Android, iOS | In development |
+| **Flutter (primary)** | `swimiq/` | Android, iOS | Milestone 2 — Auth complete |
 | **Streamlit (reference)** | `app.py` | Web | Reference only — unchanged |
 
 ## Quick start — Flutter app
