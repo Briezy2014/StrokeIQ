@@ -9,6 +9,11 @@ class AppConstants {
   static const goalsTable = 'goals';
   static const meetResultsTable = 'meet_results';
   static const swimmersTable = 'swimmers';
+  static const motivationalStandardsTable = 'motivational_standards';
+
+  /// Active USA Swimming motivational standards quad.
+  static const defaultStandardsVersion =
+      '2024-2028 USA Swimming Motivational Standards';
 
   /// Stored in Supabase Auth user metadata to link one user → one swimmer.
   static const swimmerNameMetadataKey = 'swimmer_name';

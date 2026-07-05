@@ -7,11 +7,14 @@ import '../screens/auth/signup_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/goals/goals_screen.dart';
 import '../screens/meets/meet_results_screen.dart';
+import '../screens/personal_bests/personal_bests_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/shell/main_shell.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/standards/usa_standards_screen.dart';
 import '../screens/training/training_log_screen.dart';
+import '../screens/video_lab/video_lab_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authRefreshNotifierProvider);
@@ -53,6 +56,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
       ),
+      GoRoute(
+        path: '/home/personal-bests',
+        builder: (context, state) => const PersonalBestsScreen(),
+      ),
+      GoRoute(
+        path: '/home/video-lab',
+        builder: (context, state) => const VideoLabScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainShell(navigationShell: navigationShell);
@@ -87,6 +98,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home/goals',
                 builder: (context, state) => const GoalsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/standards',
+                builder: (context, state) => const UsaStandardsScreen(),
               ),
             ],
           ),

@@ -15,6 +15,7 @@ class SwimmerProfile {
     this.school,
     this.usaSwimmingId,
     this.athleteNotes,
+    this.birthday,
   });
 
   final String? id;
@@ -31,6 +32,7 @@ class SwimmerProfile {
   final String? school;
   final String? usaSwimmingId;
   final String? athleteNotes;
+  final DateTime? birthday;
 
   String get displayName {
     if (preferredName != null && preferredName!.trim().isNotEmpty) {
@@ -61,7 +63,15 @@ class SwimmerProfile {
       school: json['school'] as String?,
       usaSwimmingId: json['usa_swimming_id'] as String?,
       athleteNotes: json['athlete_notes'] as String?,
+      birthday: _parseBirthday(json['birthday']),
     );
+  }
+
+  static DateTime? _parseBirthday(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    return DateTime.tryParse(value.toString());
   }
 
   Map<String, dynamic> toInsertJson() {
@@ -79,6 +89,7 @@ class SwimmerProfile {
       if (school != null) 'school': school,
       if (usaSwimmingId != null) 'usa_swimming_id': usaSwimmingId,
       if (athleteNotes != null) 'athlete_notes': athleteNotes,
+      if (birthday != null) 'birthday': birthday!.toIso8601String().split('T').first,
     };
   }
 }

@@ -46,6 +46,11 @@ class MainShell extends StatelessWidget {
             label: 'Goals',
           ),
           NavigationDestination(
+            icon: Icon(Icons.military_tech_outlined),
+            selectedIcon: Icon(Icons.military_tech),
+            label: 'Standards',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',

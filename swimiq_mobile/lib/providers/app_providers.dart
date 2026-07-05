@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/race_log_service.dart';
 
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
   return Supabase.instance.client;
@@ -13,6 +14,10 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 
 final profileServiceProvider = Provider<ProfileService>((ref) {
   return ProfileService(ref.watch(supabaseClientProvider));
+});
+
+final raceLogServiceProvider = Provider<RaceLogService>((ref) {
+  return RaceLogService(ref.watch(supabaseClientProvider));
 });
 
 final authServiceProvider = Provider<AuthService>((ref) {

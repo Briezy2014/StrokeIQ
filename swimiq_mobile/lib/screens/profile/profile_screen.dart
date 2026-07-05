@@ -3,19 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme.dart';
-import '../../providers/app_providers.dart';
+import '../../providers/profile_providers.dart';
+import '../../providers/race_log_providers.dart';
+import '../../providers/standards_providers.dart';
+import '../../services/standards_analytics.dart';
+import '../../widgets/standards/standard_progress_card.dart';
+import '../../widgets/standards/standards_empty_state.dart';
 import '../../widgets/swimiq_app_bar.dart';
 import '../../widgets/swimiq_logo.dart';
-
-final swimmerProfileProvider = FutureProvider.autoDispose((ref) async {
-  final swimmerName = ref.watch(currentSwimmerNameProvider);
-  if (swimmerName == null || swimmerName.isEmpty) {
-    return null;
-  }
-
-  final profileService = ref.watch(profileServiceProvider);
-  return profileService.getProfileBySwimmerName(swimmerName);
-});
 
 /// Athlete Passport profile view (read-only for now).
 class ProfileScreen extends ConsumerWidget {
@@ -24,6 +19,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(swimmerProfileProvider);
+    final standardsLoaded = ref.watch(standardsLoadedProvider);
+    final personalBestsAsync = ref.watch(personalBestsProvider);
 
     return Scaffold(
       appBar: SwimIqAppBar(
@@ -117,6 +114,65 @@ class ProfileScreen extends ConsumerWidget {
               _ProfileTile(
                 label: 'School',
                 value: profile.school ?? 'Not added yet',
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Motivational Standards',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              if (!standardsLoaded)
+                const StandardsEmptyState(compact: true)
+              else
+                personalBestsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (error, _) => Text('Standards summary error: $error'),
+                  data: (personalBests) {
+                    final comparisons = <StandardComparison>[];
+                    for (final pb in personalBests) {
+                      final comparison = ref
+                          .watch(
+                            standardComparisonProvider((
+                              event: pb.event,
+                              timeSeconds: pb.timeSeconds,
+                            )),
+                          )
+                          .value;
+                      if (comparison != null) {
+                        comparisons.add(comparison);
+                      }
+                    }
+
+                    final highest =
+                        StandardsAnalytics.highestAcrossComparisons(comparisons);
+
+                    return Column(
+                      children: [
+                        _ProfileTile(
+                          label: 'Highest motivational level',
+                          value: highest?.label ?? 'Below B',
+                        ),
+                        ...comparisons.take(2).map(
+                              (comparison) => Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: StandardProgressCard(
+                                  title: comparison.standard.event,
+                                  comparison: comparison,
+                                ),
+                              ),
+                            ),
+                      ],
+                    );
+                  },
+                ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push('/home/standards'),
+                child: const Text('Open USA Standards'),
+              ),
+              OutlinedButton(
+                onPressed: () => context.push('/home/video-lab'),
+                child: const Text('Video Lab'),
               ),
               const SizedBox(height: 8),
               const Text(

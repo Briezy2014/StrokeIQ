@@ -8,6 +8,9 @@ import plotly.express as px
 import streamlit as st
 from supabase import create_client
 
+from standards_analytics import best_standard_achieved
+from standards_service import DEFAULT_VERSION, fetch_standard_for_event, standards_count
+
 
 # ============================================================
 # SwimIQ Version 2: Athlete Performance
@@ -199,6 +202,70 @@ def safe_metric_time(df: pd.DataFrame, column: str, metric: str) -> str:
         return seconds_to_swim_time(values.mean())
 
     return "—"
+
+
+def resolve_age_group_from_birthday(birthday_value) -> str | None:
+    """Map swimmer birthday to USA Swimming motivational age group."""
+    try:
+        birthday = pd.to_datetime(birthday_value).date()
+    except Exception:
+        return None
+
+    age = date.today().year - birthday.year
+    if age <= 10:
+        return "10 & Under"
+    if age <= 12:
+        return "11-12"
+    if age <= 14:
+        return "13-14"
+    if age <= 16:
+        return "15-16"
+    if age <= 18:
+        return "17-18"
+    return None
+
+
+def highest_motivational_level_for_logs(
+    race_logs: pd.DataFrame,
+    *,
+    age_group: str | None,
+    gender: str = "F",
+    course: str = "SCY",
+) -> str:
+    """Return the highest motivational level earned across available logs."""
+    if race_logs.empty or not age_group or standards_count() == 0:
+        return "Import standards"
+
+    required = {"event", "time_seconds", "course"}
+    if not required.issubset(race_logs.columns):
+        return "Import standards"
+
+    best_level: str | None = None
+    level_order = ["B", "BB", "A", "AA", "AAA", "AAAA"]
+
+    for _, row in race_logs.iterrows():
+        event = row.get("event")
+        time_seconds = row.get("time_seconds")
+        row_course = row.get("course") or course
+
+        if not event or pd.isna(time_seconds):
+            continue
+
+        standard = fetch_standard_for_event(
+            age_group=age_group,
+            gender=gender,
+            course=str(row_course),
+            event=str(event),
+            version=DEFAULT_VERSION,
+        )
+        if not standard:
+            continue
+
+        achieved = best_standard_achieved(float(time_seconds), standard)
+        if achieved and (best_level is None or level_order.index(achieved) > level_order.index(best_level)):
+            best_level = achieved
+
+    return best_level or "Below B"
 
 
 def add_formatted_time_column(
@@ -751,7 +818,10 @@ with tab6:
         else "100 Fly"
     )
 
-    highest_cut = "Coming Soon"
+    highest_cut = highest_motivational_level_for_logs(
+        race_logs,
+        age_group=resolve_age_group_from_birthday(existing_profile.get("birthday")),
+    )
     next_meet = "Coming Soon"
     imx_score = "Coming Soon"
     readiness = "Coming Soon"
