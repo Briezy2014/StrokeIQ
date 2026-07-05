@@ -74,6 +74,8 @@ class SwimVideoAnalysis {
 
   bool get isNotesDriven => analysisEngine == 'swimiq-v1-notes';
 
+  bool get isGeminiEngine => analysisEngine == 'swimiq-v2-gemini';
+
   factory SwimVideoAnalysis.fromJson(Map<String, dynamic> json) {
     return SwimVideoAnalysis(
       id: parseUuid(json['id']),

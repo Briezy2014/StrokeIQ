@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
@@ -370,13 +371,26 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (current == null) return 'No swimmer data loaded.';
 
     try {
-      final analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
-            video: video,
-            raceLogs: current.raceLogs,
-            goals: current.goals,
-            profile: current.profile,
-            standards: current.usaStandards,
-          );
+      SwimVideoAnalysis analysis;
+
+      try {
+        analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
+              video: video,
+              raceLogs: current.raceLogs,
+              goals: current.goals,
+              profile: current.profile,
+            );
+      } on GeminiAnalysisException catch (error) {
+        return error.message;
+      } catch (_) {
+        analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
+              video: video,
+              raceLogs: current.raceLogs,
+              goals: current.goals,
+              profile: current.profile,
+              standards: current.usaStandards,
+            );
+      }
 
       final analysisWithIds = analysis.copyWith(
         swimVideoId: videoId,

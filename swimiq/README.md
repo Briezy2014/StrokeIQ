@@ -14,6 +14,7 @@ Cross-platform swim performance tracker for **Android** and **iOS**, connected t
 | Goals with progress + edit/delete | Done |
 | Meet results + edit/delete | Done |
 | Athlete passport (swimmer profile) | Done |
+| Video Lab + Gemini AI video analysis | Done — [deploy setup](docs/GEMINI_SETUP.md) |
 | Settings (account, sign out) | Done |
 | Auto-link auth user to swimmer profile | Done |
 
@@ -30,6 +31,11 @@ flutter run
 ```
 
 Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
+
+### Gemini video analysis
+
+Add `GEMINI_API_KEY` to Supabase Edge Function secrets and deploy `analyze-swim-video`.  
+See **[docs/GEMINI_SETUP.md](docs/GEMINI_SETUP.md)** for step-by-step instructions.
 
 ## Test
 
