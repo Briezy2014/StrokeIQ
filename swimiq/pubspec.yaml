@@ -27,5 +27,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/branding/swimiq_logo.png
+    - assets/branding/
     - assets/data/usa_motivational_standards_2024_2028.json

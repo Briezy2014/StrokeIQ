@@ -15,14 +15,16 @@ class MotivationalCut {
     required int distance,
     required String course,
     required double timeSeconds,
+    String? ageGroup,
+    String? gender,
   }) {
     return catalog.highestCutForTime(
       stroke: stroke,
       distance: distance,
       course: course,
       swimmerTime: timeSeconds,
-      ageGroup: SwimIqAgeGroup.fromProfile(profile),
-      gender: SwimIqGender.standardsGender(profile),
+      ageGroup: ageGroup ?? SwimIqAgeGroup.fromProfile(profile),
+      gender: gender ?? SwimIqGender.standardsGender(profile),
     );
   }
 
@@ -33,6 +35,8 @@ class MotivationalCut {
     required int distance,
     required String course,
     required double timeSeconds,
+    String? ageGroup,
+    String? gender,
   }) {
     return forSwim(
           catalog: catalog,
@@ -41,6 +45,8 @@ class MotivationalCut {
           distance: distance,
           course: course,
           timeSeconds: timeSeconds,
+          ageGroup: ageGroup,
+          gender: gender,
         ) ??
         'Below B';
   }
@@ -49,6 +55,8 @@ class MotivationalCut {
     required UsaMotivationalStandardsCatalog catalog,
     required SwimmerProfile? profile,
     required RaceLog log,
+    String? ageGroup,
+    String? gender,
   }) =>
       forSwim(
         catalog: catalog,
@@ -57,6 +65,8 @@ class MotivationalCut {
         distance: log.distance,
         course: log.course,
         timeSeconds: log.timeSeconds,
+        ageGroup: ageGroup,
+        gender: gender,
       );
 
   static String? forMeetResult({
@@ -65,6 +75,8 @@ class MotivationalCut {
     required MeetResult result,
     required String stroke,
     required int distance,
+    String? ageGroup,
+    String? gender,
   }) =>
       forSwim(
         catalog: catalog,
@@ -73,5 +85,7 @@ class MotivationalCut {
         distance: distance,
         course: result.course,
         timeSeconds: result.swimTime,
+        ageGroup: ageGroup,
+        gender: gender,
       );
 }
