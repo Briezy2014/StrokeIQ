@@ -8,6 +8,8 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
+import 'swimiq_age_group.dart';
+import 'swimiq_gender.dart';
 import 'swim_time.dart';
 
 class PassportSnapshot {
@@ -349,8 +351,12 @@ class PassportMetrics {
     SwimmerProfile? profile,
     required List<RaceLog> personalBests,
   }) {
+    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
+    final gender = SwimIqGender.standardsGender(profile);
+    final bracket = 'Age group: $ageGroup · Gender: $gender';
+
     if (personalBests.isEmpty) {
-      return '${catalog.versionLabel} loaded. Log sessions to compare cuts.';
+      return '${catalog.versionLabel} loaded. $bracket. Log sessions to compare cuts.';
     }
 
     final highest = highestCut(
@@ -365,11 +371,12 @@ class PassportMetrics {
     );
 
     if (closest == null) {
-      return 'Highest cut achieved: $highest.';
+      return '$bracket. Highest cut achieved: $highest.';
     }
 
-    return 'Highest cut achieved: $highest. Next target: ${closest.eventLabel} '
-        '(${closest.standardLevel}, ${SwimTime.fromSeconds(closest.timeSeconds)}).';
+    return '$bracket. Highest cut achieved: $highest. Next target: '
+        '${closest.eventLabel} (${closest.standardLevel}, '
+        '${SwimTime.fromSeconds(closest.timeSeconds)}).';
   }
 
   static String imxScore(List<RaceLog> raceLogs) {
