@@ -154,8 +154,12 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Video Lab'),
+      ),
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
@@ -244,6 +248,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ],
         );
       },
+      ),
     );
   }
 }

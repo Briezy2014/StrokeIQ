@@ -94,8 +94,12 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('USA Swimming Standards'),
+      ),
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final catalog = data.motivationalStandards;
         final pbs = data.personalBests;
         final profileReady = SwimIqStandardsProfile.isReady(data.profile);
@@ -288,6 +292,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
           ],
         );
       },
+      ),
     );
   }
 

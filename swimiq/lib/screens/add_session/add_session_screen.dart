@@ -128,8 +128,12 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Log Swim Session'),
+      ),
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
 
         return ListView(
@@ -232,6 +236,7 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
           ],
         );
       },
+      ),
     );
   }
 }
