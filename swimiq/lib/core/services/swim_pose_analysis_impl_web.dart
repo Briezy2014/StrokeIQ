@@ -35,7 +35,11 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
       ..playsInline = true
       ..preload = 'auto';
 
-    final blob = web.Blob([bytes.toJS].toJS);
+    final blobParts = [bytes.toJS].toJS;
+    final mime = _mimeFromFileName(fileName);
+    final blob = mime == null
+        ? web.Blob(blobParts)
+        : web.Blob(blobParts, web.BlobPropertyBag(type: mime));
     objectUrl = web.URL.createObjectURL(blob);
     video.src = objectUrl;
 
@@ -137,4 +141,12 @@ Uint8List _jpegBytesFromDataUrl(String dataUrl) {
   } catch (_) {
     return Uint8List(0);
   }
+}
+
+String? _mimeFromFileName(String? fileName) {
+  final lower = fileName?.toLowerCase() ?? '';
+  if (lower.endsWith('.mp4')) return 'video/mp4';
+  if (lower.endsWith('.webm')) return 'video/webm';
+  if (lower.endsWith('.mov')) return 'video/quicktime';
+  return null;
 }

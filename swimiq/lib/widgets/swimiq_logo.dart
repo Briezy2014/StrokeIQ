@@ -1,6 +1,51 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_constants.dart';
 import 'swimiq_branding.dart';
+
+/// Login / signup header: one square logo + tagline (+ optional title).
+class SwimIqAuthHeader extends StatelessWidget {
+  const SwimIqAuthHeader({
+    super.key,
+    this.title,
+    this.logoSize = 96,
+  });
+
+  final String? title;
+  final double logoSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: SwimIqLogo(size: logoSize, borderRadius: logoSize * 0.2),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          AppConstants.tagline,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0B2D4D),
+                height: 1.4,
+              ),
+        ),
+        if (title != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            title!,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
 /// Square SwimIQ™ icon for app bar, passport avatar, and compact slots.
 class SwimIqLogo extends StatelessWidget {

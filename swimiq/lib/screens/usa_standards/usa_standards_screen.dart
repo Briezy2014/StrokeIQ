@@ -25,6 +25,7 @@ class UsaStandardsScreen extends ConsumerStatefulWidget {
 class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   bool _importing = false;
   bool _uploading = false;
+  bool _filtersInitialized = false;
   final _searchController = TextEditingController();
   String? _selectedAgeGroup;
   String? _selectedGender;
@@ -107,11 +108,15 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
         final gender = SwimIqGender.standardsGenderOrNull(data.profile);
 
         if (profileReady) {
-          _selectedAgeGroup ??= ageGroup;
-          _selectedGender ??= gender;
-        } else {
-          _selectedAgeGroup ??= AppConstants.ageGroups[2];
-          _selectedGender ??= AppConstants.genders.first;
+          if (!_filtersInitialized) {
+            _selectedAgeGroup = ageGroup;
+            _selectedGender = gender;
+            _filtersInitialized = true;
+          }
+        } else if (!_filtersInitialized) {
+          _selectedAgeGroup = AppConstants.ageGroups[2];
+          _selectedGender = AppConstants.genders.first;
+          _filtersInitialized = true;
         }
 
         final results = catalog.search(

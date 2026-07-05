@@ -135,7 +135,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     if (lower.startsWith('b') || lower.startsWith('m') || lower == 'boy') {
       return 'Boys';
     }
-    return 'Girls';
+    if (lower.startsWith('g') || lower.startsWith('f') || lower == 'girl') {
+      return 'Girls';
+    }
+    if (raw == 'Boys' || raw == 'Girls') return raw;
+    return null;
   }
 
   Future<void> _pickBirthday() async {

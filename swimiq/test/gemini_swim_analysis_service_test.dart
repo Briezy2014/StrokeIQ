@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:functions_client/functions_client.dart';
 import 'package:swimiq/core/services/gemini_swim_analysis_service.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
@@ -78,6 +79,18 @@ void main() {
       expect(analysis.overallScore, 80);
       expect(analysis.topPriorities.length, 3);
       expect(analysis.summary, contains('Gemini summary'));
+    });
+
+    test('messageFromFunctionException surfaces API error details', () {
+      final message = GeminiSwimAnalysisService.messageFromFunctionException(
+        FunctionException(
+          status: 503,
+          details: {'error': 'GEMINI_API_KEY is not configured.'},
+          reasonPhrase: 'Service Unavailable',
+        ),
+      );
+
+      expect(message, contains('GEMINI_API_KEY'));
     });
   });
 }

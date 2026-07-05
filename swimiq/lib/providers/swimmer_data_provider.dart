@@ -389,6 +389,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       }
 
       SwimVideoAnalysis analysis;
+      var usedFallback = false;
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
@@ -400,7 +401,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             );
       } on GeminiAnalysisException catch (error) {
         return error.message;
-      } catch (_) {
+      } catch (error) {
+        usedFallback = true;
         analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
               video: video,
               raceLogs: current.raceLogs,
@@ -446,6 +448,17 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
         await refresh();
       } catch (_) {
         // Local analysis remains available even if remote refresh fails.
+      }
+
+      if (usedFallback) {
+        return 'Saved notes-based report. Deploy analyze-swim-video with '
+            'GEMINI_API_KEY for full Gemini coaching.';
+      }
+      if (analysis.isGeminiEngine && poseMetrics?.hasUsableMetrics == true) {
+        return 'Gemini + MediaPipe analysis saved.';
+      }
+      if (analysis.isGeminiEngine) {
+        return 'Gemini analysis saved.';
       }
       return null;
     } catch (error) {

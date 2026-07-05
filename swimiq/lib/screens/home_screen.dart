@@ -69,7 +69,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: SwimIqAppBarTitle(subtitle: swimmer),
+        title: SwimIqAppBarTitle(
+          subtitle: user?.email ?? swimmer,
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -92,15 +94,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           : null,
       body: Column(
         children: [
-          MaterialBanner(
-            content: Text(
-              user?.email != null
-                  ? 'Signed in as ${user!.email}'
-                  : 'Swimmer: $swimmer',
-            ),
-            backgroundColor: Colors.green.shade50,
-            actions: const [SizedBox.shrink()],
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,

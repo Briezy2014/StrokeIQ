@@ -108,8 +108,7 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
             ),
           ),
         );
-        _timeController.clear();
-        _notesController.clear();
+        if (mounted) Navigator.of(context).pop();
       }
     } on FormatException {
       if (mounted) {

@@ -68,6 +68,26 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           Text(
+            'Passport',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: const Text('Edit Athlete Passport'),
+              subtitle: const Text('Birthday, gender, photo, team, strokes'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                ref.read(homeTabIndexProvider.notifier).state = HomeTab.passport;
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
             'App',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,

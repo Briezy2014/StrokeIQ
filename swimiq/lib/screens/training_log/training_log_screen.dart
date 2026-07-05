@@ -55,7 +55,13 @@ class TrainingLogScreen extends ConsumerWidget {
     WidgetRef ref,
     RaceLog log,
   ) async {
-    if (log.id == null) return;
+    if (log.id == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This session cannot be deleted yet. Refresh and try again.')),
+      );
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -95,7 +101,13 @@ class TrainingLogScreen extends ConsumerWidget {
     WidgetRef ref,
     RaceLog log,
   ) async {
-    if (log.id == null) return;
+    if (log.id == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This session cannot be edited yet. Refresh and try again.')),
+      );
+      return;
+    }
 
     final timeController =
         TextEditingController(text: SwimTime.fromSeconds(log.timeSeconds));
@@ -203,7 +215,10 @@ class TrainingLogScreen extends ConsumerWidget {
     }
 
     try {
-      final distance = int.parse(distanceController.text);
+      final distance = int.tryParse(distanceController.text.trim());
+      if (distance == null) {
+        throw const FormatException('invalid distance');
+      }
       final timeSeconds = SwimTime.toSeconds(timeController.text);
       final updated = RaceLog(
         id: log.id,
@@ -229,7 +244,7 @@ class TrainingLogScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enter time like 35.43, 1:24.32, or 5:31.43.'),
+            content: Text('Please enter a valid distance and time.'),
           ),
         );
       }
