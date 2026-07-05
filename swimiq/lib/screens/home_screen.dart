@@ -56,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SwimIQ'),
+        title: SwimIqAppBarTitle(subtitle: swimmer),
         actions: [
           IconButton(
             tooltip: 'Refresh',

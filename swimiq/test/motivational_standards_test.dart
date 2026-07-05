@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/constants/app_constants.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 
@@ -52,5 +53,15 @@ void main() {
     );
     expect(results, isNotEmpty);
     expect(results.every((event) => event.course == 'LCM'), isTrue);
+  });
+
+  test('bundle includes all official age groups genders and courses', () {
+    final events = testMotivationalCatalog.events;
+    expect(events.map((e) => e.ageGroup).toSet(),
+        containsAll(AppConstants.ageGroups));
+    expect(events.map((e) => e.gender).toSet(),
+        containsAll(AppConstants.genders));
+    expect(events.map((e) => e.course).toSet(),
+        containsAll(AppConstants.courses));
   });
 }
