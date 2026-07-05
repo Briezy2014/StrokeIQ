@@ -13,8 +13,8 @@ Native iOS and Android client for **SwimIQ Version 2: Athlete Performance**, con
 - **Goals** — set and view target times
 - **Meet Results** — record and view competition results
 - **Video Lab** — upload swim videos to Supabase Storage, playback, AI analysis
-- **USA Swimming Standards** — import seed standards and compare PB cuts
-- **Athlete Passport** — live SwimIQ score, highest cut, readiness, profile editing
+- **Athlete Passport** — Streamlit-style status cards, athlete details, AI Coach hub, profile editing
+- **2024–2028 USA Swimming motivational standards** — full bundled dataset (500 events)
 
 ## Supabase setup (required for Video Lab + Standards import)
 
@@ -66,12 +66,26 @@ cd swimiq
 flutter pub get
 flutter analyze
 flutter test
-flutter run
+flutter run -d chrome
+```
+
+### Tomorrow quick start (after `git pull`)
+
+1. `cd swimiq && flutter clean && flutter pub get`
+2. `flutter run -d chrome` (or your device)
+3. Enter swimmer **Aspyn**
+4. Check **Passport** tab: Athlete Status cards, Coming Soon hub, AI Coach recommendation
+5. Tap **Video Lab** from hub or bottom nav; run AI analysis on a video with notes
+
+Live Supabase tests (optional — require working credentials):
+
+```bash
+flutter test test/aspyn_data_live_test.dart test/video_lab_integration_test.dart
 ```
 
 ## AI Swim Analysis (V1)
 
-V1 uses a rule-based engine (`AiSwimAnalysisService`) that scores technique/pace from training history, goals, video notes, and USA standards. Replace with a Supabase Edge Function later for frame-by-frame ML analysis.
+V1 uses a notes-and-metadata engine (`AiSwimAnalysisService`) that turns upload notes, goals, PBs, and standards into coaching priorities. Claude vision / frame-by-frame analysis is planned for SwimDNA™.
 
 ## Build for release
 

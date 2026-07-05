@@ -20,8 +20,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _selectedIndex = 0;
-
   Widget _screenAt(int index) {
     switch (index) {
       case 0:
@@ -54,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final swimmer = ref.watch(activeSwimmerProvider)!;
+    final selectedIndex = ref.watch(homeTabIndexProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,16 +79,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
-              child: _screenAt(_selectedIndex),
+              child: _screenAt(selectedIndex),
             ),
           ),
           const SwimIqFooter(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
+          ref.read(homeTabIndexProvider.notifier).state = index;
         },
         destinations: const [
           NavigationDestination(

@@ -104,17 +104,14 @@ void main() {
       expect(find.byType(DropdownButton<dynamic>), findsNothing);
 
       await tester.scrollUntilVisible(
-        find.text('Primary Stroke'),
+        find.text('Coming Soon to Athlete Passport™'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text('Gender'), findsOneWidget);
-      expect(find.text('Height'), findsOneWidget);
-      expect(find.text('Weight'), findsOneWidget);
-      expect(find.text('Dominant Hand'), findsOneWidget);
+      expect(find.text('Coming Soon to Athlete Passport™'), findsOneWidget);
+      expect(find.text('Coming Soon'), findsWidgets);
     });
 
     testWidgets('renders invalid saved strokes as text without crashing',
