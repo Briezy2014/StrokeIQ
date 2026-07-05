@@ -72,26 +72,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SwimIqHeroBanner(height: 120, borderRadius: 16),
-                        const SizedBox(height: 16),
-                        const Center(
-                          child: SwimIqLogo(size: 72, borderRadius: 18),
-                        ),
-                        const SizedBox(height: 12),
-                        const Center(child: SwimIqWordmark(fontSize: 28)),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Welcome back',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Built in the Water. Driven by Possibility.',
-                          textAlign: TextAlign.center,
-                        ),
+                        const SwimIqAuthHeader(title: 'Welcome back'),
                         const SizedBox(height: 24),
                         if (_errorMessage != null) ...[
                           _ErrorBanner(message: _errorMessage!),
