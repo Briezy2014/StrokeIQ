@@ -1,48 +1,48 @@
 # Pose Metrics (MediaPipe-compatible) + Gemini
 
-SwimIQ Video Lab uses **two layers** of AI:
+SwimIQ Video Lab uses **Gemini** for coaching reports on all platforms.
 
 | Layer | Where it runs | What it does |
 |-------|---------------|--------------|
-| **Pose metrics** | On your phone or browser | MediaPipe-compatible BlazePose (33 body points) — body line, hip drop, arm cycles, kick symmetry |
-| **Gemini coaching** | Supabase server | Watches the video + reads pose numbers → parent-friendly coaching report |
+| **Gemini coaching** | Supabase Edge Function | Watches the video + athlete context → parent-friendly coaching report |
+| **Pose metrics** | Android (coming back) | BlazePose / MediaPipe-compatible body landmarks |
 
-iOS builds when you have a Mac. Android and Flutter Web are supported now.
+**Windows + Chrome:** Use Gemini coaching now. On-device pose was temporarily removed from web/desktop builds so Flutter runs on PCs where the username has a space (see [WINDOWS_SETUP.md](WINDOWS_SETUP.md)).
 
 ## How it works
 
-1. You upload a swim clip in **Video Lab**
-2. The app samples frames and runs **on-device pose detection**
-3. Pose numbers are sent with the video to **Gemini** (via Edge Function)
-4. The combined report is saved and shown in the app
+1. Upload a swim clip in **Video Lab**
+2. Tap **Run AI analysis**
+3. The app calls the **analyze-swim-video** Edge Function (Gemini)
+4. The report is saved and shown in the app
 
-No extra signup beyond Gemini (see [GEMINI_SETUP.md](GEMINI_SETUP.md)).
+See [GEMINI_SETUP.md](GEMINI_SETUP.md) for API key + deploy steps.
 
 ## Platform support
 
-| Platform | Pose metrics | Gemini report |
-|----------|--------------|---------------|
-| **Android** | Yes | Yes |
-| **Web** | Yes | Yes |
-| **iOS** | Yes (when built on Mac) | Yes |
+| Platform | Gemini report | On-device pose |
+|----------|---------------|----------------|
+| **Web (Chrome)** | Yes | Coming back on Android |
+| **Android** | Yes | Planned |
+| **iOS** | Yes | Planned (Mac build required) |
 
-## Tips for better pose metrics
+## Tips for better Gemini reports
 
 - Side-on or 45° camera angle works best
 - Keep the full body in frame when possible
 - Clips under ~18 MB work best for Gemini
+- Add upload notes (start, underwater, strokes, breathing, finish)
 - Pool lighting and clear water help landmark detection
 
 ## Technical note
 
 The Flutter `pose_detection` package uses Google's **BlazePose** model — the same 33-landmark body topology as MediaPipe Pose. On **Chrome (Flutter web)**, frames are sampled from the HTML video element. Metrics are estimates, not official meet timing.
 
-> **Windows note:** Native OpenCV builds were removed because they fail when the user folder contains spaces (e.g. `Kara Williams`). Use `run-chrome.bat` — see [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
+> **Windows note:** Use `run-chrome.bat` if your user folder contains spaces — see [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
 ## Deploy checklist
 
 1. [GEMINI_SETUP.md](GEMINI_SETUP.md) — API key + Edge Function
-2. `flutter pub get`
-3. `flutter run` on Android or `flutter run -d chrome` for web
-
-No separate MediaPipe API key is required — pose runs on-device.
+2. [WINDOWS_SETUP.md](WINDOWS_SETUP.md) — if `flutter run -d chrome` fails on Windows
+3. `flutter pub get`
+4. `flutter run -d chrome`

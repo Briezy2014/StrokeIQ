@@ -5,9 +5,9 @@ import 'swim_pose_analysis_impl_stub.dart'
     if (dart.library.io) 'swim_pose_analysis_impl_io.dart'
     if (dart.library.html) 'swim_pose_analysis_impl_web.dart';
 
-/// On-device pose metrics using MediaPipe-compatible BlazePose (33 landmarks).
+/// On-device pose metrics (MediaPipe-compatible BlazePose).
 ///
-/// Supported on Android and Flutter Web. iOS builds when you have a Mac.
+/// Optional — Gemini coaching works without pose. Pose returns on Android later.
 class SwimPoseAnalysisService {
   bool get isSupported => isPoseAnalysisSupported;
 

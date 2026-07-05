@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 abstract final class SwimIqBranding {
   static const iconCandidates = [
     'assets/branding/swimiq_icon.png',
+    'assets/images/swimiq_logo.png',
     'assets/branding/icon.png',
     'assets/branding/logo_icon.png',
     'assets/branding/swimiq_logo_icon.png',
-    // Legacy single-file name some builds still ship.
     'assets/branding/swimiq_logo.png',
   ];
 
   static const heroCandidates = [
     'assets/branding/swimiq_hero.png',
+    'assets/images/swimiq_logo.png',
     'assets/branding/hero.png',
     'assets/branding/banner.png',
     'assets/branding/swimiq_banner.png',
