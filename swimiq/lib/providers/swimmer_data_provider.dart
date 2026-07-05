@@ -9,6 +9,7 @@ import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
+import '../data/models/swim_pose_metrics.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
@@ -371,6 +372,22 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (current == null) return 'No swimmer data loaded.';
 
     try {
+      SwimPoseMetrics? poseMetrics;
+      final poseService = ref.read(swimPoseAnalysisServiceProvider);
+      if (poseService.isSupported) {
+        try {
+          final bytes = await ref
+              .read(videoStorageServiceProvider)
+              .downloadVideoBytes(video.storagePath);
+          poseMetrics = await poseService.analyzeVideoBytes(
+            bytes,
+            fileName: video.storagePath,
+          );
+        } catch (_) {
+          // Pose metrics are optional; Gemini analysis can still run.
+        }
+      }
+
       SwimVideoAnalysis analysis;
 
       try {
@@ -379,6 +396,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               raceLogs: current.raceLogs,
               goals: current.goals,
               profile: current.profile,
+              poseMetrics: poseMetrics,
             );
       } on GeminiAnalysisException catch (error) {
         return error.message;
@@ -390,6 +408,15 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               profile: current.profile,
               standards: current.usaStandards,
             );
+        if (poseMetrics != null) {
+          analysis = analysis.copyWith(
+            analysisJson: {
+              ...?analysis.analysisJson,
+              'pose_metrics': poseMetrics.toJson(),
+              'engine': 'swimiq-v1-notes-mediapipe',
+            },
+          );
+        }
       }
 
       final analysisWithIds = analysis.copyWith(

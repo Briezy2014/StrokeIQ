@@ -37,6 +37,9 @@ Enable **Email** auth in Supabase Dashboard → Authentication → Providers.
 Add `GEMINI_API_KEY` to Supabase Edge Function secrets and deploy `analyze-swim-video`.  
 See **[docs/GEMINI_SETUP.md](docs/GEMINI_SETUP.md)** for step-by-step instructions.
 
+Pose metrics (MediaPipe-compatible BlazePose) run on-device automatically on Android and Web.  
+See **[docs/POSE_AND_GEMINI.md](docs/POSE_AND_GEMINI.md)**.
+
 ## Test
 
 ```bash

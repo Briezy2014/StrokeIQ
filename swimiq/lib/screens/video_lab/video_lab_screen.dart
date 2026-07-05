@@ -377,6 +377,22 @@ class _VideoCardState extends State<_VideoCard> {
                     ),
                   ),
                 ),
+              if (widget.analysis!.poseMetrics != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Pose metrics (MediaPipe)',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                ...widget.analysis!.poseMetrics!.observations.map(
+                  (line) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('• $line'),
+                  ),
+                ),
+              ],
             ],
           ],
         ),

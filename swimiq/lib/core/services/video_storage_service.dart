@@ -51,4 +51,8 @@ class VideoStorageService {
 
     return _repository.insertSwimVideo(video);
   }
+
+  Future<Uint8List> downloadVideoBytes(String storagePath) async {
+    return _client.storage.from(bucketName).download(storagePath);
+  }
 }

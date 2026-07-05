@@ -19,6 +19,20 @@ type CoachContext = {
   recent_sessions?: string[];
 };
 
+type PoseMetrics = {
+  engine?: string;
+  frames_sampled?: number;
+  frames_with_pose?: number;
+  detection_rate?: number;
+  avg_body_line_angle_deg?: number;
+  hip_drop_degrees?: number;
+  head_lift_score?: number;
+  avg_elbow_angle_deg?: number;
+  estimated_stroke_cycles?: number;
+  kick_symmetry_score?: number;
+  observations?: string[];
+};
+
 type AnalyzeRequest = {
   storage_path?: string;
   video_id?: string;
@@ -26,6 +40,7 @@ type AnalyzeRequest = {
   event_label?: string;
   title?: string;
   notes?: string;
+  pose_metrics?: PoseMetrics;
   coach_context?: CoachContext;
 };
 
@@ -183,14 +198,46 @@ function buildPrompt(body: AnalyzeRequest): string {
       : null,
   ].filter(Boolean).join("\n");
 
+  const pose = body.pose_metrics;
+  const poseLines = pose
+    ? [
+        pose.engine ? `Pose engine: ${pose.engine}` : null,
+        pose.frames_with_pose != null && pose.frames_sampled != null
+          ? `Pose detected in ${pose.frames_with_pose}/${pose.frames_sampled} sampled frames`
+          : null,
+        pose.avg_body_line_angle_deg != null
+          ? `Average body line angle: ${pose.avg_body_line_angle_deg.toFixed(1)}°`
+          : null,
+        pose.hip_drop_degrees != null
+          ? `Hip drop estimate: ${pose.hip_drop_degrees.toFixed(1)}`
+          : null,
+        pose.avg_elbow_angle_deg != null
+          ? `Average elbow angle: ${pose.avg_elbow_angle_deg.toFixed(1)}°`
+          : null,
+        pose.estimated_stroke_cycles != null
+          ? `Estimated arm cycles in clip: ${pose.estimated_stroke_cycles}`
+          : null,
+        pose.kick_symmetry_score != null
+          ? `Kick symmetry score: ${pose.kick_symmetry_score.toFixed(0)}/100`
+          : null,
+        pose.observations?.length
+          ? `Pose observations: ${pose.observations.join("; ")}`
+          : null,
+      ].filter(Boolean).join("\n")
+    : "";
+
   return `You are an experienced youth swim coach reviewing a race or practice video for SwimIQ.
 
-Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context below.
+Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context and on-device pose metrics below.
 
 Athlete context:
 ${contextLines || "(no extra context)"}
 
+On-device pose metrics (MediaPipe-compatible BlazePose, estimates only):
+${poseLines || "(pose metrics not available for this clip)"}
+
 Return JSON only (no markdown). Be specific about visible technique (body line, kick, pull, breathing, turns, underwater, finish).
+Reference the pose metrics when they support what you see, but do not invent numbers beyond them.
 Use parent-friendly language. Scores are 0-100 integers.
 If the camera angle limits certainty, say so in cannot_confirm_yet.
 Do not invent split times or stroke counts you cannot verify from the video.`;
@@ -226,8 +273,13 @@ function normalizeAnalysis(
   const paceScore = clampScore(parsed.pace_score);
   const overallScore = clampScore(parsed.overall_score);
 
-  const disclaimer =
-    "Gemini video analysis from uploaded footage — estimates only; confirm with your coach.";
+  const disclaimer = body.pose_metrics?.frames_with_pose
+    ? "Gemini video analysis combined with on-device MediaPipe pose metrics — estimates only; confirm with your coach."
+    : "Gemini video analysis from uploaded footage — estimates only; confirm with your coach.";
+
+  const engine = body.pose_metrics?.frames_with_pose
+    ? "swimiq-v2-gemini-mediapipe"
+    : "swimiq-v2-gemini";
 
   const summary = [
     body.event_label ?? "Swim video",
@@ -254,10 +306,11 @@ function normalizeAnalysis(
     pace_score: paceScore,
     overall_score: overallScore,
     analysis_json: {
-      engine: "swimiq-v2-gemini",
+      engine,
       model: GEMINI_MODEL,
       event: body.event_label,
       disclaimer,
+      pose_metrics: body.pose_metrics ?? null,
       sections,
       top_3_priorities: parsed.top_3_priorities ?? [],
       recommended_drills: parsed.recommended_drills ?? [],

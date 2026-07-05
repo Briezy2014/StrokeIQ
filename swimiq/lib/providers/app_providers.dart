@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
+import '../core/services/swim_pose_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
 import '../core/services/video_storage_service.dart';
@@ -38,6 +39,10 @@ final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
 
 final geminiSwimAnalysisServiceProvider = Provider<GeminiSwimAnalysisService>(
   (ref) => GeminiSwimAnalysisService(ref.watch(supabaseClientProvider)),
+);
+
+final swimPoseAnalysisServiceProvider = Provider<SwimPoseAnalysisService>(
+  (ref) => SwimPoseAnalysisService(),
 );
 
 final usaMotivationalStandardsCatalogProvider =

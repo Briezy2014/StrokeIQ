@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swim_pose_metrics.dart';
 import '../../data/models/swim_video.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
@@ -20,6 +21,7 @@ class GeminiSwimAnalysisService {
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
     SwimmerProfile? profile,
+    SwimPoseMetrics? poseMetrics,
   }) async {
     final response = await _client.functions.invoke(
       functionName,
@@ -28,6 +30,7 @@ class GeminiSwimAnalysisService {
         raceLogs: raceLogs,
         goals: goals,
         profile: profile,
+        poseMetrics: poseMetrics,
       ),
     );
 
@@ -50,6 +53,7 @@ class GeminiSwimAnalysisService {
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
     SwimmerProfile? profile,
+    SwimPoseMetrics? poseMetrics,
   }) {
     final recentSessions = raceLogs.take(5).map((log) {
       return '${log.distance} ${log.stroke} ${log.course} '
@@ -80,6 +84,7 @@ class GeminiSwimAnalysisService {
       'event_label': video.eventLabel,
       'title': video.displayTitle,
       'notes': video.notes,
+      if (poseMetrics != null) 'pose_metrics': poseMetrics.toJson(),
       'coach_context': {
         'display_name': profile?.preferredName ?? profile?.swimmerName,
         'team': profile?.team,
