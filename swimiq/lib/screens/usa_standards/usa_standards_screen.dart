@@ -6,6 +6,7 @@ import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
+import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
@@ -53,11 +54,17 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
       builder: (context, ref, data, swimmer) {
         final catalog = data.motivationalStandards;
         final pbs = data.personalBests;
-        final ageGroup = SwimIqAgeGroup.fromProfile(data.profile);
-        final gender = SwimIqGender.standardsGender(data.profile);
+        final profileReady = SwimIqStandardsProfile.isReady(data.profile);
+        final ageGroup = SwimIqAgeGroup.fromProfileOrNull(data.profile);
+        final gender = SwimIqGender.standardsGenderOrNull(data.profile);
 
-        _selectedAgeGroup ??= ageGroup;
-        _selectedGender ??= gender;
+        if (profileReady) {
+          _selectedAgeGroup ??= ageGroup;
+          _selectedGender ??= gender;
+        } else {
+          _selectedAgeGroup ??= AppConstants.ageGroups[2];
+          _selectedGender ??= AppConstants.genders.first;
+        }
 
         final results = catalog.search(
           ageGroup: _selectedAgeGroup,
@@ -74,6 +81,10 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               title: 'USA Swimming Standards',
               subtitle: catalog.versionLabel,
             ),
+            if (!profileReady) ...[
+              const SizedBox(height: 12),
+              const SwimIqStandardsSetupBanner(),
+            ],
             const SizedBox(height: 8),
             Text(
               'Valid through ${catalog.bundle.effectiveThrough}. '
@@ -162,7 +173,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
                 return SwimIqEventListTile(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',
                   subtitle:
-                      '${_selectedAgeGroup ?? ageGroup} · ${_selectedGender ?? gender} · ${cut ?? 'Below B'} motivational cut',
+                      '${_selectedAgeGroup ?? ageGroup ?? '—'} · ${_selectedGender ?? gender ?? '—'} · ${cut ?? 'Below B'} motivational cut',
                   trailing: SwimTime.fromSeconds(pb.timeSeconds),
                 );
               }),

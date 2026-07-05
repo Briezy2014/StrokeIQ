@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/passport_hub.dart';
@@ -221,6 +222,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               primaryStroke: profile?.primaryStroke,
               graduationYear: profile?.graduationYear,
             ),
+            if (!SwimIqStandardsProfile.isReady(profile)) ...[
+              const SizedBox(height: 16),
+              const SwimIqStandardsSetupBanner(),
+            ],
             const SizedBox(height: 24),
             const SwimIqScreenHeader(title: 'Athlete Status'),
             const SizedBox(height: 12),
@@ -263,6 +268,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ),
             const SizedBox(height: 24),
             const SwimIqScreenHeader(title: 'Athlete Details'),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'USA Motivational Standards',
+              lines: snapshot.usaStandardsSummary.split('\n'),
+            ),
             const SizedBox(height: 12),
             SwimIqSectionCard(
               title: 'Athlete Identity',

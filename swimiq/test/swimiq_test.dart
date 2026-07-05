@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
+import 'package:swimiq/core/utils/motivational_cut.dart';
 import 'package:swimiq/core/utils/passport_metrics.dart';
+import 'package:swimiq/core/utils/swimiq_standards_profile.dart';
 import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
 import 'package:swimiq/data/models/race_log.dart';
@@ -259,7 +261,7 @@ void main() {
   });
 
   group('PassportMetrics', () {
-    test('does not award AAAA for realistic 100 fly time', () {
+    test('does not guess cuts when birthday and gender are missing', () {
       final snapshot = PassportMetrics.build(
         swimmerName: 'Aspyn',
         profile: const SwimmerProfile(
@@ -285,8 +287,58 @@ void main() {
         motivationalStandards: testMotivationalCatalog,
       );
 
+      expect(snapshot.highestCut, SwimIqStandardsProfile.setupMessageShort);
+      expect(
+        snapshot.usaStandardsSummary,
+        SwimIqStandardsProfile.setupMessage,
+      );
+      expect(snapshot.usaStandardsSummary, isNot(contains('AAAA')));
+    });
+
+    test('uses profile age group and gender when profile is complete', () {
+      final snapshot = PassportMetrics.build(
+        swimmerName: 'Aspyn',
+        profile: SwimmerProfile(
+          swimmerName: 'Aspyn',
+          preferredName: 'Aspyn',
+          birthday: DateTime(2014, 6, 1),
+          athleteNotes: SwimmerProfile.composeAthleteNotes(gender: 'Female'),
+        ),
+        raceLogs: [
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '100 Butterfly',
+            distance: 100,
+            stroke: 'Butterfly',
+            course: 'SCY',
+            timeSeconds: 72.0,
+            date: DateTime(2026, 6, 1),
+          ),
+        ],
+        goals: const [],
+        meetResults: const [],
+        videos: const [],
+        videoAnalyses: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
       expect(snapshot.highestCut, isNot('AAAA'));
-      expect(snapshot.highestCut, isNot('No motivational cut matched yet'));
+      expect(snapshot.highestCut, isNot(SwimIqStandardsProfile.setupMessageShort));
+      expect(snapshot.usaStandardsSummary, contains('Age group: 11-12'));
+      expect(snapshot.usaStandardsSummary, contains('Gender: Girls'));
+    });
+
+    test('MotivationalCut returns setup message when profile incomplete', () {
+      final label = MotivationalCut.labelForSwim(
+        catalog: testMotivationalCatalog,
+        profile: const SwimmerProfile(swimmerName: 'Aspyn'),
+        stroke: 'Butterfly',
+        distance: 100,
+        course: 'SCY',
+        timeSeconds: 72.0,
+      );
+
+      expect(label, SwimIqStandardsProfile.setupMessageShort);
     });
 
     test('builds passport snapshot from real swimmer data only', () {

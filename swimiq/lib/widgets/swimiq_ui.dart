@@ -151,6 +151,51 @@ class SwimIqSaveButton extends StatelessWidget {
   }
 }
 
+/// Shown when birthday or gender is missing — cuts cannot be calculated accurately.
+class SwimIqStandardsSetupBanner extends StatelessWidget {
+  const SwimIqStandardsSetupBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'USA cuts need birthday and gender',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.orange.shade900,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Scroll to Edit Athlete Passport, set Date of Birth and Gender, '
+                    'then tap Save. Cuts use the official 2024–2028 age brackets.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.orange.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class EmptyStateMessage extends StatelessWidget {
   const EmptyStateMessage({super.key, required this.message});
 

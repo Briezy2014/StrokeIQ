@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/passport_metrics.dart';
+import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
@@ -236,6 +237,10 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
               trainingGroup: profile?.trainingGroup,
               primaryStroke: profile?.primaryStroke,
             ),
+            if (!SwimIqStandardsProfile.isReady(profile)) ...[
+              const SizedBox(height: 16),
+              const SwimIqStandardsSetupBanner(),
+            ],
             const SizedBox(height: 24),
             const SwimIqScreenHeader(title: 'Athlete Status'),
             const SizedBox(height: 12),
@@ -325,7 +330,7 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
             const SizedBox(height: 12),
             SwimIqSectionCard(
               title: 'USA Standards Comparison',
-              lines: [snapshot.usaStandardsSummary],
+              lines: snapshot.usaStandardsSummary.split('\n'),
             ),
             const SizedBox(height: 24),
             const Divider(),

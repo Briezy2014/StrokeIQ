@@ -3,6 +3,7 @@ import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
+import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
@@ -187,10 +188,13 @@ class PassportMetrics {
     SwimmerProfile? profile,
   }) {
     if (raceLogs.isEmpty) return 'Log sessions to compare against cuts';
+    if (!SwimIqStandardsProfile.isReady(profile)) {
+      return SwimIqStandardsProfile.setupMessageShort;
+    }
 
     final pbs = SwimAnalytics.personalBests(raceLogs);
-    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
-    final gender = SwimIqGender.standardsGender(profile);
+    final ageGroup = SwimIqAgeGroup.fromProfileOrNull(profile)!;
+    final gender = SwimIqGender.standardsGenderOrNull(profile)!;
     String? bestLevel;
 
     for (final pb in pbs) {
@@ -352,7 +356,12 @@ class PassportMetrics {
     if (personalBests.isEmpty) {
       return '${catalog.versionLabel} loaded. Log sessions to compare cuts.';
     }
+    if (!SwimIqStandardsProfile.isReady(profile)) {
+      return SwimIqStandardsProfile.setupMessage;
+    }
 
+    final ageGroup = SwimIqAgeGroup.fromProfileOrNull(profile)!;
+    final gender = SwimIqGender.standardsGenderOrNull(profile)!;
     final highest = highestCut(
       raceLogs: personalBests,
       catalog: catalog,
@@ -363,13 +372,18 @@ class PassportMetrics {
       catalog: catalog,
       profile: profile,
     );
+    final bracketLine = 'Age group: $ageGroup · Gender: $gender · Top PB cut: $highest';
 
     if (closest == null) {
-      return 'Highest cut achieved: $highest.';
+      return '${catalog.versionLabel}\n'
+          'Highest cut achieved: $highest.\n'
+          '$bracketLine';
     }
 
-    return 'Highest cut achieved: $highest. Next target: ${closest.eventLabel} '
-        '(${closest.standardLevel}, ${SwimTime.fromSeconds(closest.timeSeconds)}).';
+    return '${catalog.versionLabel}\n'
+        'Highest cut achieved: $highest. Next target: ${closest.eventLabel} '
+        '(${closest.standardLevel}, ${SwimTime.fromSeconds(closest.timeSeconds)}).\n'
+        '$bracketLine';
   }
 
   static String imxScore(List<RaceLog> raceLogs) {
@@ -412,8 +426,10 @@ class PassportMetrics {
     required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
   }) {
-    final ageGroup = SwimIqAgeGroup.fromProfile(profile);
-    final gender = SwimIqGender.standardsGender(profile);
+    if (!SwimIqStandardsProfile.isReady(profile)) return null;
+
+    final ageGroup = SwimIqAgeGroup.fromProfileOrNull(profile)!;
+    final gender = SwimIqGender.standardsGenderOrNull(profile)!;
     _ClosestCut? closest;
 
     for (final pb in personalBests) {
