@@ -41,8 +41,10 @@ The Streamlit app uses **different swimmer column names** across tables:
 ### `swimmers`
 - `swimmer_name`, `first_name`, `last_name`, `preferred_name`, `birthday`, `graduation_year`, `team`, `coach_name`, `primary_stroke`, `secondary_stroke`, `favorite_event`, `usa_swimming_id`, `school`, `athlete_notes`
 
-## Auth linkage (Version 1 design)
+## Auth linkage (Version 1 — implemented)
 
 - Each Supabase Auth user maps to **one** swimmer profile.
-- We still need to confirm whether `swimmers` already has a `user_id` column linking to `auth.users`.
-- If not, we will discuss adding it in a future step (schema change requires your approval).
+- Link is stored in **Auth user metadata**: `swimmer_name` (no schema change).
+- On sign-up, the app also creates a row in `swimmers` if one does not exist.
+- `race_logs` queries should filter by `swimmer`.
+- `goals` and `meet_results` inserts use `swimmer_name` — verify load column in Supabase before building those screens.

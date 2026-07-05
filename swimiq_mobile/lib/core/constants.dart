@@ -9,4 +9,7 @@ class AppConstants {
   static const goalsTable = 'goals';
   static const meetResultsTable = 'meet_results';
   static const swimmersTable = 'swimmers';
+
+  /// Stored in Supabase Auth user metadata to link one user → one swimmer.
+  static const swimmerNameMetadataKey = 'swimmer_name';
 }

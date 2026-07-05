@@ -86,6 +86,16 @@ lib/
 - Splash, login/sign-up, dashboard, training log, meet results, goals, profile, settings, basic charts
 - No video analysis, Stripe, or advanced AI yet
 
+## Current milestone (Step 4–5)
+
+- Splash screen → login or dashboard
+- Email/password sign-up and sign-in (Supabase Auth)
+- Bottom navigation: Dashboard, Training, Meets, Goals, Profile
+- Settings (sign out) from Profile tab
+- Athlete Passport profile loaded from `swimmers` table
+
+Feature screens (training, meets, goals, dashboard charts) are placeholders until the next milestone.
+
 ## Known Supabase schema notes
 
 See `docs/SUPABASE_SCHEMA_NOTES.md` before building data queries.
