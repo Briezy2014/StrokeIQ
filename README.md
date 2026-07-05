@@ -1,37 +1,42 @@
-# StrokeIQ
+# SwimIQ
 
-Streamlit-based swim analytics dashboard for tracking stroke efficiency, timing, and personal bests.
+**Built in the Water. Driven by Possibility.**  
+Founded by Aspyn Briez
 
-## Files
+SwimIQ is a swim performance platform. **Version 4 (Meets & Standards)** is the current Kotlin Android app.
 
-- `app.py` - Streamlit dashboard and swim entry form.
-- `requirements.txt` - Python dependencies.
-- `data/swim_data.csv` - Sample swim session dataset.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for Versions 1–8.
 
-## Setup
+## Version 4 — Meets & Standards
 
-1. Create a Python virtual environment:
-   ```bash
-   python -m venv .venv
-   ```
-2. Activate the virtual environment:
-   - Windows: `./.venv/Scripts/activate`
-   - macOS/Linux: `source .venv/bin/activate`
-3. Install dependencies:
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
+### New in V4
 
-## Run
+- **USA Swimming 2024–2028 Motivational Standards** — 3,000 age-group cuts (B through AAAA) across **SCY, SCM, and LCM** bundled from official PDF
+- **Cuts tab** — highest cut per personal best with gap analysis (e.g. `0.41s from AA`)
+- **Meet Planner** — upcoming meet calendar with location and notes
+- **Heat sheet notes** — heat/lane/event notes per planned meet
+- **Athlete Passport** — shows highest motivational cut achieved
+
+### Supabase setup
+
+1. `supabase/migrations/001_swimiq_v1.sql`
+2. `supabase/migrations/002_swimiq_v3_coach_team.sql`
+3. `supabase/migrations/003_swimiq_v4_meets_standards.sql`
+4. `supabase/migrations/004_swimiq_v4_profile_gender.sql`
+
+### Build & run
 
 ```bash
-python -m streamlit run app.py
+cp android/local.properties.example android/local.properties
+cd android && ./gradlew test assembleDebug
 ```
 
-## Features
+### Standards data
 
-- Add swim sessions with swimmer name, stroke, distance, time, stroke count, and date.
-- Calculates stroke rate and distance per stroke (DPS).
-- Displays trend charts for DPS, stroke rate, pace, and distance.
-- Tracks personal records by swimmer and stroke.
-- Shows weekly improvement percentages and efficiency recommendations.
+Source: USA Swimming 2024–2028 Motivational Age Group Standards (SCY, SCM, LCM).  
+Age groups: 10 & under, 11-12, 13-14, 15-16, 17-18.  
+Bundled asset: `android/app/src/main/assets/usa_2028_motivational_standards.json` (3,000 records)
+
+---
+
+© 2026 SwimIQ · Founded by Aspyn Briez
