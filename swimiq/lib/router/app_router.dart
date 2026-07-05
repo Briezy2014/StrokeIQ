@@ -13,6 +13,7 @@ import '../features/profile/profile_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/splash/splash_screen.dart';
+import '../features/training/add_session_screen.dart';
 import '../features/training/training_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -24,6 +25,7 @@ enum AppRoute {
   signup('/signup'),
   dashboard('/dashboard'),
   training('/training'),
+  trainingAdd('/training/add'),
   meets('/meets'),
   goals('/goals'),
   profile('/profile'),
@@ -91,6 +93,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoute.training.path,
                 builder: (context, state) => const TrainingScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'add',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AddSessionScreen(),
+                  ),
+                ],
               ),
             ],
           ),

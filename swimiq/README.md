@@ -6,7 +6,14 @@ Cross-platform SwimIQ mobile app for **Android and iOS**, built with Flutter.
 
 The existing Streamlit web app in the repository root remains unchanged as a reference implementation.
 
-## Version 1 — Milestone 1 (current)
+## Version 1 — Milestone 2 (current)
+
+- Swimmer identity linked via auth user ID (no schema migration)
+- Data repositories for `race_logs`, `goals`, `meet_results`, `swimmers`
+- Training log list + add session with personal-best detection
+- Dashboard with live SwimIQ Score, metrics, and time-progress chart
+
+## Version 1 — Milestone 1
 
 - Flutter project scaffold (`swimiq/`)
 - Supabase connection via compile-time environment file
@@ -72,4 +79,10 @@ lib/
 
 ## Schema note
 
-Milestone 1 uses Supabase **Auth only**. Data tables (`race_logs`, `goals`, `meet_results`, `swimmers`) still use the existing `swimmer` text field from the Streamlit app. Linking auth users to swimmer records will be addressed before data features ship, with schema changes proposed first if needed.
+**No Supabase schema changes in Milestones 1–2.**
+
+The authenticated Supabase user ID is stored in the existing `swimmer` column on data tables and `swimmer_name` on the `swimmers` table. This isolates each mobile user's data without migrating columns.
+
+Before enabling production RLS, we will propose optional `user_id` columns and policies.
+
+See `lib/domain/swimmer_identity.dart` for the full strategy.
