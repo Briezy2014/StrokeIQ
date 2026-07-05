@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
+import 'swimiq_logo.dart';
 
 class SwimIqHeader extends StatelessWidget {
   const SwimIqHeader({super.key});
@@ -11,13 +12,14 @@ class SwimIqHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 8),
-        Icon(Icons.pool, size: 72, color: AppColors.primary),
-        const SizedBox(height: 8),
+        const SwimIqLogo(size: 120, borderRadius: 24),
+        const SizedBox(height: 12),
         Text(
-          AppConstants.appName,
+          AppConstants.trademark,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: AppColors.primaryDeep,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
               ),
         ),
         const SizedBox(height: 4),
@@ -55,6 +57,37 @@ class SwimIqFooter extends StatelessWidget {
               color: Colors.grey.shade600,
             ),
       ),
+    );
+  }
+}
+
+class SwimIqAppBarTitle extends StatelessWidget {
+  const SwimIqAppBarTitle({super.key, this.subtitle});
+
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SwimIqLogo(size: 32, borderRadius: 8),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SwimIqWordmark(fontSize: 16),
+            if (subtitle != null)
+              Text(
+                subtitle!,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white70,
+                    ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

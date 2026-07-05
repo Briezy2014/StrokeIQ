@@ -8,6 +8,7 @@ import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../widgets/swimiq_logo.dart';
 
 /// Brand-new Athlete Passport — text fields and date picker only.
 class AthletePassportV2Screen extends ConsumerStatefulWidget {
@@ -536,11 +537,19 @@ class _PassportHero extends StatelessWidget {
           Container(
             width: 104,
             height: 104,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Icon(Icons.pool, size: 46, color: AppColors.primary),
+            padding: const EdgeInsets.all(10),
+            child: const SwimIqLogo(size: 84, borderRadius: 42),
           ),
           const SizedBox(height: 18),
           Text(

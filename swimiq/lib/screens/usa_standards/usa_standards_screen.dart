@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swimiq_age_group.dart';
@@ -21,16 +22,13 @@ class UsaStandardsScreen extends ConsumerStatefulWidget {
 class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   bool _importing = false;
   final _searchController = TextEditingController();
-  final _ageGroupController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _courseController = TextEditingController();
+  String? _selectedAgeGroup;
+  String? _selectedGender;
+  String? _selectedCourse;
 
   @override
   void dispose() {
     _searchController.dispose();
-    _ageGroupController.dispose();
-    _genderController.dispose();
-    _courseController.dispose();
     super.dispose();
   }
 
@@ -58,17 +56,13 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
         final ageGroup = SwimIqAgeGroup.fromProfile(data.profile);
         final gender = SwimIqGender.standardsGender(data.profile);
 
-        if (_ageGroupController.text.isEmpty) {
-          _ageGroupController.text = ageGroup;
-        }
-        if (_genderController.text.isEmpty) {
-          _genderController.text = gender;
-        }
+        _selectedAgeGroup ??= ageGroup;
+        _selectedGender ??= gender;
 
         final results = catalog.search(
-          ageGroup: _optional(_ageGroupController.text),
-          gender: _optional(_genderController.text),
-          course: _optional(_courseController.text),
+          ageGroup: _selectedAgeGroup,
+          gender: _selectedGender,
+          course: _selectedCourse,
           query: _optional(_searchController.text),
         );
 
@@ -83,7 +77,9 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             const SizedBox(height: 8),
             Text(
               'Valid through ${catalog.bundle.effectiveThrough}. '
-              '${catalog.events.length} official age-group events loaded from the 2024-2028 motivational standards.',
+              '${catalog.events.length} official events · '
+              'Girls & Boys separated · SCY / SCM / LCM courses · '
+              'Age brackets: ${AppConstants.ageGroups.join(', ')}.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -103,31 +99,51 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _ageGroupController,
-              decoration: const InputDecoration(
-                labelText: 'Age group',
-                hintText: '10 & under, 11-12, 13-14, 15-16, 17-18',
-              ),
-              onChanged: (_) => setState(() {}),
+            Text('Age group', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: AppConstants.ageGroups.map((group) {
+                return FilterChip(
+                  label: Text(group),
+                  selected: _selectedAgeGroup == group,
+                  onSelected: (_) => setState(() => _selectedAgeGroup = group),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _genderController,
-              decoration: const InputDecoration(
-                labelText: 'Gender',
-                hintText: 'Girls or Boys',
-              ),
-              onChanged: (_) => setState(() {}),
+            Text('Gender', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: AppConstants.genders.map((value) {
+                return FilterChip(
+                  label: Text(value),
+                  selected: _selectedGender == value,
+                  onSelected: (_) => setState(() => _selectedGender = value),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _courseController,
-              decoration: const InputDecoration(
-                labelText: 'Course',
-                hintText: 'SCY, SCM, or LCM',
-              ),
-              onChanged: (_) => setState(() {}),
+            Text('Course', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _selectedCourse == null,
+                  onSelected: (_) => setState(() => _selectedCourse = null),
+                ),
+                ...AppConstants.courses.map((course) {
+                  return FilterChip(
+                    label: Text(course),
+                    selected: _selectedCourse == course,
+                    onSelected: (_) => setState(() => _selectedCourse = course),
+                  );
+                }),
+              ],
             ),
             const SizedBox(height: 20),
             Text('Your PB Cuts', style: Theme.of(context).textTheme.titleMedium),
@@ -146,7 +162,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
                 return SwimIqEventListTile(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',
                   subtitle:
-                      '$ageGroup · $gender · ${cut ?? 'Below B'} motivational cut',
+                      '${_selectedAgeGroup ?? ageGroup} · ${_selectedGender ?? gender} · ${cut ?? 'Below B'} motivational cut',
                   trailing: SwimTime.fromSeconds(pb.timeSeconds),
                 );
               }),
