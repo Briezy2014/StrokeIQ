@@ -4,15 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../data/models/swim_video.dart';
+import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/swim_stroke_utils.dart';
+import '../../core/utils/video_event_inference.dart';
+import '../../data/models/video_models.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
-  const VideoLabScreen({super.key, required this.data});
-
-  final SwimmerData data;
+  const VideoLabScreen({super.key});
 
   @override
   ConsumerState<VideoLabScreen> createState() => _VideoLabScreenState();
@@ -21,17 +22,41 @@ class VideoLabScreen extends ConsumerStatefulWidget {
 class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   final _titleController = TextEditingController();
   final _notesController = TextEditingController();
-  String _stroke = AppConstants.strokes.first;
-  String _course = AppConstants.courses.first;
-  int _distance = 100;
+  final _distanceController = TextEditingController(text: '50');
+  final _strokeController = TextEditingController(text: 'Butterfly');
+  final _courseController = TextEditingController(text: 'LCM');
   bool _uploading = false;
-  bool _analyzing = false;
+  String? _analyzingVideoId;
 
   @override
   void dispose() {
     _titleController.dispose();
     _notesController.dispose();
+    _distanceController.dispose();
+    _strokeController.dispose();
+    _courseController.dispose();
     super.dispose();
+  }
+
+  String get _stroke => _strokeController.text.trim().isEmpty
+      ? 'Butterfly'
+      : _strokeController.text.trim();
+
+  String get _course => _courseController.text.trim().isEmpty
+      ? 'LCM'
+      : _courseController.text.trim();
+
+  void _applyEventInference(String? title) {
+    final inferred = VideoEventInference.fromTitle(title);
+    if (inferred.stroke != null) {
+      _strokeController.text = inferred.stroke!;
+    }
+    if (inferred.course != null) {
+      _courseController.text = inferred.course!;
+    }
+    if (inferred.distance != null) {
+      _distanceController.text = '${inferred.distance}';
+    }
   }
 
   Future<void> _pickAndUpload() async {
@@ -42,6 +67,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (result == null || result.files.isEmpty) return;
 
     final file = result.files.first;
+    final fileName = file.name;
+    if (_titleController.text.trim().isEmpty) {
+      _titleController.text = fileName;
+    }
+    _applyEventInference(fileName);
+    setState(() {});
+
     if (file.bytes == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,14 +85,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
 
     setState(() => _uploading = true);
+    final distance = int.tryParse(_distanceController.text.trim()) ?? 50;
     final error = await ref.read(swimmerDataProvider.notifier).uploadVideo(
-          fileName: file.name,
+          fileName: fileName,
           bytes: file.bytes!,
           title: _titleController.text.trim().isEmpty
-              ? file.name
+              ? fileName
               : _titleController.text.trim(),
           stroke: _stroke,
-          distance: _distance,
+          distance: '$distance',
           course: _course,
           notes: _notesController.text.trim(),
         );
@@ -70,10 +103,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          error ??
-              'Video uploaded. If upload failed, run the Supabase migration and create the swim-videos bucket.',
-        ),
+        content: Text(error ?? 'Video uploaded.'),
       ),
     );
 
@@ -84,73 +114,99 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 
   Future<void> _runAnalysis(SwimVideo video) async {
-    setState(() => _analyzing = true);
+    final videoId = video.id;
+    if (videoId == null) return;
+
+    setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
-    setState(() => _analyzing = false);
+    setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(error ?? 'AI analysis saved.')),
     );
   }
 
+  String? _videoMotivationalCut(SwimmerData data, SwimVideo video) {
+    final stroke = SwimStrokeUtils.canonical(video.stroke);
+    final distance = int.tryParse(video.distance ?? '');
+    final course = video.course?.trim();
+    if (stroke.isEmpty || distance == null || course == null || course.isEmpty) {
+      return null;
+    }
+
+    final matches = data.personalBests.where(
+      (log) =>
+          log.stroke == stroke &&
+          log.distance == distance &&
+          log.course == course,
+    );
+    if (matches.isEmpty) return null;
+
+    return MotivationalCut.labelForSwim(
+      catalog: data.motivationalStandards,
+      profile: data.profile,
+      stroke: stroke,
+      distance: distance,
+      course: course,
+      timeSeconds: matches.first.timeSeconds,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat.yMMMd();
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
+        final dateFormat = DateFormat.yMMMd();
+        final videos = data.userFacingVideos;
+        final snapshot = data.passportSnapshot(swimmer);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Video Lab',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Upload swim videos for playback and AI coaching analysis.',
-        ),
-        const SizedBox(height: 16),
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            SwimIqScreenHeader(
+              title: 'Video Lab',
+              subtitle:
+                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
+            ),
+            const SizedBox(height: 16),
         TextFormField(
           controller: _titleController,
           decoration: const InputDecoration(labelText: 'Video title'),
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: _stroke,
-          decoration: const InputDecoration(labelText: 'Stroke'),
-          items: AppConstants.strokes
-              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-              .toList(),
-          onChanged: (v) => setState(() => _stroke = v!),
+          onChanged: _applyEventInference,
         ),
         const SizedBox(height: 12),
         TextFormField(
-          initialValue: '100',
-          decoration: const InputDecoration(labelText: 'Distance'),
-          keyboardType: TextInputType.number,
-          onChanged: (v) {
-            final parsed = int.tryParse(v);
-            if (parsed != null) _distance = parsed;
-          },
+          controller: _strokeController,
+          decoration: const InputDecoration(
+            labelText: 'Stroke',
+            hintText:
+                'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+          ),
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: _course,
-          decoration: const InputDecoration(labelText: 'Course'),
-          items: AppConstants.courses
-              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-              .toList(),
-          onChanged: (v) => setState(() => _course = v!),
+        TextFormField(
+          controller: _distanceController,
+          decoration: const InputDecoration(labelText: 'Distance'),
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _courseController,
+          decoration: const InputDecoration(
+            labelText: 'Course',
+            hintText: 'SCY, SCM, or LCM',
+          ),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _notesController,
           decoration: const InputDecoration(
-            labelText: 'Notes',
-            hintText: 'Stroke count, splits, race notes...',
+            labelText: 'Race notes',
+            hintText:
+                'Reaction time, breakout, breathing, stroke count, tempo, finish, race strategy...',
           ),
-          maxLines: 2,
+          maxLines: 4,
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
@@ -166,23 +222,28 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         ),
         const SizedBox(height: 24),
         Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(snapshot.latestAnalysisSummary),
         const SizedBox(height: 12),
-        if (widget.data.videos.isEmpty)
+        if (videos.isEmpty)
           const EmptyStateMessage(
             message:
                 'No videos yet. Upload a swim video to start AI analysis.',
           )
         else
-          ...widget.data.videos.map(
+          ...videos.map(
             (video) => _VideoCard(
               video: video,
-              analysis: widget.data.analysisForVideo(video.id ?? -1),
+              analysis: data.analysisForVideo(video.id),
               dateFormat: dateFormat,
-              analyzing: _analyzing,
+              analyzing: _analyzingVideoId == video.id,
               onAnalyze: () => _runAnalysis(video),
+              motivationalCut: _videoMotivationalCut(data, video),
             ),
           ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -194,6 +255,7 @@ class _VideoCard extends StatefulWidget {
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
+    this.motivationalCut,
   });
 
   final SwimVideo video;
@@ -201,6 +263,7 @@ class _VideoCard extends StatefulWidget {
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
+  final String? motivationalCut;
 
   @override
   State<_VideoCard> createState() => _VideoCardState();
@@ -243,6 +306,11 @@ class _VideoCardState extends State<_VideoCard> {
                 style: const TextStyle(fontWeight: FontWeight.w800)),
             if (widget.video.createdAt != null)
               Text(widget.dateFormat.format(widget.video.createdAt!)),
+            if (widget.motivationalCut != null)
+              Text(
+                'Motivational cut from matching PB: ${widget.motivationalCut}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             if (_controller != null) ...[
               const SizedBox(height: 12),
               AspectRatio(
@@ -280,13 +348,35 @@ class _VideoCardState extends State<_VideoCard> {
                     : const Text('Run AI Swim Analysis'),
               )
             else ...[
-              const SizedBox(height: 8),
-              Text('AI Score: ${widget.analysis!.overallScore}/100',
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text(widget.analysis!.summary),
-              const SizedBox(height: 6),
-              Text('Strengths: ${widget.analysis!.strengths}'),
-              Text('Improve: ${widget.analysis!.improvements}'),
+              if (widget.analysis!.disclaimer != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.analysis!.disclaimer!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              if (widget.analysis!.coachingSections.isNotEmpty)
+                ...widget.analysis!.coachingSections.entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(entry.value),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ],
         ),

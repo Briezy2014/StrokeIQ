@@ -1,127 +1,148 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
-import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key, required this.data});
-
-  final SwimmerData data;
+class DashboardScreen extends ConsumerWidget {
+  const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final logs = data.raceLogs;
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
+        final logs = data.raceLogs;
 
-    if (logs.isEmpty) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const EmptyStateMessage(
-            message:
-                'No swim sessions yet. Add a swim session to start building the dashboard.',
-          ),
-        ],
-      );
-    }
-
-    final score = SwimAnalytics.calculateSwimIqScore(
-      raceLogs: logs,
-      goals: data.goals,
-    );
-    final personalBests = SwimAnalytics.personalBests(logs);
-    final dateFormat = DateFormat.yMMMd();
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Swimmer Dashboard',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+        if (logs.isEmpty) {
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              SwimIqScreenHeader(
+                title: 'Swimmer Dashboard',
+                subtitle: 'Training overview for ${data.displayName(swimmer)}',
               ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.6,
+              const SizedBox(height: 16),
+              const EmptyStateMessage(
+                message:
+                    'No swim sessions yet. Add a swim session to start building the dashboard.',
+              ),
+            ],
+          );
+        }
+
+        final personalBests = data.personalBests;
+        final dateFormat = DateFormat.yMMMd();
+        final snapshot = data.passportSnapshot(swimmer);
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           children: [
-            MetricCard(label: 'SwimIQ Score', value: '$score'),
-            MetricCard(label: 'Total Sessions', value: '${logs.length}'),
-            MetricCard(
-              label: 'Personal Bests',
-              value: '${personalBests.length}',
+            SwimIqScreenHeader(
+              title: 'Swimmer Dashboard',
+              subtitle: snapshot.swimIqExplanation,
             ),
-            MetricCard(label: 'Active Goals', value: '${data.goals.length}'),
-            MetricCard(
-              label: 'Best Time',
-              value: SwimAnalytics.bestTime(logs),
+            const SizedBox(height: 16),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              children: [
+                SwimIqMetricCard(
+                  label: 'SwimIQ Score',
+                  value: '${data.swimIqScore}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Total Sessions',
+                  value: '${logs.length}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Personal Bests',
+                  value: '${personalBests.length}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Active Goals',
+                  value: '${data.goals.length}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Meet Results',
+                  value: '${data.meetResults.length}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Video Analyses',
+                  value: '${data.userFacingVideoAnalyses.length}',
+                ),
+                SwimIqMetricCard(
+                  label: 'Best Time',
+                  value: SwimAnalytics.bestTime(logs),
+                ),
+                SwimIqMetricCard(
+                  label: 'Highest Motivational Cut',
+                  value: snapshot.highestCut,
+                ),
+                SwimIqMetricCard(
+                  label: 'Standards Version',
+                  value: data.motivationalStandards.versionId,
+                ),
+              ],
             ),
-            MetricCard(
-              label: 'Average Time',
-              value: SwimAnalytics.averageTime(logs),
+            const SizedBox(height: 24),
+            Text(
+              'Session History',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            ...logs.map(
+              (log) {
+                final cut = MotivationalCut.labelForSwim(
+                  catalog: data.motivationalStandards,
+                  profile: data.profile,
+                  stroke: log.stroke,
+                  distance: log.distance,
+                  course: log.course,
+                  timeSeconds: log.timeSeconds,
+                );
+                return SwimIqEventListTile(
+                  title: '${log.distance} ${log.stroke} · ${log.course}',
+                  subtitle:
+                      '${dateFormat.format(log.date)} · ${log.event} · $cut cut',
+                  trailing: SwimTime.fromSeconds(log.timeSeconds),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Time Progress',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 260,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _TimeProgressChart(logs: logs),
+                ),
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Session History',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 12),
-        ...logs.map((log) => _SessionTile(log: log, dateFormat: dateFormat)),
-        const SizedBox(height: 24),
-        Text(
-          'Time Progress',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 260,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _TimeProgressChart(logs: logs),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SessionTile extends StatelessWidget {
-  const _SessionTile({required this.log, required this.dateFormat});
-
-  final RaceLog log;
-  final DateFormat dateFormat;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        title: Text('${log.distance} ${log.stroke} · ${log.course}'),
-        subtitle: Text(
-          '${dateFormat.format(log.date)} · ${log.event}',
-        ),
-        trailing: Text(
-          SwimTime.fromSeconds(log.timeSeconds),
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
+        );
+      },
     );
   }
 }
