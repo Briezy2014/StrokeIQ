@@ -12,6 +12,7 @@ data class SwimmerProfile(
     @SerialName("last_name") val lastName: String? = null,
     @SerialName("preferred_name") val preferredName: String? = null,
     val birthday: String? = null,
+    val gender: String? = null,
     @SerialName("graduation_year") val graduationYear: Int? = null,
     val team: String? = null,
     @SerialName("coach_name") val coachName: String? = null,

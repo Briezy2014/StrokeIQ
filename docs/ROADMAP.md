@@ -67,6 +67,10 @@ This roadmap defines eight incremental releases. Each version ships a working pr
 - Qualifying time gap analysis (“0.8s from AA”)
 - Meet heat sheet notes (manual entry)
 
+**Data source:** USA Swimming 2024-2028 Motivational Age Group Standards — **3,000 records** across **SCY (1,008), SCM (1,008), and LCM (984)** for age groups 10 & under through 17-18, Girls and Boys. Bundled from official PDF.
+
+**Exit criteria:** Cuts tab shows PB cuts with gap analysis; meet planner with heat notes; passport shows highest cut.
+
 ---
 
 ## Version 5 — Advanced Metrics

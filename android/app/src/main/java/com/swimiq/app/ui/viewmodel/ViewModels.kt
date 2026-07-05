@@ -96,6 +96,12 @@ data class SwimUiState(
     val standardsCount: Int
         get() = standards.size
 
+    val standardsCourseSummary: String
+        get() = StandardsService.courseSummary(standards)
+
+    val standardsGender: String
+        get() = StandardsService.genderFromProfile(profile)
+
     val personalBestCuts: List<PersonalBestCut>
         get() = StandardsService.personalBestCuts(standards, raceLogs, profile)
 

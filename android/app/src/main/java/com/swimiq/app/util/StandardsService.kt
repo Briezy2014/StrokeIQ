@@ -36,8 +36,18 @@ object StandardsService {
     }
 
     fun genderFromProfile(profile: SwimmerProfile?): String {
-        // Default; future: explicit gender field on profile
-        return "Girls"
+        return when (profile?.gender?.trim()?.lowercase()) {
+            "boys", "boy", "male", "m" -> "Boys"
+            else -> "Girls"
+        }
+    }
+
+    fun courseSummary(standards: List<TimeStandard>): String {
+        return listOf("SCY", "SCM", "LCM")
+            .joinToString(" · ") { course ->
+                val count = standards.count { it.course == course }
+                "$course ($count)"
+            }
     }
 
     fun normalizeStroke(stroke: String): String {
@@ -46,7 +56,8 @@ object StandardsService {
             "back", "backstroke" -> "Backstroke"
             "breast", "breaststroke" -> "Breaststroke"
             "fly", "butterfly" -> "Butterfly"
-            "im" -> "Individual Medley"
+            "im", "individual medley" -> "Individual Medley"
+            "fr-r", "freestyle relay", "free relay" -> "Freestyle Relay"
             else -> stroke
         }
     }

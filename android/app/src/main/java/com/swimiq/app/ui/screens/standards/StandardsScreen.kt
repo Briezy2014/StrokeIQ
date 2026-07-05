@@ -36,12 +36,18 @@ fun StandardsScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 SectionHeader("USA Swimming Standards")
                 Text(
-                    text = "2024–2028 Motivational Age Group Standards (SCY)",
+                    text = "2024–2028 Motivational Age Group Standards",
                     color = SwimNavy.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "Age group: ${state.standardsAgeGroup} · ${state.standardsCount} standards loaded",
+                    text = "Courses: ${state.standardsCourseSummary}",
+                    color = SwimNavy.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                Text(
+                    text = "Age group: ${state.standardsAgeGroup} · ${state.standardsGender} · ${state.standardsCount} standards",
                     color = SwimBlueDark,
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.padding(top = 4.dp),

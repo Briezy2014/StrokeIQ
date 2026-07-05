@@ -3,6 +3,7 @@ package com.swimiq.app.util
 import com.swimiq.app.data.model.TimeStandard
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class StandardsServiceTest {
@@ -92,5 +93,54 @@ class StandardsServiceTest {
         assertEquals("AA", gap.nextLevel)
         assertNotNull(gap.gapSeconds)
         assertEquals(0.41, gap.gapSeconds!!, 0.01)
+    }
+
+    @Test
+    fun genderFromProfile_mapsBoysAndGirls() {
+        assertEquals("Boys", StandardsService.genderFromProfile(
+            com.swimiq.app.data.model.SwimmerProfile(gender = "Boys"),
+        ))
+        assertEquals("Girls", StandardsService.genderFromProfile(
+            com.swimiq.app.data.model.SwimmerProfile(gender = "Girls"),
+        ))
+    }
+
+    @Test
+    fun highestCut_respectsCourseAndGender() {
+        val scmStandard = standards.first().copy(course = "SCM", timeSeconds = 30.0)
+        val boysStandard = standards.first().copy(gender = "Boys", timeSeconds = 30.0)
+        assertNull(
+            StandardsService.highestCut(
+                standards = listOf(scmStandard),
+                stroke = "Freestyle",
+                distance = 50,
+                course = "SCY",
+                swimmerTime = 28.50,
+                ageGroup = "11-12",
+                gender = "Girls",
+            ),
+        )
+        assertNull(
+            StandardsService.highestCut(
+                standards = standards,
+                stroke = "Freestyle",
+                distance = 50,
+                course = "SCY",
+                swimmerTime = 28.50,
+                ageGroup = "11-12",
+                gender = "Boys",
+            ),
+        )
+        assertNotNull(
+            StandardsService.highestCut(
+                standards = listOf(boysStandard),
+                stroke = "Freestyle",
+                distance = 50,
+                course = "SCY",
+                swimmerTime = 28.50,
+                ageGroup = "11-12",
+                gender = "Boys",
+            ),
+        )
     }
 }

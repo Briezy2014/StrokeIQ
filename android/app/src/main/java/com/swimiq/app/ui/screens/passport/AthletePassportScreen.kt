@@ -52,6 +52,8 @@ private val strokeOptions = listOf(
     "IM",
 )
 
+private val genderOptions = listOf("Girls", "Boys")
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AthletePassportScreen(
@@ -64,6 +66,7 @@ fun AthletePassportScreen(
     var lastName by remember(profile) { mutableStateOf(profile?.lastName.orEmpty()) }
     var preferredName by remember(profile) { mutableStateOf(profile?.preferredName.orEmpty()) }
     var birthday by remember(profile) { mutableStateOf(profile?.birthday.orEmpty()) }
+    var gender by remember(profile) { mutableStateOf(profile?.gender ?: genderOptions.first()) }
     var graduationYear by remember(profile) {
         mutableStateOf(profile?.graduationYear?.toString().orEmpty())
     }
@@ -203,6 +206,7 @@ fun AthletePassportScreen(
             label = { Text("Birthday (YYYY-MM-DD)") },
             modifier = Modifier.fillMaxWidth(),
         )
+        GenderDropdown(gender) { gender = it }
         OutlinedTextField(
             value = graduationYear,
             onValueChange = { graduationYear = it },
@@ -260,6 +264,7 @@ fun AthletePassportScreen(
                         lastName = lastName.ifBlank { null },
                         preferredName = preferredName.ifBlank { null },
                         birthday = birthday.ifBlank { null },
+                        gender = gender,
                         graduationYear = graduationYear.toIntOrNull(),
                         team = team.ifBlank { null },
                         coachName = coach.ifBlank { null },
@@ -278,6 +283,45 @@ fun AthletePassportScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Save Athlete Passport")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GenderDropdown(
+    selected: String,
+    onSelected: (String) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Gender (for standards)") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            genderOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    },
+                )
+            }
         }
     }
 }
