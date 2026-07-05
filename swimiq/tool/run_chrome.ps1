@@ -1,4 +1,4 @@
-# SwimIQ — run in Chrome on Windows (handles paths with spaces)
+# SwimIQ - run in Chrome on Windows (handles paths with spaces)
 # Usage: powershell -ExecutionPolicy Bypass -File tool\run_chrome.ps1
 
 $ErrorActionPreference = "Stop"
@@ -15,16 +15,17 @@ $flutterCandidates = @(
 
 $flutterBin = $null
 foreach ($candidate in $flutterCandidates) {
-  if (Test-Path "$candidate\bin\flutter.bat") {
-    $flutterBin = "$candidate\bin"
+  $bat = Join-Path $candidate "bin\flutter.bat"
+  if (Test-Path $bat) {
+    $flutterBin = Join-Path $candidate "bin"
     break
   }
 }
 
 if ($null -eq $flutterBin) {
-  $flutterBin = (Get-Command flutter -ErrorAction SilentlyContinue).Source
-  if ($flutterBin) {
-    $flutterBin = Split-Path -Parent $flutterBin
+  $flutterCmd = Get-Command flutter -ErrorAction SilentlyContinue
+  if ($flutterCmd) {
+    $flutterBin = Split-Path -Parent $flutterCmd.Source
   }
 }
 
@@ -34,8 +35,9 @@ if (-not $flutterBin) {
 }
 
 # Map drive letters when paths contain spaces (Flutter/Dart native hooks break otherwise).
-if ($flutterBin -match " ") {
-  subst F: $flutterBin.TrimEnd('\bin') 2>$null
+$flutterRoot = Split-Path -Parent $flutterBin
+if ($flutterRoot -match " ") {
+  subst F: $flutterRoot 2>$null
   $flutterBin = "F:\bin"
   Write-Host "Mapped Flutter to F:\ (path had spaces)"
 }
@@ -51,13 +53,14 @@ $env:Path = "$flutterBin;$env:Path"
 Set-Location $projectRoot
 
 if (-not (Test-Path ".env")) {
-  Write-Host "Creating .env from .env.example — add your Supabase keys before login works."
+  Write-Host "Creating .env from .env.example - add your Supabase keys before login works."
   Copy-Item ".env.example" ".env"
 }
 
+$flutterBat = Join-Path $flutterBin "flutter.bat"
 Write-Host "Running from: $projectRoot"
-Write-Host "Flutter: $flutterBin\flutter.bat"
+Write-Host "Flutter: $flutterBat"
 
-flutter clean
-flutter pub get
-flutter run -d chrome
+& $flutterBat clean
+& $flutterBat pub get
+& $flutterBat run -d chrome
