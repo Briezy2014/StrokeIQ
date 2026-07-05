@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/swimiq_app_bar.dart';
+import '../../widgets/swimiq_logo.dart';
 
 final swimmerProfileProvider = FutureProvider.autoDispose((ref) async {
   final swimmerName = ref.watch(currentSwimmerNameProvider);
@@ -24,8 +26,8 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(swimmerProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Athlete Passport'),
+      appBar: SwimIqAppBar(
+        subtitle: 'Athlete Passport',
         actions: [
           IconButton(
             onPressed: () => context.push('/home/profile/settings'),
@@ -62,24 +64,18 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      SwimIqColors.primary,
-                      SwimIqColors.primaryDark,
-                    ],
-                  ),
+                  color: SwimIqColors.black,
                   borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: SwimIqColors.primary.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.pool_rounded,
-                        size: 40,
-                        color: SwimIqColors.primary,
-                      ),
+                    const SwimIqLogo(
+                      variant: SwimIqLogoVariant.appIcon,
+                      width: 88,
+                      height: 88,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -94,7 +90,7 @@ class ProfileScreen extends ConsumerWidget {
                     Text(
                       profile.team ?? 'Team not added yet',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.white70,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

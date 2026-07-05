@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/swimiq_app_bar.dart';
+
 /// Training log placeholder — list + add session form comes next.
 class TrainingLogScreen extends StatelessWidget {
   const TrainingLogScreen({super.key});
@@ -7,9 +9,7 @@ class TrainingLogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Training Log'),
-      ),
+      appBar: const SwimIqAppBar(subtitle: 'Training Log'),
       body: const Center(
         child: Padding(
           padding: EdgeInsets.all(24),

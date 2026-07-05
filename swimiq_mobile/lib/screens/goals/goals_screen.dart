@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/swimiq_app_bar.dart';
+
 /// Goals placeholder.
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
@@ -7,9 +9,7 @@ class GoalsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Goals'),
-      ),
+      appBar: const SwimIqAppBar(subtitle: 'Goals'),
       body: const Center(
         child: Padding(
           padding: EdgeInsets.all(24),

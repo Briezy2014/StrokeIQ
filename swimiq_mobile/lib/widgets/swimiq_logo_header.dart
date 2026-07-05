@@ -2,64 +2,49 @@ import 'package:flutter/material.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
+import 'swimiq_logo.dart';
 
-/// Shared SwimIQ branding widget used on splash and auth screens.
+/// Shared SwimIQ branding block for splash and auth screens.
 class SwimIqLogoHeader extends StatelessWidget {
   const SwimIqLogoHeader({
     super.key,
     this.compact = false,
+    this.showTagline = true,
   });
 
   final bool compact;
+  final bool showTagline;
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = compact ? 56.0 : 88.0;
-    final titleStyle = compact
-        ? Theme.of(context).textTheme.headlineSmall
-        : Theme.of(context).textTheme.headlineMedium;
+    if (compact) {
+      return SwimIqLogo(
+        variant: SwimIqLogoVariant.logo,
+        width: 220,
+      );
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: iconSize + 24,
-          height: iconSize + 24,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: SwimIqColors.primary.withValues(alpha: 0.25),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.pool_rounded,
-            size: iconSize,
-            color: SwimIqColors.primary,
-          ),
+        SwimIqLogo(
+          variant: showTagline
+              ? SwimIqLogoVariant.brandingFull
+              : SwimIqLogoVariant.logo,
+          width: 280,
         ),
-        SizedBox(height: compact ? 12 : 20),
-        Text(
-          AppConstants.appName,
-          textAlign: TextAlign.center,
-          style: titleStyle?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: SwimIqColors.primaryDark,
+        if (showTagline) ...[
+          const SizedBox(height: 12),
+          Text(
+            AppConstants.appTagline,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: SwimIqColors.white,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          AppConstants.appTagline,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: SwimIqColors.navy,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
+        ],
       ],
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/swimiq_app_bar.dart';
+
 /// Meet results placeholder.
 class MeetResultsScreen extends StatelessWidget {
   const MeetResultsScreen({super.key});
@@ -7,9 +9,7 @@ class MeetResultsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meet Results'),
-      ),
+      appBar: const SwimIqAppBar(subtitle: 'Meet Results'),
       body: const Center(
         child: Padding(
           padding: EdgeInsets.all(24),

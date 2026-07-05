@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/app_providers.dart';
+import '../../widgets/swimiq_app_bar.dart';
 
 /// Dashboard placeholder — full metrics and charts come in the next milestone.
 class DashboardScreen extends ConsumerWidget {
@@ -13,9 +14,7 @@ class DashboardScreen extends ConsumerWidget {
     final email = ref.watch(currentUserEmailProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
+      appBar: const SwimIqAppBar(subtitle: 'Dashboard'),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

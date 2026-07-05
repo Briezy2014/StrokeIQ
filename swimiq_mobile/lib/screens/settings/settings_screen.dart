@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/swimiq_app_bar.dart';
 
 /// Settings screen with account info and sign out.
 class SettingsScreen extends ConsumerWidget {
@@ -15,9 +16,7 @@ class SettingsScreen extends ConsumerWidget {
     final swimmerName = ref.watch(currentSwimmerNameProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: const SwimIqAppBar(subtitle: 'Settings'),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
