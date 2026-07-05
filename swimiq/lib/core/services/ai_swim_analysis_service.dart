@@ -1,12 +1,17 @@
-import '../../core/utils/swim_analytics.dart';
+import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
-import '../../data/models/swim_video.dart';
+import '../../data/models/usa_time_standard.dart';
+import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 
-/// Rule-based swim analysis for V1. Can be replaced by a Supabase Edge Function later.
+/// V1 notes-and-metadata report. Not frame-by-frame video analysis.
 class AiSwimAnalysisService {
+  static const disclaimer =
+      'V1 report from upload notes and video metadata only — '
+      'not automatic video measurement.';
+
   SwimVideoAnalysis analyze({
     required SwimVideo video,
     required List<RaceLog> raceLogs,
@@ -14,152 +19,544 @@ class AiSwimAnalysisService {
     SwimmerProfile? profile,
     List<UsaTimeStandard> standards = const [],
   }) {
-    final stroke = video.stroke ?? profile?.primaryStroke ?? 'Freestyle';
-    final distance = video.distance ?? 100;
+    final ctx = _AnalysisContext.build(
+      video: video,
+      raceLogs: raceLogs,
+      goals: goals,
+      profile: profile,
+      standards: standards,
+    );
+
+    final suggestions = _whatVideoSuggests(ctx);
+    final priorities = _topThreePriorities(ctx);
+    final drills = _specificDrills(ctx, priorities);
+    final timeSavings = _estimatedTimeSavings(ctx);
+    final coachNotes = _coachNotesForNextRace(ctx, priorities);
+
+    final sections = <String, String>{
+      'Quick Summary': _quickSummary(ctx, priorities),
+      'What the video suggests': _bulletBlock(suggestions),
+      'What cannot be confirmed yet without frame-by-frame AI':
+          _cannotConfirmYet(ctx),
+      'Top 3 priorities for the next practice': _bulletBlock(priorities),
+      'Specific drills': _bulletBlock(drills),
+      'Estimated time savings': timeSavings,
+      'Coach notes for next race': coachNotes,
+    };
+
+    final overallScore = _overallScore(ctx, suggestions.length);
+
+    return SwimVideoAnalysis(
+      swimVideoId: video.id,
+      swimmer: video.swimmer,
+      summary: '${ctx.eventLabel}\n$disclaimer\n\n${sections['Quick Summary']}',
+      strengths: _formatSections(sections),
+      improvements: 'Top 3 priorities for the next practice\n'
+          '${_bulletBlock(priorities)}',
+      techniqueScore: overallScore,
+      paceScore: overallScore,
+      overallScore: overallScore,
+      analysisJson: {
+        'event': ctx.eventLabel,
+        'stroke': ctx.stroke,
+        'distance': ctx.distance,
+        'course': ctx.course,
+        'user_notes': ctx.notes,
+        'disclaimer': disclaimer,
+        'sections': sections,
+        'top_3_priorities': priorities,
+        'recommended_drills': drills,
+        'estimated_time_savings': timeSavings,
+        'personal_best_seconds': ctx.personalBestSeconds,
+        'engine': 'swimiq-v1-notes',
+      },
+    );
+  }
+
+  String _quickSummary(_AnalysisContext ctx, List<String> priorities) {
+    final buffer = StringBuffer()
+      ..writeln(
+        'This is a ${ctx.eventLabel} upload review — not an auto-measured race breakdown.',
+      );
+
+    if (!ctx.noteSignals.hasContent) {
+      buffer.writeln(
+        'Add short race notes on upload (start, underwater, strokes, breathing, finish) '
+        'to get event-specific feedback.',
+      );
+      return buffer.toString().trim();
+    }
+
+    if (priorities.isNotEmpty) {
+      buffer.writeln('Main focus from your notes: ${priorities.first}');
+    }
+
+    if (ctx.personalBestSeconds != null) {
+      buffer.writeln(
+        'Logged PB for this event: ${SwimTime.fromSeconds(ctx.personalBestSeconds!)}.',
+      );
+    } else if (ctx.matchingGoal != null) {
+      buffer.writeln(
+        'Goal on file: ${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)} '
+        '(${ctx.matchingGoal!.event}).',
+      );
+    }
+
+    return buffer.toString().trim();
+  }
+
+  List<String> _whatVideoSuggests(_AnalysisContext ctx) {
+    final items = <String>[];
+    final s = ctx.noteSignals;
+    final event = ctx.eventLabel;
+
+    if (s.reactionSeconds != null) {
+      final rt = s.reactionSeconds!;
+      final tag = rt <= 0.68
+          ? 'a solid start to build on'
+          : rt <= 0.75
+              ? 'room to sharpen the block reaction'
+              : 'the start may be costing early speed';
+      items.add(
+        'Notes cite ~${rt.toStringAsFixed(2)}s reaction — for $event that is $tag.',
+      );
+    } else if (s.mentionsStart) {
+      items.add('Start phase is flagged in your notes for $event.');
+    }
+
+    if (s.breakoutMeters != null) {
+      items.add(
+        'Breakout around ${s.breakoutMeters}m is noted'
+        '${s.dolphinKickCount != null ? ' after ${s.dolphinKickCount} underwater kicks' : ''} — '
+        'check whether the first stroke keeps underwater speed.',
+      );
+    } else if (s.dolphinKickCount != null) {
+      items.add(
+        '${s.dolphinKickCount} underwater kicks logged — compare kick tempo to breakout timing.',
+      );
+    }
+
+    if (s.strokeCountPerLength != null) {
+      final spl = s.strokeCountPerLength!;
+      final range = ctx.expectedStrokeCountRange;
+      final note = range == null
+          ? 'validate against pace'
+          : spl > range.$2
+              ? 'on the high side for $event'
+              : spl < range.$1
+                  ? 'on the low side — watch for over-gliding'
+                  : 'in a reasonable range if tempo holds';
+      items.add('~$spl strokes per length noted — $note.');
+    }
+
+    if (s.breathesEveryStroke == true && ctx.stroke == 'Butterfly' && ctx.isSprint) {
+      items.add(
+        'Breathing every stroke on the second 25 may disrupt fly rhythm on a 50.',
+      );
+    } else if (s.mentionsBreathing) {
+      items.add('Breathing pattern is noted — watch for head lift slowing the hips.');
+    }
+
+    if (s.tempoRushedLate == true) {
+      items.add('Tempo fades or rushes late in the race — common limiter on $event.');
+    }
+
+    if (s.finishExtensionMentioned == true) {
+      items.add('Finish extension is noted — confirm the last stroke drives to the wall.');
+    } else if (s.mentionsFinish) {
+      items.add('Finish phase is flagged — avoid coasting in the last few meters.');
+    }
+
+    if (items.isEmpty && ctx.notes.isNotEmpty) {
+      items.add(
+        'Your notes mention race details for $event — re-run after adding start, stroke count, or finish specifics.',
+      );
+    }
+
+    if (items.isEmpty) {
+      items.add('No upload notes yet — the app cannot infer technique from the file alone.');
+    }
+
+    return items.take(5).toList();
+  }
+
+  String _cannotConfirmYet(_AnalysisContext ctx) {
+    final items = <String>[
+      'Exact reaction time, breakout distance, and stroke count from pixels',
+      'Breath timing and head position frame-by-frame',
+      'Underwater kick amplitude and body angle off the wall',
+      'Split times and velocity through each 25',
+    ];
+    if (ctx.isSprint) {
+      items.add('Touch timing and finish glide distance at the wall');
+    }
+    return '${_bulletBlock(items)}\n\n'
+        'SwimIQ V1 uses what you typed on upload plus logged times — not computer vision.';
+  }
+
+  List<String> _topThreePriorities(_AnalysisContext ctx) {
+    final items = <String>[];
+
+    void add(String value) {
+      if (items.length < 3 && !items.contains(value)) items.add(value);
+    }
+
+    final s = ctx.noteSignals;
+    final event = ctx.eventLabel;
+
+    if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
+      add('Tighten block setup and reaction for $event.');
+    }
+    if (s.breakoutMeters != null &&
+        s.breakoutMeters! < 9 &&
+        (ctx.stroke == 'Butterfly' || ctx.stroke == 'Freestyle')) {
+      add('Hold streamline longer before breakout.');
+    }
+    if (s.strokeCountPerLength != null) {
+      final range = ctx.expectedStrokeCountRange;
+      final spl = s.strokeCountPerLength!;
+      if (range != null && spl > range.$2) {
+        add('Lower stroke count without losing tempo.');
+      } else if (range != null && spl < range.$1) {
+        add('Add rhythm — avoid over-gliding between strokes.');
+      }
+    }
+    if (s.tempoRushedLate == true) {
+      add('Keep stroke length stable in the last ${ctx.isSprint ? '15m' : 'length'}.');
+    }
+    if (s.breathesEveryStroke == true &&
+        ctx.stroke == 'Butterfly' &&
+        ctx.isSprint) {
+      add('Test one fewer breath on the second 25.');
+    }
+    if (s.mentionsFinish || ctx.isSprint) {
+      add('Practice full-extension finishes at race tempo.');
+    }
+    if (ctx.personalBestSeconds != null && ctx.matchingGoal != null) {
+      final gap = ctx.personalBestSeconds! - ctx.matchingGoal!.goalTime;
+      if (gap > 0) {
+        add(
+          'Close ${gap.toStringAsFixed(2)}s to goal '
+          '${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)}.',
+        );
+      }
+    }
+
+    add('Film side and head-on angles on the next $event upload.');
+    add('Log a fresh $event time to track progress.');
+
+    return items.take(3).toList();
+  }
+
+  List<String> _specificDrills(_AnalysisContext ctx, List<String> priorities) {
+    final drills = <String>[];
+    final lower = priorities.join(' ').toLowerCase();
+
+    if (lower.contains('block') || lower.contains('reaction') || lower.contains('start')) {
+      drills.add('5 block starts with reaction calls');
+    }
+    if (lower.contains('streamline') || lower.contains('breakout')) {
+      drills.add(
+        ctx.stroke == 'Butterfly'
+            ? '4 x 15m underwater fly kick to a marked breakout'
+            : 'Push-offs: streamline to a set breakout mark',
+      );
+    }
+    if (lower.contains('stroke count') || lower.contains('tempo') || lower.contains('rhythm')) {
+      drills.add('4 x 25 holding stroke count while building pace');
+    }
+    if (lower.contains('breath')) {
+      drills.add('6 x 25 with a fixed breath pattern');
+    }
+    if (lower.contains('finish')) {
+      drills.add('6 finishes from the flags — 3 strokes to the wall');
+    }
+
+    if (drills.isEmpty) {
+      if (ctx.stroke == 'Butterfly') {
+        drills.add('3-3-3 fly drill');
+      } else if (ctx.stroke == 'Freestyle') {
+        drills.add('Catch-up freestyle');
+      } else {
+        drills.add('Technique 25s at moderate effort');
+      }
+    }
+
+    return drills.take(4).toList();
+  }
+
+  String _estimatedTimeSavings(_AnalysisContext ctx) {
+    final s = ctx.noteSignals;
+    final lines = <String>[];
+
+    if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
+      lines.add('Sharper start: often 0.05–0.15s on a ${ctx.distance}m race');
+    }
+    if (s.breakoutMeters != null && s.breakoutMeters! < 10) {
+      lines.add('Better underwater phase: ~0.1–0.2s per length (estimate)');
+    }
+    if (s.strokeCountPerLength != null) {
+      final range = ctx.expectedStrokeCountRange;
+      final spl = s.strokeCountPerLength!;
+      if (range != null && spl > range.$2) {
+        lines.add('One fewer stroke per length: ~0.1–0.3s per 25 (estimate)');
+      }
+    }
+    if (s.tempoRushedLate == true) {
+      lines.add('Stable late-race tempo: ~0.1–0.2s on a sprint (estimate)');
+    }
+    if (s.breathesEveryStroke == true && ctx.isSprint) {
+      lines.add('One fewer breath on a 50: ~0.05–0.15s (estimate)');
+    }
+
+    if (lines.isEmpty) {
+      return 'Add detailed upload notes to estimate where time is most likely hiding. '
+          'These ranges are coaching estimates, not measured from video.';
+    }
+
+    final totalLow = lines.length * 0.05;
+    final totalHigh = lines.length * 0.15;
+    return '${_bulletBlock(lines)}\n\n'
+        'Rough combined range if priorities improve: '
+        '${totalLow.toStringAsFixed(2)}–${totalHigh.toStringAsFixed(2)}s '
+        '(estimates only — not measured from this upload).';
+  }
+
+  String _coachNotesForNextRace(_AnalysisContext ctx, List<String> priorities) {
+    final lines = <String>[
+      'Event: ${ctx.eventLabel}',
+      'Pre-race: confirm block settings and breakout kick count plan',
+    ];
+
+    if (ctx.noteSignals.reactionSeconds != null) {
+      lines.add(
+        'Target reaction: low-${(ctx.noteSignals.reactionSeconds! - 0.03).clamp(0.55, 0.99).toStringAsFixed(2)}s range',
+      );
+    }
+    if (ctx.noteSignals.strokeCountPerLength != null) {
+      lines.add(
+        'Stroke-count target: ~${ctx.noteSignals.strokeCountPerLength} per length',
+      );
+    }
+    if (priorities.isNotEmpty) {
+      lines.add('Practice focus carried into meet warm-up: ${priorities.first}');
+    }
+    if (ctx.personalBestSeconds != null) {
+      lines.add('PB reference: ${SwimTime.fromSeconds(ctx.personalBestSeconds!)}');
+    }
+
+    lines.add('Reminder: this plan is from upload notes — verify on deck with video review.');
+
+    return _bulletBlock(lines);
+  }
+
+  String _bulletBlock(List<String> items) =>
+      items.map((item) => '• $item').join('\n');
+
+  String _formatSections(Map<String, String> sections) {
+    return sections.entries
+        .map((entry) => '${entry.key}\n${entry.value}')
+        .join('\n\n');
+  }
+
+  int _overallScore(_AnalysisContext ctx, int suggestionCount) {
+    var score = 60;
+    if (ctx.noteSignals.hasContent) score += 10;
+    if (suggestionCount >= 3) score += 8;
+    if (ctx.personalBestSeconds != null) score += 6;
+    if (ctx.matchingGoal != null) score += 4;
+    return score.clamp(55, 88);
+  }
+}
+
+class _NoteSignals {
+  const _NoteSignals({
+    this.reactionSeconds,
+    this.breakoutMeters,
+    this.dolphinKickCount,
+    this.strokeCountPerLength,
+    this.breathesEveryStroke,
+    this.tempoRushedLate,
+    this.finishExtensionMentioned,
+    this.mentionsStart = false,
+    this.mentionsBreakout = false,
+    this.mentionsStrokeCount = false,
+    this.mentionsTempo = false,
+    this.mentionsBreathing = false,
+    this.mentionsFinish = false,
+  });
+
+  final double? reactionSeconds;
+  final int? breakoutMeters;
+  final int? dolphinKickCount;
+  final int? strokeCountPerLength;
+  final bool? breathesEveryStroke;
+  final bool? tempoRushedLate;
+  final bool? finishExtensionMentioned;
+  final bool mentionsStart;
+  final bool mentionsBreakout;
+  final bool mentionsStrokeCount;
+  final bool mentionsTempo;
+  final bool mentionsBreathing;
+  final bool mentionsFinish;
+
+  bool get hasContent =>
+      reactionSeconds != null ||
+      breakoutMeters != null ||
+      dolphinKickCount != null ||
+      strokeCountPerLength != null ||
+      breathesEveryStroke != null ||
+      tempoRushedLate == true ||
+      mentionsStart ||
+      mentionsBreakout ||
+      mentionsStrokeCount ||
+      mentionsTempo ||
+      mentionsBreathing ||
+      mentionsFinish;
+
+  static _NoteSignals parse(String notes) {
+    final lower = notes.toLowerCase();
+    if (notes.trim().isEmpty) return const _NoteSignals();
+
+    final reactionMatch = RegExp(
+      r'reaction(?:\s*time)?\s*(?:of|at|:)?\s*(\d+\.\d+)',
+      caseSensitive: false,
+    ).firstMatch(notes);
+    final breakoutMatch = RegExp(
+      r'breakout(?:\s*at)?\s*(\d+)\s*m',
+      caseSensitive: false,
+    ).firstMatch(notes);
+    final kickMatch =
+        RegExp(r'(\d+)\s*dolphin', caseSensitive: false).firstMatch(notes);
+    final strokeCountMatch = RegExp(
+      r'stroke count\s*(\d+)|(\d+)\s*(?:per length|spl|strokes per)',
+      caseSensitive: false,
+    ).firstMatch(notes);
+
+    return _NoteSignals(
+      reactionSeconds: reactionMatch != null
+          ? double.tryParse(reactionMatch.group(1)!)
+          : null,
+      breakoutMeters:
+          breakoutMatch != null ? int.tryParse(breakoutMatch.group(1)!) : null,
+      dolphinKickCount:
+          kickMatch != null ? int.tryParse(kickMatch.group(1)!) : null,
+      strokeCountPerLength: strokeCountMatch != null
+          ? int.tryParse(
+              strokeCountMatch.group(1) ?? strokeCountMatch.group(2) ?? '',
+            )
+          : null,
+      breathesEveryStroke:
+          lower.contains('breath') ? lower.contains('every stroke') : null,
+      tempoRushedLate: lower.contains('tempo') &&
+          (lower.contains('rush') ||
+              lower.contains('last 15') ||
+              lower.contains('fade')),
+      finishExtensionMentioned: lower.contains('finish') &&
+          (lower.contains('extension') || lower.contains('full extension')),
+      mentionsStart: lower.contains('reaction') ||
+          lower.contains('dive') ||
+          lower.contains('block') ||
+          lower.contains('start'),
+      mentionsBreakout: lower.contains('breakout') || lower.contains('surface'),
+      mentionsStrokeCount:
+          lower.contains('stroke count') || lower.contains('spl'),
+      mentionsTempo: lower.contains('tempo') ||
+          lower.contains('rhythm') ||
+          lower.contains('cadence'),
+      mentionsBreathing: lower.contains('breath'),
+      mentionsFinish: lower.contains('finish') ||
+          lower.contains('touch') ||
+          lower.contains('wall'),
+    );
+  }
+}
+
+class _AnalysisContext {
+  _AnalysisContext({
+    required this.eventLabel,
+    required this.stroke,
+    required this.distance,
+    required this.course,
+    required this.notes,
+    required this.noteSignals,
+    required this.personalBestSeconds,
+    required this.matchingGoal,
+    required this.standards,
+    required this.profile,
+  });
+
+  final String eventLabel;
+  final String stroke;
+  final int distance;
+  final String course;
+  final String notes;
+  final _NoteSignals noteSignals;
+  final double? personalBestSeconds;
+  final SwimGoal? matchingGoal;
+  final List<UsaTimeStandard> standards;
+  final SwimmerProfile? profile;
+
+  bool get isSprint => distance <= 50;
+
+  (int, int)? get expectedStrokeCountRange {
+    if (stroke == 'Butterfly') {
+      return course == 'LCM' ? (15, 19) : (14, 18);
+    }
+    if (stroke == 'Freestyle') {
+      return course == 'LCM' ? (14, 18) : (12, 16);
+    }
+    return null;
+  }
+
+  factory _AnalysisContext.build({
+    required SwimVideo video,
+    required List<RaceLog> raceLogs,
+    required List<SwimGoal> goals,
+    SwimmerProfile? profile,
+    required List<UsaTimeStandard> standards,
+  }) {
+    final stroke = SwimStrokeUtils.canonical(
+      video.stroke ?? profile?.primaryStroke ?? 'Freestyle',
+    );
+    final distance = video.distanceMeters ?? 100;
     final course = video.course ?? 'SCY';
+    final notes = video.notes?.trim() ?? '';
+    final noteSignals = _NoteSignals.parse(notes);
 
     final matchingLogs = raceLogs.where(
       (log) =>
-          log.stroke == stroke &&
+          SwimStrokeUtils.matches(log.stroke, stroke) &&
           log.distance == distance &&
           log.course == course,
     );
-
     final pb = matchingLogs.isEmpty
         ? null
         : matchingLogs
             .map((log) => log.timeSeconds)
             .reduce((a, b) => a < b ? a : b);
 
-    final totalSessions = raceLogs.length;
-    final totalGoals = goals.length;
-    final totalPbs = SwimAnalytics.personalBests(raceLogs).length;
-
-    var techniqueScore = 65;
-    var paceScore = 60;
-
-    if (totalSessions >= 5) techniqueScore += 10;
-    if (totalSessions >= 15) techniqueScore += 10;
-    if (totalPbs >= 2) paceScore += 15;
-    if (totalGoals >= 1) paceScore += 5;
-
-    if (video.notes != null && video.notes!.toLowerCase().contains('stroke')) {
-      techniqueScore += 5;
+    SwimGoal? matchingGoal;
+    for (final goal in goals) {
+      final goalStroke = SwimStrokeUtils.canonical(goal.event);
+      if (goal.course == course &&
+          (goalStroke == stroke || goal.event.contains('$distance'))) {
+        matchingGoal = goal;
+        break;
+      }
     }
 
-    techniqueScore = techniqueScore.clamp(40, 95);
-    paceScore = paceScore.clamp(40, 95);
-    final overallScore = ((techniqueScore + paceScore) / 2).round();
-
-    final strengths = <String>[
-      if (totalSessions > 0)
-        'Consistent training history with $totalSessions logged sessions.',
-      if (pb != null)
-        'Current best for $distance $stroke ($course): ${SwimTime.fromSeconds(pb)}.',
-      if (profile?.primaryStroke != null)
-        'Primary stroke focus: ${profile!.primaryStroke}.',
-    ];
-
-    final improvements = <String>[
-      'Film side and underwater angles for better stroke review.',
-      'Log stroke count and splits in video notes for richer analysis.',
-      if (totalGoals == 0)
-        'Add a goal for $distance $stroke to track progress against target pace.',
-      if (pb == null)
-        'Add a training session for this event to unlock PB comparisons.',
-    ];
-
-    final standardMatch = _bestStandardMatch(
-      standards: standards,
+    return _AnalysisContext(
+      eventLabel: video.eventLabel,
       stroke: stroke,
       distance: distance,
       course: course,
-      swimmerTime: pb,
+      notes: notes,
+      noteSignals: noteSignals,
+      personalBestSeconds: pb,
+      matchingGoal: matchingGoal,
+      standards: standards,
       profile: profile,
     );
-
-    final summary = StringBuffer()
-      ..write(
-        'AI Swim Analysis for ${video.displayTitle}: ',
-      )
-      ..write(
-        'Overall readiness score $overallScore/100. ',
-      );
-    if (standardMatch != null) {
-      summary.write('Highest comparable USA cut detected: $standardMatch. ');
-    }
-    summary.write(
-      'This V1 analysis uses training history, goals, and video metadata. '
-      'Connect a future Edge Function for frame-by-frame technique scoring.',
-    );
-
-    return SwimVideoAnalysis(
-      swimVideoId: video.id,
-      swimmerName: video.swimmerName,
-      summary: summary.toString(),
-      strengths: strengths.isEmpty
-          ? 'Keep uploading videos to build your analysis profile.'
-          : strengths.join(' '),
-      improvements: improvements.join(' '),
-      techniqueScore: techniqueScore,
-      paceScore: paceScore,
-      overallScore: overallScore,
-      analysisJson: {
-        'stroke': stroke,
-        'distance': distance,
-        'course': course,
-        'personal_best_seconds': pb,
-        'standard_match': standardMatch,
-        'engine': 'swimiq-v1-rules',
-      },
-    );
-  }
-
-  String? _bestStandardMatch({
-    required List<UsaTimeStandard> standards,
-    required String stroke,
-    required int distance,
-    required String course,
-    required double? swimmerTime,
-    SwimmerProfile? profile,
-  }) {
-    if (swimmerTime == null || standards.isEmpty) return null;
-
-    final gender = _inferGender(profile);
-    final ageGroup = _inferAgeGroup(profile);
-
-    final matches = standards.where(
-      (standard) =>
-          standard.stroke == stroke &&
-          standard.distance == distance &&
-          standard.course == course &&
-          (gender == null || standard.gender == gender) &&
-          (ageGroup == null || standard.ageGroup == ageGroup) &&
-          swimmerTime <= standard.timeSeconds,
-    );
-
-    if (matches.isEmpty) return null;
-
-    const levelOrder = ['AAAA', 'AAA', 'AA', 'A', 'BB', 'B'];
-    matches.toList().sort(
-          (a, b) => levelOrder
-              .indexOf(a.standardLevel)
-              .compareTo(levelOrder.indexOf(b.standardLevel)),
-        );
-    final best = matches.first;
-    return '${best.standardLevel} (${SwimTime.fromSeconds(best.timeSeconds)})';
-  }
-
-  String? _inferGender(SwimmerProfile? profile) {
-    return null;
-  }
-
-  String? _inferAgeGroup(SwimmerProfile? profile) {
-    final age = profile?.age;
-    if (age == null) return '11-12';
-    if (age <= 10) return '10 & Under';
-    if (age <= 12) return '11-12';
-    if (age <= 14) return '13-14';
-    return '15-16';
   }
 }

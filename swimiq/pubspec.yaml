@@ -29,4 +29,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/branding/swimiq_logo.png
     - assets/data/usa_time_standards_seed.json
+    - assets/data/usa_motivational_standards_2024_2028.json

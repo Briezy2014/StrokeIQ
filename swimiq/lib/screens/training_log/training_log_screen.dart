@@ -7,61 +7,45 @@ import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_ui.dart';
 
-/// Training log with list, edit, and delete — Milestone 3 CRUD.
+/// Training log with list, edit, and delete.
 class TrainingLogScreen extends ConsumerWidget {
   const TrainingLogScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dataAsync = ref.watch(swimmerDataProvider);
-
-    return dataAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('Could not load training log: $error')),
-      data: (data) {
-        if (data == null) {
-          return const Center(child: Text('No swimmer data loaded.'));
-        }
-
+    return SwimmerScreen(
+      builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
         final dateFormat = DateFormat.yMMMd();
 
-        return logs.isEmpty
-              ? ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: const [
-                    EmptyStateMessage(
-                      message:
-                          'No swim sessions yet. Use the Add tab to log your first training swim.',
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: logs.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          'Training Log',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                      );
-                    }
-
-                    final log = logs[index - 1];
-                    return _TrainingLogTile(
-                      log: log,
-                      dateFormat: dateFormat,
-                      onEdit: () => _editLog(context, ref, log),
-                      onDelete: () => _deleteLog(context, ref, log),
-                    );
-                  },
-                );
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            SwimIqScreenHeader(
+              title: 'Training Log',
+              subtitle: 'Sessions for ${data.displayName(swimmer)}',
+            ),
+            const SizedBox(height: 16),
+            if (logs.isEmpty)
+              const EmptyStateMessage(
+                message:
+                    'No swim sessions yet. Use the Add tab to log your first training swim.',
+              )
+            else
+              ...logs.map(
+                (log) => _TrainingLogTile(
+                  log: log,
+                  dateFormat: dateFormat,
+                  onEdit: () => _editLog(context, ref, log),
+                  onDelete: () => _deleteLog(context, ref, log),
+                ),
+              ),
+          ],
+        );
       },
     );
   }
@@ -102,11 +86,7 @@ class TrainingLogScreen extends ConsumerWidget {
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          error ?? 'Swim session deleted.',
-        ),
-      ),
+      SnackBar(content: Text(error ?? 'Swim session deleted.')),
     );
   }
 
@@ -124,6 +104,7 @@ class TrainingLogScreen extends ConsumerWidget {
     var stroke = log.stroke;
     var course = log.course;
     var sessionDate = log.date;
+    final dateFormat = DateFormat.yMMMd();
 
     final saved = await showDialog<bool>(
       context: context,
@@ -136,7 +117,9 @@ class TrainingLogScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: stroke,
+                    value: AppConstants.strokes.contains(stroke)
+                        ? stroke
+                        : AppConstants.strokes.first,
                     decoration: const InputDecoration(labelText: 'Stroke'),
                     items: AppConstants.strokes
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -180,7 +163,7 @@ class TrainingLogScreen extends ConsumerWidget {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Date'),
-                    subtitle: Text(DateFormat.yMMMd().format(sessionDate)),
+                    subtitle: Text(dateFormat.format(sessionDate)),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -212,11 +195,16 @@ class TrainingLogScreen extends ConsumerWidget {
       ),
     );
 
-    if (saved != true || !context.mounted) return;
+    if (saved != true || !context.mounted) {
+      timeController.dispose();
+      notesController.dispose();
+      distanceController.dispose();
+      return;
+    }
 
     try {
-      final timeSeconds = SwimTime.toSeconds(timeController.text);
       final distance = int.parse(distanceController.text);
+      final timeSeconds = SwimTime.toSeconds(timeController.text);
       final updated = RaceLog(
         id: log.id,
         swimmer: log.swimmer,
@@ -235,9 +223,7 @@ class TrainingLogScreen extends ConsumerWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error ?? 'Swim session updated.'),
-        ),
+        SnackBar(content: Text(error ?? 'Swim session updated.')),
       );
     } on FormatException {
       if (context.mounted) {

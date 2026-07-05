@@ -1,3 +1,5 @@
+import '../../core/utils/swim_stroke_utils.dart';
+
 class SwimmerProfile {
   const SwimmerProfile({
     this.id,
@@ -16,6 +18,10 @@ class SwimmerProfile {
     this.school,
     this.athleteNotes,
   });
+
+  static final _structuredNotesLine = RegExp(
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group):\s*(.+)$',
+  );
 
   final int? id;
   final String swimmerName;
@@ -41,6 +47,33 @@ class SwimmerProfile {
     return fullName.isNotEmpty ? fullName : swimmerName;
   }
 
+  String get legalName {
+    final fullName = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    return fullName.isNotEmpty ? fullName : swimmerName;
+  }
+
+  /// Structured metadata stored inside [athleteNotes] (no extra DB columns).
+  String? get gender => _structuredNotesValue('Gender');
+  String? get height => _structuredNotesValue('Height');
+  String? get weight => _structuredNotesValue('Weight');
+  String? get dominantHand => _structuredNotesValue('Dominant Hand');
+
+  /// Parsed from [athleteNotes] as `Training Group: <name>`.
+  String? get trainingGroup => _structuredNotesValue('Training Group');
+
+  /// Free-text notes with structured prefix lines removed.
+  String? get notesBody {
+    final notes = athleteNotes?.trim();
+    if (notes == null || notes.isEmpty) return null;
+    final bodyLines = <String>[];
+    for (final line in notes.split('\n')) {
+      if (_structuredNotesLine.hasMatch(line.trim())) continue;
+      bodyLines.add(line);
+    }
+    final body = bodyLines.join('\n').trim();
+    return body.isEmpty ? null : body;
+  }
+
   int? get age {
     if (birthday == null) return null;
     final today = DateTime.now();
@@ -55,20 +88,20 @@ class SwimmerProfile {
   factory SwimmerProfile.fromJson(Map<String, dynamic> json) {
     return SwimmerProfile(
       id: json['id'] as int?,
-      swimmerName: json['swimmer_name'] as String? ?? '',
-      firstName: json['first_name'] as String?,
-      lastName: json['last_name'] as String?,
-      preferredName: json['preferred_name'] as String?,
+      swimmerName: _nullableText(json['swimmer_name']) ?? '',
+      firstName: _nullableText(json['first_name']),
+      lastName: _nullableText(json['last_name']),
+      preferredName: _nullableText(json['preferred_name']),
       birthday: DateTime.tryParse(json['birthday']?.toString() ?? ''),
       graduationYear: (json['graduation_year'] as num?)?.toInt(),
-      team: json['team'] as String?,
-      coachName: json['coach_name'] as String?,
-      primaryStroke: json['primary_stroke'] as String?,
-      secondaryStroke: json['secondary_stroke'] as String?,
-      favoriteEvent: json['favorite_event'] as String?,
-      usaSwimmingId: json['usa_swimming_id'] as String?,
-      school: json['school'] as String?,
-      athleteNotes: json['athlete_notes'] as String?,
+      team: _nullableText(json['team']),
+      coachName: _nullableText(json['coach_name']),
+      primaryStroke: _normalizeStroke(json['primary_stroke'] as String?),
+      secondaryStroke: _normalizeStroke(json['secondary_stroke'] as String?),
+      favoriteEvent: _nullableText(json['favorite_event']),
+      usaSwimmingId: _nullableText(json['usa_swimming_id']),
+      school: _nullableText(json['school']),
+      athleteNotes: _nullableText(json['athlete_notes']),
     );
   }
 
@@ -123,6 +156,70 @@ class SwimmerProfile {
       school: school ?? this.school,
       athleteNotes: athleteNotes ?? this.athleteNotes,
     );
+  }
+
+  static String composeAthleteNotes({
+    String? gender,
+    String? height,
+    String? weight,
+    String? dominantHand,
+    String? trainingGroup,
+    String? notes,
+  }) {
+    final parts = <String>[];
+    void addLine(String label, String? value) {
+      final text = value?.trim();
+      if (text != null && text.isNotEmpty) {
+        parts.add('$label: $text');
+      }
+    }
+
+    addLine('Gender', gender);
+    addLine('Height', height);
+    addLine('Weight', weight);
+    addLine('Dominant Hand', dominantHand);
+    addLine('Training Group', trainingGroup);
+
+    final body = notes?.trim();
+    if (body != null && body.isNotEmpty) {
+      parts.add(body);
+    }
+    return parts.join('\n');
+  }
+
+  static ({String? firstName, String? lastName}) splitLegalName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return (firstName: null, lastName: null);
+    }
+    final parts = trimmed.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return (firstName: parts.first, lastName: null);
+    }
+    return (firstName: parts.first, lastName: parts.sublist(1).join(' '));
+  }
+
+  String? _structuredNotesValue(String label) {
+    final notes = athleteNotes?.trim();
+    if (notes == null || notes.isEmpty) return null;
+    final pattern = RegExp('^$label:\\s*(.+)\$');
+    for (final line in notes.split('\n')) {
+      final match = pattern.firstMatch(line.trim());
+      final value = match?.group(1)?.trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  static String? _nullableText(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static String? _normalizeStroke(String? value) {
+    final canonical = SwimStrokeUtils.canonical(value);
+    return canonical.isEmpty ? null : canonical;
   }
 
   static String _formatDate(DateTime date) =>

@@ -19,6 +19,9 @@ Cross-platform swim performance tracker for **Android** and **iOS**, connected t
 
 ## Setup
 
+> **Note:** The Streamlit app (`app.py` on port 8501) is separate from this Flutter app.
+> Running Streamlit will **not** show Flutter changes. Use `flutter run` below.
+
 ```bash
 cd swimiq
 flutter pub get

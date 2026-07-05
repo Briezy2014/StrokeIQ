@@ -49,6 +49,13 @@ abstract final class SwimTime {
     if (value is String) {
       final trimmed = value.trim();
       if (trimmed.isEmpty) return null;
+      if (trimmed.contains(':')) {
+        try {
+          return toSeconds(trimmed);
+        } on FormatException {
+          return null;
+        }
+      }
       return double.tryParse(trimmed);
     }
     return null;

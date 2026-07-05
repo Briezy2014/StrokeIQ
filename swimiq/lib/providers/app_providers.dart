@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/services/ai_swim_analysis_service.dart';
+import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
 import '../core/services/video_storage_service.dart';
 import '../data/repositories/swimiq_repository.dart';
@@ -16,8 +17,27 @@ final swimIqRepositoryProvider = Provider<SwimIqRepository>(
 
 final activeSwimmerProvider = StateProvider<String?>((ref) => null);
 
+/// Bottom-nav tab indices for [HomeScreen].
+abstract final class HomeTab {
+  static const dashboard = 0;
+  static const personalBests = 1;
+  static const trainingLog = 2;
+  static const addSession = 3;
+  static const goals = 4;
+  static const meetResults = 5;
+  static const videoLab = 6;
+  static const passport = 7;
+}
+
+final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);
+
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
+);
+
+final usaMotivationalStandardsCatalogProvider =
+    FutureProvider<UsaMotivationalStandardsCatalog>(
+  (ref) => UsaMotivationalStandardsCatalog.loadFromAssets(),
 );
 
 final usaStandardsServiceProvider = Provider<UsaStandardsService>(

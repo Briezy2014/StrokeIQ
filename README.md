@@ -6,8 +6,11 @@ Swim performance tracking platform.
 
 | App | Path | Platform | Status |
 |-----|------|----------|--------|
-| **Flutter (primary)** | `swimiq/` | Android, iOS | Milestone 2 — Auth complete |
+| **Flutter (primary)** | `swimiq/` | Android, iOS | V1 complete — auth, training log, settings |
 | **Streamlit (reference)** | `app.py` | Web | Reference only — unchanged |
+
+> **Codespaces / devcontainer:** The default preview opens the **Streamlit** app on port 8501.
+> To see Flutter changes, run `cd swimiq && flutter run` (or `flutter run -d chrome` for web).
 
 ## Quick start — Flutter app
 

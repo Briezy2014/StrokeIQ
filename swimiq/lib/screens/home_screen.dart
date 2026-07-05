@@ -5,13 +5,13 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
-import 'settings/settings_screen.dart';
 import 'add_session/add_session_screen.dart';
-import 'athlete_passport/athlete_passport_screen.dart';
+import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
 import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
+import 'settings/settings_screen.dart';
 import 'training_log/training_log_screen.dart';
 import 'video_lab/video_lab_screen.dart';
 
@@ -23,7 +23,28 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _selectedIndex = 0;
+  Widget _screenAt(int index) {
+    switch (index) {
+      case HomeTab.dashboard:
+        return const DashboardScreen();
+      case HomeTab.personalBests:
+        return const PersonalBestsScreen();
+      case HomeTab.trainingLog:
+        return const TrainingLogScreen();
+      case HomeTab.addSession:
+        return const AddSessionScreen();
+      case HomeTab.goals:
+        return const GoalsScreen();
+      case HomeTab.meetResults:
+        return const MeetResultsScreen();
+      case HomeTab.videoLab:
+        return const VideoLabScreen();
+      case HomeTab.passport:
+        return const AthletePassportV2Screen();
+      default:
+        return const DashboardScreen();
+    }
+  }
 
   void _openSettings() {
     Navigator.of(context).push(
@@ -40,12 +61,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final swimmer = ref.watch(activeSwimmerProvider)!;
-    final dataAsync = ref.watch(swimmerDataProvider);
+    final selectedIndex = ref.watch(homeTabIndexProvider);
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SwimIQ'),
+        title: SwimIqAppBarTitle(subtitle: swimmer),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -63,61 +84,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           MaterialBanner(
             content: Text(
-              'Swimmer: $swimmer'
-              '${user?.email != null ? ' · ${user!.email}' : ''}',
+              user?.email != null
+                  ? 'Signed in as ${user!.email}'
+                  : 'Swimmer: $swimmer',
             ),
             backgroundColor: Colors.green.shade50,
             actions: const [SizedBox.shrink()],
           ),
           Expanded(
-            child: dataAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Could not load swimmer data: $error'),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: _refresh,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              data: (data) {
-                if (data == null) {
-                  return const Center(child: Text('No swimmer data loaded.'));
-                }
-
-                final screens = [
-                  DashboardScreen(data: data),
-                  PersonalBestsScreen(data: data),
-                  const TrainingLogScreen(),
-                  const AddSessionScreen(),
-                  GoalsScreen(data: data),
-                  MeetResultsScreen(data: data),
-                  VideoLabScreen(data: data),
-                  AthletePassportScreen(data: data),
-                ];
-
-                return RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: screens[_selectedIndex],
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: _screenAt(selectedIndex),
             ),
           ),
           const SwimIqFooter(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
+          ref.read(homeTabIndexProvider.notifier).state = index;
         },
         destinations: const [
           NavigationDestination(
