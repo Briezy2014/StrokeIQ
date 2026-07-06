@@ -1,0 +1,46 @@
+SWIMIQ LAUNCH ANNOUNCEMENT — FULL VERSION
+==========================================
+
+Hey everyone — I'm Aspyn, founder of SwimIQ.
+
+I'm excited to share that we're in the final stretch before launching SwimIQ on iPhone and Android.
+
+SwimIQ is a swim performance passport built for competitive swimmers, parents, and coaches. Our tagline says it plainly: Built in the Water. Driven by Possibility.
+
+Here's what you'll be able to do at launch:
+
+Athlete Passport — Your swimmer's home base: profile, team and coach info, readiness status, highest USA Swimming cut, and what to focus on next.
+
+SwimIQ Score — A single progress number that grows as you log sessions, hit personal bests, and chase goals.
+
+Training tools — Log practices and meets, track personal bests (with automatic PB detection), set time goals, and see progress charts over time.
+
+USA Swimming standards — Built-in 2024–2028 motivational times (B through AAAA), so every session, goal, and meet result shows where you stand.
+
+Video Lab + AI Coach — Upload race footage and get a structured coaching report: what the video shows, top practice priorities, specific drills, estimated time savings, and meet-day notes — written in language families can actually use.
+
+More is on the way inside the passport — SwimDNA, Race Intelligence, and a Recruiting Center — but the core experience is real and ready.
+
+We're aiming to launch in the coming weeks if everything stays on track.
+
+See the latest build and progress here:
+https://briezy2014.github.io/StrokeIQ/
+
+Thank you to everyone who's believed in this from the start. We can't wait to put SwimIQ in swimmers' hands.
+
+Stay tuned.
+
+— Aspyn
+
+
+SWIMIQ LAUNCH ANNOUNCEMENT — SHORT VERSION
+==========================================
+
+SwimIQ is almost here — iPhone and Android.
+
+Your swimmer's performance passport: Athlete Passport, SwimIQ Score, training logs, goals, meet results, USA Swimming cuts, and Video Lab AI coaching from real race footage.
+
+Built in the Water. Driven by Possibility.
+
+Launching in the coming weeks:
+https://briezy2014.github.io/StrokeIQ/
