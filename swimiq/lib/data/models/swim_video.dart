@@ -1,0 +1,121 @@
+import '../../core/utils/supabase_parsers.dart';
+
+/// Canonical swim video model for Video Lab.
+///
+/// Do not duplicate this class elsewhere. Import [video_models.dart] in consumers.
+class SwimVideo {
+  const SwimVideo({
+    this.id,
+    required this.swimmer,
+    required this.storagePath,
+    this.title,
+    this.stroke,
+    this.distance,
+    this.course,
+    this.videoUrl,
+    this.notes,
+    this.createdAt,
+  });
+
+  final String? id;
+  final String swimmer;
+  final String storagePath;
+  final String? title;
+  final String? stroke;
+  final String? distance;
+  final String? course;
+  final String? videoUrl;
+  final String? notes;
+  final DateTime? createdAt;
+
+  String get swimmerName => swimmer;
+
+  int? get distanceMeters => parseOptionalInt(distance);
+
+  String get displayTitle {
+    if (title != null && title!.trim().isNotEmpty) return title!.trim();
+    if (stroke != null && distance != null) {
+      return '$distance $stroke';
+    }
+    return 'Swim Video';
+  }
+
+  /// e.g. "50 Butterfly LCM"
+  String get eventLabel {
+    final distanceLabel = distance?.trim().isNotEmpty == true ? distance!.trim() : '?';
+    final strokeLabel = stroke?.trim().isNotEmpty == true ? stroke!.trim() : 'Swim';
+    final courseLabel = course?.trim();
+    if (courseLabel != null && courseLabel.isNotEmpty) {
+      return '$distanceLabel $strokeLabel $courseLabel';
+    }
+    return '$distanceLabel $strokeLabel';
+  }
+
+  /// Hide automated integration uploads from the Video Lab list.
+  bool get isUserFacing {
+    final normalizedTitle = title?.trim().toLowerCase() ?? '';
+    if (normalizedTitle.contains('integration test')) return false;
+
+    final normalizedNotes = notes?.trim().toLowerCase() ?? '';
+    if (normalizedNotes == 'stroke count test') return false;
+
+    return true;
+  }
+
+  factory SwimVideo.fromJson(Map<String, dynamic> json) {
+    return SwimVideo(
+      id: parseUuid(json['id']),
+      swimmer: swimmerFromJson(json),
+      storagePath: parseOptionalText(json['storage_path']) ?? '',
+      title: parseOptionalText(json['title']),
+      stroke: parseOptionalText(json['stroke']),
+      distance: parseOptionalText(json['distance']),
+      course: parseOptionalText(json['course']),
+      videoUrl: parseOptionalText(json['video_url']),
+      notes: parseOptionalText(json['notes']),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+    );
+  }
+
+  factory SwimVideo.fromSupabaseRow(dynamic row) {
+    return SwimVideo.fromJson(supabaseRowToMap(row));
+  }
+
+  SwimVideo copyWith({
+    String? id,
+    String? swimmer,
+    String? storagePath,
+    String? title,
+    String? stroke,
+    String? distance,
+    String? course,
+    String? videoUrl,
+    String? notes,
+    DateTime? createdAt,
+  }) {
+    return SwimVideo(
+      id: id ?? this.id,
+      swimmer: swimmer ?? this.swimmer,
+      storagePath: storagePath ?? this.storagePath,
+      title: title ?? this.title,
+      stroke: stroke ?? this.stroke,
+      distance: distance ?? this.distance,
+      course: course ?? this.course,
+      videoUrl: videoUrl ?? this.videoUrl,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  Map<String, dynamic> toInsertJson() => {
+        'swimmer': swimmer,
+        'swimmer_name': swimmer,
+        'title': title,
+        'stroke': stroke,
+        'distance': distance?.toString(),
+        'course': course,
+        'storage_path': storagePath,
+        'video_url': videoUrl,
+        'notes': notes,
+      };
+}

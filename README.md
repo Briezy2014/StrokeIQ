@@ -1,56 +1,50 @@
-# SwimIQ / StrokeIQ
+# SwimIQ
 
-Swim analytics platform for tracking athlete performance, personal bests, goals, and meet results.
+Swim performance tracking platform.
 
 ## Apps
 
-| App | Platform | Directory |
-|-----|----------|-----------|
-| **SwimIQ V2 (Web)** | Streamlit | `app.py` |
-| **SwimIQ V1 (Mobile)** | Flutter (Android + iOS) | `swimiq_app/` |
+| App | Path | Platform | Status |
+|-----|------|----------|--------|
+| **Flutter (primary)** | `swimiq/` | Android, iOS | V1 complete — auth, training log, settings |
+| **Streamlit (reference)** | `app.py` | Web | Reference only — unchanged |
 
-Both apps connect to the same Supabase backend.
+> **Codespaces / devcontainer:** The default preview opens the **Streamlit** app on port 8501.
+> To see Flutter changes, run `cd swimiq && flutter run` (or `flutter run -d chrome` for web).
 
-## Web app (Streamlit)
-
-- `app.py` - Streamlit dashboard and swim entry form.
-- `requirements.txt` - Python dependencies.
-- `data/swim_data.csv` - Sample swim session dataset.
-
-## Setup
-
-1. Create a Python virtual environment:
-   ```bash
-   python -m venv .venv
-   ```
-2. Activate the virtual environment:
-   - Windows: `./.venv/Scripts/activate`
-   - macOS/Linux: `source .venv/bin/activate`
-3. Install dependencies:
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
-
-## Run
+## Quick start — Flutter app
 
 ```bash
+cd swimiq
+flutter pub get
+cp .env.example .env   # add your Supabase credentials
+flutter run
+```
+
+See [swimiq/README.md](swimiq/README.md) for full setup.
+
+## Quick start — Streamlit reference app
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml   # add credentials
 python -m streamlit run app.py
 ```
 
-## Features
+## Secrets
 
-- Add swim sessions with swimmer name, stroke, distance, time, stroke count, and date.
-- Calculates stroke rate and distance per stroke (DPS).
-- Displays trend charts for DPS, stroke rate, pace, and distance.
-- Tracks personal records by swimmer and stroke.
-- Shows weekly improvement percentages and efficiency recommendations.
+**Do not commit credentials.** The following files are gitignored:
 
-## Mobile app (Flutter)
+- `.env`
+- `.streamlit/secrets.toml`
 
-See [`swimiq_app/README.md`](swimiq_app/README.md) for setup and run instructions.
+Use the `.example` files as templates:
 
-```bash
-cd swimiq_app
-flutter pub get
-flutter run
-```
+- `.env.example` — Flutter / shared
+- `.streamlit/secrets.toml.example` — Streamlit
+
+## License
+
+© 2026 SwimIQ · Founded by Aspyn Briez

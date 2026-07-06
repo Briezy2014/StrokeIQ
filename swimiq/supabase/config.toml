@@ -1,0 +1,4 @@
+# Supabase local config. Deploy functions with: supabase functions deploy analyze-swim-video
+
+[functions.analyze-swim-video]
+verify_jwt = true
