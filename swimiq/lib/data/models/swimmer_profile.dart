@@ -1,4 +1,6 @@
 import '../../core/utils/swim_stroke_utils.dart';
+import 'meet_schedule_queue_item.dart';
+import 'scheduled_meet.dart';
 
 class SwimmerProfile {
   const SwimmerProfile({
@@ -20,7 +22,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets|Instagram|TikTok|Facebook|Website|Public Passport|Interest Sports|Interest Academics|Interest Passions|Beyond Bio):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets|Instagram|TikTok|Facebook|Website|Public Passport|Interest Sports|Interest Academics|Interest Passions|Beyond Bio|Scheduled Meets|Meet Queue):\s*(.+)$',
   );
 
   final int? id;
@@ -68,7 +70,7 @@ class SwimmerProfile {
   String? get sorenessLevel => _structuredNotesValue('Soreness');
   String? get illnessNotes => _structuredNotesValue('Illness');
 
-  /// COA / team calendar meet IDs the athlete marked as attending.
+  /// Team calendar meet IDs the athlete marked as attending.
   List<String> get attendingMeetIds {
     final raw = _structuredNotesValue('Attending Meets');
     if (raw == null || raw.isEmpty) return const [];
@@ -98,6 +100,12 @@ class SwimmerProfile {
     if (raw == null) return null;
     return raw.replaceAll('|', '\n');
   }
+
+  List<ScheduledMeet> get scheduledMeets =>
+      ScheduledMeet.decodeList(_structuredNotesValue('Scheduled Meets'));
+
+  List<MeetScheduleQueueItem> get meetQueue =>
+      MeetScheduleQueueItem.decodeList(_structuredNotesValue('Meet Queue'));
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -216,6 +224,8 @@ class SwimmerProfile {
     List<String>? interestAcademics,
     List<String>? interestPassions,
     String? beyondBio,
+    List<ScheduledMeet>? scheduledMeets,
+    List<MeetScheduleQueueItem>? meetQueue,
     String? notes,
   }) {
     final parts = <String>[];
@@ -256,6 +266,12 @@ class SwimmerProfile {
     }
     if (beyondBio != null && beyondBio.trim().isNotEmpty) {
       addLine('Beyond Bio', beyondBio.trim().replaceAll('\n', '|'));
+    }
+    if (scheduledMeets != null && scheduledMeets.isNotEmpty) {
+      addLine('Scheduled Meets', ScheduledMeet.encodeList(scheduledMeets));
+    }
+    if (meetQueue != null && meetQueue.isNotEmpty) {
+      addLine('Meet Queue', MeetScheduleQueueItem.encodeList(meetQueue));
     }
 
     final body = notes?.trim();

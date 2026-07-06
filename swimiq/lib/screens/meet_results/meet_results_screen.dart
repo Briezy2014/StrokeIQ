@@ -9,13 +9,12 @@ import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../providers/team_schedule_provider.dart';
-import '../../providers/team_schedule_provider.dart';
+import '../../providers/meet_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
-import '../../widgets/team_schedule_section.dart';
+import '../../widgets/meet_schedule_section.dart';
 
 class MeetResultsScreen extends ConsumerStatefulWidget {
   const MeetResultsScreen({super.key});
@@ -277,7 +276,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                   '${snapshot.lastMeetResult}',
             ),
             const SizedBox(height: 16),
-            const TeamScheduleSection(),
+            const MeetScheduleSection(),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),

@@ -1,3 +1,5 @@
+import '../../data/models/meet_schedule_queue_item.dart';
+import '../../data/models/scheduled_meet.dart';
 import '../../data/models/swimmer_profile.dart';
 
 /// Merges structured athlete note fields so partial saves keep social/peer data.
@@ -23,6 +25,8 @@ abstract final class SwimmerProfileNotes {
     List<String>? interestAcademics,
     List<String>? interestPassions,
     String? beyondBio,
+    List<ScheduledMeet>? scheduledMeets,
+    List<MeetScheduleQueueItem>? meetQueue,
     String? notes,
   }) {
     return SwimmerProfile.composeAthleteNotes(
@@ -45,6 +49,8 @@ abstract final class SwimmerProfileNotes {
       interestAcademics: interestAcademics ?? existing?.interestAcademics,
       interestPassions: interestPassions ?? existing?.interestPassions,
       beyondBio: beyondBio ?? existing?.beyondBio,
+      scheduledMeets: scheduledMeets ?? existing?.scheduledMeets,
+      meetQueue: meetQueue ?? existing?.meetQueue,
       notes: notes ?? existing?.notesBody,
     );
   }

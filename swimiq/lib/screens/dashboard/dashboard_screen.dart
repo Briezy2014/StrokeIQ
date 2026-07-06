@@ -8,7 +8,7 @@ import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/team_schedule_provider.dart';
+import '../../providers/meet_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dashboard_insights.dart';
 import '../../widgets/swimmer_screen.dart';

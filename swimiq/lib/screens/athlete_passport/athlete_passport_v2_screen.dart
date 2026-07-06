@@ -10,7 +10,7 @@ import '../../core/utils/passport_metrics.dart';
 import '../../core/utils/swimmer_profile_notes.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../providers/team_schedule_provider.dart';
+import '../../providers/meet_schedule_provider.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/passport_social_links.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -461,7 +461,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'Meet schedule',
               lines: [
                 'Last meet (results logged): ${snapshot.lastMeetResult}',
-                'Upcoming meet (COA calendar or goal): ${snapshot.upcomingMeet}',
+                'Upcoming meet (schedule photo or goal): ${snapshot.upcomingMeet}',
               ],
             ),
             const SizedBox(height: 12),
