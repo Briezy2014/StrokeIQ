@@ -6,13 +6,18 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
+import '../../core/utils/passport_metrics.dart';
+import '../../core/utils/swimmer_profile_notes.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../providers/team_schedule_provider.dart';
 import '../../widgets/passport_hub.dart';
+import '../../widgets/passport_social_links.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/swimiq_logo.dart';
+import 'beyond_the_pool_tab.dart';
+import 'swimmer_directory_screen.dart';
 
 /// Brand-new Athlete Passport — text fields and date picker only.
 class AthletePassportV2Screen extends ConsumerStatefulWidget {
@@ -43,10 +48,15 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _dominantHandController;
   late final TextEditingController _sleepController;
   late final TextEditingController _illnessController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _instagramController;
+  late final TextEditingController _tiktokController;
+  late final TextEditingController _facebookController;
 
   DateTime? _birthday;
   String? _selectedGender;
   String? _selectedSoreness;
+  bool _publicPassport = false;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
   bool _formDirty = false;
@@ -72,6 +82,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _dominantHandController = TextEditingController();
     _sleepController = TextEditingController();
     _illnessController = TextEditingController();
+    _websiteController = TextEditingController();
+    _instagramController = TextEditingController();
+    _tiktokController = TextEditingController();
+    _facebookController = TextEditingController();
   }
 
   @override
@@ -93,6 +107,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _dominantHandController.dispose();
     _sleepController.dispose();
     _illnessController.dispose();
+    _websiteController.dispose();
+    _instagramController.dispose();
+    _tiktokController.dispose();
+    _facebookController.dispose();
     super.dispose();
   }
 
@@ -136,6 +154,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _sleepController.text = profile?.sleepHours ?? '';
     _selectedSoreness = profile?.sorenessLevel;
     _illnessController.text = profile?.illnessNotes ?? '';
+    _websiteController.text = profile?.personalWebsite ?? '';
+    _instagramController.text = profile?.instagram ?? '';
+    _tiktokController.text = profile?.tiktok ?? '';
+    _facebookController.text = profile?.facebook ?? '';
+    _publicPassport = profile?.publicPassportEnabled ?? false;
     _birthday = profile?.birthday;
     _formDirty = false;
   }
@@ -198,17 +221,21 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       secondaryStroke: _optionalText(_secondaryStrokeController.text),
       favoriteEvent: _optionalText(_favoriteEventController.text),
       usaSwimmingId: _optionalText(_usaIdController.text),
-        athleteNotes: SwimmerProfile.composeAthleteNotes(
+      athleteNotes: SwimmerProfileNotes.merge(
+        existing: existing,
         gender: _selectedGender,
         height: _heightController.text,
         weight: _weightController.text,
         dominantHand: _dominantHandController.text,
-        trainingGroup: existing?.trainingGroup,
-        profilePhotoUrl: existing?.profilePhotoUrl,
         sleepHours: _sleepController.text,
         sorenessLevel: _selectedSoreness,
         illnessNotes: _illnessController.text,
         attendingMeetIds: existing?.attendingMeetIds,
+        instagram: _instagramController.text,
+        tiktok: _tiktokController.text,
+        facebook: _facebookController.text,
+        website: _websiteController.text,
+        publicPassport: _publicPassport,
         notes: _notesController.text,
       ),
     );
@@ -296,6 +323,72 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
           attendingMeets: attendingMeets,
         );
 
+        return DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: TabBar(
+                        tabs: [
+                          Tab(text: 'Passport'),
+                          Tab(text: 'Beyond the Pool'),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Find a swimmer',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const SwimmerDirectoryScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_search_outlined),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildPassportTab(
+                      context: context,
+                      data: data,
+                      swimmer: swimmer,
+                      profile: profile,
+                      displayName: displayName,
+                      dateFormat: dateFormat,
+                      effectiveBirthday: effectiveBirthday,
+                      effectiveGender: effectiveGender,
+                      snapshot: snapshot,
+                    ),
+                    BeyondThePoolTab(swimmer: swimmer, profile: profile),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPassportTab({
+    required BuildContext context,
+    required SwimmerData data,
+    required String swimmer,
+    required SwimmerProfile? profile,
+    required String displayName,
+    required DateFormat dateFormat,
+    required DateTime? effectiveBirthday,
+    required String? effectiveGender,
+    required PassportSnapshot snapshot,
+  }) {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -307,6 +400,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               primaryStroke: profile?.primaryStroke,
               graduationYear: profile?.graduationYear,
               profilePhotoUrl: profile?.profilePhotoUrl,
+              profile: profile,
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
             ),
@@ -516,6 +610,50 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         controller: _schoolController,
                         label: 'School',
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Online & recruiting (shown on Passport)',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _field(
+                        controller: _websiteController,
+                        label: 'Personal website',
+                        hint: 'Example: aspenbreeze.com',
+                      ),
+                      _field(
+                        controller: _instagramController,
+                        label: 'Instagram',
+                        hint: '@handle or full profile URL',
+                      ),
+                      _field(
+                        controller: _tiktokController,
+                        label: 'TikTok',
+                        hint: '@handle or full profile URL',
+                      ),
+                      _field(
+                        controller: _facebookController,
+                        label: 'Facebook',
+                        hint: 'Profile name or URL',
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Public passport'),
+                        subtitle: const Text(
+                          'Let teammates and recruiters find you by name. '
+                          'Shows Passport + Beyond the Pool only.',
+                        ),
+                        value: _publicPassport,
+                        onChanged: (value) {
+                          setState(() {
+                            _formDirty = true;
+                            _publicPassport = value;
+                          });
+                        },
+                      ),
                       _field(
                         controller: _heightController,
                         label: 'Height',
@@ -572,8 +710,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ),
           ],
         );
-      },
-    );
   }
 
   Widget _field({
@@ -720,6 +856,7 @@ class _PassportHero extends StatelessWidget {
     this.primaryStroke,
     this.graduationYear,
     this.profilePhotoUrl,
+    this.profile,
     this.isUploadingPhoto = false,
     this.onUploadPhoto,
   });
@@ -730,6 +867,7 @@ class _PassportHero extends StatelessWidget {
   final String? primaryStroke;
   final int? graduationYear;
   final String? profilePhotoUrl;
+  final SwimmerProfile? profile;
   final bool isUploadingPhoto;
   final VoidCallback? onUploadPhoto;
 
@@ -856,6 +994,10 @@ class _PassportHero extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+          ),
+          PassportSocialLinks(
+            profile: profile,
+            iconColor: Colors.white,
           ),
         ],
       ),

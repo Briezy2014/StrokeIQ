@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets|Instagram|TikTok|Facebook|Website|Public Passport|Interest Sports|Interest Academics|Interest Passions|Beyond Bio):\s*(.+)$',
   );
 
   final int? id;
@@ -77,6 +77,26 @@ class SwimmerProfile {
         .map((id) => id.trim())
         .where((id) => id.isNotEmpty)
         .toList();
+  }
+
+  String? get instagram => _structuredNotesValue('Instagram');
+  String? get tiktok => _structuredNotesValue('TikTok');
+  String? get facebook => _structuredNotesValue('Facebook');
+  String? get personalWebsite => _structuredNotesValue('Website');
+
+  bool get publicPassportEnabled {
+    final raw = _structuredNotesValue('Public Passport')?.toLowerCase();
+    return raw == 'yes' || raw == 'true' || raw == 'on';
+  }
+
+  List<String> get interestSports => _commaList('Interest Sports');
+  List<String> get interestAcademics => _commaList('Interest Academics');
+  List<String> get interestPassions => _commaList('Interest Passions');
+
+  String? get beyondBio {
+    final raw = _structuredNotesValue('Beyond Bio');
+    if (raw == null) return null;
+    return raw.replaceAll('|', '\n');
   }
 
   /// Free-text notes with structured prefix lines removed.
@@ -187,6 +207,15 @@ class SwimmerProfile {
     String? sorenessLevel,
     String? illnessNotes,
     List<String>? attendingMeetIds,
+    String? instagram,
+    String? tiktok,
+    String? facebook,
+    String? website,
+    bool? publicPassport,
+    List<String>? interestSports,
+    List<String>? interestAcademics,
+    List<String>? interestPassions,
+    String? beyondBio,
     String? notes,
   }) {
     final parts = <String>[];
@@ -208,6 +237,25 @@ class SwimmerProfile {
     addLine('Illness', illnessNotes);
     if (attendingMeetIds != null && attendingMeetIds.isNotEmpty) {
       addLine('Attending Meets', attendingMeetIds.join(','));
+    }
+    addLine('Instagram', instagram);
+    addLine('TikTok', tiktok);
+    addLine('Facebook', facebook);
+    addLine('Website', website);
+    if (publicPassport == true) {
+      addLine('Public Passport', 'yes');
+    }
+    if (interestSports != null && interestSports.isNotEmpty) {
+      addLine('Interest Sports', interestSports.join(', '));
+    }
+    if (interestAcademics != null && interestAcademics.isNotEmpty) {
+      addLine('Interest Academics', interestAcademics.join(', '));
+    }
+    if (interestPassions != null && interestPassions.isNotEmpty) {
+      addLine('Interest Passions', interestPassions.join(', '));
+    }
+    if (beyondBio != null && beyondBio.trim().isNotEmpty) {
+      addLine('Beyond Bio', beyondBio.trim().replaceAll('\n', '|'));
     }
 
     final body = notes?.trim();
@@ -239,6 +287,33 @@ class SwimmerProfile {
       if (value != null && value.isNotEmpty) return value;
     }
     return null;
+  }
+
+  List<String> _commaList(String label) {
+    final raw = _structuredNotesValue(label);
+    if (raw == null || raw.isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  bool matchesDirectoryQuery(String query) {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return false;
+
+    final haystacks = <String>[
+      swimmerName,
+      displayName,
+      legalName,
+      preferredName ?? '',
+      firstName ?? '',
+      lastName ?? '',
+      '${firstName ?? ''} ${lastName ?? ''}',
+    ].map((s) => s.trim().toLowerCase()).where((s) => s.isNotEmpty);
+
+    return haystacks.any((hay) => hay.contains(needle));
   }
 
   static String? _nullableText(dynamic value) {

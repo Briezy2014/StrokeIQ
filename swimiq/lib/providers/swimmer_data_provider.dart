@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
+import '../core/utils/swimmer_profile_notes.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
@@ -493,18 +494,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           );
 
       final updated = profile.copyWith(
-        athleteNotes: SwimmerProfile.composeAthleteNotes(
-          gender: profile.gender,
-          height: profile.height,
-          weight: profile.weight,
-          dominantHand: profile.dominantHand,
-          trainingGroup: profile.trainingGroup,
+        athleteNotes: SwimmerProfileNotes.merge(
+          existing: profile,
           profilePhotoUrl: photoUrl,
-          sleepHours: profile.sleepHours,
-          sorenessLevel: profile.sorenessLevel,
-          illnessNotes: profile.illnessNotes,
-          attendingMeetIds: profile.attendingMeetIds,
-          notes: profile.notesBody,
         ),
       );
 

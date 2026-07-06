@@ -240,4 +240,20 @@ class SwimIqRepository {
         );
     return standards.length;
   }
+
+  /// Directory search for swimmers who enabled [SwimmerProfile.publicPassportEnabled].
+  Future<List<SwimmerProfile>> searchPublicProfiles(String query) async {
+    final response = await _client.from('swimmers').select().limit(250);
+
+    final profiles = (response as List)
+        .map((row) => SwimmerProfile.fromJson(Map<String, dynamic>.from(row)))
+        .where((profile) => profile.publicPassportEnabled)
+        .where((profile) => profile.matchesDirectoryQuery(query))
+        .toList();
+
+    profiles.sort(
+      (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+    );
+    return profiles;
+  }
 }

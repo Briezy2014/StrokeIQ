@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/services/team_schedule_service.dart';
+import '../core/utils/swimmer_profile_notes.dart';
 import '../data/models/scheduled_meet.dart';
 import '../data/models/swimmer_profile.dart';
 import 'app_providers.dart';
@@ -107,18 +108,9 @@ class TeamScheduleNotifier extends Notifier<TeamScheduleState> {
     }
 
     final updated = profile.copyWith(
-      athleteNotes: SwimmerProfile.composeAthleteNotes(
-        gender: profile.gender,
-        height: profile.height,
-        weight: profile.weight,
-        dominantHand: profile.dominantHand,
-        trainingGroup: profile.trainingGroup,
-        profilePhotoUrl: profile.profilePhotoUrl,
-        sleepHours: profile.sleepHours,
-        sorenessLevel: profile.sorenessLevel,
-        illnessNotes: profile.illnessNotes,
+      athleteNotes: SwimmerProfileNotes.merge(
+        existing: profile,
         attendingMeetIds: ids.toList()..sort(),
-        notes: profile.notesBody,
       ),
     );
 
