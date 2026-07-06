@@ -72,7 +72,7 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
     for (final timestampSec in sampleTimes) {
       await _seekVideo(video, timestampSec);
       context.drawImage(video, 0, 0);
-      final dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      final dataUrl = canvas.toDataURL('image/jpeg', 0.82.toJS);
       final frameBytes = _jpegBytesFromDataUrl(dataUrl);
       if (frameBytes.isEmpty) continue;
 
