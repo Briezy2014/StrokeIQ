@@ -117,7 +117,8 @@ class TrainingLogScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: AppConstants.strokes.contains(stroke)
+                    key: ValueKey('stroke-$stroke'),
+                    initialValue: AppConstants.strokes.contains(stroke)
                         ? stroke
                         : AppConstants.strokes.first,
                     decoration: const InputDecoration(labelText: 'Stroke'),
@@ -136,7 +137,8 @@ class TrainingLogScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: course,
+                    key: ValueKey('course-$course'),
+                    initialValue: course,
                     decoration: const InputDecoration(labelText: 'Course'),
                     items: AppConstants.courses
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
