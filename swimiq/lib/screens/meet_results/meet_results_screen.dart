@@ -9,10 +9,13 @@ import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../providers/team_schedule_provider.dart';
+import '../../providers/team_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../widgets/team_schedule_section.dart';
 
 class MeetResultsScreen extends ConsumerStatefulWidget {
   const MeetResultsScreen({super.key});
@@ -258,7 +261,11 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
-        final snapshot = data.passportSnapshot(swimmer);
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -266,9 +273,19 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
           children: [
             SwimIqScreenHeader(
               title: 'Meet Results',
-              subtitle: 'Past results only · latest: ${snapshot.lastMeetResult}',
+              subtitle: 'Upcoming: ${snapshot.upcomingMeet} · latest result: '
+                  '${snapshot.lastMeetResult}',
             ),
             const SizedBox(height: 16),
+            const TeamScheduleSection(),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              'Log a past meet result',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
             Form(
               key: _formKey,
               child: Column(

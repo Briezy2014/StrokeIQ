@@ -10,6 +10,7 @@ import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
+import '../data/models/scheduled_meet.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
@@ -76,12 +77,17 @@ class SwimmerData {
     return swimmerName;
   }
 
-  PassportSnapshot passportSnapshot(String swimmerName) => PassportMetrics.build(
+  PassportSnapshot passportSnapshot(
+    String swimmerName, {
+    List<ScheduledMeet> attendingMeets = const [],
+  }) =>
+      PassportMetrics.build(
         swimmerName: swimmerName,
         profile: profile,
         raceLogs: raceLogs,
         goals: goals,
         meetResults: meetResults,
+        attendingMeets: attendingMeets,
         videos: userFacingVideos,
         videoAnalyses: userFacingVideoAnalyses,
         motivationalStandards: motivationalStandards,
@@ -494,6 +500,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           dominantHand: profile.dominantHand,
           trainingGroup: profile.trainingGroup,
           profilePhotoUrl: photoUrl,
+          sleepHours: profile.sleepHours,
+          sorenessLevel: profile.sorenessLevel,
+          illnessNotes: profile.illnessNotes,
+          attendingMeetIds: profile.attendingMeetIds,
           notes: profile.notesBody,
         ),
       );

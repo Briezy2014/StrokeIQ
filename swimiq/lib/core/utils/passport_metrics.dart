@@ -6,6 +6,7 @@ import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
+import '../../data/models/scheduled_meet.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
@@ -62,6 +63,7 @@ class PassportMetrics {
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
     required List<MeetResult> meetResults,
+    List<ScheduledMeet> attendingMeets = const [],
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
     required UsaMotivationalStandardsCatalog motivationalStandards,
@@ -105,7 +107,7 @@ class PassportMetrics {
         profile: profile,
       ),
       lastMeetResult: lastMeetResult(meetResults),
-      upcomingMeet: upcomingMeet(goals),
+      upcomingMeet: upcomingMeet(goals, attendingMeets: attendingMeets),
       imxScore: imxScore(raceLogs),
       readiness: readiness(
         raceLogs: raceLogs,
@@ -228,7 +230,21 @@ class PassportMetrics {
     return '${latest.meetName} · ${_formatDate(latest.meetDate)}';
   }
 
-  static String upcomingMeet(List<SwimGoal> goals) {
+  static String upcomingMeet(
+    List<SwimGoal> goals, {
+    List<ScheduledMeet> attendingMeets = const [],
+  }) {
+    if (attendingMeets.isNotEmpty) {
+      final sorted = [...attendingMeets]
+        ..sort((a, b) => a.startDate.compareTo(b.startDate));
+      final next = sorted.first;
+      final location = next.location?.trim();
+      if (location != null && location.isNotEmpty) {
+        return '${next.name} · ${_formatDate(next.startDate)} · $location';
+      }
+      return '${next.name} · ${_formatDate(next.startDate)}';
+    }
+
     final today = DateTime.now();
     final startOfToday = DateTime(today.year, today.month, today.day);
     final upcoming = goals

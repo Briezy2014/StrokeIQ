@@ -8,6 +8,7 @@ import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/team_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dashboard_insights.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -23,7 +24,11 @@ class DashboardScreen extends ConsumerWidget {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
-        final snapshot = data.passportSnapshot(swimmer);
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
         final subtitle = dashboardSubtitleForMode(
           mode: viewMode,
           displayName: data.displayName(swimmer),

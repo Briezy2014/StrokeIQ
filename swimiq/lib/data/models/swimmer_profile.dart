@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets):\s*(.+)$',
   );
 
   final int? id;
@@ -67,6 +67,17 @@ class SwimmerProfile {
   String? get sleepHours => _structuredNotesValue('Sleep');
   String? get sorenessLevel => _structuredNotesValue('Soreness');
   String? get illnessNotes => _structuredNotesValue('Illness');
+
+  /// COA / team calendar meet IDs the athlete marked as attending.
+  List<String> get attendingMeetIds {
+    final raw = _structuredNotesValue('Attending Meets');
+    if (raw == null || raw.isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+  }
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -175,6 +186,7 @@ class SwimmerProfile {
     String? sleepHours,
     String? sorenessLevel,
     String? illnessNotes,
+    List<String>? attendingMeetIds,
     String? notes,
   }) {
     final parts = <String>[];
@@ -194,6 +206,9 @@ class SwimmerProfile {
     addLine('Sleep', sleepHours);
     addLine('Soreness', sorenessLevel);
     addLine('Illness', illnessNotes);
+    if (attendingMeetIds != null && attendingMeetIds.isNotEmpty) {
+      addLine('Attending Meets', attendingMeetIds.join(','));
+    }
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {

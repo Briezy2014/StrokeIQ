@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../providers/team_schedule_provider.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -197,7 +198,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       secondaryStroke: _optionalText(_secondaryStrokeController.text),
       favoriteEvent: _optionalText(_favoriteEventController.text),
       usaSwimmingId: _optionalText(_usaIdController.text),
-      athleteNotes: SwimmerProfile.composeAthleteNotes(
+        athleteNotes: SwimmerProfile.composeAthleteNotes(
         gender: _selectedGender,
         height: _heightController.text,
         weight: _weightController.text,
@@ -207,6 +208,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         sleepHours: _sleepController.text,
         sorenessLevel: _selectedSoreness,
         illnessNotes: _illnessController.text,
+        attendingMeetIds: existing?.attendingMeetIds,
         notes: _notesController.text,
       ),
     );
@@ -288,7 +290,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final effectiveBirthday = _birthday ?? profile?.birthday;
         final effectiveGender = _selectedGender ?? profile?.gender;
 
-        final snapshot = data.passportSnapshot(swimmer);
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -361,7 +367,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'Meet schedule',
               lines: [
                 'Last meet (results logged): ${snapshot.lastMeetResult}',
-                'Upcoming meet (goal target): ${snapshot.upcomingMeet}',
+                'Upcoming meet (COA calendar or goal): ${snapshot.upcomingMeet}',
               ],
             ),
             const SizedBox(height: 12),
