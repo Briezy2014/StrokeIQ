@@ -59,10 +59,11 @@ class DashboardInsightCards extends ConsumerWidget {
         const SizedBox(height: 12),
         _InsightCard(
           emoji: '📈',
-          title: season.currentPhase.name,
+          title: 'Season arc · ${season.currentPhase.name}',
           subtitle: season.currentPhase.focus,
           detail: '${season.currentPhase.weeksRemaining} weeks to target · '
               '${season.currentPhase.volumeGuidance}',
+          source: 'Pulls from: Goals tab (nearest target date)',
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const MeetDayScreen()),
@@ -78,6 +79,8 @@ class DashboardInsightCards extends ConsumerWidget {
               ? '${gap.closestTarget!.eventLabel} · ${gap.closestTarget!.standardLevel} '
                   '(${gap.closestTarget!.cutLabel})'
               : 'Top PB cut: ${gap.highestAchieved}',
+          source:
+              'Pulls from: Personal bests + Passport (birthday/gender) + USA standards JSON',
           progress: gap.closestTarget?.progressPercent,
         ),
         const SizedBox(height: 10),
@@ -88,6 +91,8 @@ class DashboardInsightCards extends ConsumerWidget {
           detail: wellness.factors.isNotEmpty
               ? wellness.factors.first
               : 'Log wellness check-in in Passport',
+          source:
+              'Pulls from: Passport wellness (sleep, soreness, illness) + training log',
           progress: wellness.readinessScore,
           onTap: () {
             Navigator.of(context).push(
@@ -120,6 +125,7 @@ class _InsightCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.detail,
+    this.source,
     this.progress,
     this.onTap,
   });
@@ -128,6 +134,7 @@ class _InsightCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String detail;
+  final String? source;
   final int? progress;
   final VoidCallback? onTap;
 
@@ -171,6 +178,16 @@ class _InsightCard extends StatelessWidget {
                 detail,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (source != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  source!,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.primaryDark,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
               if (progress != null) ...[
                 const SizedBox(height: 10),
                 ClipRRect(

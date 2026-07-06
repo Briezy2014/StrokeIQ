@@ -10,6 +10,7 @@ import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -25,8 +26,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
   final _meetNameController = TextEditingController();
   final _eventController = TextEditingController();
   final _timeController = TextEditingController();
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
+  String _course = AppConstants.courses.first;
 
   DateTime _meetDate = DateTime.now();
   bool _isSaving = false;
@@ -36,7 +36,6 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     _meetNameController.dispose();
     _eventController.dispose();
     _timeController.dispose();
-    _courseController.dispose();
     super.dispose();
   }
 
@@ -61,9 +60,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
+      final course = _course;
 
       final swimTime = SwimTime.toSeconds(_timeController.text);
       final result = MeetResult(
@@ -269,7 +266,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
           children: [
             SwimIqScreenHeader(
               title: 'Meet Results',
-              subtitle: 'Latest meet: ${snapshot.nextMeet}',
+              subtitle: 'Past results only · latest: ${snapshot.lastMeetResult}',
             ),
             const SizedBox(height: 16),
             Form(
@@ -323,12 +320,10 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Result Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
+                  SwimCourseDropdown(
+                    value: _course,
+                    label: 'Result Course',
+                    onChanged: (value) => setState(() => _course = value),
                   ),
                   const SizedBox(height: 20),
                   SwimIqSaveButton(

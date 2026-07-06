@@ -55,7 +55,7 @@ abstract final class SeasonArcService {
       if (upcomingGoals.isNotEmpty)
         'Next goal: ${upcomingGoals.first.event} on ${_formatDate(upcomingGoals.first.targetDate)}',
       if (data.meetResults.isNotEmpty)
-        'Last meet: ${data.passportSnapshot(swimmer).nextMeet}',
+        'Last meet: ${data.passportSnapshot(swimmer).lastMeetResult}',
       'Current focus: ${data.passportSnapshot(swimmer).currentFocus}',
       '${data.raceLogs.length} sessions logged this season',
     ];

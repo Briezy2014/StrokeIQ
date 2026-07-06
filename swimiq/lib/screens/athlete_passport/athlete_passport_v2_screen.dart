@@ -335,8 +335,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   value: snapshot.highestCut,
                 ),
                 SwimIqMetricCard(
-                  label: 'Next Meet',
-                  value: snapshot.nextMeet,
+                  label: 'Last Meet',
+                  value: snapshot.lastMeetResult,
+                  subtitle: 'From Meet Results tab',
+                ),
+                SwimIqMetricCard(
+                  label: 'Upcoming Meet',
+                  value: snapshot.upcomingMeet,
+                  subtitle: 'From Goals target date',
                 ),
                 SwimIqMetricCard(
                   label: 'IMX / IMR',
@@ -350,6 +356,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ),
             const SizedBox(height: 24),
             const SwimIqScreenHeader(title: 'Athlete Details'),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
+              title: 'Meet schedule',
+              lines: [
+                'Last meet (results logged): ${snapshot.lastMeetResult}',
+                'Upcoming meet (goal target): ${snapshot.upcomingMeet}',
+              ],
+            ),
             const SizedBox(height: 12),
             SwimIqSectionCard(
               title: 'USA Motivational Standards',

@@ -120,8 +120,8 @@ abstract final class RaceIntelligenceService {
       meetDayTips: _meetDayTips(nextGoal, recentMeet),
       warmupTips: _warmupTips(data.profile?.primaryStroke),
       racePlans: plans,
-      nextMeetName: nextGoal != null ? 'Goal: ${nextGoal.event}' : recentMeet?.meetName,
-      nextMeetDate: nextGoal?.targetDate ?? recentMeet?.meetDate,
+      nextMeetName: nextGoal?.event,
+      nextMeetDate: nextGoal?.targetDate,
     );
   }
 

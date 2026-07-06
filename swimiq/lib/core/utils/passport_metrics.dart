@@ -19,7 +19,8 @@ class PassportSnapshot {
     required this.swimIqExplanation,
     required this.currentFocus,
     required this.highestCut,
-    required this.nextMeet,
+    required this.lastMeetResult,
+    required this.upcomingMeet,
     required this.imxScore,
     required this.readiness,
     required this.nextFocus,
@@ -38,7 +39,8 @@ class PassportSnapshot {
   final String swimIqExplanation;
   final String currentFocus;
   final String highestCut;
-  final String nextMeet;
+  final String lastMeetResult;
+  final String upcomingMeet;
   final String imxScore;
   final String readiness;
   final String nextFocus;
@@ -102,7 +104,8 @@ class PassportMetrics {
         catalog: motivationalStandards,
         profile: profile,
       ),
-      nextMeet: nextMeet(meetResults),
+      lastMeetResult: lastMeetResult(meetResults),
+      upcomingMeet: upcomingMeet(goals),
       imxScore: imxScore(raceLogs),
       readiness: readiness(
         raceLogs: raceLogs,
@@ -216,12 +219,34 @@ class PassportMetrics {
     return bestLevel ?? 'No motivational cut matched yet';
   }
 
-  static String nextMeet(List<MeetResult> meetResults) {
-    if (meetResults.isEmpty) return 'No meet results logged yet';
+  static String lastMeetResult(List<MeetResult> meetResults) {
+    if (meetResults.isEmpty) return 'No meet results yet';
+
     final sorted = [...meetResults]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
-    return sorted.first.meetName;
+    final latest = sorted.first;
+    return '${latest.meetName} · ${_formatDate(latest.meetDate)}';
   }
+
+  static String upcomingMeet(List<SwimGoal> goals) {
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+    final upcoming = goals
+        .where((goal) => !goal.targetDate.isBefore(startOfToday))
+        .toList()
+      ..sort((a, b) => a.targetDate.compareTo(b.targetDate));
+
+    if (upcoming.isEmpty) {
+      return 'Add a goal with a target meet date';
+    }
+
+    final goal = upcoming.first;
+    return '${goal.event} ${goal.course} · ${_formatDate(goal.targetDate)}';
+  }
+
+  /// @deprecated Use [lastMeetResult]. Kept for older tests/fixtures.
+  static String nextMeet(List<MeetResult> meetResults) =>
+      lastMeetResult(meetResults);
 
   static String readiness({
     required List<RaceLog> raceLogs,

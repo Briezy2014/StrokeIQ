@@ -12,6 +12,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimiq_ui.dart';
 
 class GoalsScreen extends ConsumerStatefulWidget {
@@ -24,10 +25,8 @@ class GoalsScreen extends ConsumerStatefulWidget {
 class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
-  final _strokeController =
-      TextEditingController(text: AppConstants.strokes.first);
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
+  String _stroke = AppConstants.strokes.first;
+  String _course = AppConstants.courses.first;
 
   int _distance = 100;
   DateTime _targetDate = DateTime.now();
@@ -36,8 +35,6 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   @override
   void dispose() {
     _timeController.dispose();
-    _strokeController.dispose();
-    _courseController.dispose();
     super.dispose();
   }
 
@@ -62,19 +59,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final stroke = _strokeController.text.trim().isEmpty
-          ? AppConstants.strokes.first
-          : _strokeController.text.trim();
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
-
       final goalTime = SwimTime.toSeconds(_timeController.text);
+
       final goal = SwimGoal(
         swimmerName: swimmer,
-        event: '$_distance $stroke',
+        event: '$_distance $_stroke',
         goalTime: goalTime,
-        course: course,
+        course: _course,
         targetDate: _targetDate,
       );
 
@@ -306,13 +297,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _strokeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Stroke',
-                      hintText:
-                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
-                    ),
+                  SwimStrokeDropdown(
+                    value: _stroke,
+                    label: 'Goal Stroke',
+                    onChanged: (value) => setState(() => _stroke = value),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -354,12 +342,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
+                  SwimCourseDropdown(
+                    value: _course,
+                    label: 'Goal Course',
+                    onChanged: (value) => setState(() => _course = value),
                   ),
                   const SizedBox(height: 12),
                   ListTile(

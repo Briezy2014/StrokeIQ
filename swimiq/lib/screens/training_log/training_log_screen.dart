@@ -8,7 +8,7 @@ import '../../data/models/race_log.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_ui.dart';
+import '../../widgets/swim_form_fields.dart';
 
 /// Training log with list, edit, and delete.
 class TrainingLogScreen extends ConsumerWidget {
@@ -109,8 +109,9 @@ class TrainingLogScreen extends ConsumerWidget {
       return;
     }
 
-    final timeController =
-        TextEditingController(text: SwimTime.fromSeconds(log.timeSeconds));
+    final timeController = TextEditingController(
+      text: log.timeSeconds > 0 ? SwimTime.fromSeconds(log.timeSeconds) : '',
+    );
     final notesController = TextEditingController(text: log.notes ?? '');
     final distanceController = TextEditingController(text: '${log.distance}');
     var stroke = log.stroke;
@@ -161,8 +162,8 @@ class TrainingLogScreen extends ConsumerWidget {
                   TextField(
                     controller: timeController,
                     decoration: const InputDecoration(
-                      labelText: 'Time',
-                      hintText: '35.43 or 1:24.32',
+                      labelText: 'Time (optional)',
+                      hintText: 'Leave blank for notes-only sessions',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -219,7 +220,9 @@ class TrainingLogScreen extends ConsumerWidget {
       if (distance == null) {
         throw const FormatException('invalid distance');
       }
-      final timeSeconds = SwimTime.toSeconds(timeController.text);
+      final timeText = timeController.text.trim();
+      final timeSeconds =
+          timeText.isEmpty ? 0.0 : SwimTime.toSeconds(timeText);
       final updated = RaceLog(
         id: log.id,
         swimmer: log.swimmer,
@@ -282,7 +285,7 @@ class _TrainingLogTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              SwimTime.fromSeconds(log.timeSeconds),
+              formatLoggedTime(log.timeSeconds),
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             PopupMenuButton<String>(
