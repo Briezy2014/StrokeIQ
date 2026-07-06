@@ -49,6 +49,21 @@ void main() {
       expect(profile.trainingGroup, 'Senior');
       expect(profile.notesBody, 'Working on fly breakout.');
     });
+
+    test('round-trips wellness check-in fields', () {
+      final profile = SwimmerProfile(
+        swimmerName: 'Aspyn',
+        athleteNotes: SwimmerProfile.composeAthleteNotes(
+          sleepHours: '8.5',
+          sorenessLevel: 'Mild',
+          illnessNotes: 'Sore shoulder',
+        ),
+      );
+
+      expect(profile.sleepHours, '8.5');
+      expect(profile.sorenessLevel, 'Mild');
+      expect(profile.illnessNotes, 'Sore shoulder');
+    });
   });
 
   group('Athlete Passport dropdown values', () {

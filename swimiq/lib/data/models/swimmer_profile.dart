@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness):\s*(.+)$',
   );
 
   final int? id;
@@ -63,6 +63,10 @@ class SwimmerProfile {
 
   /// Public URL for the athlete profile photo stored in Supabase.
   String? get profilePhotoUrl => _structuredNotesValue('Profile Photo');
+
+  String? get sleepHours => _structuredNotesValue('Sleep');
+  String? get sorenessLevel => _structuredNotesValue('Soreness');
+  String? get illnessNotes => _structuredNotesValue('Illness');
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -168,6 +172,9 @@ class SwimmerProfile {
     String? dominantHand,
     String? trainingGroup,
     String? profilePhotoUrl,
+    String? sleepHours,
+    String? sorenessLevel,
+    String? illnessNotes,
     String? notes,
   }) {
     final parts = <String>[];
@@ -184,6 +191,9 @@ class SwimmerProfile {
     addLine('Dominant Hand', dominantHand);
     addLine('Training Group', trainingGroup);
     addLine('Profile Photo', profilePhotoUrl);
+    addLine('Sleep', sleepHours);
+    addLine('Soreness', sorenessLevel);
+    addLine('Illness', illnessNotes);
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {

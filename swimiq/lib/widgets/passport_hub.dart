@@ -6,9 +6,14 @@ import '../core/theme/app_theme.dart';
 import '../core/utils/passport_metrics.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../screens/ai_coach/ai_coach_screen.dart';
+import '../screens/meet_day/meet_day_screen.dart';
 import '../screens/race_intelligence/race_intelligence_screen.dart';
+import '../screens/recruiting/recruiting_passport_screen.dart';
+import '../screens/swim_dna/swim_dna_screen.dart';
+import '../screens/video_compare/video_compare_screen.dart';
 import '../screens/video_lab/video_lab_screen.dart';
 import '../screens/usa_standards/usa_standards_screen.dart';
+import '../screens/wellness/wellness_readiness_screen.dart';
 
 class PassportHub extends ConsumerWidget {
   const PassportHub({
@@ -23,8 +28,9 @@ class PassportHub extends ConsumerWidget {
   final PassportSnapshot snapshot;
 
   static const hubTagline =
-      '🤖 AI Coach   |   🧬 SwimDNA™   |   🎓 Recruiting Center   |   '
-      '🎥 Video Lab   |   🏁 Race Intelligence™   |   📊 USA Swimming Standards';
+      '🤖 AI Coach   |   🧬 SwimDNA™   |   🎓 Recruiting   |   🏊 Meet Day   |   '
+      '🎥 Video Lab   |   🎬 Compare   |   🏁 Race Intelligence™   |   '
+      '📊 USA Standards   |   💚 Wellness';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,6 +92,26 @@ class PassportHub extends ConsumerWidget {
       case PassportHubDestination.usaStandards:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const UsaStandardsScreen()),
+        );
+      case PassportHubDestination.swimDna:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SwimDnaScreen()),
+        );
+      case PassportHubDestination.meetDay:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MeetDayScreen()),
+        );
+      case PassportHubDestination.recruiting:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RecruitingPassportScreen()),
+        );
+      case PassportHubDestination.videoCompare:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const VideoCompareScreen()),
+        );
+      case PassportHubDestination.wellness:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const WellnessReadinessScreen()),
         );
       case PassportHubDestination.comingSoon:
         break;
@@ -166,8 +192,8 @@ class _HubIntro extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'AI Coach = what to fix · Video Lab = full video critique · '
-            'Race Intelligence™ = meet strategy',
+            'AI Coach = what to fix · Video Lab = full critique · '
+            'Race Intelligence™ = meet strategy · SwimDNA™ = fingerprint',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: const Color(0xFF0B2D4D),
                   fontWeight: FontWeight.w600,
@@ -240,17 +266,23 @@ class _ModuleStrip extends StatelessWidget {
     _PassportModule(
       emoji: '🧬',
       label: 'SwimDNA™',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'Stroke fingerprinting from your PBs, splits, and video trends.',
+      subtitle: 'Fingerprint',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.swimDna,
     ),
     _PassportModule(
       emoji: '🎓',
-      label: 'Recruiting Center',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'College recruiting timeline, academic profile, and meet targets '
-          'pulled from your passport and USA cuts.',
+      label: 'Recruiting',
+      subtitle: 'Share card',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.recruiting,
+    ),
+    _PassportModule(
+      emoji: '🏊',
+      label: 'Meet Day',
+      subtitle: 'Live toolkit',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.meetDay,
     ),
     _PassportModule(
       emoji: '🎥',
@@ -258,6 +290,13 @@ class _ModuleStrip extends StatelessWidget {
       subtitle: 'Full critique',
       status: _PassportModuleStatus.live,
       destination: PassportHubDestination.videoLab,
+    ),
+    _PassportModule(
+      emoji: '🎬',
+      label: 'Compare',
+      subtitle: '2 videos',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.videoCompare,
     ),
     _PassportModule(
       emoji: '🏁',
@@ -272,6 +311,13 @@ class _ModuleStrip extends StatelessWidget {
       subtitle: 'Official cuts',
       status: _PassportModuleStatus.live,
       destination: PassportHubDestination.usaStandards,
+    ),
+    _PassportModule(
+      emoji: '💚',
+      label: 'Wellness',
+      subtitle: 'Readiness',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.wellness,
     ),
   ];
 

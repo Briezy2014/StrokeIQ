@@ -7,6 +7,11 @@ enum PassportHubDestination {
   videoLab,
   raceIntelligence,
   usaStandards,
+  swimDna,
+  meetDay,
+  recruiting,
+  videoCompare,
+  wellness,
   comingSoon,
 }
 

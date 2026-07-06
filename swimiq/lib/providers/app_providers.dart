@@ -34,6 +34,11 @@ abstract final class HomeTab {
 
 final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);
 
+/// Lens for dashboard copy — athlete, parent, or coach view.
+enum AppViewMode { athlete, parent, coach }
+
+final appViewModeProvider = StateProvider<AppViewMode>((ref) => AppViewMode.athlete);
+
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
 );

@@ -40,9 +40,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
+  late final TextEditingController _sleepController;
+  late final TextEditingController _illnessController;
 
   DateTime? _birthday;
   String? _selectedGender;
+  String? _selectedSoreness;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
   bool _formDirty = false;
@@ -66,6 +69,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
+    _sleepController = TextEditingController();
+    _illnessController = TextEditingController();
   }
 
   @override
@@ -85,6 +90,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
+    _sleepController.dispose();
+    _illnessController.dispose();
     super.dispose();
   }
 
@@ -125,6 +132,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
+    _sleepController.text = profile?.sleepHours ?? '';
+    _selectedSoreness = profile?.sorenessLevel;
+    _illnessController.text = profile?.illnessNotes ?? '';
     _birthday = profile?.birthday;
     _formDirty = false;
   }
@@ -194,6 +204,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         dominantHand: _dominantHandController.text,
         trainingGroup: existing?.trainingGroup,
         profilePhotoUrl: existing?.profilePhotoUrl,
+        sleepHours: _sleepController.text,
+        sorenessLevel: _selectedSoreness,
+        illnessNotes: _illnessController.text,
         notes: _notesController.text,
       ),
     );
@@ -498,6 +511,28 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         label: 'Dominant Hand',
                         hint: 'Left or Right',
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Wellness check-in (feeds readiness score)',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _field(
+                        controller: _sleepController,
+                        label: 'Sleep (hours last night)',
+                        hint: 'Example: 8.5',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      ),
+                      _sorenessPicker(),
+                      _field(
+                        controller: _illnessController,
+                        label: 'Illness / injury note',
+                        hint: 'Optional — sore shoulder, cold symptoms, etc.',
+                        maxLines: 2,
+                      ),
                       _field(
                         controller: _notesController,
                         label: 'Athlete Notes',
@@ -594,6 +629,39 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   setState(() {
                     _formDirty = true;
                     _selectedGender = selected ? gender : null;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sorenessPicker() {
+    const options = ['None / Fresh', 'Mild', 'Moderate', 'High'];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Soreness level',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: options.map((level) {
+              return ChoiceChip(
+                label: Text(level),
+                selected: _selectedSoreness == level,
+                onSelected: (selected) {
+                  setState(() {
+                    _formDirty = true;
+                    _selectedSoreness = selected ? level : null;
                   });
                 },
               );

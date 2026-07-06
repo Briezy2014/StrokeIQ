@@ -157,12 +157,36 @@ Gemini requires the edge function deployed with your API key. If you have not do
 ## Step 9 — Settings
 
 1. Tap gear icon (top right)
-2. Tap **Edit Athlete Passport** → should jump to Passport tab
-3. Confirm your email and display name show correctly
+2. Try **Athlete / Parent / Coach** view mode — dashboard subtitle and insight cards should shift emphasis
+3. Tap **Edit Athlete Passport** → should jump to Passport tab
+4. Confirm your email and display name show correctly
 
 ---
 
-## Step 10 — Quick connectivity check
+## Step 10 — New differentiation features (overnight build)
+
+### Dashboard insights (top of Dashboard tab)
+- **Season arc** — training phase and weeks to next goal
+- **Standards gap** — seconds from next USA motivational cut
+- **Wellness readiness** — score from sleep/soreness check-in
+
+### Passport hub modules (scroll the strip)
+| Module | What to test |
+|--------|----------------|
+| 🧬 SwimDNA™ | Stroke fingerprint from PBs and video |
+| 🎓 Recruiting | Copy shareable athlete card to clipboard |
+| 🏊 Meet Day | Checklist, warmup, race lineup |
+| 🎬 Compare | Side-by-side if 2+ Video Lab analyses exist |
+| 💚 Wellness | Readiness score; tap through to update in Passport |
+
+### Passport wellness check-in
+1. Open **Passport** → edit form
+2. Fill **Sleep**, **Soreness**, optional **Illness note**
+3. Save → Dashboard readiness card should update
+
+---
+
+## Step 11 — Quick connectivity check
 
 | Action | Should update |
 |--------|----------------|
