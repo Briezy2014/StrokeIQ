@@ -6,8 +6,10 @@ Swim performance tracking platform.
 
 | App | Path | Platform | Status |
 |-----|------|----------|--------|
-| **Flutter (primary)** | `swimiq/` | Android, iOS | V1 complete — auth, training log, settings |
+| **Flutter (primary)** | `swimiq/` | Android, iOS, **Web** | V1 complete — auth, training log, settings |
 | **Streamlit (reference)** | `app.py` | Web | Reference only — unchanged |
+
+**Public Flutter web (after deploy setup):** https://briezy2014.github.io/StrokeIQ/ — see [swimiq/docs/WEB_DEPLOY.md](swimiq/docs/WEB_DEPLOY.md)
 
 > **Codespaces / devcontainer:** The default preview opens the **Streamlit** app on port 8501.
 > To see Flutter changes, run `cd swimiq && flutter run` (or `flutter run -d chrome` for web).
