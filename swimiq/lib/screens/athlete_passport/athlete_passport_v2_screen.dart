@@ -885,15 +885,7 @@ class _PassportHero extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.accent,
-            AppColors.surfaceLight,
-          ],
-        ),
+        gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(

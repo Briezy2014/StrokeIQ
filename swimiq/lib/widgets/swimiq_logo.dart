@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_constants.dart';
 import 'swimiq_branding.dart';
+import 'swimiq_brand_typography.dart';
 
-/// Login / signup header: one square logo + tagline (+ optional title).
+/// Login / signup header: logo + cursive tagline (+ optional title).
 class SwimIqAuthHeader extends StatelessWidget {
   const SwimIqAuthHeader({
     super.key,
@@ -20,26 +21,22 @@ class SwimIqAuthHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: SwimIqLogo(size: logoSize, borderRadius: logoSize * 0.2),
+          child: SwimIqLogo(size: logoSize, borderRadius: logoSize * 0.22),
         ),
-        const SizedBox(height: 16),
-        Text(
-          AppConstants.tagline,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0B2D4D),
-                height: 1.4,
-              ),
-        ),
+        const SizedBox(height: 20),
+        const SwimIqTagline(fontSize: 20),
+        const SizedBox(height: 8),
+        const SwimIqFounderLine(),
         if (title != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             title!,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: GoogleFonts.outfit(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0B2D4D),
+            ),
           ),
         ],
       ],
@@ -47,7 +44,7 @@ class SwimIqAuthHeader extends StatelessWidget {
   }
 }
 
-/// Square SwimIQ™ icon for app bar, passport avatar, and compact slots.
+/// Square SwimIQ™ icon — loads uploaded PNG from assets/branding/ when present.
 class SwimIqLogo extends StatelessWidget {
   const SwimIqLogo({
     super.key,
@@ -66,7 +63,58 @@ class SwimIqLogo extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       borderRadius: borderRadius,
-      fallback: Icon(Icons.pool, size: size * 0.7, color: Colors.white),
+      fallback: SwimIqBrandMark(size: size, borderRadius: borderRadius),
+    );
+  }
+}
+
+/// Painted fallback when swimiq_icon.png is not in assets yet.
+class SwimIqBrandMark extends StatelessWidget {
+  const SwimIqBrandMark({
+    super.key,
+    required this.size,
+    this.borderRadius = 16,
+  });
+
+  final double size;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B2D4D),
+            Color(0xFF0B5CAD),
+            Color(0xFF009CFF),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0B5CAD).withValues(alpha: 0.35),
+            blurRadius: size * 0.12,
+            offset: Offset(0, size * 0.06),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.waves, color: Colors.white, size: size * 0.28),
+          SizedBox(height: size * 0.04),
+          SwimIqWordmark(fontSize: size * 0.17, onDark: true),
+        ],
+      ),
     );
   }
 }
@@ -84,13 +132,50 @@ class SwimIqHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwimIqBrandedImage(
-      candidates: SwimIqBranding.heroCandidates,
-      width: double.infinity,
+    return Container(
       height: height,
-      fit: BoxFit.contain,
-      borderRadius: borderRadius,
-      fallback: const SwimIqWordmark(fontSize: 28),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B2D4D),
+            Color(0xFF0B5CAD),
+            Color(0xFF009CFF),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0B5CAD).withValues(alpha: 0.28),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SwimIqBrandedImage(
+        candidates: SwimIqBranding.heroCandidates,
+        width: double.infinity,
+        height: height,
+        fit: BoxFit.cover,
+        borderRadius: 0,
+        fallback: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SwimIqWordmark(fontSize: 28, onDark: true),
+              const SizedBox(height: 6),
+              SwimIqTagline(
+                fontSize: 15,
+                color: Colors.white.withValues(alpha: 0.95),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -100,41 +185,43 @@ class SwimIqWordmark extends StatelessWidget {
     super.key,
     this.fontSize = 22,
     this.showTm = true,
+    this.onDark = false,
   });
 
   final double fontSize;
   final bool showTm;
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
+    final swimColor = onDark ? Colors.white : const Color(0xFF0B2D4D);
+    final iqColor = onDark ? const Color(0xFF5CC8FF) : const Color(0xFF009CFF);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
           text: TextSpan(
-            style: TextStyle(
+            style: GoogleFonts.outfit(
               fontSize: fontSize,
               fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+              letterSpacing: 1.4,
             ),
-            children: const [
-              TextSpan(text: 'SWIM', style: TextStyle(color: Colors.white)),
-              TextSpan(
-                text: 'IQ',
-                style: TextStyle(color: Color(0xFF009CFF)),
-              ),
+            children: [
+              TextSpan(text: 'SWIM', style: TextStyle(color: swimColor)),
+              TextSpan(text: 'IQ', style: TextStyle(color: iqColor)),
             ],
           ),
         ),
         if (showTm)
-          const Padding(
-            padding: EdgeInsets.only(top: 2, left: 2),
+          Padding(
+            padding: EdgeInsets.only(top: fontSize * 0.08, left: 2),
             child: Text(
               '™',
-              style: TextStyle(
-                color: Color(0xFF009CFF),
-                fontSize: 10,
+              style: GoogleFonts.outfit(
+                color: iqColor,
+                fontSize: fontSize * 0.38,
                 fontWeight: FontWeight.w800,
               ),
             ),

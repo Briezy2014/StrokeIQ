@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/swimiq_brand_background.dart';
 import '../widgets/swimiq_header.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
@@ -68,22 +69,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: SwimIqAppBarTitle(
-          subtitle: user?.email ?? swimmer,
+      extendBody: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: SwimIqBrandedAppBar(
+          child: AppBar(
+            title: SwimIqAppBarTitle(
+              subtitle: user?.email ?? swimmer,
+            ),
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+              ),
+              IconButton(
+                tooltip: 'Settings',
+                onPressed: _openSettings,
+                icon: const Icon(Icons.settings_outlined),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            onPressed: _refresh,
-            icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: _openSettings,
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
       ),
       floatingActionButton: selectedIndex == HomeTab.trainingLog
           ? FloatingActionButton.extended(
@@ -92,23 +99,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: const Text('Log Session'),
             )
           : null,
-      body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: _screenAt(selectedIndex),
+      body: SwimIqBrandBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                color: const Color(0xFF009CFF),
+                onRefresh: _refresh,
+                child: _screenAt(selectedIndex),
+              ),
             ),
-          ),
-          const SwimIqFooter(),
-        ],
+            const SwimIqFooter(),
+          ],
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          ref.read(homeTabIndexProvider.notifier).state = index;
-        },
-        destinations: const [
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        child: NavigationBar(
+          height: 68,
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (index) {
+            ref.read(homeTabIndexProvider.notifier).state = index;
+          },
+          destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
@@ -140,6 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Passport',
           ),
         ],
+        ),
       ),
     );
   }
