@@ -142,10 +142,32 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             Text(
               'Valid through ${catalog.bundle.effectiveThrough}. '
               '${catalog.events.length} official events · '
-              'Girls & Boys · SCY / SCM / LCM · '
-              'Age brackets: ${AppConstants.ageGroups.join(', ')}.',
+              '${catalog.flatStandards.length} motivational rows · '
+              '${catalog.completenessReport().summaryLabel}.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (catalog.completenessReport().isComplete) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.verified_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '2024-2028 USA age-group motivational standards verified: '
+                      'all levels from B through AAAA are loaded for every '
+                      'official age bracket, Girls and Boys, on SCY, SCM, and LCM.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               'Upload a new USA Swimming JSON export each season to refresh cuts '

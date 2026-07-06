@@ -10,7 +10,13 @@ import '../providers/swimmer_data_provider.dart';
 
 /// Photo-based meet schedule — works for any team (no website scraping).
 class MeetScheduleSection extends ConsumerWidget {
-  const MeetScheduleSection({super.key});
+  const MeetScheduleSection({
+    super.key,
+    this.onLogResults,
+  });
+
+  /// When set, attending meets show a button to pre-fill the meet results form.
+  final ValueChanged<ScheduledMeet>? onLogResults;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,9 +40,13 @@ class MeetScheduleSection extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Snap or upload a photo of your team meet schedule — any club, '
-              'any season. SwimIQ reads the dates with AI and adds them to your '
-              'queue. Mark which meets you are attending for Passport and Meet Day.',
+              onLogResults == null
+                  ? 'Snap or upload a photo of your team meet schedule — any club, '
+                      'any season. SwimIQ reads the dates with AI and adds them to your '
+                      'queue. Mark which meets you are attending for Passport and Meet Day.'
+                  : 'Snap or upload a photo of your team meet schedule — any club, '
+                      'any season. Mark meets you are attending, then tap Log times to '
+                      'enter results that save to this tab with USA motivational cuts.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
@@ -92,6 +102,7 @@ class MeetScheduleSection extends ConsumerWidget {
                   meet: meet,
                   dateFormat: dateFormat,
                   isAttending: attendingIds.contains(meet.externalId),
+                  onLogResults: onLogResults,
                   onChanged: (value) async {
                     final error = await notifier.setAttending(
                       meetExternalId: meet.externalId,
@@ -196,12 +207,14 @@ class _MeetAttendanceTile extends StatelessWidget {
     required this.dateFormat,
     required this.isAttending,
     required this.onChanged,
+    this.onLogResults,
   });
 
   final ScheduledMeet meet;
   final DateFormat dateFormat;
   final bool isAttending;
   final ValueChanged<bool> onChanged;
+  final ValueChanged<ScheduledMeet>? onLogResults;
 
   @override
   Widget build(BuildContext context) {
@@ -211,13 +224,30 @@ class _MeetAttendanceTile extends StatelessWidget {
       if (meet.course != null && meet.course!.isNotEmpty) meet.course!,
     ];
 
-    return CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      value: isAttending,
-      onChanged: (value) => onChanged(value ?? false),
-      title: Text(meet.name),
-      subtitle: Text(subtitleParts.join(' · ')),
-      controlAffinity: ListTileControlAffinity.leading,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          value: isAttending,
+          onChanged: (value) => onChanged(value ?? false),
+          title: Text(meet.name),
+          subtitle: Text(subtitleParts.join(' · ')),
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        if (isAttending && onLogResults != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 48, bottom: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                onPressed: () => onLogResults!(meet),
+                icon: const Icon(Icons.timer_outlined, size: 18),
+                label: const Text('Log times for this meet'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

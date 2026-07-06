@@ -7,6 +7,7 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
+import '../../data/models/scheduled_meet.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../providers/meet_schedule_provider.dart';
@@ -25,6 +26,8 @@ class MeetResultsScreen extends ConsumerStatefulWidget {
 
 class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+  final _formSectionKey = GlobalKey();
   final _meetNameController = TextEditingController();
   final _eventController = TextEditingController();
   final _timeController = TextEditingController();
@@ -32,13 +35,57 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
 
   DateTime _meetDate = DateTime.now();
   bool _isSaving = false;
+  ScheduledMeet? _loggingMeet;
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _meetNameController.dispose();
     _eventController.dispose();
     _timeController.dispose();
     super.dispose();
+  }
+
+  void _beginLoggingForMeet(ScheduledMeet meet) {
+    setState(() {
+      _loggingMeet = meet;
+      _meetNameController.text = meet.name;
+      _meetDate = meet.startDate;
+      final course = meet.course?.trim().toUpperCase();
+      if (course != null &&
+          course.isNotEmpty &&
+          AppConstants.courses.contains(course)) {
+        _course = course;
+      }
+      _eventController.clear();
+      _timeController.clear();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _formSectionKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+      _eventController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _eventController.text.length,
+      );
+      FocusScope.of(this.context).requestFocus(FocusNode());
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Logging times for ${meet.name}. Add each event and save — '
+          'meet name and date stay filled.',
+        ),
+      ),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -46,7 +93,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
       context: context,
       initialDate: _meetDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 366)),
     );
     if (picked != null) {
       setState(() => _meetDate = picked);
@@ -87,9 +134,14 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Meet result saved.')),
         );
-        _meetNameController.clear();
-        _eventController.clear();
-        _timeController.clear();
+        if (_loggingMeet != null) {
+          _eventController.clear();
+          _timeController.clear();
+        } else {
+          _meetNameController.clear();
+          _eventController.clear();
+          _timeController.clear();
+        }
       }
     } on FormatException {
       if (mounted) {
@@ -267,6 +319,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
         );
 
         return ListView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
@@ -276,19 +329,34 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                   '${snapshot.lastMeetResult}',
             ),
             const SizedBox(height: 16),
-            const MeetScheduleSection(),
+            MeetScheduleSection(onLogResults: _beginLoggingForMeet),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
-            Text(
-              'Log a past meet result',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            Form(
-              key: _formKey,
+            KeyedSubtree(
+              key: _formSectionKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    _loggingMeet == null
+                        ? 'Log a meet result'
+                        : 'Log times for ${_loggingMeet!.name}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (_loggingMeet != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${dateFormat.format(_meetDate)} · $_course · '
+                      'Add each event, then save. Meet details stay filled.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
                   TextFormField(
                     controller: _meetNameController,
                     decoration:
@@ -346,6 +414,9 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                     label: 'Save Meet Result',
                     isSaving: _isSaving,
                     onPressed: _saveResult,
+                  ),
+                      ],
+                    ),
                   ),
                 ],
               ),

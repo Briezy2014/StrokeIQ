@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../constants/app_constants.dart';
 import '../../data/models/usa_motivational_standard.dart';
 import '../../data/models/usa_time_standard.dart';
 import '../utils/swim_stroke_utils.dart';
@@ -198,4 +199,71 @@ class UsaMotivationalStandardsCatalog {
     }
     return 'girls';
   }
+
+  /// Verifies every official age group, gender, course, and motivational level
+  /// is present in the bundled standards (B through AAAA).
+  CompletenessReport completenessReport() {
+    final missingEventCuts = <String>[];
+    for (final event in bundle.events) {
+      for (final level in standardLevels) {
+        final cut = event.cuts[level];
+        if (cut == null || cut <= 0) {
+          missingEventCuts.add(
+            '${event.event} · ${event.ageGroup} · ${event.gender} · '
+            '${event.course} · $level',
+          );
+        }
+      }
+    }
+
+    final missingFlatCombos = <String>[];
+    for (final ageGroup in AppConstants.ageGroups) {
+      for (final gender in AppConstants.genders) {
+        for (final course in AppConstants.courses) {
+          for (final level in standardLevels) {
+            final hasRow = flatStandards.any(
+              (row) =>
+                  normalizeAgeGroup(row.ageGroup) ==
+                      normalizeAgeGroup(ageGroup) &&
+                  _genderMatches(row.gender, gender) &&
+                  row.course.toUpperCase() == course.toUpperCase() &&
+                  row.standardLevel == level,
+            );
+            if (!hasRow) {
+              missingFlatCombos.add('$ageGroup · $gender · $course · $level');
+            }
+          }
+        }
+      }
+    }
+
+    return CompletenessReport(
+      eventCount: bundle.events.length,
+      flatStandardCount: flatStandards.length,
+      missingEventCuts: missingEventCuts,
+      missingFlatCombos: missingFlatCombos,
+    );
+  }
+}
+
+class CompletenessReport {
+  const CompletenessReport({
+    required this.eventCount,
+    required this.flatStandardCount,
+    required this.missingEventCuts,
+    required this.missingFlatCombos,
+  });
+
+  final int eventCount;
+  final int flatStandardCount;
+  final List<String> missingEventCuts;
+  final List<String> missingFlatCombos;
+
+  bool get isComplete =>
+      missingEventCuts.isEmpty && missingFlatCombos.isEmpty;
+
+  String get summaryLabel =>
+      'B · BB · A · AA · AAA · AAAA for ${AppConstants.ageGroups.length} '
+      'age groups · ${AppConstants.genders.length} genders · '
+      '${AppConstants.courses.length} courses';
 }
