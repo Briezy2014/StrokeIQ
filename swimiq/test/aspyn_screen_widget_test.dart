@@ -165,7 +165,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
-      expect(find.text('ATHLETE PASSPORT™'), findsOneWidget);
+      expect(find.text('RECRUITING PASSPORT'), findsOneWidget);
+      expect(find.text('Recruiting snapshot'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Athlete Status'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Athlete Status'), findsOneWidget);
 
       await tester.scrollUntilVisible(

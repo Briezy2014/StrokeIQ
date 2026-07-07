@@ -485,6 +485,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           dominantHand: profile.dominantHand,
           trainingGroup: profile.trainingGroup,
           profilePhotoUrl: photoUrl,
+          gpa: profile.gpa,
+          athleteWebsite: profile.athleteWebsite,
+          otherInterests: profile.otherInterests,
           notes: profile.notesBody,
         ),
       );

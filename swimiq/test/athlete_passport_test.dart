@@ -20,6 +20,21 @@ void main() {
       expect(profile.secondaryStroke, isNull);
     });
 
+    test('round-trips recruiting profile fields in athlete notes', () {
+      final profile = SwimmerProfile(
+        swimmerName: 'Aspyn',
+        athleteNotes: SwimmerProfile.composeAthleteNotes(
+          gpa: '3.92',
+          athleteWebsite: 'https://aspyn-swims.example.com',
+          otherInterests: 'Piano, NHS, water polo',
+        ),
+      );
+
+      expect(profile.gpa, '3.92');
+      expect(profile.athleteWebsite, 'https://aspyn-swims.example.com');
+      expect(profile.otherInterests, 'Piano, NHS, water polo');
+    });
+
     test('round-trips structured athlete notes metadata', () {
       final profile = SwimmerProfile(
         swimmerName: 'Aspyn',

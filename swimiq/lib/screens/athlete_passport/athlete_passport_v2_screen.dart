@@ -37,6 +37,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _secondaryStrokeController;
   late final TextEditingController _favoriteEventController;
   late final TextEditingController _notesController;
+  late final TextEditingController _gpaController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _interestsController;
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
@@ -62,6 +65,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _secondaryStrokeController = TextEditingController();
     _favoriteEventController = TextEditingController();
     _notesController = TextEditingController();
+    _gpaController = TextEditingController();
+    _websiteController = TextEditingController();
+    _interestsController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
@@ -82,6 +88,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _secondaryStrokeController.dispose();
     _favoriteEventController.dispose();
     _notesController.dispose();
+    _gpaController.dispose();
+    _websiteController.dispose();
+    _interestsController.dispose();
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
@@ -123,6 +132,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _secondaryStrokeController.text = profile?.secondaryStroke ?? '';
     _favoriteEventController.text = profile?.favoriteEvent ?? '';
     _notesController.text = profile?.notesBody ?? '';
+    _gpaController.text = profile?.gpa ?? '';
+    _websiteController.text = profile?.athleteWebsite ?? '';
+    _interestsController.text = profile?.otherInterests ?? '';
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
@@ -177,6 +189,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         weight: _weightController.text,
         dominantHand: _dominantHandController.text,
         profilePhotoUrl: existing?.profilePhotoUrl,
+        gpa: _gpaController.text,
+        athleteWebsite: _websiteController.text,
+        otherInterests: _interestsController.text,
         notes: _notesController.text,
       ),
     );
@@ -261,9 +276,15 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               primaryStroke: profile?.primaryStroke,
               graduationYear: profile?.graduationYear,
               profilePhotoUrl: profile?.profilePhotoUrl,
+              swimIqScore: snapshot.swimIqScore > 0
+                  ? snapshot.swimIqScore.toString()
+                  : null,
+              highestCut: snapshot.highestCut,
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
             ),
+            const SizedBox(height: 16),
+            _RecruitingSnapshotCard(profile: profile),
             if (!SwimIqStandardsProfile.isReady(profile)) ...[
               const SizedBox(height: 16),
               const SwimIqStandardsSetupBanner(),
@@ -465,6 +486,34 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         label: 'Dominant Hand',
                         hint: 'Left or Right',
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Recruiting profile',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      _field(
+                        controller: _gpaController,
+                        label: 'Grade point average (GPA)',
+                        hint: 'Example: 3.85',
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                      _field(
+                        controller: _websiteController,
+                        label: 'Athlete website',
+                        hint: 'https://your-recruiting-site.com',
+                        keyboardType: TextInputType.url,
+                      ),
+                      _field(
+                        controller: _interestsController,
+                        label: 'Other interests',
+                        hint: 'Music, community service, other sports…',
+                        maxLines: 2,
+                      ),
                       _field(
                         controller: _notesController,
                         label: 'Athlete Notes',
@@ -544,6 +593,8 @@ class _PassportHero extends StatelessWidget {
     this.primaryStroke,
     this.graduationYear,
     this.profilePhotoUrl,
+    this.swimIqScore,
+    this.highestCut,
     this.isUploadingPhoto = false,
     this.onUploadPhoto,
   });
@@ -554,6 +605,8 @@ class _PassportHero extends StatelessWidget {
   final String? primaryStroke;
   final int? graduationYear;
   final String? profilePhotoUrl;
+  final String? swimIqScore;
+  final String? highestCut;
   final bool isUploadingPhoto;
   final VoidCallback? onUploadPhoto;
 
@@ -569,7 +622,6 @@ class _PassportHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -583,103 +635,376 @@ class _PassportHero extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 32,
+            offset: const Offset(0, 14),
           ),
         ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth > 420;
+          final logoSize = wide ? 156.0 : 132.0;
+
+          final logoBlock = Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SwimIqLogo(size: logoSize, borderRadius: logoSize * 0.22),
+              const SizedBox(height: 8),
+              Text(
+                'SwimIQ',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
+                    ),
+              ),
+            ],
+          );
+
+          final identity = Column(
+            crossAxisAlignment:
+                wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            children: [
+              _HeroAvatar(photoUrl: profilePhotoUrl),
+              if (onUploadPhoto != null) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: isUploadingPhoto ? null : onUploadPhoto,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white70),
+                  ),
+                  icon: isUploadingPhoto
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.photo_camera_outlined, size: 18),
+                  label: Text(
+                    isUploadingPhoto ? 'Uploading...' : 'Upload profile photo',
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                'RECRUITING PASSPORT',
+                textAlign: wide ? TextAlign.start : TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.5,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                displayName,
+                textAlign: wide ? TextAlign.start : TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              if (team != null && team!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  team!.trim(),
+                  textAlign: wide ? TextAlign.start : TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                textAlign: wide ? TextAlign.start : TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                alignment: wide ? WrapAlignment.start : WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _HeroMetricChip(
+                    label: 'SwimIQ Score',
+                    value: swimIqScore ?? '—',
+                  ),
+                  _HeroMetricChip(
+                    label: 'Highest Cut',
+                    value: highestCut ?? '—',
+                  ),
+                ],
+              ),
+            ],
+          );
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: wide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 5, child: identity),
+                      const SizedBox(width: 8),
+                      Expanded(flex: 4, child: logoBlock),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      logoBlock,
+                      const SizedBox(height: 22),
+                      identity,
+                    ],
+                  ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HeroAvatar extends StatelessWidget {
+  const _HeroAvatar({this.photoUrl});
+
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 88,
+      height: 88,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: photoUrl != null && photoUrl!.isNotEmpty
+          ? Image.network(
+              photoUrl!,
+              width: 88,
+              height: 88,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: SwimIqLogo(size: 72, borderRadius: 36),
+                );
+              },
+            )
+          : const Padding(
+              padding: EdgeInsets.all(8),
+              child: SwimIqLogo(size: 72, borderRadius: 36),
+            ),
+    );
+  }
+}
+
+class _HeroMetricChip extends StatelessWidget {
+  const _HeroMetricChip({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 104,
-            height: 104,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecruitingSnapshotCard extends StatelessWidget {
+  const _RecruitingSnapshotCard({required this.profile});
+
+  final SwimmerProfile? profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final gpa = profile?.gpa;
+    final website = profile?.athleteWebsite;
+    final interests = profile?.otherInterests;
+    final hasGpa = gpa != null && gpa.trim().isNotEmpty;
+    final hasWebsite = website != null && website.trim().isNotEmpty;
+    final hasInterests = interests != null && interests.trim().isNotEmpty;
+    final hasAny = hasGpa || hasWebsite || hasInterests;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.badge_outlined, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Recruiting snapshot',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textDark,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (hasAny)
+            Column(
+              children: [
+                if (hasGpa)
+                  _RecruitingRow(
+                    icon: Icons.school_outlined,
+                    label: 'GPA',
+                    value: gpa.trim(),
+                    highlight: true,
+                  ),
+                if (hasWebsite) ...[
+                  if (hasGpa) const SizedBox(height: 10),
+                  _RecruitingRow(
+                    icon: Icons.language_outlined,
+                    label: 'Athlete website',
+                    value: website.trim(),
+                    isLink: true,
+                  ),
+                ],
+                if (hasInterests) ...[
+                  if (hasGpa || hasWebsite) const SizedBox(height: 10),
+                  _RecruitingRow(
+                    icon: Icons.interests_outlined,
+                    label: 'Other interests',
+                    value: interests.trim(),
+                  ),
+                ],
+              ],
+            )
+          else
+            Text(
+              'Add GPA, your recruiting website, and other interests in Edit Athlete Passport — coaches scan this first.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textDark.withValues(alpha: 0.65),
+                    height: 1.45,
+                  ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecruitingRow extends StatelessWidget {
+  const _RecruitingRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.highlight = false,
+    this.isLink = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool highlight;
+  final bool isLink;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: highlight
+            ? AppColors.surfaceLight
+            : AppColors.comingSoonBg.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: highlight
+              ? AppColors.primary.withValues(alpha: 0.35)
+              : AppColors.comingSoonBorder,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppColors.primary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.textDark.withValues(alpha: 0.65),
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: highlight ? FontWeight.w900 : FontWeight.w700,
+                        color: isLink ? AppColors.primary : AppColors.textDark,
+                        decoration: isLink ? TextDecoration.underline : null,
+                      ),
                 ),
               ],
             ),
-            clipBehavior: Clip.antiAlias,
-            child: profilePhotoUrl != null && profilePhotoUrl!.isNotEmpty
-                ? Image.network(
-                    profilePhotoUrl!,
-                    width: 104,
-                    height: 104,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: SwimIqLogo(size: 84, borderRadius: 42),
-                      );
-                    },
-                  )
-                : const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: SwimIqLogo(size: 84, borderRadius: 42),
-                  ),
-          ),
-          if (onUploadPhoto != null) ...[
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: isUploadingPhoto ? null : onUploadPhoto,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white70),
-              ),
-              icon: isUploadingPhoto
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.photo_camera_outlined, size: 18),
-              label: Text(isUploadingPhoto ? 'Uploading...' : 'Upload profile photo'),
-            ),
-          ],
-          const SizedBox(height: 18),
-          Text(
-            'ATHLETE PASSPORT™',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3,
-                ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            displayName,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          if (team != null && team!.trim().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              team!.trim(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-          ],
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
           ),
         ],
       ),
