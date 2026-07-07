@@ -1,13 +1,21 @@
 SwimIQ branding folder
 ========================
 
-Drop your logo files here, then run: flutter clean && flutter pub get
+Use ONE logo file for the entire app and website build:
 
-Required files (exact names):
-  swimiq_hero.png  — full logo + tagline (login / welcome screen)
-  swimiq_icon.png  — square icon only (app bar, splash)
+  swimiq_logo.png
 
-Use your official SWIMIQ artwork (black background, blue IQ, tagline).
-Remove old PNGs with other names so the wrong art is not bundled.
+Put your official SWIMIQ artwork here:
+  swimiq/assets/branding/swimiq_logo.png
 
-After adding or renaming files, always run flutter clean before rebuild.
+That same file is used everywhere — splash, login, app bar, passport,
+headers, and the GoDaddy web build. You do NOT need separate hero or
+icon PNG files.
+
+After adding or replacing the file:
+  flutter clean
+  flutter pub get
+  flutter run -d chrome
+
+To update swimiqapp.com, rebuild with scripts\build-web-godaddy.ps1
+and upload build\web to GoDaddy public_html.
