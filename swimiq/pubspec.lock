@@ -57,14 +57,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  change_case:
-    dependency: transitive
-    description:
-      name: change_case
-      sha256: e41ef3df58521194ef8d7649928954805aeb08061917cf658322305e61568003
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
   characters:
     dependency: transitive
     description:
@@ -145,14 +137,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
-  dartcv4:
-    dependency: transitive
-    description:
-      name: dartcv4
-      sha256: "5764d13550055da3bb35ca28e6866b837579dfb4b594582b7a7753785ca5dfef"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.1+4"
   equatable:
     dependency: transitive
     description:
@@ -230,14 +214,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
-  flutter_litert:
-    dependency: transitive
-    description:
-      name: flutter_litert
-      sha256: "26788265d0cb19c4954678e855b4e2ee0f688343149857742cf4f9ff9b6ee4b4"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.3.1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -448,14 +424,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.6"
-  native_toolchain_cmake:
-    dependency: transitive
-    description:
-      name: native_toolchain_cmake
-      sha256: "9960e1e926ec210a3ba6fe61720d48e1dd6cbab00d05890a6e147ee45b7e47c5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.6"
   objective_c:
     dependency: transitive
     description:
@@ -464,14 +432,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.3.0"
-  opencv_dart:
-    dependency: transitive
-    description:
-      name: opencv_dart
-      sha256: b50ea4788e6d61df6369874e0244445d98ef9210dbb90b8d3c1df198b4ee2333
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.1+4"
   package_config:
     dependency: transitive
     description:
@@ -568,14 +528,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
-  pose_detection:
-    dependency: "direct main"
-    description:
-      name: pose_detection
-      sha256: "6d438c4e5ed7ed7d92fa9f4127ea90a7e537be9a01a82f0c0273ef6c8e1f1d2d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.5.0"
   postgrest:
     dependency: transitive
     description:
@@ -592,14 +544,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  quiver:
-    dependency: transitive
-    description:
-      name: quiver
-      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.2"
   realtime_client:
     dependency: transitive
     description:

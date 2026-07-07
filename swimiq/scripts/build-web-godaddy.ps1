@@ -75,9 +75,23 @@ Write-Host ""
 
 flutter clean
 flutter pub get
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 flutter build web --release `
     --dart-define=SUPABASE_URL=$url `
     --dart-define=SUPABASE_ANON_KEY=$key
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "BUILD FAILED — do not upload to GoDaddy yet." -ForegroundColor Red
+    Write-Host "See docs/WINDOWS_SETUP.md if you see 'C:\Users\Kara' is not recognized." -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+
+if (-not (Test-Path "build\web\main.dart.js")) {
+    Write-Host "BUILD FAILED — missing build\web\main.dart.js" -ForegroundColor Red
+    exit 1
+}
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
