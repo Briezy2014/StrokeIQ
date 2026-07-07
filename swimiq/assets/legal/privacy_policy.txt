@@ -1,12 +1,16 @@
 SwimIQ Privacy Policy
 Last updated: July 7, 2026
 
-1. Who we are
-SwimIQ ("we," "us") is operated by Kara Jayne Williams from Groveport, Ohio. This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
+Business / brand: SwimIQ
+Product founder: Aspyn Briez Williams (minor). SwimIQ was built for competitive swimmers like Aspyn. She is not the legal operator of the service.
+Parent / legal representative & operator: Kara Jayne Williams
+Support: support@swimiq.app
+Privacy: privacy@swimiq.app
+Website: https://swimiq.app
+Web copy of this policy: https://swimiq.app/privacy
 
-Contact:
-privacy@swimiq.app
-support@swimiq.app
+1. Who we are
+SwimIQ ("we," "us") is operated by Kara Jayne Williams, parent and legal representative for SwimIQ, from Groveport, Ohio. This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
 
 Mailing address:
 Kara Jayne Williams · SwimIQ
@@ -14,30 +18,29 @@ Kara Jayne Williams · SwimIQ
 Groveport, OH 43125
 United States
 
-Web copy: https://swimiq.app/privacy
-
 2. Information we collect
-Account information: email address, display name, and authentication identifiers from our secure sign-in service.
-
-Athlete profile: name, birthday, gender, team, coach, school, graduation year, recruiting notes, and profile photo you choose to upload.
-
-Performance data: training sessions, meet results, goals, schedules, and personal bests you enter.
-
-Video content: swim videos you upload to Video Lab, associated metadata (stroke, distance, course, notes), and AI analysis results.
-
-Device & usage: app version, basic diagnostic logs needed to operate the service.
+• Account information: email address, display name, password, and authentication identifiers from our secure sign-in service
+• Athlete profiles: name, birthday, gender, team, coach, school, graduation year, recruiting notes, and profile photo you choose to upload
+• Training logs, meet results, goals, schedules, and personal bests you enter
+• Uploaded swim videos, associated metadata (stroke, distance, course, notes), and AI analysis results
+• AI analysis requests and related context you submit when you choose to run SwimIQ AI
+• Subscription and plan information when billing is enabled (processed by Apple App Store or Google Play — we do not receive your full payment card number)
+• Device and usage data: app version and basic diagnostic logs needed to operate the service
 
 3. How we use information
 We use information to:
-• Provide dashboards, logs, standards comparisons, and athlete passport features
-• Generate SwimIQ AI coaching reports when you request analysis
-• Store and sync your data securely across your devices
-• Improve reliability and security of the app
+• Provide app services (dashboards, logs, standards, athlete passport, and related features)
+• Generate AI coaching insights when you request analysis
+• Improve the platform and fix reliability issues
+• Maintain security and prevent misuse
+• Process and support subscriptions when billing is enabled
+• Communicate with you about your account, support requests, or important service updates
 
 4. Third-party service providers
 We use trusted processors, including:
 • Cloud infrastructure providers (hosting, database, authentication, file storage)
-• Google cloud AI services (video coaching analysis — video and context you submit are processed by Google as our subprocessors when you run SwimIQ AI analysis)
+• Google cloud AI services (video coaching analysis — video and context you submit are processed by Google when you run SwimIQ AI analysis)
+• Apple and Google (app store billing and subscription management when enabled)
 
 We do not sell your personal information.
 
@@ -50,19 +53,22 @@ We retain your data while your account is active. You may request deletion by co
 7. Children and athletes (ages 8–30)
 SwimIQ serves competitive swimmers ages 8 through 30.
 
+Parents and guardians are responsible for accounts for minors where required by law.
+
 Ages 8–12 (under 13): A parent or legal guardian must create and control the account, log in, and consent to this Privacy Policy on the athlete’s behalf. The parent must also approve AI video analysis before any video is sent for processing.
 
 Ages 13–30: Athletes may create and use their own account and accept this policy directly.
 
 If you believe someone under 13 created an account without parental consent, contact privacy@swimiq.app and we will delete it.
 
-8. Security
-We use industry-standard transport encryption (HTTPS/TLS) and access controls. No method of transmission is 100% secure.
-
-9. Your choices
+8. User rights
+You may request access, correction, export, or deletion of eligible personal data by emailing privacy@swimiq.app. We will respond within a reasonable time. You may also:
 • Edit or delete performance data within the app where supported
 • Decline AI analysis consent (non-AI features remain available on eligible plans)
 • Sign out to end your session on a shared device
+
+9. Security
+We use reasonable administrative, technical, and organizational safeguards, including industry-standard transport encryption (HTTPS/TLS) and access controls. No method of transmission or storage is 100% secure.
 
 10. International transfers
 If you access SwimIQ from outside the United States, your information may be processed in the U.S. and other countries where our providers operate.
@@ -72,6 +78,8 @@ We may update this policy. We will revise the "Last updated" date and, where req
 
 12. Contact
 privacy@swimiq.app
+support@swimiq.app
+
 Kara Jayne Williams · SwimIQ
 199 Harbinger Dr.
 Groveport, OH 43125

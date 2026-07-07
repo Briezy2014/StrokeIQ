@@ -3,7 +3,9 @@
 abstract final class LegalConstants {
   static const appName = 'SwimIQ';
   static const operatorName = 'Kara Jayne Williams';
+  static const legalRepresentativeName = 'Kara Jayne Williams';
   static const productName = 'SwimIQ';
+  static const founderName = 'Aspyn Briez Williams';
   /// After Ohio filing, update operatorName display to this in legal docs.
   static const plannedLlcName = 'SwimIQ LLC';
   /// Planned operator after age-18 transition — do not use in public legal text until then.
