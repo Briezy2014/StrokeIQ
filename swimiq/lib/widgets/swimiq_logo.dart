@@ -16,7 +16,7 @@ class SwimIqLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SwimIqBrandedImage(
-      candidates: SwimIqBranding.iconCandidates,
+      candidates: SwimIqBranding.assetCandidates,
       width: size,
       height: size,
       fit: BoxFit.contain,
@@ -26,7 +26,7 @@ class SwimIqLogo extends StatelessWidget {
   }
 }
 
-/// Wide SwimIQ™ hero banner (logo + tagline) for welcome and passport hero.
+/// Displays the SwimIQ icon at a larger size (login, headers).
 class SwimIqHeroBanner extends StatelessWidget {
   const SwimIqHeroBanner({
     super.key,
@@ -39,13 +39,15 @@ class SwimIqHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwimIqBrandedImage(
-      candidates: SwimIqBranding.heroCandidates,
-      width: double.infinity,
-      height: height,
-      fit: BoxFit.contain,
-      borderRadius: borderRadius,
-      fallback: const SwimIqWordmark(fontSize: 28),
+    return Center(
+      child: SwimIqBrandedImage(
+        candidates: SwimIqBranding.assetCandidates,
+        width: height,
+        height: height,
+        fit: BoxFit.contain,
+        borderRadius: borderRadius,
+        fallback: SwimIqWordmark(fontSize: height * 0.2),
+      ),
     );
   }
 }
