@@ -95,8 +95,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         const SwimIqHeroBanner(height: 160, borderRadius: 16),
                         const SizedBox(height: 20),
-                        const Center(child: SwimIqWordmark(fontSize: 28)),
-                        const SizedBox(height: 20),
                         Text(
                           'Welcome back',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(

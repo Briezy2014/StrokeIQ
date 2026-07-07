@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'swimiq_branded_fallback.dart';
 import 'swimiq_branding.dart';
 
-/// Square SwimIQ™ icon for app bar, passport avatar, and compact slots.
+/// SwimIQ logo at a compact size (app bar, splash, passport avatar).
 class SwimIqLogo extends StatelessWidget {
   const SwimIqLogo({
     super.key,
@@ -17,7 +17,7 @@ class SwimIqLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SwimIqBrandedImage(
-      candidates: SwimIqBranding.iconCandidates,
+      candidates: SwimIqBranding.logoCandidates,
       width: size,
       height: size,
       fit: BoxFit.contain,
@@ -32,7 +32,7 @@ class SwimIqLogo extends StatelessWidget {
   }
 }
 
-/// Wide SwimIQ™ hero banner (logo + tagline) for welcome and passport hero.
+/// Same SwimIQ logo at a larger size (login, headers, app bar brand strip).
 class SwimIqHeroBanner extends StatelessWidget {
   const SwimIqHeroBanner({
     super.key,
@@ -46,7 +46,7 @@ class SwimIqHeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SwimIqBrandedImage(
-      candidates: SwimIqBranding.heroCandidates,
+      candidates: SwimIqBranding.logoCandidates,
       width: double.infinity,
       height: height,
       fit: BoxFit.contain,
