@@ -1,11 +1,20 @@
-/// Legal document metadata and placeholders — replace before App Store submission.
+/// Legal document metadata — update [operatorName] if you form an LLC or use a DBA.
 abstract final class LegalConstants {
   static const appName = 'SwimIQ';
-  static const companyName = '[Your Company Legal Name]';
+  static const operatorName = 'SwimIQ';
+  static const companyName = operatorName;
   static const contactEmail = 'privacy@swimiq.app';
   static const supportEmail = 'support@swimiq.app';
   static const websiteUrl = 'https://swimiq.app';
+  static const governingLawState = 'Ohio';
+  static const mailingAddressLine1 = '199 Harbinger Dr.';
+  static const mailingCityStateZip = 'Groveport, OH 43125';
+  static const mailingCountry = 'United States';
   static const lastUpdated = 'July 7, 2026';
+
+  static const privacyPolicyWebUrl = '$websiteUrl/privacy';
+  static const termsOfServiceWebUrl = '$websiteUrl/terms';
+  static const aiDisclosureWebUrl = '$websiteUrl/ai';
 
   /// Athlete age range SwimIQ is designed for (see Terms and Privacy Policy).
   static const athleteAgeMin = 8;
@@ -20,7 +29,7 @@ abstract final class LegalConstants {
 
   static const settingsFooter =
       'SwimIQ provides coaching estimates only — not official meet timing or '
-      'medical advice. Confirm with your coach. © $lastUpdated $companyName.';
+      'medical advice. Confirm with your coach. © $lastUpdated $operatorName.';
 }
 
 enum LegalDocumentType {

@@ -1,12 +1,20 @@
 SwimIQ Privacy Policy
 Last updated: July 7, 2026
 
-[DRAFT — have legal counsel review before App Store submission]
-
 1. Who we are
-SwimIQ ("we," "us") is operated by [Your Company Legal Name] ("Company"). This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
+SwimIQ ("we," "us") is operated by SwimIQ from Groveport, Ohio. This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
 
-Contact: privacy@swimiq.app
+Contact:
+privacy@swimiq.app
+support@swimiq.app
+
+Mailing address:
+SwimIQ
+199 Harbinger Dr.
+Groveport, OH 43125
+United States
+
+Web copy: https://swimiq.app/privacy
 
 2. Information we collect
 Account information: email address, display name, and authentication identifiers from our secure sign-in service.
@@ -39,14 +47,12 @@ When you tap "Run AI Swim Analysis," your video and related swimmer context are 
 6. Data retention
 We retain your data while your account is active. You may request deletion by contacting privacy@swimiq.app. We may retain limited records where required by law.
 
-7. Children and teen athletes (ages 8–30)
-SwimIQ serves youth, junior, collegiate, and post-collegiate swimmers ages 8 through 30.
+7. Children and athletes (ages 8–30)
+SwimIQ serves competitive swimmers ages 8 through 30.
 
-Under 13: A parent or legal guardian must own the account and log in. The parent consents to collection of the child's profile, performance data, photos, and videos, and must approve AI video analysis before any video is sent for processing.
+Ages 8–12 (under 13): A parent or legal guardian must create and control the account, log in, and consent to this Privacy Policy on the athlete’s behalf. The parent must also approve AI video analysis before any video is sent for processing.
 
-Ages 13–17: Athletes may use their own login; parents or guardians should supervise account creation and subscriptions where appropriate.
-
-Ages 18–30: Athletes may use SwimIQ on their own account.
+Ages 13–30: Athletes may create and use their own account and accept this policy directly.
 
 If you believe someone under 13 created an account without parental consent, contact privacy@swimiq.app and we will delete it.
 
@@ -66,5 +72,7 @@ We may update this policy. We will revise the "Last updated" date and, where req
 
 12. Contact
 privacy@swimiq.app
-[Your Company Legal Name]
-[Mailing address — add before launch]
+SwimIQ
+199 Harbinger Dr.
+Groveport, OH 43125
+United States

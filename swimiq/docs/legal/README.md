@@ -1,43 +1,50 @@
-# SwimIQ Legal Documents (Draft)
+# SwimIQ Legal Documents
 
-These files are **starting drafts** for launch. Replace bracketed placeholders and have qualified legal counsel review before App Store submission.
+## Where everything lives
 
-## In-app locations
+| What | Path | How users open it |
+|------|------|-------------------|
+| Privacy Policy | `assets/legal/privacy_policy.txt` | **Settings → Legal & privacy → Privacy Policy** |
+| Terms of Service | `assets/legal/terms_of_service.txt` | **Settings → Legal & privacy → Terms of Service** |
+| AI & Data Disclosure | `assets/legal/ai_data_disclosure.txt` | **Settings → Legal & privacy → AI & Data Disclosure** |
+| Metadata (emails, address, URLs) | `lib/core/constants/legal_constants.dart` | Used by Settings, footer, AI consent |
+| In-app reader | `lib/screens/legal/legal_document_screen.dart` | Loads the `.txt` files from the app bundle |
 
-| Document | Asset | Settings link |
-|----------|-------|---------------|
-| Privacy Policy | `assets/legal/privacy_policy.txt` | Settings → Legal |
-| Terms of Service | `assets/legal/terms_of_service.txt` | Settings → Legal |
-| AI & Data Disclosure | `assets/legal/ai_data_disclosure.txt` | Settings → Legal + first AI analysis consent |
+There are **three** legal documents in the app today — not dozens. Other docs (subscription addendum, health disclaimer, etc.) can be added later as new `.txt` files under `assets/legal/` and linked from Settings.
 
-## Placeholders to fill before launch
+## In-app vs web links
 
-- `[Your Company Legal Name]`
-- `[Mailing address]`
-- `[Your State/Country]` in Terms governing law
-- `privacy@swimiq.app` / `support@swimiq.app` — configure real inboxes
-- App Store Connect privacy nutrition labels (match Privacy Policy)
+- **In-app:** Full text is bundled inside the app. Works offline. Tap **Settings → Legal & privacy**.
+- **Web (App Store):** Apple wants a public URL. Settings also lists:
+  - https://swimiq.app/privacy
+  - https://swimiq.app/terms
+  - https://swimiq.app/ai
 
-## Apple App Store checklist
+Host the **same text** on your website when `swimiq.app` is live. Until then, in-app copies are the source of truth.
 
-1. **Guideline 5.1.2(i)** — In-app AI consent before first video transmission (implemented in Video Lab)
-2. **Privacy Policy URL** — host a web copy at `https://swimiq.app/privacy` mirroring in-app text
-3. **App Privacy labels** — declare video, contact info, user content, and third-party AI (Google)
-4. **Subscription terms** — link Terms + auto-renewal disclosure on paywall when StoreKit is wired
+## Operator (Ohio)
+
+- **Operator:** SwimIQ
+- **Address:** 199 Harbinger Dr., Groveport, OH 43125
+- **Governing law:** Ohio
+- **privacy@swimiq.app** / **support@swimiq.app**
+
+Update `legal_constants.dart` and the three `.txt` files together when anything changes.
 
 ## Product audience
 
-- **Athletes ages 8 through 30** (youth, junior, collegiate, post-collegiate)
-- **Under 13:** parent/guardian creates account, logs in, and consents (COPPA)
-- **13–17:** athlete may use own login; parent involvement recommended
-- **18–30:** athlete uses own account
+- Athletes **ages 8 through 30**
+- **Ages 8–12:** parent/guardian account + consent (COPPA)
+- **Ages 13–30:** athlete may use own account
 
-- Code: `COACH-EVAL-14` (legacy `COACH-TRIAL-30` still works)
-- 14-day Pro access + 7-day Elite AI sneak peek (5 video analyses max)
+## Also shown in the app
 
-## Next legal docs to draft (outside app repo)
+- **Membership** screen — `LegalFooter` links to all three docs
+- **Video Lab** — AI consent dialog before first analysis (uses `ai_data_consent_dialog.dart`)
 
-- Coach / club license agreement
-- Data Processing Agreement (DPA) for teams
-- COPPA / parental consent flow if under-13 signup is allowed
-- Trademark guidelines for SwimIQ™
+## After you edit a legal file
+
+1. Save the `.txt` under `assets/legal/`
+2. Bump `lastUpdated` in `legal_constants.dart` if the date changed
+3. Mirror the same text on swimiq.app when hosted
+4. Run `flutter test` (assets are bundled at build time)

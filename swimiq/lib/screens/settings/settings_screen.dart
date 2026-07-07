@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../providers/app_providers.dart';
@@ -20,6 +21,16 @@ class SettingsScreen extends ConsumerWidget {
     await ref.read(authServiceProvider).signOut();
     ref.read(activeSwimmerProvider.notifier).state = null;
     if (context.mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _openWebLegalUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open $url')),
+      );
+    }
   }
 
   @override
@@ -102,6 +113,12 @@ class SettingsScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w700,
                 ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap a document to read it inside the app. Web links are for App Store '
+            'and sharing — host the same text at swimiq.app when your site is live.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 12),
           Card(
             child: Column(
@@ -109,6 +126,7 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.policy_outlined),
                   title: const Text('Privacy Policy'),
+                  subtitle: const Text('Read in app'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
@@ -122,8 +140,19 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: const Text('Privacy Policy (web)'),
+                  subtitle: Text(LegalConstants.privacyPolicyWebUrl),
+                  onTap: () => _openWebLegalUrl(
+                    context,
+                    LegalConstants.privacyPolicyWebUrl,
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('Terms of Service'),
+                  subtitle: const Text('Read in app'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
@@ -137,9 +166,19 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: const Text('Terms of Service (web)'),
+                  subtitle: Text(LegalConstants.termsOfServiceWebUrl),
+                  onTap: () => _openWebLegalUrl(
+                    context,
+                    LegalConstants.termsOfServiceWebUrl,
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.smart_toy_outlined),
                   title: const Text('AI & Data Disclosure'),
-                  subtitle: const Text('Required for SwimIQ AI video analysis'),
+                  subtitle: const Text('Read in app · required for SwimIQ AI'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
@@ -150,6 +189,16 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     );
                   },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: const Text('AI & Data Disclosure (web)'),
+                  subtitle: Text(LegalConstants.aiDisclosureWebUrl),
+                  onTap: () => _openWebLegalUrl(
+                    context,
+                    LegalConstants.aiDisclosureWebUrl,
+                  ),
                 ),
               ],
             ),

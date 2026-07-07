@@ -1,13 +1,13 @@
 SwimIQ Terms of Service
 Last updated: July 7, 2026
 
-[DRAFT — have legal counsel review before App Store submission]
-
 1. Agreement
 By downloading or using SwimIQ, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the app.
 
 2. Service description
 SwimIQ is designed for competitive swimmers and student-athletes ages 8 through 30. It provides swim performance tracking, meet and training logs, USA motivational standards comparisons, athlete passport tools, and optional AI-generated coaching feedback. Features may vary by subscription plan.
+
+Web copy: https://swimiq.app/terms
 
 3. Not medical or officiating advice
 SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and time estimates — are for training guidance only. They are not medical advice, dietary prescriptions, or official meet results. Always follow your coach, physician, and meet officials.
@@ -15,9 +15,9 @@ SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and
 4. Accounts
 SwimIQ is for athletes ages 8 through 30.
 
-If the athlete is under 13, a parent or legal guardian must create and control the account, accept these Terms and our Privacy Policy on the athlete's behalf, and provide consent for any AI video analysis.
+Ages 8–12 (under 13): A parent or legal guardian must create and control the account, accept these Terms and our Privacy Policy on the athlete’s behalf, and provide consent for any AI video analysis.
 
-Athletes ages 13 through 30 may create and use their own account. If the athlete is 13–17, we recommend a parent or guardian remain involved in account setup and subscription decisions.
+Ages 13–30: Athletes may create and use their own account.
 
 You are responsible for safeguarding your login credentials and for activity under your account. Provide accurate profile information, especially birthday and gender used for USA age-group standards.
 
@@ -42,10 +42,16 @@ We may suspend or terminate access for violations of these Terms. You may stop u
 THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, TO THE MAXIMUM EXTENT PERMITTED BY LAW.
 
 11. Limitation of liability
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, [YOUR COMPANY LEGAL NAME] WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, SWIMIQ WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL.
 
 12. Governing law
-These Terms are governed by the laws of [Your State/Country — add before launch], without regard to conflict-of-law rules.
+These Terms are governed by the laws of the State of Ohio, without regard to conflict-of-law rules.
 
 13. Contact
 support@swimiq.app
+privacy@swimiq.app
+
+SwimIQ
+199 Harbinger Dr.
+Groveport, OH 43125
+United States
