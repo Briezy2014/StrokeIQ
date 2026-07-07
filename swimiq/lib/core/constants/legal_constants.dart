@@ -2,8 +2,8 @@
 /// assumes ownership at age 18 (see docs/legal/README.md).
 abstract final class LegalConstants {
   static const appName = 'SwimIQ';
-  static const operatorName = 'Kara Jayne Williams';
-  static const legalRepresentativeName = 'Kara Jayne Williams';
+  static const operatorName = 'Kara Williams';
+  static const legalRepresentativeName = 'Kara Williams';
   static const productName = 'SwimIQ';
   static const founderName = 'Aspyn Briez Williams';
   /// After Ohio filing, update operatorName display to this in legal docs.

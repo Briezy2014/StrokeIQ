@@ -24,7 +24,7 @@ Use this when a parent says *“We want to try it!”* and your swimmers are **1
 
 ### A. Enroll in Apple Developer Program
 1. Go to [developer.apple.com/account](https://developer.apple.com/account)
-2. Enroll as **Individual** (Kara Jayne Williams) or **Organization** (SwimIQ LLC after you file)
+2. Enroll as **Individual** (Kara Williams) or **Organization** (SwimIQ LLC after you file)
 3. Pay **$99/year**, wait for approval (usually 24–48 hours)
 
 ### B. Create the app in App Store Connect

@@ -27,7 +27,7 @@ Run `python3 website/sync_legal.py` after editing legal `.txt` files to refresh 
 
 ## Operator (Ohio)
 
-- **Operator:** Kara Jayne Williams (SwimIQ)
+- **Operator:** Kara Williams (SwimIQ)
 - **Address:** 199 Harbinger Dr., Groveport, OH 43125
 - **Governing law:** Ohio
 - **privacy@swimiqapp.com** / **support@swimiqapp.com**
@@ -51,9 +51,9 @@ Update `legal_constants.dart` and the three `.txt` files together when anything 
 3. **Fill in the form:**
    - **LLC name:** `SwimIQ LLC`
    - **Purpose:** general (software / mobile app is fine)
-   - **Statutory agent:** **Kara Jayne Williams** at **199 Harbinger Dr., Groveport, OH 43125** (you can be your own agent in Ohio — free)
+   - **Statutory agent:** **Kara Williams** at **199 Harbinger Dr., Groveport, OH 43125** (you can be your own agent in Ohio — free)
    - **Management:** Member-managed (you as sole member/manager)
-   - **Organizer:** Kara Jayne Williams
+   - **Organizer:** Kara Williams
 
 4. **Pay $99** online (credit card).
 
@@ -62,10 +62,10 @@ Update `legal_constants.dart` and the three `.txt` files together when anything 
 6. **Get a free EIN** from the IRS (required before App Store business banking): [irs.gov/ein](https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online) — choose LLC, Ohio, your name as responsible party.
 
 7. **Operating agreement** (keep at home, not filed with state) — one-page doc saying:
-   - Kara Jayne Williams = 100% owner / Managing Member until amended
+   - Kara Williams = 100% owner / Managing Member until amended
    - Note: Aspyn Briez Williams may receive membership interest at age 18 (ChatGPT can draft from this sentence)
 
-8. **After LLC is approved** — update legal docs from “Kara Jayne Williams” to **“SwimIQ LLC”** (managed by Kara Jayne Williams) in `legal_constants.dart` and all three `assets/legal/*.txt` files.
+8. **After LLC is approved** — update legal docs from “Kara Williams” to **“SwimIQ LLC”** (managed by Kara Williams) in `legal_constants.dart` and all three `assets/legal/*.txt` files.
 
 9. **Optional:** Open a **business bank account** (Chase, local credit union) using EIN + Articles of Organization — keeps app money separate from personal.
 
@@ -84,9 +84,9 @@ Update `legal_constants.dart` and the three `.txt` files together when anything 
 
 ## Ownership plan (Ohio)
 
-**Now (before LLC is filed):** Legal docs say **Kara Jayne Williams · SwimIQ**.
+**Now (before LLC is filed):** Legal docs say **Kara Williams · SwimIQ**.
 
-**After LLC is filed:** Change to **SwimIQ LLC** (Managing Member: Kara Jayne Williams).
+**After LLC is filed:** Change to **SwimIQ LLC** (Managing Member: Kara Williams).
 
 **Now (before Aspyn is 18):** Kara remains legal operator — not Aspyn’s name on Privacy Policy or Terms.
 
