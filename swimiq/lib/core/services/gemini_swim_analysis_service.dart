@@ -1,3 +1,4 @@
+import 'package:functions_client/functions_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/utils/swim_time.dart';
@@ -23,29 +24,50 @@ class GeminiSwimAnalysisService {
     SwimmerProfile? profile,
     SwimPoseMetrics? poseMetrics,
   }) async {
-    final response = await _client.functions.invoke(
-      functionName,
-      body: buildRequestBody(
-        video: video,
-        raceLogs: raceLogs,
-        goals: goals,
-        profile: profile,
-        poseMetrics: poseMetrics,
-      ),
-    );
-
-    final data = response.data;
-    if (data is Map && data['error'] != null) {
-      throw GeminiAnalysisException(data['error'].toString());
-    }
-
-    if (data is! Map) {
-      throw GeminiAnalysisException(
-        'Unexpected response from $functionName.',
+    try {
+      final response = await _client.functions.invoke(
+        functionName,
+        body: buildRequestBody(
+          video: video,
+          raceLogs: raceLogs,
+          goals: goals,
+          profile: profile,
+          poseMetrics: poseMetrics,
+        ),
       );
-    }
 
-    return parseAnalysisResponse(Map<String, dynamic>.from(data));
+      final data = response.data;
+      if (data is Map && data['error'] != null) {
+        throw GeminiAnalysisException(data['error'].toString());
+      }
+
+      if (data is! Map) {
+        throw GeminiAnalysisException(
+          'Unexpected response from $functionName.',
+        );
+      }
+
+      return parseAnalysisResponse(Map<String, dynamic>.from(data));
+    } on FunctionException catch (error) {
+      throw GeminiAnalysisException(messageFromFunctionException(error));
+    }
+  }
+
+  static String messageFromFunctionException(FunctionException error) {
+    final details = error.details;
+    if (details is Map && details['error'] != null) {
+      return details['error'].toString();
+    }
+    final status = error.status;
+    if (status == 401) {
+      return 'Sign in again, then retry video analysis.';
+    }
+    if (status == 503) {
+      return 'Gemini is not configured. Set GEMINI_API_KEY in Supabase secrets '
+          'and deploy analyze-swim-video.';
+    }
+    return error.reasonPhrase ??
+        'Gemini analysis failed (HTTP $status).';
   }
 
   static Map<String, dynamic> buildRequestBody({

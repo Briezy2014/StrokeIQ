@@ -1,4 +1,6 @@
 import '../../core/utils/swim_stroke_utils.dart';
+import 'meet_schedule_queue_item.dart';
+import 'scheduled_meet.dart';
 
 class SwimmerProfile {
   const SwimmerProfile({
@@ -20,7 +22,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|Sleep|Soreness|Illness|Attending Meets|Instagram|TikTok|Facebook|Website|Public Passport|Interest Sports|Interest Academics|Interest Passions|Beyond Bio|Scheduled Meets|Meet Queue):\s*(.+)$',
   );
 
   final int? id;
@@ -64,6 +66,47 @@ class SwimmerProfile {
   /// Public URL for the athlete profile photo stored in Supabase.
   String? get profilePhotoUrl => _structuredNotesValue('Profile Photo');
 
+  String? get sleepHours => _structuredNotesValue('Sleep');
+  String? get sorenessLevel => _structuredNotesValue('Soreness');
+  String? get illnessNotes => _structuredNotesValue('Illness');
+
+  /// Team calendar meet IDs the athlete marked as attending.
+  List<String> get attendingMeetIds {
+    final raw = _structuredNotesValue('Attending Meets');
+    if (raw == null || raw.isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+  }
+
+  String? get instagram => _structuredNotesValue('Instagram');
+  String? get tiktok => _structuredNotesValue('TikTok');
+  String? get facebook => _structuredNotesValue('Facebook');
+  String? get personalWebsite => _structuredNotesValue('Website');
+
+  bool get publicPassportEnabled {
+    final raw = _structuredNotesValue('Public Passport')?.toLowerCase();
+    return raw == 'yes' || raw == 'true' || raw == 'on';
+  }
+
+  List<String> get interestSports => _commaList('Interest Sports');
+  List<String> get interestAcademics => _commaList('Interest Academics');
+  List<String> get interestPassions => _commaList('Interest Passions');
+
+  String? get beyondBio {
+    final raw = _structuredNotesValue('Beyond Bio');
+    if (raw == null) return null;
+    return raw.replaceAll('|', '\n');
+  }
+
+  List<ScheduledMeet> get scheduledMeets =>
+      ScheduledMeet.decodeList(_structuredNotesValue('Scheduled Meets'));
+
+  List<MeetScheduleQueueItem> get meetQueue =>
+      MeetScheduleQueueItem.decodeList(_structuredNotesValue('Meet Queue'));
+
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
     final notes = athleteNotes?.trim();
@@ -95,7 +138,7 @@ class SwimmerProfile {
       firstName: _nullableText(json['first_name']),
       lastName: _nullableText(json['last_name']),
       preferredName: _nullableText(json['preferred_name']),
-      birthday: DateTime.tryParse(json['birthday']?.toString() ?? ''),
+      birthday: _parseBirthday(json['birthday']),
       graduationYear: (json['graduation_year'] as num?)?.toInt(),
       team: _nullableText(json['team']),
       coachName: _nullableText(json['coach_name']),
@@ -168,6 +211,21 @@ class SwimmerProfile {
     String? dominantHand,
     String? trainingGroup,
     String? profilePhotoUrl,
+    String? sleepHours,
+    String? sorenessLevel,
+    String? illnessNotes,
+    List<String>? attendingMeetIds,
+    String? instagram,
+    String? tiktok,
+    String? facebook,
+    String? website,
+    bool? publicPassport,
+    List<String>? interestSports,
+    List<String>? interestAcademics,
+    List<String>? interestPassions,
+    String? beyondBio,
+    List<ScheduledMeet>? scheduledMeets,
+    List<MeetScheduleQueueItem>? meetQueue,
     String? notes,
   }) {
     final parts = <String>[];
@@ -184,6 +242,37 @@ class SwimmerProfile {
     addLine('Dominant Hand', dominantHand);
     addLine('Training Group', trainingGroup);
     addLine('Profile Photo', profilePhotoUrl);
+    addLine('Sleep', sleepHours);
+    addLine('Soreness', sorenessLevel);
+    addLine('Illness', illnessNotes);
+    if (attendingMeetIds != null && attendingMeetIds.isNotEmpty) {
+      addLine('Attending Meets', attendingMeetIds.join(','));
+    }
+    addLine('Instagram', instagram);
+    addLine('TikTok', tiktok);
+    addLine('Facebook', facebook);
+    addLine('Website', website);
+    if (publicPassport == true) {
+      addLine('Public Passport', 'yes');
+    }
+    if (interestSports != null && interestSports.isNotEmpty) {
+      addLine('Interest Sports', interestSports.join(', '));
+    }
+    if (interestAcademics != null && interestAcademics.isNotEmpty) {
+      addLine('Interest Academics', interestAcademics.join(', '));
+    }
+    if (interestPassions != null && interestPassions.isNotEmpty) {
+      addLine('Interest Passions', interestPassions.join(', '));
+    }
+    if (beyondBio != null && beyondBio.trim().isNotEmpty) {
+      addLine('Beyond Bio', beyondBio.trim().replaceAll('\n', '|'));
+    }
+    if (scheduledMeets != null && scheduledMeets.isNotEmpty) {
+      addLine('Scheduled Meets', ScheduledMeet.encodeList(scheduledMeets));
+    }
+    if (meetQueue != null && meetQueue.isNotEmpty) {
+      addLine('Meet Queue', MeetScheduleQueueItem.encodeList(meetQueue));
+    }
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {
@@ -216,6 +305,33 @@ class SwimmerProfile {
     return null;
   }
 
+  List<String> _commaList(String label) {
+    final raw = _structuredNotesValue(label);
+    if (raw == null || raw.isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  bool matchesDirectoryQuery(String query) {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return false;
+
+    final haystacks = <String>[
+      swimmerName,
+      displayName,
+      legalName,
+      preferredName ?? '',
+      firstName ?? '',
+      lastName ?? '',
+      '${firstName ?? ''} ${lastName ?? ''}',
+    ].map((s) => s.trim().toLowerCase()).where((s) => s.isNotEmpty);
+
+    return haystacks.any((hay) => hay.contains(needle));
+  }
+
   static String? _nullableText(dynamic value) {
     if (value == null) return null;
     final text = value.toString().trim();
@@ -231,4 +347,25 @@ class SwimmerProfile {
       '${date.year.toString().padLeft(4, '0')}-'
       '${date.month.toString().padLeft(2, '0')}-'
       '${date.day.toString().padLeft(2, '0')}';
+
+  static DateTime? _parseBirthday(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+
+    final parsed = DateTime.tryParse(text);
+    if (parsed != null) return DateTime(parsed.year, parsed.month, parsed.day);
+
+    final dateOnly = RegExp(r'^(\d{4})-(\d{2})-(\d{2})');
+    final match = dateOnly.firstMatch(text);
+    if (match != null) {
+      final year = int.tryParse(match.group(1)!);
+      final month = int.tryParse(match.group(2)!);
+      final day = int.tryParse(match.group(3)!);
+      if (year != null && month != null && day != null) {
+        return DateTime(year, month, day);
+      }
+    }
+    return null;
+  }
 }

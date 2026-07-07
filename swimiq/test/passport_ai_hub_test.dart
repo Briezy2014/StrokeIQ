@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/services/ai_coach_service.dart';
 import 'package:swimiq/core/services/passport_ai_recommendation.dart';
+import 'package:swimiq/core/services/race_intelligence_service.dart';
 import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
@@ -63,7 +65,7 @@ void main() {
   });
 
   group('PassportAiRecommendation', () {
-    test('recommends Video Lab when no videos exist', () {
+    test('routes to Video Lab when no videos exist', () {
       final recommendation = PassportAiRecommendation.build(
         data: _baseData(),
         swimmer: 'Aspyn',
@@ -71,10 +73,9 @@ void main() {
 
       expect(recommendation.destination, PassportHubDestination.videoLab);
       expect(recommendation.detail, contains('Video Lab'));
-      expect(recommendation.engineLabel, contains('Claude'));
     });
 
-    test('recommends analysis for unanalyzed uploads', () {
+    test('routes unanalyzed uploads to Video Lab', () {
       final recommendation = PassportAiRecommendation.build(
         data: _baseData(
           videos: [
@@ -92,12 +93,11 @@ void main() {
         swimmer: 'Aspyn',
       );
 
-      expect(recommendation.headline, contains('Recommended next AI analysis'));
+      expect(recommendation.destination, PassportHubDestination.videoLab);
       expect(recommendation.actionLabel, contains('Video Lab'));
-      expect(recommendation.suggestedEvent, contains('50'));
     });
 
-    test('surfaces latest AI priorities when analysis exists', () {
+    test('routes analyzed videos to AI Coach', () {
       final recommendation = PassportAiRecommendation.build(
         data: _baseData(
           videos: [
@@ -115,9 +115,9 @@ void main() {
             SwimVideoAnalysis(
               swimVideoId: 'video-1',
               swimmer: 'Aspyn',
-              summary: '50 Fly SCY\nnotes-driven',
-              strengths: '',
-              improvements: '',
+              summary: '50 Fly SCY',
+              strengths: 'Strong breakout',
+              improvements: 'Hold tempo',
               techniqueScore: 80,
               paceScore: 80,
               overallScore: 80,
@@ -127,7 +127,7 @@ void main() {
                   'Sharpen breakout timing',
                   'Hold tempo through 35m',
                 ],
-                'engine': 'swimiq-v1-notes',
+                'engine': 'swimiq-v2-gemini',
               },
             ),
           ],
@@ -135,9 +135,63 @@ void main() {
         swimmer: 'Aspyn',
       );
 
-      expect(recommendation.headline, contains('AI Coach'));
+      expect(recommendation.destination, PassportHubDestination.aiCoach);
+      expect(recommendation.actionLabel, contains('AI Coach'));
       expect(recommendation.detail, contains('Sharpen breakout timing'));
-      expect(recommendation.priorities, isNotEmpty);
+    });
+  });
+
+  group('AiCoachService', () {
+    test('builds corrective brief from latest analysis', () {
+      final brief = AiCoachService.build(
+        data: _baseData(
+          videos: [
+            SwimVideo(
+              id: 'video-1',
+              swimmer: 'Aspyn',
+              storagePath: 'Aspyn/video-1.mp4',
+              title: 'District Finals',
+              stroke: 'Butterfly',
+              distance: '50',
+              course: 'SCY',
+            ),
+          ],
+          analyses: [
+            SwimVideoAnalysis(
+              swimVideoId: 'video-1',
+              swimmer: 'Aspyn',
+              summary: 'analysis',
+              strengths: 'Strong breakout',
+              improvements: 'Finish harder',
+              techniqueScore: 80,
+              paceScore: 80,
+              overallScore: 80,
+              analysisJson: {
+                'top_3_priorities': ['Fix breakout'],
+                'engine': 'swimiq-v2-gemini',
+              },
+            ),
+          ],
+        ),
+        swimmer: 'Aspyn',
+      );
+
+      expect(brief.hasVideoAnalysis, isTrue);
+      expect(brief.correctionsToTry, contains('Fix breakout'));
+      expect(brief.keepDoing, contains('Strong breakout'));
+    });
+  });
+
+  group('RaceIntelligenceService', () {
+    test('builds meet race plans from upcoming goals', () {
+      final brief = RaceIntelligenceService.build(
+        data: _baseData(),
+        swimmer: 'Aspyn',
+      );
+
+      expect(brief.racePlans, isNotEmpty);
+      expect(brief.meetDayTips, isNotEmpty);
+      expect(brief.summary, contains('meet-specific'));
     });
   });
 }

@@ -3,14 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
+import '../../core/utils/passport_metrics.dart';
+import '../../core/utils/swimmer_profile_notes.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../providers/meet_schedule_provider.dart';
 import '../../widgets/passport_hub.dart';
+import '../../widgets/passport_social_links.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/swimiq_logo.dart';
+import 'beyond_the_pool_tab.dart';
+import 'swimmer_directory_screen.dart';
 
 /// Brand-new Athlete Passport — text fields and date picker only.
 class AthletePassportV2Screen extends ConsumerStatefulWidget {
@@ -28,7 +35,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _lastNameController;
   late final TextEditingController _preferredNameController;
   late final TextEditingController _usaIdController;
-  late final TextEditingController _genderController;
   late final TextEditingController _clubController;
   late final TextEditingController _coachController;
   late final TextEditingController _schoolController;
@@ -40,10 +46,20 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
+  late final TextEditingController _sleepController;
+  late final TextEditingController _illnessController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _instagramController;
+  late final TextEditingController _tiktokController;
+  late final TextEditingController _facebookController;
 
   DateTime? _birthday;
+  String? _selectedGender;
+  String? _selectedSoreness;
+  bool _publicPassport = false;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
+  bool _formDirty = false;
   int? _syncedProfileId;
 
   @override
@@ -53,7 +69,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _lastNameController = TextEditingController();
     _preferredNameController = TextEditingController();
     _usaIdController = TextEditingController();
-    _genderController = TextEditingController();
     _clubController = TextEditingController();
     _coachController = TextEditingController();
     _schoolController = TextEditingController();
@@ -65,6 +80,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
+    _sleepController = TextEditingController();
+    _illnessController = TextEditingController();
+    _websiteController = TextEditingController();
+    _instagramController = TextEditingController();
+    _tiktokController = TextEditingController();
+    _facebookController = TextEditingController();
   }
 
   @override
@@ -73,7 +94,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _lastNameController.dispose();
     _preferredNameController.dispose();
     _usaIdController.dispose();
-    _genderController.dispose();
     _clubController.dispose();
     _coachController.dispose();
     _schoolController.dispose();
@@ -85,6 +105,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
+    _sleepController.dispose();
+    _illnessController.dispose();
+    _websiteController.dispose();
+    _instagramController.dispose();
+    _tiktokController.dispose();
+    _facebookController.dispose();
     super.dispose();
   }
 
@@ -100,7 +126,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   }
 
   void _syncForm(SwimmerProfile? profile) {
-    if (_syncedProfileId == profile?.id && profile?.id != null) return;
     _syncedProfileId = profile?.id;
 
     _firstNameController.text = profile?.firstName ?? '';
@@ -113,7 +138,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     }
     _preferredNameController.text = profile?.preferredName ?? '';
     _usaIdController.text = profile?.usaSwimmingId ?? '';
-    _genderController.text = profile?.gender ?? '';
+    _selectedGender = _normalizeGenderSelection(profile?.gender);
     _clubController.text = profile?.team ?? '';
     _coachController.text = profile?.coachName ?? '';
     _schoolController.text = profile?.school ?? '';
@@ -126,7 +151,29 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
+    _sleepController.text = profile?.sleepHours ?? '';
+    _selectedSoreness = profile?.sorenessLevel;
+    _illnessController.text = profile?.illnessNotes ?? '';
+    _websiteController.text = profile?.personalWebsite ?? '';
+    _instagramController.text = profile?.instagram ?? '';
+    _tiktokController.text = profile?.tiktok ?? '';
+    _facebookController.text = profile?.facebook ?? '';
+    _publicPassport = profile?.publicPassportEnabled ?? false;
     _birthday = profile?.birthday;
+    _formDirty = false;
+  }
+
+  String? _normalizeGenderSelection(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final lower = raw.trim().toLowerCase();
+    if (lower.startsWith('b') || lower.startsWith('m') || lower == 'boy') {
+      return 'Boys';
+    }
+    if (lower.startsWith('g') || lower.startsWith('f') || lower == 'girl') {
+      return 'Girls';
+    }
+    if (raw == 'Boys' || raw == 'Girls') return raw;
+    return null;
   }
 
   Future<void> _pickBirthday() async {
@@ -137,7 +184,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() => _birthday = picked);
+      setState(() {
+        _formDirty = true;
+        _birthday = picked;
+      });
     }
   }
 
@@ -171,12 +221,21 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       secondaryStroke: _optionalText(_secondaryStrokeController.text),
       favoriteEvent: _optionalText(_favoriteEventController.text),
       usaSwimmingId: _optionalText(_usaIdController.text),
-      athleteNotes: SwimmerProfile.composeAthleteNotes(
-        gender: _genderController.text,
+      athleteNotes: SwimmerProfileNotes.merge(
+        existing: existing,
+        gender: _selectedGender,
         height: _heightController.text,
         weight: _weightController.text,
         dominantHand: _dominantHandController.text,
-        profilePhotoUrl: existing?.profilePhotoUrl,
+        sleepHours: _sleepController.text,
+        sorenessLevel: _selectedSoreness,
+        illnessNotes: _illnessController.text,
+        attendingMeetIds: existing?.attendingMeetIds,
+        instagram: _instagramController.text,
+        tiktok: _tiktokController.text,
+        facebook: _facebookController.text,
+        website: _websiteController.text,
+        publicPassport: _publicPassport,
         notes: _notesController.text,
       ),
     );
@@ -189,6 +248,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       _isSaving = false;
       if (error == null) {
         _syncedProfileId = null;
+        _formDirty = false;
       }
     });
 
@@ -241,15 +301,94 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<SwimmerData?>>(swimmerDataProvider, (previous, next) {
+      final profile = next.value?.profile;
+      final profileId = profile?.id;
+      if (!_formDirty && profileId != _syncedProfileId) {
+        _syncForm(profile);
+      }
+    });
+
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final profile = data.profile;
-        _syncForm(profile);
         final displayName = profile?.displayName ?? swimmer;
         final dateFormat = DateFormat('MM/dd/yyyy');
+        final effectiveBirthday = _birthday ?? profile?.birthday;
+        final effectiveGender = _selectedGender ?? profile?.gender;
 
-        final snapshot = data.passportSnapshot(swimmer);
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
 
+        return DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: TabBar(
+                        tabs: [
+                          Tab(text: 'Passport'),
+                          Tab(text: 'Beyond the Pool'),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Find a swimmer',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const SwimmerDirectoryScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_search_outlined),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildPassportTab(
+                      context: context,
+                      data: data,
+                      swimmer: swimmer,
+                      profile: profile,
+                      displayName: displayName,
+                      dateFormat: dateFormat,
+                      effectiveBirthday: effectiveBirthday,
+                      effectiveGender: effectiveGender,
+                      snapshot: snapshot,
+                    ),
+                    BeyondThePoolTab(swimmer: swimmer, profile: profile),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPassportTab({
+    required BuildContext context,
+    required SwimmerData data,
+    required String swimmer,
+    required SwimmerProfile? profile,
+    required String displayName,
+    required DateFormat dateFormat,
+    required DateTime? effectiveBirthday,
+    required String? effectiveGender,
+    required PassportSnapshot snapshot,
+  }) {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -261,6 +400,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               primaryStroke: profile?.primaryStroke,
               graduationYear: profile?.graduationYear,
               profilePhotoUrl: profile?.profilePhotoUrl,
+              profile: profile,
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
             ),
@@ -295,8 +435,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   value: snapshot.highestCut,
                 ),
                 SwimIqMetricCard(
-                  label: 'Next Meet',
-                  value: snapshot.nextMeet,
+                  label: 'Last Meet',
+                  value: snapshot.lastMeetResult,
+                  subtitle: 'From Meet Results tab',
+                ),
+                SwimIqMetricCard(
+                  label: 'Upcoming Meet',
+                  value: snapshot.upcomingMeet,
+                  subtitle: 'From Goals target date',
                 ),
                 SwimIqMetricCard(
                   label: 'IMX / IMR',
@@ -312,6 +458,14 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             const SwimIqScreenHeader(title: 'Athlete Details'),
             const SizedBox(height: 12),
             SwimIqSectionCard(
+              title: 'Meet schedule',
+              lines: [
+                'Last meet (results logged): ${snapshot.lastMeetResult}',
+                'Upcoming meet (schedule photo or goal): ${snapshot.upcomingMeet}',
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwimIqSectionCard(
               title: 'USA Motivational Standards',
               lines: snapshot.usaStandardsSummary.split('\n'),
             ),
@@ -320,8 +474,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'Athlete Identity',
               lines: [
                 'Display Name: $displayName',
-                'Birthday: ${_passportLabel(profile?.birthday != null ? dateFormat.format(profile!.birthday!) : null)}',
-                'Age: ${_passportLabel(profile?.age?.toString())}',
+                'Birthday: ${_passportLabel(effectiveBirthday != null ? dateFormat.format(effectiveBirthday) : null)}',
+                'Gender: ${_passportLabel(effectiveGender)}',
+                'Age: ${_passportLabel(_ageLabel(effectiveBirthday, profile?.age))}',
                 'Graduation Year: ${_passportLabel(profile?.graduationYear?.toString())}',
                 'School: ${_passportLabel(profile?.school)}',
               ],
@@ -396,7 +551,17 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         label: 'Preferred Name',
                         hint: 'Name used on deck and in results',
                       ),
-                      _dateTile(dateFormat),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Required for USA Swimming motivational cuts',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _birthdayField(dateFormat),
+                      _genderPicker(),
                       _field(
                         controller: _graduationYearController,
                         label: 'Graduation Year',
@@ -445,10 +610,49 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         controller: _schoolController,
                         label: 'School',
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Online & recruiting (shown on Passport)',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
                       _field(
-                        controller: _genderController,
-                        label: 'Gender',
-                        hint: 'Example: Female, Male, Non-binary',
+                        controller: _websiteController,
+                        label: 'Personal website',
+                        hint: 'Example: aspenbreeze.com',
+                      ),
+                      _field(
+                        controller: _instagramController,
+                        label: 'Instagram',
+                        hint: '@handle or full profile URL',
+                      ),
+                      _field(
+                        controller: _tiktokController,
+                        label: 'TikTok',
+                        hint: '@handle or full profile URL',
+                      ),
+                      _field(
+                        controller: _facebookController,
+                        label: 'Facebook',
+                        hint: 'Profile name or URL',
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Public passport'),
+                        subtitle: const Text(
+                          'Let teammates and recruiters find you by name. '
+                          'Shows Passport + Beyond the Pool only.',
+                        ),
+                        value: _publicPassport,
+                        onChanged: (value) {
+                          setState(() {
+                            _formDirty = true;
+                            _publicPassport = value;
+                          });
+                        },
                       ),
                       _field(
                         controller: _heightController,
@@ -464,6 +668,28 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         controller: _dominantHandController,
                         label: 'Dominant Hand',
                         hint: 'Left or Right',
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Wellness check-in (feeds readiness score)',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _field(
+                        controller: _sleepController,
+                        label: 'Sleep (hours last night)',
+                        hint: 'Example: 8.5',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      ),
+                      _sorenessPicker(),
+                      _field(
+                        controller: _illnessController,
+                        label: 'Illness / injury note',
+                        hint: 'Optional — sore shoulder, cold symptoms, etc.',
+                        maxLines: 2,
                       ),
                       _field(
                         controller: _notesController,
@@ -484,8 +710,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ),
           ],
         );
-      },
-    );
   }
 
   Widget _field({
@@ -500,6 +724,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
+        onChanged: (_) => _formDirty = true,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -511,23 +736,110 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     );
   }
 
-  Widget _dateTile(DateFormat dateFormat) {
+  Widget _birthdayField(DateFormat dateFormat) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Date of Birth'),
-        subtitle: Text(
-          _birthday != null ? dateFormat.format(_birthday!) : 'Not set',
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.calendar_today),
-          tooltip: 'Pick date of birth',
-          onPressed: _pickBirthday,
+      child: InkWell(
+        onTap: _pickBirthday,
+        borderRadius: BorderRadius.circular(12),
+        child: InputDecorator(
+          decoration: const InputDecoration(
+            labelText: 'Date of Birth',
+            hintText: 'Tap to pick birthday',
+            suffixIcon: Icon(Icons.calendar_today),
+            border: OutlineInputBorder(),
+          ),
+          child: Text(
+            _birthday != null
+                ? dateFormat.format(_birthday!)
+                : 'Not set — tap to choose',
+            style: TextStyle(
+              color: _birthday != null
+                  ? null
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ),
     );
   }
+
+  Widget _genderPicker() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gender (USA Swimming)',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: AppConstants.genders.map((gender) {
+              return ChoiceChip(
+                label: Text(gender),
+                selected: _selectedGender == gender,
+                onSelected: (selected) {
+                  setState(() {
+                    _formDirty = true;
+                    _selectedGender = selected ? gender : null;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sorenessPicker() {
+    const options = ['None / Fresh', 'Mild', 'Moderate', 'High'];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Soreness level',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: options.map((level) {
+              return ChoiceChip(
+                label: Text(level),
+                selected: _selectedSoreness == level,
+                onSelected: (selected) {
+                  setState(() {
+                    _formDirty = true;
+                    _selectedSoreness = selected ? level : null;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String? _ageLabel(DateTime? birthday, int? savedAge) {
+  if (birthday == null) {
+    return savedAge?.toString();
+  }
+  final today = DateTime.now();
+  var years = today.year - birthday.year;
+  if (today.month < birthday.month ||
+      (today.month == birthday.month && today.day < birthday.day)) {
+    years--;
+  }
+  return years.toString();
 }
 
 String _passportLabel(String? value) {
@@ -544,6 +856,7 @@ class _PassportHero extends StatelessWidget {
     this.primaryStroke,
     this.graduationYear,
     this.profilePhotoUrl,
+    this.profile,
     this.isUploadingPhoto = false,
     this.onUploadPhoto,
   });
@@ -554,6 +867,7 @@ class _PassportHero extends StatelessWidget {
   final String? primaryStroke;
   final int? graduationYear;
   final String? profilePhotoUrl;
+  final SwimmerProfile? profile;
   final bool isUploadingPhoto;
   final VoidCallback? onUploadPhoto;
 
@@ -571,15 +885,7 @@ class _PassportHero extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.accent,
-            AppColors.surfaceLight,
-          ],
-        ),
+        gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
@@ -680,6 +986,10 @@ class _PassportHero extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
+          ),
+          PassportSocialLinks(
+            profile: profile,
+            iconColor: Colors.white,
           ),
         ],
       ),

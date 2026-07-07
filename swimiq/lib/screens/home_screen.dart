@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/swimiq_brand_background.dart';
 import '../widgets/swimiq_header.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
@@ -13,7 +14,6 @@ import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
 import 'settings/settings_screen.dart';
 import 'training_log/training_log_screen.dart';
-import 'video_lab/video_lab_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,14 +31,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return const PersonalBestsScreen();
       case HomeTab.trainingLog:
         return const TrainingLogScreen();
-      case HomeTab.addSession:
-        return const AddSessionScreen();
       case HomeTab.goals:
         return const GoalsScreen();
       case HomeTab.meetResults:
         return const MeetResultsScreen();
-      case HomeTab.videoLab:
-        return const VideoLabScreen();
       case HomeTab.passport:
         return const AthletePassportV2Screen();
       default:
@@ -54,6 +50,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _openAddSession() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AddSessionScreen(),
+      ),
+    );
+  }
+
   Future<void> _refresh() async {
     await ref.read(swimmerDataProvider.notifier).refresh();
   }
@@ -65,47 +69,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: SwimIqAppBarTitle(subtitle: swimmer),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            onPressed: _refresh,
-            icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: _openSettings,
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          MaterialBanner(
-            content: Text(
-              user?.email != null
-                  ? 'Signed in as ${user!.email}'
-                  : 'Swimmer: $swimmer',
+      extendBody: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: SwimIqBrandedAppBar(
+          child: AppBar(
+            title: SwimIqAppBarTitle(
+              subtitle: user?.email ?? swimmer,
             ),
-            backgroundColor: Colors.green.shade50,
-            actions: const [SizedBox.shrink()],
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+              ),
+              IconButton(
+                tooltip: 'Settings',
+                onPressed: _openSettings,
+                icon: const Icon(Icons.settings_outlined),
+              ),
+            ],
           ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: _screenAt(selectedIndex),
-            ),
-          ),
-          const SwimIqFooter(),
-        ],
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          ref.read(homeTabIndexProvider.notifier).state = index;
-        },
-        destinations: const [
+      floatingActionButton: selectedIndex == HomeTab.trainingLog
+          ? FloatingActionButton.extended(
+              onPressed: _openAddSession,
+              icon: const Icon(Icons.add),
+              label: const Text('Log Session'),
+            )
+          : null,
+      body: SwimIqBrandBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                color: const Color(0xFF009CFF),
+                onRefresh: _refresh,
+                child: _screenAt(selectedIndex),
+              ),
+            ),
+            const SwimIqFooter(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        child: NavigationBar(
+          height: 68,
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (index) {
+            ref.read(homeTabIndexProvider.notifier).state = index;
+          },
+          destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
@@ -122,11 +138,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Log',
           ),
           NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Add',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.flag_outlined),
             selectedIcon: Icon(Icons.flag),
             label: 'Goals',
@@ -137,16 +148,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Meets',
           ),
           NavigationDestination(
-            icon: Icon(Icons.videocam_outlined),
-            selectedIcon: Icon(Icons.videocam),
-            label: 'Video',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.badge_outlined),
             selectedIcon: Icon(Icons.badge),
             label: 'Passport',
           ),
         ],
+        ),
       ),
     );
   }

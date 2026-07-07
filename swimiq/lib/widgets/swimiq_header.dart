@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
+import 'swimiq_brand_background.dart';
+import 'swimiq_brand_typography.dart';
 import 'swimiq_logo.dart';
 
 class SwimIqHeader extends StatelessWidget {
@@ -13,31 +15,14 @@ class SwimIqHeader extends StatelessWidget {
       children: [
         const SizedBox(height: 8),
         const SwimIqHeroBanner(height: 160, borderRadius: 24),
-        const SizedBox(height: 12),
-        Text(
-          AppConstants.trademark,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.primaryDeep,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          AppConstants.tagline,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.primaryDeep,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          AppConstants.founder,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
         const SizedBox(height: 16),
-        const Divider(),
+        const SwimIqWordmark(fontSize: 28),
+        const SizedBox(height: 8),
+        const SwimIqTagline(fontSize: 18),
+        const SizedBox(height: 6),
+        const SwimIqFounderLine(),
+        const SizedBox(height: 16),
+        Divider(color: AppColors.accent.withValues(alpha: 0.25)),
       ],
     );
   }
@@ -48,14 +33,30 @@ class SwimIqFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Text(
-        AppConstants.copyright,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            AppColors.primary.withValues(alpha: 0.06),
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          const SwimIqWordmark(fontSize: 14),
+          const SizedBox(height: 4),
+          Text(
+            AppConstants.copyright,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -71,21 +72,26 @@ class SwimIqAppBarTitle extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SwimIqLogo(size: 32, borderRadius: 8),
+        const SwimIqLogo(size: 36, borderRadius: 10),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SwimIqWordmark(fontSize: 16),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white70,
-                    ),
-              ),
-          ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SwimIqWordmark(fontSize: 17, onDark: true),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+            ],
+          ),
         ),
       ],
     );

@@ -7,11 +7,15 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/meet_result.dart';
+import '../../data/models/scheduled_meet.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../providers/meet_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../widgets/meet_schedule_section.dart';
 
 class MeetResultsScreen extends ConsumerStatefulWidget {
   const MeetResultsScreen({super.key});
@@ -22,22 +26,66 @@ class MeetResultsScreen extends ConsumerStatefulWidget {
 
 class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+  final _formSectionKey = GlobalKey();
   final _meetNameController = TextEditingController();
   final _eventController = TextEditingController();
   final _timeController = TextEditingController();
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
+  String _course = AppConstants.courses.first;
 
   DateTime _meetDate = DateTime.now();
   bool _isSaving = false;
+  ScheduledMeet? _loggingMeet;
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _meetNameController.dispose();
     _eventController.dispose();
     _timeController.dispose();
-    _courseController.dispose();
     super.dispose();
+  }
+
+  void _beginLoggingForMeet(ScheduledMeet meet) {
+    setState(() {
+      _loggingMeet = meet;
+      _meetNameController.text = meet.name;
+      _meetDate = meet.startDate;
+      final course = meet.course?.trim().toUpperCase();
+      if (course != null &&
+          course.isNotEmpty &&
+          AppConstants.courses.contains(course)) {
+        _course = course;
+      }
+      _eventController.clear();
+      _timeController.clear();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _formSectionKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+      _eventController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _eventController.text.length,
+      );
+      FocusScope.of(this.context).requestFocus(FocusNode());
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Logging times for ${meet.name}. Add each event and save — '
+          'meet name and date stay filled.',
+        ),
+      ),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -45,7 +93,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
       context: context,
       initialDate: _meetDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 366)),
     );
     if (picked != null) {
       setState(() => _meetDate = picked);
@@ -61,9 +109,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
+      final course = _course;
 
       final swimTime = SwimTime.toSeconds(_timeController.text);
       final result = MeetResult(
@@ -88,9 +134,14 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Meet result saved.')),
         );
-        _meetNameController.clear();
-        _eventController.clear();
-        _timeController.clear();
+        if (_loggingMeet != null) {
+          _eventController.clear();
+          _timeController.clear();
+        } else {
+          _meetNameController.clear();
+          _eventController.clear();
+          _timeController.clear();
+        }
       }
     } on FormatException {
       if (mounted) {
@@ -104,6 +155,122 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _editResult(MeetResult result) async {
+    if (result.id == null) return;
+
+    final meetController = TextEditingController(text: result.meetName);
+    final eventController = TextEditingController(text: result.event);
+    final timeController =
+        TextEditingController(text: SwimTime.fromSeconds(result.swimTime));
+    final courseController = TextEditingController(text: result.course);
+    var meetDate = result.meetDate;
+    final dateFormat = DateFormat.yMMMd();
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit meet result'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: meetController,
+                    decoration: const InputDecoration(labelText: 'Meet name'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: eventController,
+                    decoration: const InputDecoration(labelText: 'Event'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: timeController,
+                    decoration: const InputDecoration(labelText: 'Result time'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: courseController,
+                    decoration: const InputDecoration(labelText: 'Course'),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Meet date'),
+                    subtitle: Text(dateFormat.format(meetDate)),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: meetDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setDialogState(() => meetDate = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (saved != true || !mounted) {
+      meetController.dispose();
+      eventController.dispose();
+      timeController.dispose();
+      courseController.dispose();
+      return;
+    }
+
+    try {
+      final updated = MeetResult(
+        id: result.id,
+        swimmerName: result.swimmerName,
+        meetName: meetController.text.trim(),
+        event: eventController.text.trim(),
+        swimTime: SwimTime.toSeconds(timeController.text),
+        course: courseController.text.trim(),
+        meetDate: meetDate,
+        notes: result.notes,
+      );
+      final error = await ref
+          .read(swimmerDataProvider.notifier)
+          .updateMeetResult(updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Meet result updated.')),
+      );
+    } on FormatException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid result time.')),
+        );
+      }
+    } finally {
+      meetController.dispose();
+      eventController.dispose();
+      timeController.dispose();
+      courseController.dispose();
     }
   }
 
@@ -145,21 +312,51 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
-        final snapshot = data.passportSnapshot(swimmer);
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
 
         return ListView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
               title: 'Meet Results',
-              subtitle: 'Latest meet: ${snapshot.nextMeet}',
+              subtitle: 'Upcoming: ${snapshot.upcomingMeet} · latest result: '
+                  '${snapshot.lastMeetResult}',
             ),
             const SizedBox(height: 16),
-            Form(
-              key: _formKey,
+            MeetScheduleSection(onLogResults: _beginLoggingForMeet),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            KeyedSubtree(
+              key: _formSectionKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    _loggingMeet == null
+                        ? 'Log a meet result'
+                        : 'Log times for ${_loggingMeet!.name}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (_loggingMeet != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${dateFormat.format(_meetDate)} · $_course · '
+                      'Add each event, then save. Meet details stay filled.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
                   TextFormField(
                     controller: _meetNameController,
                     decoration:
@@ -207,18 +404,19 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Result Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
+                  SwimCourseDropdown(
+                    value: _course,
+                    label: 'Result Course',
+                    onChanged: (value) => setState(() => _course = value),
                   ),
                   const SizedBox(height: 20),
                   SwimIqSaveButton(
                     label: 'Save Meet Result',
                     isSaving: _isSaving,
                     onPressed: _saveResult,
+                  ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -260,9 +458,11 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                           ),
                           PopupMenuButton<String>(
                             onSelected: (value) {
+                              if (value == 'edit') _editResult(result);
                               if (value == 'delete') _deleteResult(result);
                             },
                             itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'edit', child: Text('Edit')),
                               PopupMenuItem(
                                 value: 'delete',
                                 child: Text('Delete'),

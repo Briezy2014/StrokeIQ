@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../core/constants/app_colors.dart';
-
-/// Shared gradient background used on splash and auth screens.
+/// Deep-pool gradient for splash and auth screens.
 class AuthGradientBackground extends StatelessWidget {
   const AuthGradientBackground({super.key, required this.child});
 
@@ -18,10 +16,12 @@ class AuthGradientBackground extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.accent,
-            AppColors.accentLight,
-            AppColors.background,
+            Color(0xFF0B2D4D),
+            Color(0xFF0B5CAD),
+            Color(0xFF009CFF),
+            Color(0xFF38B6FF),
           ],
+          stops: [0.0, 0.4, 0.75, 1.0],
         ),
       ),
       child: SafeArea(child: child),

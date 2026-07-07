@@ -5,10 +5,12 @@ import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
-import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
 import '../core/services/video_storage_service.dart';
 import '../data/repositories/swimiq_repository.dart';
+import 'usa_standards_catalog_provider.dart';
+
+export 'usa_standards_catalog_provider.dart';
 
 final supabaseClientProvider = Provider<SupabaseClient>(
   (ref) => Supabase.instance.client,
@@ -25,14 +27,17 @@ abstract final class HomeTab {
   static const dashboard = 0;
   static const personalBests = 1;
   static const trainingLog = 2;
-  static const addSession = 3;
-  static const goals = 4;
-  static const meetResults = 5;
-  static const videoLab = 6;
-  static const passport = 7;
+  static const goals = 3;
+  static const meetResults = 4;
+  static const passport = 5;
 }
 
 final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);
+
+/// Lens for dashboard copy — athlete, parent, or coach view.
+enum AppViewMode { athlete, parent, coach }
+
+final appViewModeProvider = StateProvider<AppViewMode>((ref) => AppViewMode.athlete);
 
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
@@ -44,11 +49,6 @@ final geminiSwimAnalysisServiceProvider = Provider<GeminiSwimAnalysisService>(
 
 final swimPoseAnalysisServiceProvider = Provider<SwimPoseAnalysisService>(
   (ref) => SwimPoseAnalysisService(),
-);
-
-final usaMotivationalStandardsCatalogProvider =
-    FutureProvider<UsaMotivationalStandardsCatalog>(
-  (ref) => UsaMotivationalStandardsCatalog.loadFromAssets(),
 );
 
 final usaStandardsServiceProvider = Provider<UsaStandardsService>(

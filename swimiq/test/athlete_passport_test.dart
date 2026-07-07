@@ -20,6 +20,15 @@ void main() {
       expect(profile.secondaryStroke, isNull);
     });
 
+    test('parses Postgres-style birthday strings', () {
+      final profile = SwimmerProfile.fromJson({
+        'swimmer_name': 'Aspyn',
+        'birthday': '2012-03-15',
+      });
+
+      expect(profile.birthday, DateTime(2012, 3, 15));
+    });
+
     test('round-trips structured athlete notes metadata', () {
       final profile = SwimmerProfile(
         swimmerName: 'Aspyn',
@@ -39,6 +48,21 @@ void main() {
       expect(profile.dominantHand, 'Right');
       expect(profile.trainingGroup, 'Senior');
       expect(profile.notesBody, 'Working on fly breakout.');
+    });
+
+    test('round-trips wellness check-in fields', () {
+      final profile = SwimmerProfile(
+        swimmerName: 'Aspyn',
+        athleteNotes: SwimmerProfile.composeAthleteNotes(
+          sleepHours: '8.5',
+          sorenessLevel: 'Mild',
+          illnessNotes: 'Sore shoulder',
+        ),
+      );
+
+      expect(profile.sleepHours, '8.5');
+      expect(profile.sorenessLevel, 'Mild');
+      expect(profile.illnessNotes, 'Sore shoulder');
     });
   });
 

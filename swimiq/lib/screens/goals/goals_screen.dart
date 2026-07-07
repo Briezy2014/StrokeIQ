@@ -12,6 +12,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swim_form_fields.dart';
 import '../../widgets/swimiq_ui.dart';
 
 class GoalsScreen extends ConsumerStatefulWidget {
@@ -24,10 +25,8 @@ class GoalsScreen extends ConsumerStatefulWidget {
 class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
-  final _strokeController =
-      TextEditingController(text: AppConstants.strokes.first);
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
+  String _stroke = AppConstants.strokes.first;
+  String _course = AppConstants.courses.first;
 
   int _distance = 100;
   DateTime _targetDate = DateTime.now();
@@ -36,8 +35,6 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   @override
   void dispose() {
     _timeController.dispose();
-    _strokeController.dispose();
-    _courseController.dispose();
     super.dispose();
   }
 
@@ -62,19 +59,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final stroke = _strokeController.text.trim().isEmpty
-          ? AppConstants.strokes.first
-          : _strokeController.text.trim();
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
-
       final goalTime = SwimTime.toSeconds(_timeController.text);
+
       final goal = SwimGoal(
         swimmerName: swimmer,
-        event: '$_distance $stroke',
+        event: '$_distance $_stroke',
         goalTime: goalTime,
-        course: course,
+        course: _course,
         targetDate: _targetDate,
       );
 
@@ -107,8 +98,135 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     }
   }
 
-  Future<void> _deleteGoal(SwimGoal goal) async {
+  Future<void> _editGoal(SwimGoal goal) async {
     if (goal.id == null) return;
+
+    final timeController =
+        TextEditingController(text: SwimTime.fromSeconds(goal.goalTime));
+    final strokeController = TextEditingController();
+    final courseController = TextEditingController(text: goal.course);
+    final distanceController = TextEditingController();
+    final parts = goal.event.split(' ');
+    if (parts.isNotEmpty) distanceController.text = parts.first;
+    if (parts.length > 1) {
+      strokeController.text = parts.sublist(1).join(' ');
+    }
+    var targetDate = goal.targetDate;
+    final dateFormat = DateFormat.yMMMd();
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit goal'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: strokeController,
+                    decoration: const InputDecoration(labelText: 'Stroke'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: distanceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Distance'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: timeController,
+                    decoration: const InputDecoration(labelText: 'Target time'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: courseController,
+                    decoration: const InputDecoration(labelText: 'Course'),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Target date'),
+                    subtitle: Text(dateFormat.format(targetDate)),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: targetDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2045),
+                      );
+                      if (picked != null) {
+                        setDialogState(() => targetDate = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (saved != true || !mounted) {
+      timeController.dispose();
+      strokeController.dispose();
+      courseController.dispose();
+      distanceController.dispose();
+      return;
+    }
+
+    try {
+      final distance = int.parse(distanceController.text);
+      final updated = SwimGoal(
+        id: goal.id,
+        swimmerName: goal.swimmerName,
+        event: '$distance ${strokeController.text.trim()}',
+        goalTime: SwimTime.toSeconds(timeController.text),
+        course: courseController.text.trim(),
+        targetDate: targetDate,
+        currentTime: goal.currentTime,
+      );
+      final error =
+          await ref.read(swimmerDataProvider.notifier).updateGoal(updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Goal updated.')),
+      );
+    } on FormatException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid target time and distance.')),
+        );
+      }
+    } finally {
+      timeController.dispose();
+      strokeController.dispose();
+      courseController.dispose();
+      distanceController.dispose();
+    }
+  }
+
+  Future<void> _deleteGoal(SwimGoal goal) async {
+    if (goal.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This goal cannot be deleted yet. Refresh and try again.')),
+      );
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -179,13 +297,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _strokeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Stroke',
-                      hintText:
-                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
-                    ),
+                  SwimStrokeDropdown(
+                    value: _stroke,
+                    label: 'Goal Stroke',
+                    onChanged: (value) => setState(() => _stroke = value),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -227,12 +342,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
+                  SwimCourseDropdown(
+                    value: _course,
+                    label: 'Goal Course',
+                    onChanged: (value) => setState(() => _course = value),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
@@ -291,9 +404,11 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     isThreeLine: true,
                     trailing: PopupMenuButton<String>(
                       onSelected: (value) {
+                        if (value == 'edit') _editGoal(goal);
                         if (value == 'delete') _deleteGoal(goal);
                       },
                       itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Edit')),
                         PopupMenuItem(value: 'delete', child: Text('Delete')),
                       ],
                     ),
