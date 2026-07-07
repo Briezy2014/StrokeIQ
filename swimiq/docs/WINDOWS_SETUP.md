@@ -104,6 +104,31 @@ flutter pub get
 
 ---
 
+## Supabase keys required (fixes “assets/.env 404” in Chrome)
+
+Flutter **web** does not load `.env` as a file in the browser. The launcher passes keys via `--dart-define`.
+
+1. In `S:\swimiq`, copy the example file:
+
+```powershell
+copy .env.example .env
+notepad .env
+```
+
+2. In [Supabase](https://supabase.com/dashboard) → your project → **Project Settings** → **API**, paste:
+   - **Project URL** → `SUPABASE_URL=`
+   - **anon public** key → `SUPABASE_ANON_KEY=`
+
+3. Save `.env`, then launch:
+
+```powershell
+.\run-chrome.bat
+```
+
+Do **not** use raw `flutter run -d chrome` — use `run-chrome.bat` so keys and path fixes apply.
+
+---
+
 ## Logos
 
 Brand files live in `assets\branding\` (`swimiq_icon.png`, `swimiq_hero.png`, `swimiq_logo.png`).  
