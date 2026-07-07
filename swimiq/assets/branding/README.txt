@@ -1,7 +1,11 @@
 SwimIQ branding folder
 ========================
 
-Drop your two logo files here, then run: flutter clean && flutter pub get
+Drop your two logo files here, then run branding icon setup:
+
+  powershell -ExecutionPolicy Bypass -File scripts\apply-branding-icons.ps1
+  flutter clean
+  flutter run -d chrome
 
 Required files (use these exact names):
   swimiq_icon.png  — square SWIMIQ icon (app bar, passport circle)

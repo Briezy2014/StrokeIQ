@@ -13,7 +13,6 @@ import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
 import 'settings/settings_screen.dart';
 import 'training_log/training_log_screen.dart';
-import 'video_lab/video_lab_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,14 +30,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return const PersonalBestsScreen();
       case HomeTab.trainingLog:
         return const TrainingLogScreen();
-      case HomeTab.addSession:
-        return const AddSessionScreen();
       case HomeTab.goals:
         return const GoalsScreen();
       case HomeTab.meetResults:
         return const MeetResultsScreen();
-      case HomeTab.videoLab:
-        return const VideoLabScreen();
       case HomeTab.passport:
         return const AthletePassportV2Screen();
       default:
@@ -50,6 +45,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const SettingsScreen(),
+      ),
+    );
+  }
+
+  void _openAddSession() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AddSessionScreen(),
       ),
     );
   }
@@ -66,7 +69,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: SwimIqAppBarTitle(subtitle: swimmer),
+        title: SwimIqAppBarTitle(
+          subtitle: user?.email ?? swimmer,
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -80,17 +85,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
+      floatingActionButton: selectedIndex == HomeTab.trainingLog
+          ? FloatingActionButton.extended(
+              onPressed: _openAddSession,
+              icon: const Icon(Icons.add),
+              label: const Text('Log Session'),
+            )
+          : null,
       body: Column(
         children: [
-          MaterialBanner(
-            content: Text(
-              user?.email != null
-                  ? 'Signed in as ${user!.email}'
-                  : 'Swimmer: $swimmer',
-            ),
-            backgroundColor: Colors.green.shade50,
-            actions: const [SizedBox.shrink()],
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
@@ -122,11 +125,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Log',
           ),
           NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Add',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.flag_outlined),
             selectedIcon: Icon(Icons.flag),
             label: 'Goals',
@@ -135,11 +133,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.stadium_outlined),
             selectedIcon: Icon(Icons.stadium),
             label: 'Meets',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.videocam_outlined),
-            selectedIcon: Icon(Icons.videocam),
-            label: 'Video',
           ),
           NavigationDestination(
             icon: Icon(Icons.badge_outlined),

@@ -6,6 +6,7 @@ import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/meet_result.dart';
 import '../../data/models/race_log.dart';
+import '../../data/models/scheduled_meet.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
@@ -19,7 +20,8 @@ class PassportSnapshot {
     required this.swimIqExplanation,
     required this.currentFocus,
     required this.highestCut,
-    required this.nextMeet,
+    required this.lastMeetResult,
+    required this.upcomingMeet,
     required this.imxScore,
     required this.readiness,
     required this.nextFocus,
@@ -38,7 +40,8 @@ class PassportSnapshot {
   final String swimIqExplanation;
   final String currentFocus;
   final String highestCut;
-  final String nextMeet;
+  final String lastMeetResult;
+  final String upcomingMeet;
   final String imxScore;
   final String readiness;
   final String nextFocus;
@@ -60,6 +63,7 @@ class PassportMetrics {
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
     required List<MeetResult> meetResults,
+    List<ScheduledMeet> attendingMeets = const [],
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
     required UsaMotivationalStandardsCatalog motivationalStandards,
@@ -102,7 +106,8 @@ class PassportMetrics {
         catalog: motivationalStandards,
         profile: profile,
       ),
-      nextMeet: nextMeet(meetResults),
+      lastMeetResult: lastMeetResult(meetResults),
+      upcomingMeet: upcomingMeet(goals, attendingMeets: attendingMeets),
       imxScore: imxScore(raceLogs),
       readiness: readiness(
         raceLogs: raceLogs,
@@ -216,12 +221,48 @@ class PassportMetrics {
     return bestLevel ?? 'No motivational cut matched yet';
   }
 
-  static String nextMeet(List<MeetResult> meetResults) {
-    if (meetResults.isEmpty) return 'No meet results logged yet';
+  static String lastMeetResult(List<MeetResult> meetResults) {
+    if (meetResults.isEmpty) return 'No meet results yet';
+
     final sorted = [...meetResults]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
-    return sorted.first.meetName;
+    final latest = sorted.first;
+    return '${latest.meetName} · ${_formatDate(latest.meetDate)}';
   }
+
+  static String upcomingMeet(
+    List<SwimGoal> goals, {
+    List<ScheduledMeet> attendingMeets = const [],
+  }) {
+    if (attendingMeets.isNotEmpty) {
+      final sorted = [...attendingMeets]
+        ..sort((a, b) => a.startDate.compareTo(b.startDate));
+      final next = sorted.first;
+      final location = next.location?.trim();
+      if (location != null && location.isNotEmpty) {
+        return '${next.name} · ${_formatDate(next.startDate)} · $location';
+      }
+      return '${next.name} · ${_formatDate(next.startDate)}';
+    }
+
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+    final upcoming = goals
+        .where((goal) => !goal.targetDate.isBefore(startOfToday))
+        .toList()
+      ..sort((a, b) => a.targetDate.compareTo(b.targetDate));
+
+    if (upcoming.isEmpty) {
+      return 'Add a goal with a target meet date';
+    }
+
+    final goal = upcoming.first;
+    return '${goal.event} ${goal.course} · ${_formatDate(goal.targetDate)}';
+  }
+
+  /// @deprecated Use [lastMeetResult]. Kept for older tests/fixtures.
+  static String nextMeet(List<MeetResult> meetResults) =>
+      lastMeetResult(meetResults);
 
   static String readiness({
     required List<RaceLog> raceLogs,

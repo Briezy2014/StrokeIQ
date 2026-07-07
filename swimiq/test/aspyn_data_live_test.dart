@@ -130,7 +130,8 @@ void main() {
       // Athlete Passport
       expect(snapshot.swimmerName, _swimmer);
       expect(snapshot.currentFocus, isNotEmpty);
-      expect(snapshot.nextMeet, isNotEmpty);
+      expect(snapshot.lastMeetResult, isNotEmpty);
+      expect(snapshot.upcomingMeet, isNotEmpty);
       expect(snapshot.videoCount, data.userFacingVideos.length);
       expect(snapshot.analysisCount, data.userFacingVideoAnalyses.length);
 
@@ -155,7 +156,7 @@ void main() {
       // Meet Results
       final latestMeet = [...data.meetResults]
         ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
-      expect(snapshot.nextMeet, latestMeet.first.meetName);
+      expect(snapshot.lastMeetResult, contains(latestMeet.first.meetName));
 
       // USA Standards
       expect(snapshot.usaStandardsSummary, isNotEmpty);
@@ -177,7 +178,8 @@ void main() {
         'userFacingVideoCount': data.userFacingVideos.length,
         'analysisCount': data.userFacingVideoAnalyses.length,
         'currentFocus': snapshot.currentFocus,
-        'nextMeet': snapshot.nextMeet,
+        'lastMeetResult': snapshot.lastMeetResult,
+        'upcomingMeet': snapshot.upcomingMeet,
         'usaStandardsSummary': snapshot.usaStandardsSummary,
         'latestAnalysisSummary': snapshot.latestAnalysisSummary,
         'goalLines': snapshot.goalLines,

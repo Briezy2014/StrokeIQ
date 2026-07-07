@@ -112,14 +112,24 @@ class SwimIqRepository {
     final data = Map<String, dynamic>.from(profile.toJson())
       ..removeWhere((key, value) => value == null);
     if (profile.id != null) {
-      await _client.from('swimmers').update(data).eq('id', profile.id!);
-      return profile;
+      final response = await _client
+          .from('swimmers')
+          .update(data)
+          .eq('id', profile.id!)
+          .select()
+          .single();
+      return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
     }
 
     final existing = await fetchProfile(profile.swimmerName);
     if (existing?.id != null) {
-      await _client.from('swimmers').update(data).eq('id', existing!.id!);
-      return profile.copyWith(id: existing.id);
+      final response = await _client
+          .from('swimmers')
+          .update(data)
+          .eq('id', existing!.id!)
+          .select()
+          .single();
+      return SwimmerProfile.fromJson(Map<String, dynamic>.from(response));
     }
 
     final response = await _client
@@ -229,5 +239,21 @@ class SwimIqRepository {
           onConflict: 'age_group,gender,stroke,distance,course,standard_level',
         );
     return standards.length;
+  }
+
+  /// Directory search for swimmers who enabled [SwimmerProfile.publicPassportEnabled].
+  Future<List<SwimmerProfile>> searchPublicProfiles(String query) async {
+    final response = await _client.from('swimmers').select().limit(250);
+
+    final profiles = (response as List)
+        .map((row) => SwimmerProfile.fromJson(Map<String, dynamic>.from(row)))
+        .where((profile) => profile.publicPassportEnabled)
+        .where((profile) => profile.matchesDirectoryQuery(query))
+        .toList();
+
+    profiles.sort(
+      (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+    );
+    return profiles;
   }
 }

@@ -268,8 +268,12 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
                   value: snapshot.highestCut,
                 ),
                 SwimIqMetricCard(
-                  label: 'Latest Meet',
-                  value: snapshot.nextMeet,
+                  label: 'Last Meet',
+                  value: snapshot.lastMeetResult,
+                ),
+                SwimIqMetricCard(
+                  label: 'Upcoming Meet',
+                  value: snapshot.upcomingMeet,
                 ),
                 SwimIqMetricCard(
                   label: 'IMX / IMR',

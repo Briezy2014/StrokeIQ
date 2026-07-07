@@ -8,7 +8,7 @@ import '../../data/models/race_log.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_ui.dart';
+import '../../widgets/swim_form_fields.dart';
 
 /// Training log with list, edit, and delete.
 class TrainingLogScreen extends ConsumerWidget {
@@ -33,7 +33,7 @@ class TrainingLogScreen extends ConsumerWidget {
             if (logs.isEmpty)
               const EmptyStateMessage(
                 message:
-                    'No swim sessions yet. Use the Add tab to log your first training swim.',
+                    'No swim sessions yet. Tap Log Session below to record your first training swim.',
               )
             else
               ...logs.map(
@@ -55,7 +55,13 @@ class TrainingLogScreen extends ConsumerWidget {
     WidgetRef ref,
     RaceLog log,
   ) async {
-    if (log.id == null) return;
+    if (log.id == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This session cannot be deleted yet. Refresh and try again.')),
+      );
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -95,10 +101,17 @@ class TrainingLogScreen extends ConsumerWidget {
     WidgetRef ref,
     RaceLog log,
   ) async {
-    if (log.id == null) return;
+    if (log.id == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This session cannot be edited yet. Refresh and try again.')),
+      );
+      return;
+    }
 
-    final timeController =
-        TextEditingController(text: SwimTime.fromSeconds(log.timeSeconds));
+    final timeController = TextEditingController(
+      text: log.timeSeconds > 0 ? SwimTime.fromSeconds(log.timeSeconds) : '',
+    );
     final notesController = TextEditingController(text: log.notes ?? '');
     final distanceController = TextEditingController(text: '${log.distance}');
     var stroke = log.stroke;
@@ -151,8 +164,8 @@ class TrainingLogScreen extends ConsumerWidget {
                   TextField(
                     controller: timeController,
                     decoration: const InputDecoration(
-                      labelText: 'Time',
-                      hintText: '35.43 or 1:24.32',
+                      labelText: 'Time (optional)',
+                      hintText: 'Leave blank for notes-only sessions',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -205,8 +218,13 @@ class TrainingLogScreen extends ConsumerWidget {
     }
 
     try {
-      final distance = int.parse(distanceController.text);
-      final timeSeconds = SwimTime.toSeconds(timeController.text);
+      final distance = int.tryParse(distanceController.text.trim());
+      if (distance == null) {
+        throw const FormatException('invalid distance');
+      }
+      final timeText = timeController.text.trim();
+      final timeSeconds =
+          timeText.isEmpty ? 0.0 : SwimTime.toSeconds(timeText);
       final updated = RaceLog(
         id: log.id,
         swimmer: log.swimmer,
@@ -231,7 +249,7 @@ class TrainingLogScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enter time like 35.43, 1:24.32, or 5:31.43.'),
+            content: Text('Please enter a valid distance and time.'),
           ),
         );
       }
@@ -269,7 +287,7 @@ class _TrainingLogTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              SwimTime.fromSeconds(log.timeSeconds),
+              formatLoggedTime(log.timeSeconds),
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             PopupMenuButton<String>(

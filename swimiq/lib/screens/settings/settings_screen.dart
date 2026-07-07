@@ -23,6 +23,7 @@ class SettingsScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final swimmer = ref.watch(activeSwimmerProvider);
     final profile = ref.watch(swimmerDataProvider).value?.profile;
+    final viewMode = ref.watch(appViewModeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,6 +65,81 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: Text(swimmer ?? '—'),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Passport',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: const Text('Edit Athlete Passport'),
+              subtitle: const Text('Birthday, gender, photo, team, strokes'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                ref.read(homeTabIndexProvider.notifier).state = HomeTab.passport;
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'View mode',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Dashboard lens',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Athlete, parent, and coach views show the same data with '
+                    'different emphasis on the dashboard.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<AppViewMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: AppViewMode.athlete,
+                        label: Text('Athlete'),
+                        icon: Icon(Icons.person_outline),
+                      ),
+                      ButtonSegment(
+                        value: AppViewMode.parent,
+                        label: Text('Parent'),
+                        icon: Icon(Icons.family_restroom),
+                      ),
+                      ButtonSegment(
+                        value: AppViewMode.coach,
+                        label: Text('Coach'),
+                        icon: Icon(Icons.sports),
+                      ),
+                    ],
+                    selected: {viewMode},
+                    onSelectionChanged: (selection) {
+                      ref.read(appViewModeProvider.notifier).state =
+                          selection.first;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
