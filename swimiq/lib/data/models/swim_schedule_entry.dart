@@ -37,7 +37,7 @@ class SwimScheduleEntry {
       case typeMeet:
         return 'Meet';
       case typeRace:
-        return 'Race heat';
+        return 'Race result';
       default:
         return 'Practice';
     }

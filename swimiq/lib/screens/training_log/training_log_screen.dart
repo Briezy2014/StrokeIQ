@@ -21,7 +21,7 @@ class TrainingLogScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
-  int _tabIndex = 0;
+  int _tabIndex = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
             SegmentedButton<int>(
               segments: const [
                 ButtonSegment(value: 0, label: Text('Training')),
-                ButtonSegment(value: 1, label: Text('Schedules')),
+                ButtonSegment(value: 1, label: Text('Meets & results')),
               ],
               selected: {_tabIndex},
               onSelectionChanged: (values) {
