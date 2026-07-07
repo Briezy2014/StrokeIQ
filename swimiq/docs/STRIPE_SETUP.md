@@ -48,6 +48,17 @@ Each product: **Recurring** → add **monthly** price, then **yearly** price.
 
 Each price has an ID like `price_1ABC...`. Copy all **6** IDs.
 
+**Your sandbox Price IDs (test mode):**
+
+| Secret name | Price ID |
+|-------------|----------|
+| `STRIPE_PRICE_BASIC_MONTHLY` | `price_1TqfCpAGTU3uDC7zn2vtpFFO` |
+| `STRIPE_PRICE_BASIC_ANNUAL` | `price_1TqfEGAGTU3uDC7ziSbknFdT` |
+| `STRIPE_PRICE_PRO_MONTHLY` | `price_1TqfIIAGTU3uDC7zJkgA90xR` |
+| `STRIPE_PRICE_PRO_ANNUAL` | `price_1TqfJ2AGTU3uDC7zlYPp9evf` |
+| `STRIPE_PRICE_ELITE_MONTHLY` | `price_1TqfK8AGTU3uDC7zaL5Zj3UQ` |
+| `STRIPE_PRICE_ELITE_ANNUAL` | `price_1TqfLCAGTU3uDC7zSrjzvNuW` |
+
 ---
 
 # PART B — Supabase (database + secrets)
