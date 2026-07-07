@@ -12,6 +12,7 @@ import 'package:swimiq/screens/home_screen.dart';
 import 'package:swimiq/services/auth_service.dart';
 
 import 'support/motivational_standards_test_helper.dart';
+import 'support/subscription_test_helper.dart';
 
 /// HomeScreen Passport tab uses AthletePassportV2Screen (text fields only).
 
@@ -85,6 +86,7 @@ void main() {
           activeSwimmerProvider.overrideWith((ref) => 'Aspyn'),
           swimmerDataProvider.overrideWith(_AspynHarness.new),
           currentUserProvider.overrideWith((ref) => null),
+          ...subscriptionTestOverrides,
         ],
         child: MaterialApp(
           theme: buildAppTheme(),

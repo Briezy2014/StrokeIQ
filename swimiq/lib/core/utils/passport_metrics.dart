@@ -5,6 +5,7 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../data/models/meet_result.dart';
+import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/video_models.dart';
@@ -75,7 +76,10 @@ class PassportMetrics {
         )
         .toList();
 
-    final pbs = SwimAnalytics.personalBests(raceLogs);
+    final unifiedPbs = SwimAnalytics.personalBestsUnified(
+      raceLogs: raceLogs,
+      meetResults: meetResults,
+    );
     final swimIqScore = swimIqScoreValue(
       raceLogs: raceLogs,
       goals: goals,
@@ -89,7 +93,7 @@ class PassportMetrics {
         score: swimIqScore,
         raceLogs: raceLogs,
         goals: goals,
-        personalBestCount: pbs.length,
+        personalBestCount: unifiedPbs.length,
       ),
       currentFocus: currentFocus(
         profile: profile,
@@ -97,8 +101,8 @@ class PassportMetrics {
         videos: userVideos,
         analyses: userAnalyses,
       ),
-      highestCut: highestCut(
-        raceLogs: raceLogs,
+      highestCut: SwimAnalytics.highestMotivationalCut(
+        personalBests: unifiedPbs,
         catalog: motivationalStandards,
         profile: profile,
       ),
@@ -118,7 +122,7 @@ class PassportMetrics {
         analyses: userAnalyses,
         raceLogs: raceLogs,
       ),
-      personalBests: personalBestLines(pbs),
+      personalBests: personalBestLines(unifiedPbs),
       goalLines: goalProgressLines(goals: goals, raceLogs: raceLogs),
       videoCount: userVideos.length,
       analysisCount: userAnalyses.length,
@@ -133,7 +137,8 @@ class PassportMetrics {
       usaStandardsSummary: usaStandardsSummary(
         catalog: motivationalStandards,
         profile: profile,
-        personalBests: pbs,
+        personalBests: unifiedPbs,
+        meetResults: meetResults,
       ),
     );
   }
@@ -274,14 +279,14 @@ class PassportMetrics {
     return 'Add a goal or upload a race video for coaching focus';
   }
 
-  static List<String> personalBestLines(List<RaceLog> pbs) {
+  static List<String> personalBestLines(List<PersonalBestEntry> pbs) {
     if (pbs.isEmpty) return const ['No personal bests logged yet.'];
 
     return pbs
         .take(6)
         .map(
           (pb) =>
-              '${pb.distance} ${pb.stroke} (${pb.course}): ${SwimTime.fromSeconds(pb.timeSeconds)}',
+              '${pb.displayTitle} (${pb.course} · ${pb.sourceLabel}): ${pb.formattedTime}',
         )
         .toList();
   }
@@ -351,10 +356,11 @@ class PassportMetrics {
   static String usaStandardsSummary({
     required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
-    required List<RaceLog> personalBests,
+    required List<PersonalBestEntry> personalBests,
+    List<MeetResult> meetResults = const [],
   }) {
     if (personalBests.isEmpty) {
-      return '${catalog.versionLabel} loaded. Log sessions to compare cuts.';
+      return '${catalog.versionLabel} loaded. Log sessions or meets to compare cuts.';
     }
     if (!SwimIqStandardsProfile.isReady(profile)) {
       return SwimIqStandardsProfile.setupMessage;
@@ -362,8 +368,8 @@ class PassportMetrics {
 
     final ageGroup = SwimIqAgeGroup.fromProfileOrNull(profile)!;
     final gender = SwimIqGender.standardsGenderOrNull(profile)!;
-    final highest = highestCut(
-      raceLogs: personalBests,
+    final highest = SwimAnalytics.highestMotivationalCut(
+      personalBests: personalBests,
       catalog: catalog,
       profile: profile,
     );
@@ -422,7 +428,7 @@ class PassportMetrics {
   }
 
   static _ClosestCut? _closestCutGap({
-    required List<RaceLog> personalBests,
+    required List<PersonalBestEntry> personalBests,
     required UsaMotivationalStandardsCatalog catalog,
     SwimmerProfile? profile,
   }) {

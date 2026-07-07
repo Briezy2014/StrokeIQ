@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../membership/membership_screen.dart';
 import '../../services/auth_service.dart';
 
 /// Account and app settings — Milestone 4.
@@ -64,6 +65,31 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: Text(swimmer ?? '—'),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Membership',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium_outlined),
+              title: const Text('Plans & billing'),
+              subtitle: const Text(
+                'Basic, Pro, and Elite — monthly or annual. Coach preview codes supported.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MembershipScreen(),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 24),

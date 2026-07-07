@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/models/subscription_plan.dart';
 import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
+import '../core/services/subscription_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
 import '../core/services/video_storage_service.dart';
@@ -65,3 +67,49 @@ final videoStorageServiceProvider = Provider<VideoStorageService>(
 final profilePhotoServiceProvider = Provider<ProfilePhotoService>(
   (ref) => ProfilePhotoService(ref.watch(supabaseClientProvider)),
 );
+
+final subscriptionServiceProvider = Provider<SubscriptionService>(
+  (ref) => SubscriptionService(),
+);
+
+final subscriptionStateProvider =
+    AsyncNotifierProvider<SubscriptionNotifier, SubscriptionState>(
+  SubscriptionNotifier.new,
+);
+
+class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
+  @override
+  Future<SubscriptionState> build() async {
+    final service = ref.read(subscriptionServiceProvider);
+    final state = await service.load();
+    if (!state.hasUsedTrial && !state.isTrialActive) {
+      return service.startTrialIfEligible(state);
+    }
+    return state;
+  }
+
+  Future<void> selectPlan(SubscriptionTier tier, BillingCycle cycle) async {
+    final service = ref.read(subscriptionServiceProvider);
+    final current = state.value ?? await service.load();
+    state = AsyncData(
+      await service.selectPlan(
+        current: current,
+        tier: tier,
+        billingCycle: cycle,
+      ),
+    );
+  }
+
+  Future<String?> redeemCoachCode(String code) async {
+    try {
+      final service = ref.read(subscriptionServiceProvider);
+      final current = state.value ?? await service.load();
+      state = AsyncData(await service.redeemCoachCode(current, code));
+      return null;
+    } on FormatException catch (error) {
+      return error.message;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+}

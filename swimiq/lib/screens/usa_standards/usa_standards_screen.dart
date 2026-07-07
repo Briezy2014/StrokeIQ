@@ -165,17 +165,21 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               )
             else
               ...pbs.map((pb) {
-                final cut = MotivationalCut.forRaceLog(
+                final cut = MotivationalCut.forSwim(
                   catalog: catalog,
                   profile: data.profile,
-                  log: pb,
+                  stroke: pb.stroke,
+                  distance: pb.distance,
+                  course: pb.course,
+                  timeSeconds: pb.timeSeconds,
                   ageGroup: _selectedAgeGroup ?? ageGroup,
                   gender: _selectedGender ?? gender,
                 );
                 return SwimIqEventListTile(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',
                   subtitle:
-                      '${_selectedAgeGroup ?? ageGroup ?? '—'} · ${_selectedGender ?? gender ?? '—'} · ${cut ?? 'Below B'} motivational cut',
+                      '${pb.sourceLabel} · ${_selectedAgeGroup ?? ageGroup ?? '—'} · '
+                      '${_selectedGender ?? gender ?? '—'} · ${cut ?? 'Below B'} motivational cut',
                   trailing: SwimTime.fromSeconds(pb.timeSeconds),
                 );
               }),

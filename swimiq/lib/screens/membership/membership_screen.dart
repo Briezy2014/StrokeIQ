@@ -1,0 +1,282 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/models/subscription_plan.dart';
+import '../../core/theme/app_theme.dart';
+import '../../providers/app_providers.dart';
+
+class MembershipScreen extends ConsumerStatefulWidget {
+  const MembershipScreen({super.key});
+
+  @override
+  ConsumerState<MembershipScreen> createState() => _MembershipScreenState();
+}
+
+class _MembershipScreenState extends ConsumerState<MembershipScreen> {
+  BillingCycle _billingCycle = BillingCycle.monthly;
+  final _coachCodeController = TextEditingController();
+  String? _message;
+
+  @override
+  void dispose() {
+    _coachCodeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectPlan(SubscriptionTier tier) async {
+    await ref
+        .read(subscriptionStateProvider.notifier)
+        .selectPlan(tier, _billingCycle);
+    if (!mounted) return;
+    setState(() {
+      _message =
+          'Selected ${SubscriptionCatalog.planFor(tier).name} (${_billingCycle.name}). '
+          'App Store billing connects at launch.';
+    });
+  }
+
+  Future<void> _redeemCoachCode() async {
+    final error = await ref
+        .read(subscriptionStateProvider.notifier)
+        .redeemCoachCode(_coachCodeController.text);
+    if (!mounted) return;
+    setState(() {
+      _message = error ??
+          'Coach preview unlocked for ${SubscriptionCatalog.coachTrialDays} days.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final subscriptionAsync = ref.watch(subscriptionStateProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SwimIQ Membership'),
+      ),
+      body: subscriptionAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Could not load plans: $error')),
+        data: (subscription) {
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      AppColors.primaryDeep,
+                      AppColors.primary,
+                      AppColors.accent,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subscription.statusLabel.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Built in the Water.\nDriven by Possibility.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Every new athlete gets a ${SubscriptionCatalog.trialDays}-day Elite trial. '
+                      'Choose monthly or annual billing when you are ready.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SegmentedButton<BillingCycle>(
+                segments: const [
+                  ButtonSegment(
+                    value: BillingCycle.monthly,
+                    label: Text('Monthly'),
+                  ),
+                  ButtonSegment(
+                    value: BillingCycle.annual,
+                    label: Text('Annual'),
+                  ),
+                ],
+                selected: {_billingCycle},
+                onSelectionChanged: (value) {
+                  setState(() => _billingCycle = value.first);
+                },
+              ),
+              const SizedBox(height: 20),
+              ...SubscriptionCatalog.plans.map(
+                (plan) => _PlanCard(
+                  plan: plan,
+                  billingCycle: _billingCycle,
+                  isCurrent: subscription.effectiveTier == plan.tier,
+                  onSelect: () => _selectPlan(plan.tier),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Coach preview access',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Coaches can unlock a ${SubscriptionCatalog.coachTrialDays}-day Pro preview '
+                'with invite code ${SubscriptionCatalog.coachAccessCode}.',
+                style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _coachCodeController,
+                decoration: const InputDecoration(
+                  labelText: 'Coach access code',
+                  hintText: SubscriptionCatalog.coachAccessCode,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: _redeemCoachCode,
+                child: const Text('Unlock coach preview'),
+              ),
+              if (_message != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _message!,
+                  style: TextStyle(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.plan,
+    required this.billingCycle,
+    required this.isCurrent,
+    required this.onSelect,
+  });
+
+  final SubscriptionPlan plan;
+  final BillingCycle billingCycle;
+  final bool isCurrent;
+  final VoidCallback onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: plan.isFeatured ? AppColors.primary : Colors.grey.shade200,
+          width: plan.isFeatured ? 2 : 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  plan.name,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                if (plan.isFeatured) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'MOST POPULAR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(plan.tagline),
+            const SizedBox(height: 12),
+            Text(
+              plan.priceLabel(billingCycle),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDeep,
+                  ),
+            ),
+            if (plan.savingsLabel(billingCycle) != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                plan.savingsLabel(billingCycle)!,
+                style: TextStyle(
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            ...plan.features.map(
+              (feature) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.check_circle, size: 18, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(feature)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: onSelect,
+              child: Text(isCurrent ? 'Current plan' : 'Choose ${plan.name}'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

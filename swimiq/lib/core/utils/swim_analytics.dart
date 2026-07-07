@@ -1,5 +1,11 @@
+import '../../data/models/meet_result.dart';
+import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swimmer_profile.dart';
+import '../services/usa_motivational_standards_catalog.dart';
+import 'motivational_cut.dart';
+import 'swimiq_standards_profile.dart';
 import 'swim_time.dart';
 
 /// Business logic for personal bests and SwimIQ scoring.
@@ -26,6 +32,115 @@ class SwimAnalytics {
         return a.distance.compareTo(b.distance);
       });
     return results;
+  }
+
+  /// Best times across training sessions **and** meet results.
+  static List<PersonalBestEntry> personalBestsUnified({
+    required List<RaceLog> raceLogs,
+    required List<MeetResult> meetResults,
+  }) {
+    final bestByEvent = <String, PersonalBestEntry>{};
+
+    for (final log in raceLogs) {
+      if (log.timeSeconds <= 0) continue;
+      final entry = PersonalBestEntry.fromRaceLog(log);
+      if (!entry.isValid) continue;
+      _keepFastest(bestByEvent, entry);
+    }
+
+    for (final result in meetResults) {
+      if (result.swimTime <= 0) continue;
+      final entry = PersonalBestEntry.fromMeetResult(result);
+      if (!entry.isValid) continue;
+      _keepFastest(bestByEvent, entry);
+    }
+
+    final results = bestByEvent.values.toList()
+      ..sort((a, b) {
+        final strokeCompare = a.stroke.compareTo(b.stroke);
+        if (strokeCompare != 0) return strokeCompare;
+        return a.distance.compareTo(b.distance);
+      });
+    return results;
+  }
+
+  static void _keepFastest(
+    Map<String, PersonalBestEntry> bestByEvent,
+    PersonalBestEntry entry,
+  ) {
+    final existing = bestByEvent[entry.eventKey];
+    if (existing == null || entry.timeSeconds < existing.timeSeconds) {
+      bestByEvent[entry.eventKey] = entry;
+    }
+  }
+
+  static PersonalBestEntry? spotlightPersonalBest({
+    required List<PersonalBestEntry> personalBests,
+    required UsaMotivationalStandardsCatalog catalog,
+    required SwimmerProfile? profile,
+  }) {
+    if (personalBests.isEmpty) return null;
+    if (!SwimIqStandardsProfile.isReady(profile)) {
+      return personalBests.first;
+    }
+
+    PersonalBestEntry? bestCutEntry;
+    String? bestCutLevel;
+    const levelOrder = ['AAAA', 'AAA', 'AA', 'A', 'BB', 'B'];
+
+    for (final entry in personalBests) {
+      final level = MotivationalCut.forSwim(
+        catalog: catalog,
+        profile: profile,
+        stroke: entry.stroke,
+        distance: entry.distance,
+        course: entry.course,
+        timeSeconds: entry.timeSeconds,
+      );
+      if (level == null) continue;
+
+      if (bestCutLevel == null ||
+          levelOrder.indexOf(level) < levelOrder.indexOf(bestCutLevel)) {
+        bestCutLevel = level;
+        bestCutEntry = entry;
+      }
+    }
+
+    return bestCutEntry ?? personalBests.first;
+  }
+
+  static String highestMotivationalCut({
+    required List<PersonalBestEntry> personalBests,
+    required UsaMotivationalStandardsCatalog catalog,
+    required SwimmerProfile? profile,
+  }) {
+    if (personalBests.isEmpty) {
+      return 'Log sessions or meets to compare against cuts';
+    }
+    if (!SwimIqStandardsProfile.isReady(profile)) {
+      return SwimIqStandardsProfile.setupMessageShort;
+    }
+
+    const levelOrder = ['AAAA', 'AAA', 'AA', 'A', 'BB', 'B'];
+    String? bestLevel;
+
+    for (final entry in personalBests) {
+      final level = MotivationalCut.forSwim(
+        catalog: catalog,
+        profile: profile,
+        stroke: entry.stroke,
+        distance: entry.distance,
+        course: entry.course,
+        timeSeconds: entry.timeSeconds,
+      );
+      if (level == null) continue;
+      if (bestLevel == null ||
+          levelOrder.indexOf(level) < levelOrder.indexOf(bestLevel)) {
+        bestLevel = level;
+      }
+    }
+
+    return bestLevel ?? 'No motivational cut matched yet';
   }
 
   static bool isNewPersonalBest({

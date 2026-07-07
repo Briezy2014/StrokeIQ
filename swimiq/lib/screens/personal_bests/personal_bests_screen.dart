@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swim_time.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_ui.dart';
 
 class PersonalBestsScreen extends ConsumerWidget {
   const PersonalBestsScreen({super.key});
@@ -23,14 +21,20 @@ class PersonalBestsScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
-              SwimIqScreenHeader(
-                title: 'Personal Bests',
-                subtitle: 'Fastest logged times for ${data.displayName(swimmer)}',
+              Text(
+                'Personal Bests',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Fastest logged times for ${data.displayName(swimmer)}',
               ),
               const SizedBox(height: 16),
               const EmptyStateMessage(
                 message:
-                    'No personal bests yet. Add swim sessions to unlock this page.',
+                    'No personal bests yet. Add swim sessions or meet results to unlock this page.',
               ),
             ],
           );
@@ -40,27 +44,45 @@ class PersonalBestsScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'Personal Bests',
-              subtitle:
-                  '${personalBests.length} events tracked for ${data.displayName(swimmer)}',
+            Text(
+              'Personal Bests',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${personalBests.length} events tracked from sessions and meets',
             ),
             const SizedBox(height: 16),
             ...personalBests.map(
-              (log) {
+              (pb) {
                 final cut = MotivationalCut.labelForSwim(
                   catalog: data.motivationalStandards,
                   profile: data.profile,
-                  stroke: log.stroke,
-                  distance: log.distance,
-                  course: log.course,
-                  timeSeconds: log.timeSeconds,
+                  stroke: pb.stroke,
+                  distance: pb.distance,
+                  course: pb.course,
+                  timeSeconds: pb.timeSeconds,
                 );
-                return SwimIqEventListTile(
-                  title: '${log.distance} ${log.stroke}',
-                  subtitle:
-                      '${log.course} · ${dateFormat.format(log.date)} · $cut cut',
-                  trailing: SwimTime.fromSeconds(log.timeSeconds),
+                final sourceDetail = pb.meetName ?? pb.eventLabel;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: ListTile(
+                    title: Text(
+                      pb.displayTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    subtitle: Text(
+                      '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)}\n'
+                      '$sourceDetail · $cut cut',
+                    ),
+                    isThreeLine: true,
+                    trailing: Text(
+                      pb.formattedTime,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
                 );
               },
             ),

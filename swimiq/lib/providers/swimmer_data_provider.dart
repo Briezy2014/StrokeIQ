@@ -7,6 +7,7 @@ import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
+import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
@@ -63,7 +64,10 @@ class SwimmerData {
         .toList();
   }
 
-  List<RaceLog> get personalBests => SwimAnalytics.personalBests(raceLogs);
+  List<PersonalBestEntry> get personalBests => SwimAnalytics.personalBestsUnified(
+        raceLogs: raceLogs,
+        meetResults: meetResults,
+      );
 
   int get swimIqScore =>
       SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);

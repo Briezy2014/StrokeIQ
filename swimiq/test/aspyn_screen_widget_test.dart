@@ -21,6 +21,7 @@ import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
 
 import 'support/motivational_standards_test_helper.dart';
+import 'support/subscription_test_helper.dart';
 
 SwimmerData? _harnessData;
 late Map<String, dynamic> _fixture;
@@ -124,6 +125,7 @@ Widget _screenHarness(Widget screen) {
     overrides: [
       activeSwimmerProvider.overrideWith((ref) => _fixture['swimmer'] as String),
       swimmerDataProvider.overrideWith(_HarnessSwimmerDataNotifier.new),
+      ...subscriptionTestOverrides,
     ],
     child: MaterialApp(
       theme: buildAppTheme(),
@@ -145,7 +147,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final data = _harnessData!;
-      expect(find.text('Swimmer Dashboard'), findsOneWidget);
+      expect(find.textContaining('WELCOME BACK'), findsOneWidget);
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
       expect(find.text('${data.raceLogs.length}'), findsOneWidget);
       expect(find.text('${data.personalBests.length}'), findsOneWidget);
@@ -153,9 +155,9 @@ void main() {
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
       expect(
         find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),
-        findsOneWidget,
+        findsWidgets,
       );
-      expect(find.text('2024-2028'), findsOneWidget);
+      expect(find.text('Unlock the Elite wild factor'), findsOneWidget);
     });
 
     testWidgets('Athlete Passport', (tester) async {
