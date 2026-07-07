@@ -490,6 +490,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       } catch (_) {
         // Local analysis remains available even if remote refresh fails.
       }
+
+      await ref.read(subscriptionStateProvider.notifier).recordCoachAiAnalysis();
       return null;
     } catch (error) {
       return error.toString();

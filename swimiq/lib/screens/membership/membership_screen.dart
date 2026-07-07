@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/legal_footer.dart';
 
 class MembershipScreen extends ConsumerStatefulWidget {
   const MembershipScreen({super.key});
@@ -42,7 +44,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
     if (!mounted) return;
     setState(() {
       _message = error ??
-          'Coach preview unlocked for ${SubscriptionCatalog.coachTrialDays} days.';
+          'Coach preview unlocked: ${SubscriptionCatalog.coachTrialDays}-day Pro access plus '
+          '${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek '
+          '(${SubscriptionCatalog.coachEliteAnalysisLimit} video analyses).';
     });
   }
 
@@ -104,6 +108,17 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                         height: 1.4,
                       ),
                     ),
+                    if (subscription.isCoachTrialActive) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        SubscriptionCapabilities.coachPreviewSummary(subscription),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -142,14 +157,17 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Coaches can unlock a ${SubscriptionCatalog.coachTrialDays}-day Pro preview '
-                'with invite code ${SubscriptionCatalog.coachAccessCode}.',
-                style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+                'Coaches evaluate SwimIQ before buying for their team:\n'
+                '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
+                '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
+                '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
+                'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}',
+                style: TextStyle(color: Colors.grey.shade700, height: 1.45),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _coachCodeController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Coach access code',
                   hintText: SubscriptionCatalog.coachAccessCode,
                 ),
@@ -169,6 +187,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 28),
+              const LegalFooter(),
             ],
           );
         },

@@ -1,0 +1,62 @@
+SwimIQ Privacy Policy
+Last updated: July 7, 2026
+
+[DRAFT — have legal counsel review before App Store submission]
+
+1. Who we are
+SwimIQ ("we," "us") is operated by [Your Company Legal Name] ("Company"). This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
+
+Contact: privacy@swimiq.app
+
+2. Information we collect
+Account information: email address, display name, and authentication identifiers from our identity provider (Supabase Auth).
+
+Athlete profile: name, birthday, gender, team, coach, school, graduation year, recruiting notes, and profile photo you choose to upload.
+
+Performance data: training sessions, meet results, goals, schedules, and personal bests you enter.
+
+Video content: swim videos you upload to Video Lab, associated metadata (stroke, distance, course, notes), and AI analysis results.
+
+Device & usage: app version, basic diagnostic logs needed to operate the service.
+
+3. How we use information
+We use information to:
+• Provide dashboards, logs, standards comparisons, and athlete passport features
+• Generate SwimIQ AI coaching reports when you request analysis
+• Store and sync your data across devices via Supabase
+• Improve reliability and security of the app
+
+4. Third-party service providers
+We use trusted processors, including:
+• Supabase (hosting, database, authentication, file storage)
+• Google cloud AI services (video coaching analysis — video and context you submit are processed by Google as our subprocessors when you run SwimIQ AI analysis)
+
+We do not sell your personal information.
+
+5. AI processing (Apple App Store disclosure)
+When you tap "Run AI Swim Analysis," your video and related swimmer context are transmitted to our servers and then to Google’s AI services to generate coaching feedback. We ask for your explicit in-app consent before the first transmission. You may decline and still use non-AI features.
+
+6. Data retention
+We retain your data while your account is active. You may request deletion by contacting privacy@swimiq.app. We may retain limited records where required by law.
+
+7. Children
+SwimIQ is used by athletes of varying ages. If you are a parent or guardian and believe a child provided information without appropriate consent, contact us to request deletion.
+
+8. Security
+We use industry-standard transport encryption (HTTPS/TLS) and access controls. No method of transmission is 100% secure.
+
+9. Your choices
+• Edit or delete performance data within the app where supported
+• Decline AI analysis consent (non-AI features remain available on eligible plans)
+• Sign out to end your session on a shared device
+
+10. International transfers
+If you access SwimIQ from outside the United States, your information may be processed in the U.S. and other countries where our providers operate.
+
+11. Changes
+We may update this policy. We will revise the "Last updated" date and, where required, provide additional notice in the app.
+
+12. Contact
+privacy@swimiq.app
+[Your Company Legal Name]
+[Mailing address — add before launch]

@@ -11,6 +11,8 @@ class TestSubscriptionNotifier extends SubscriptionNotifier {
       billingCycle: BillingCycle.monthly,
       trialEndsAt: DateTime.now().add(const Duration(days: 3)),
       coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
       hasUsedTrial: true,
     );
   }

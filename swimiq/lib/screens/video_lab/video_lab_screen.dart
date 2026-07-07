@@ -8,7 +8,10 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../data/models/video_models.dart';
+import '../../core/subscription/subscription_capabilities.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -116,6 +119,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   Future<void> _runAnalysis(SwimVideo video) async {
     final videoId = video.id;
     if (videoId == null) return;
+
+    final subscription = ref.read(subscriptionStateProvider).value;
+    if (subscription != null &&
+        !SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(SubscriptionCapabilities.eliteGateMessage(subscription)),
+        ),
+      );
+      return;
+    }
+
+    final consented = await AiDataConsentDialog.ensureGranted(context);
+    if (!consented || !mounted) return;
 
     setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);

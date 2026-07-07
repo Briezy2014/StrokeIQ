@@ -1,0 +1,32 @@
+SwimIQ AI & Data Disclosure
+Last updated: July 7, 2026
+
+Required disclosure for Apple App Review Guideline 5.1.2(i) — third-party AI
+
+WHAT USES AI?
+• Video Lab — "Run AI Swim Analysis" on uploaded swim clips
+• Race Intelligence — meet-day plans and nutrition suggestions (generated on-device from your data; no video sent for nutrition text)
+• Future AI Coach features labeled "SwimIQ AI"
+
+WHAT DATA IS SHARED WITH THIRD-PARTY AI?
+When you run Video Lab AI analysis, SwimIQ sends to our secure backend:
+• The swim video file you uploaded
+• Swimmer context: event, stroke, distance, course, notes, goals, and relevant profile fields
+
+Our backend uses Google cloud AI services to analyze that content and return a coaching report. Google processes data as our subprocessor under their API terms.
+
+WHAT IS NOT SHARED WITHOUT YOUR ACTION?
+• Training log entries, meet results, and passport fields are not sent to Google unless you explicitly run AI video analysis or a future feature clearly discloses transmission.
+• On-device body mechanics (when available) are processed locally and are not uploaded as raw video for that step.
+
+CONSENT
+The first time you run AI video analysis, SwimIQ shows this disclosure and asks for your explicit permission. You may decline and continue using non-AI features.
+
+REVOKE CONSENT
+Contact support@swimiq.app or delete your account to stop future AI processing. Clearing app data or signing out removes local consent flags on your device.
+
+ACCURACY
+AI output is estimated coaching feedback — not automatic video timing, not a substitute for your coach, and not medical or nutrition therapy.
+
+QUESTIONS
+privacy@swimiq.app

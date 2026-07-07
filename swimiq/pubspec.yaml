@@ -34,5 +34,6 @@ flutter:
   assets:
     - assets/branding/
     - assets/images/
+    - assets/legal/
     - assets/data/usa_time_standards_seed.json
     - assets/data/usa_motivational_standards_2024_2028.json

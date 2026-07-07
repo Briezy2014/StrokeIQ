@@ -1,0 +1,45 @@
+SwimIQ Terms of Service
+Last updated: July 7, 2026
+
+[DRAFT — have legal counsel review before App Store submission]
+
+1. Agreement
+By downloading or using SwimIQ, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the app.
+
+2. Service description
+SwimIQ provides swim performance tracking, meet and training logs, USA motivational standards comparisons, athlete passport tools, and optional AI-generated coaching feedback. Features may vary by subscription plan.
+
+3. Not medical or officiating advice
+SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and time estimates — are for training guidance only. They are not medical advice, dietary prescriptions, or official meet results. Always follow your coach, physician, and meet officials.
+
+4. Accounts
+You are responsible for safeguarding your login credentials and for activity under your account. Provide accurate profile information, especially birthday and gender used for USA age-group standards.
+
+5. Subscriptions & billing
+Paid plans (Basic, Pro, Elite) will be billed through the Apple App Store or Google Play when connected at launch. Prices are shown in the app. Trials and coach preview codes are promotional and may change.
+
+Coach preview: invite codes grant time-limited Pro access plus a capped Elite AI evaluation period so coaches can assess SwimIQ before purchasing for their team.
+
+6. Acceptable use
+You agree not to misuse the service, upload unlawful content, attempt to reverse engineer the app, or interfere with other users.
+
+7. Your content
+You retain ownership of videos and data you upload. You grant us a license to host, process, and display your content solely to operate SwimIQ features you request (including AI analysis when you consent).
+
+8. AI-generated content
+AI outputs may be inaccurate or incomplete. You are responsible for how you use AI feedback. We may use aggregated, de-identified analytics to improve the product where permitted by law and our Privacy Policy.
+
+9. Termination
+We may suspend or terminate access for violations of these Terms. You may stop using the app at any time.
+
+10. Disclaimers
+THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, TO THE MAXIMUM EXTENT PERMITTED BY LAW.
+
+11. Limitation of liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, [YOUR COMPANY LEGAL NAME] WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL.
+
+12. Governing law
+These Terms are governed by the laws of [Your State/Country — add before launch], without regard to conflict-of-law rules.
+
+13. Contact
+support@swimiq.app

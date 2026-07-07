@@ -48,8 +48,17 @@ class SubscriptionPlan {
 
 abstract final class SubscriptionCatalog {
   static const trialDays = 3;
-  static const coachTrialDays = 30;
-  static const coachAccessCode = 'COACH-TRIAL-30';
+  static const coachTrialDays = 14;
+  static const coachElitePeekDays = 7;
+  static const coachEliteAnalysisLimit = 5;
+  static const coachAccessCode = 'COACH-EVAL-14';
+  static const legacyCoachAccessCode = 'COACH-TRIAL-30';
+
+  static bool isCoachAccessCode(String code) {
+    final normalized = code.trim().toUpperCase();
+    return normalized == coachAccessCode ||
+        normalized == legacyCoachAccessCode;
+  }
 
   static const plans = [
     SubscriptionPlan(

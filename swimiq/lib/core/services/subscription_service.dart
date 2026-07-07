@@ -8,6 +8,8 @@ class SubscriptionState {
     required this.billingCycle,
     required this.trialEndsAt,
     required this.coachTrialEndsAt,
+    required this.coachTrialStartedAt,
+    required this.coachAiAnalysesUsed,
     required this.hasUsedTrial,
   });
 
@@ -15,6 +17,8 @@ class SubscriptionState {
   final BillingCycle billingCycle;
   final DateTime? trialEndsAt;
   final DateTime? coachTrialEndsAt;
+  final DateTime? coachTrialStartedAt;
+  final int coachAiAnalysesUsed;
   final bool hasUsedTrial;
 
   bool get isTrialActive =>
@@ -24,14 +28,36 @@ class SubscriptionState {
       coachTrialEndsAt != null &&
       DateTime.now().isBefore(coachTrialEndsAt!);
 
+  bool get hasCoachElitePeek {
+    if (!isCoachTrialActive || coachTrialStartedAt == null) return false;
+    final peekEnds = coachTrialStartedAt!.add(
+      Duration(days: SubscriptionCatalog.coachElitePeekDays),
+    );
+    final withinWindow = DateTime.now().isBefore(peekEnds);
+    final underLimit =
+        coachAiAnalysesUsed < SubscriptionCatalog.coachEliteAnalysisLimit;
+    return withinWindow && underLimit;
+  }
+
+  int get coachTrialDaysRemaining {
+    if (!isCoachTrialActive || coachTrialEndsAt == null) return 0;
+    return coachTrialEndsAt!.difference(DateTime.now()).inDays.clamp(0, 999);
+  }
+
   SubscriptionTier get effectiveTier {
-    if (isCoachTrialActive) return SubscriptionTier.coach;
+    if (isCoachTrialActive) {
+      return hasCoachElitePeek ? SubscriptionTier.elite : SubscriptionTier.pro;
+    }
     if (isTrialActive) return SubscriptionTier.elite;
     return tier;
   }
 
   String get statusLabel {
-    if (isCoachTrialActive) return 'Coach preview active';
+    if (isCoachTrialActive) {
+      return hasCoachElitePeek
+          ? 'Coach preview · Elite AI sneak peek'
+          : 'Coach preview · Pro';
+    }
     if (isTrialActive) return 'Elite trial active';
     return SubscriptionCatalog.planFor(tier).name;
   }
@@ -41,6 +67,8 @@ class SubscriptionState {
     BillingCycle? billingCycle,
     DateTime? trialEndsAt,
     DateTime? coachTrialEndsAt,
+    DateTime? coachTrialStartedAt,
+    int? coachAiAnalysesUsed,
     bool? hasUsedTrial,
   }) {
     return SubscriptionState(
@@ -48,6 +76,8 @@ class SubscriptionState {
       billingCycle: billingCycle ?? this.billingCycle,
       trialEndsAt: trialEndsAt ?? this.trialEndsAt,
       coachTrialEndsAt: coachTrialEndsAt ?? this.coachTrialEndsAt,
+      coachTrialStartedAt: coachTrialStartedAt ?? this.coachTrialStartedAt,
+      coachAiAnalysesUsed: coachAiAnalysesUsed ?? this.coachAiAnalysesUsed,
       hasUsedTrial: hasUsedTrial ?? this.hasUsedTrial,
     );
   }
@@ -58,6 +88,8 @@ class SubscriptionService {
   static const _cycleKey = 'subscription_billing_cycle';
   static const _trialEndsKey = 'subscription_trial_ends';
   static const _coachTrialEndsKey = 'subscription_coach_trial_ends';
+  static const _coachTrialStartedKey = 'subscription_coach_trial_started';
+  static const _coachAiAnalysesKey = 'subscription_coach_ai_analyses_used';
   static const _hasUsedTrialKey = 'subscription_has_used_trial';
 
   Future<SubscriptionState> load() async {
@@ -66,6 +98,8 @@ class SubscriptionService {
     final cycleName = prefs.getString(_cycleKey);
     final trialEnds = _readDate(prefs.getString(_trialEndsKey));
     final coachTrialEnds = _readDate(prefs.getString(_coachTrialEndsKey));
+    final coachTrialStarted = _readDate(prefs.getString(_coachTrialStartedKey));
+    final coachAiAnalysesUsed = prefs.getInt(_coachAiAnalysesKey) ?? 0;
     final hasUsedTrial = prefs.getBool(_hasUsedTrialKey) ?? false;
 
     return SubscriptionState(
@@ -75,6 +109,8 @@ class SubscriptionService {
           : BillingCycle.monthly,
       trialEndsAt: trialEnds,
       coachTrialEndsAt: coachTrialEnds,
+      coachTrialStartedAt: coachTrialStarted,
+      coachAiAnalysesUsed: coachAiAnalysesUsed,
       hasUsedTrial: hasUsedTrial,
     );
   }
@@ -97,14 +133,28 @@ class SubscriptionService {
     SubscriptionState current,
     String code,
   ) async {
-    if (code.trim().toUpperCase() != SubscriptionCatalog.coachAccessCode) {
+    if (!SubscriptionCatalog.isCoachAccessCode(code)) {
       throw FormatException('Invalid coach access code.');
     }
 
+    final now = DateTime.now();
     final updated = current.copyWith(
-      coachTrialEndsAt: DateTime.now().add(
+      coachTrialStartedAt: now,
+      coachTrialEndsAt: now.add(
         Duration(days: SubscriptionCatalog.coachTrialDays),
       ),
+      coachAiAnalysesUsed: 0,
+    );
+    await _save(updated);
+    return updated;
+  }
+
+  Future<SubscriptionState> recordCoachAiAnalysis(SubscriptionState current) async {
+    if (!current.isCoachTrialActive || !current.hasCoachElitePeek) {
+      return current;
+    }
+    final updated = current.copyWith(
+      coachAiAnalysesUsed: current.coachAiAnalysesUsed + 1,
     );
     await _save(updated);
     return updated;
@@ -130,6 +180,8 @@ class SubscriptionService {
     await prefs.setBool(_hasUsedTrialKey, state.hasUsedTrial);
     await _writeDate(prefs, _trialEndsKey, state.trialEndsAt);
     await _writeDate(prefs, _coachTrialEndsKey, state.coachTrialEndsAt);
+    await _writeDate(prefs, _coachTrialStartedKey, state.coachTrialStartedAt);
+    await prefs.setInt(_coachAiAnalysesKey, state.coachAiAnalysesUsed);
   }
 
   SubscriptionTier _parseTier(String? value) {

@@ -112,4 +112,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       return error.toString();
     }
   }
+
+  Future<void> recordCoachAiAnalysis() async {
+    final service = ref.read(subscriptionServiceProvider);
+    final current = state.value ?? await service.load();
+    state = AsyncData(await service.recordCoachAiAnalysis(current));
+  }
 }

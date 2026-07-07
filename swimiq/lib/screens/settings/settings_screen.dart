@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../core/constants/legal_constants.dart';
+import '../legal/legal_document_screen.dart';
 import '../membership/membership_screen.dart';
+import '../../widgets/legal_footer.dart';
 import '../../services/auth_service.dart';
 
 /// Account and app settings — Milestone 4.
@@ -80,7 +83,7 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.workspace_premium_outlined),
               title: const Text('Plans & billing'),
               subtitle: const Text(
-                'Basic, Pro, and Elite — monthly or annual. Coach preview codes supported.',
+                'Basic, Pro, and Elite — coach preview includes Elite AI sneak peek.',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
@@ -90,6 +93,65 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 );
               },
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Legal & privacy',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.policy_outlined),
+                  title: const Text('Privacy Policy'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LegalDocumentScreen(
+                          document: LegalDocumentType.privacyPolicy,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('Terms of Service'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LegalDocumentScreen(
+                          document: LegalDocumentType.termsOfService,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.smart_toy_outlined),
+                  title: const Text('AI & Data Disclosure'),
+                  subtitle: const Text('Required for SwimIQ AI video analysis'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LegalDocumentScreen(
+                          document: LegalDocumentType.aiDataDisclosure,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -117,6 +179,8 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 32),
+          const LegalFooter(),
           const SizedBox(height: 32),
           FilledButton.icon(
             onPressed: () => _signOut(ref, context),
