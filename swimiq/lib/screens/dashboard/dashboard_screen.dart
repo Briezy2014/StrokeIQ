@@ -7,7 +7,10 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
+import '../../providers/app_providers.dart';
+import '../../providers/team_schedule_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/dashboard_insights.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -16,9 +19,21 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final viewMode = ref.watch(appViewModeProvider);
+
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
+        final attendingMeets = ref.watch(attendingMeetsProvider);
+        final snapshot = data.passportSnapshot(
+          swimmer,
+          attendingMeets: attendingMeets,
+        );
+        final subtitle = dashboardSubtitleForMode(
+          mode: viewMode,
+          displayName: data.displayName(swimmer),
+          swimIqExplanation: snapshot.swimIqExplanation,
+        );
 
         if (logs.isEmpty) {
           return ListView(
@@ -27,8 +42,10 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               SwimIqScreenHeader(
                 title: 'Swimmer Dashboard',
-                subtitle: 'Training overview for ${data.displayName(swimmer)}',
+                subtitle: subtitle,
               ),
+              const SizedBox(height: 16),
+              DashboardInsightCards(data: data, swimmer: swimmer),
               const SizedBox(height: 16),
               const EmptyStateMessage(
                 message:
@@ -40,7 +57,6 @@ class DashboardScreen extends ConsumerWidget {
 
         final personalBests = data.personalBests;
         final dateFormat = DateFormat.yMMMd();
-        final snapshot = data.passportSnapshot(swimmer);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -48,9 +64,11 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             SwimIqScreenHeader(
               title: 'Swimmer Dashboard',
-              subtitle: snapshot.swimIqExplanation,
+              subtitle: subtitle,
             ),
             const SizedBox(height: 16),
+            DashboardInsightCards(data: data, swimmer: swimmer),
+            const SizedBox(height: 24),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,

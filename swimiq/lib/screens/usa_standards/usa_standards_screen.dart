@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +9,7 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -22,6 +24,8 @@ class UsaStandardsScreen extends ConsumerStatefulWidget {
 
 class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   bool _importing = false;
+  bool _uploading = false;
+  bool _filtersInitialized = false;
   final _searchController = TextEditingController();
   String? _selectedAgeGroup;
   String? _selectedGender;
@@ -31,6 +35,47 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _uploadStandardsFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['json'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not read the selected JSON file.')),
+      );
+      return;
+    }
+
+    setState(() => _uploading = true);
+    final raw = String.fromCharCodes(file.bytes!);
+    final error = await ref
+        .read(usaMotivationalStandardsCatalogProvider.notifier)
+        .loadFromJsonString(raw);
+
+    if (!mounted) return;
+    setState(() => _uploading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
+    await ref.read(swimmerDataProvider.notifier).refresh();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Loaded ${file.name}. USA cuts now use this standards file.',
+        ),
+      ),
+    );
   }
 
   Future<void> _importStandards() async {
@@ -50,8 +95,12 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('USA Swimming Standards'),
+      ),
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final catalog = data.motivationalStandards;
         final pbs = data.personalBests;
         final profileReady = SwimIqStandardsProfile.isReady(data.profile);
@@ -59,11 +108,15 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
         final gender = SwimIqGender.standardsGenderOrNull(data.profile);
 
         if (profileReady) {
-          _selectedAgeGroup ??= ageGroup;
-          _selectedGender ??= gender;
-        } else {
-          _selectedAgeGroup ??= AppConstants.ageGroups[2];
-          _selectedGender ??= AppConstants.genders.first;
+          if (!_filtersInitialized) {
+            _selectedAgeGroup = ageGroup;
+            _selectedGender = gender;
+            _filtersInitialized = true;
+          }
+        } else if (!_filtersInitialized) {
+          _selectedAgeGroup = AppConstants.ageGroups[2];
+          _selectedGender = AppConstants.genders.first;
+          _filtersInitialized = true;
         }
 
         final results = catalog.search(
@@ -89,13 +142,25 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             Text(
               'Valid through ${catalog.bundle.effectiveThrough}. '
               '${catalog.events.length} official events · '
-              'Girls & Boys separated · SCY / SCM / LCM courses · '
+              'Girls & Boys · SCY / SCM / LCM · '
               'Age brackets: ${AppConstants.ageGroups.join(', ')}.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Upload a new USA Swimming JSON export each season to refresh cuts '
+              'without waiting for an app update.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
             SwimIqSaveButton(
-              label: 'Sync Standards to Supabase',
+              label: 'Upload New Standards JSON',
+              isSaving: _uploading,
+              onPressed: _uploadStandardsFile,
+            ),
+            const SizedBox(height: 12),
+            SwimIqSaveButton(
+              label: 'Sync Current Standards to Supabase',
               isSaving: _importing,
               onPressed: _importStandards,
             ),
@@ -232,6 +297,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
           ],
         );
       },
+      ),
     );
   }
 

@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
+import '../core/utils/swimmer_profile_notes.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
+import '../data/models/scheduled_meet.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
@@ -76,12 +78,17 @@ class SwimmerData {
     return swimmerName;
   }
 
-  PassportSnapshot passportSnapshot(String swimmerName) => PassportMetrics.build(
+  PassportSnapshot passportSnapshot(
+    String swimmerName, {
+    List<ScheduledMeet> attendingMeets = const [],
+  }) =>
+      PassportMetrics.build(
         swimmerName: swimmerName,
         profile: profile,
         raceLogs: raceLogs,
         goals: goals,
         meetResults: meetResults,
+        attendingMeets: attendingMeets,
         videos: userFacingVideos,
         videoAnalyses: userFacingVideoAnalyses,
         motivationalStandards: motivationalStandards,
@@ -389,6 +396,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       }
 
       SwimVideoAnalysis analysis;
+      var usedFallback = false;
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
@@ -400,7 +408,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             );
       } on GeminiAnalysisException catch (error) {
         return error.message;
-      } catch (_) {
+      } catch (error) {
+        usedFallback = true;
         analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
               video: video,
               raceLogs: current.raceLogs,
@@ -447,6 +456,17 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       } catch (_) {
         // Local analysis remains available even if remote refresh fails.
       }
+
+      if (usedFallback) {
+        return 'Saved notes-based report. Deploy analyze-swim-video with '
+            'GEMINI_API_KEY for full Gemini coaching.';
+      }
+      if (analysis.isGeminiEngine && poseMetrics?.hasUsableMetrics == true) {
+        return 'Gemini + MediaPipe analysis saved.';
+      }
+      if (analysis.isGeminiEngine) {
+        return 'Gemini analysis saved.';
+      }
       return null;
     } catch (error) {
       return error.toString();
@@ -474,14 +494,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           );
 
       final updated = profile.copyWith(
-        athleteNotes: SwimmerProfile.composeAthleteNotes(
-          gender: profile.gender,
-          height: profile.height,
-          weight: profile.weight,
-          dominantHand: profile.dominantHand,
-          trainingGroup: profile.trainingGroup,
+        athleteNotes: SwimmerProfileNotes.merge(
+          existing: profile,
           profilePhotoUrl: photoUrl,
-          notes: profile.notesBody,
         ),
       );
 
@@ -493,7 +508,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
   Future<String?> importUsaStandards() async {
     try {
-      await ref.read(usaStandardsServiceProvider).importSeedToSupabase();
+      final catalog =
+          await ref.read(usaMotivationalStandardsCatalogProvider.future);
+      await ref
+          .read(swimIqRepositoryProvider)
+          .upsertUsaStandards(catalog.flatStandards);
       await refresh();
       return null;
     } catch (error) {

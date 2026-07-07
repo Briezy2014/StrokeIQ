@@ -1,0 +1,150 @@
+import '../../core/utils/swim_time.dart';
+import '../../data/models/race_log.dart';
+import '../../data/models/swimmer_profile.dart';
+import '../../providers/swimmer_data_provider.dart';
+
+/// Shareable athlete recruiting card — copy/paste for coaches and recruiters.
+class RecruitingPassportBrief {
+  const RecruitingPassportBrief({
+    required this.headline,
+    required this.shareableCard,
+    required this.highlights,
+    required this.personalBests,
+    required this.academicLine,
+    required this.contactLine,
+  });
+
+  final String headline;
+  final String shareableCard;
+  final List<String> highlights;
+  final List<String> personalBests;
+  final String academicLine;
+  final String contactLine;
+}
+
+abstract final class RecruitingPassportService {
+  static RecruitingPassportBrief build({
+    required SwimmerData data,
+    required String swimmer,
+  }) {
+    final profile = data.profile;
+    final snapshot = data.passportSnapshot(swimmer);
+    final pbs = data.personalBests;
+    final displayName = snapshot.displayName;
+
+    final pbLines = pbs.take(6).map(_formatPb).toList();
+    if (pbLines.isEmpty) {
+      pbLines.add('No personal bests logged yet');
+    }
+
+    final highlights = <String>[
+      if (profile?.team != null && profile!.team!.trim().isNotEmpty)
+        'Club: ${profile.team}',
+      if (profile?.coachName != null && profile!.coachName!.trim().isNotEmpty)
+        'Coach: ${profile.coachName}',
+      'Highest motivational cut: ${snapshot.highestCut}',
+      'SwimIQ score: ${snapshot.swimIqScore}',
+      if (profile?.primaryStroke != null)
+        'Primary stroke: ${profile!.primaryStroke}',
+      if (profile?.favoriteEvent != null)
+        'Focus event: ${profile!.favoriteEvent}',
+      if (profile?.personalWebsite != null &&
+          profile!.personalWebsite!.trim().isNotEmpty)
+        'Website: ${profile.personalWebsite}',
+      if (profile?.instagram != null && profile!.instagram!.trim().isNotEmpty)
+        'Instagram: ${profile.instagram}',
+      if (profile?.interestAcademics.isNotEmpty == true)
+        'Academics: ${profile!.interestAcademics.join(', ')}',
+      if (profile?.interestSports.isNotEmpty == true)
+        'Other sports: ${profile!.interestSports.join(', ')}',
+    ];
+
+    final gradYear = profile?.graduationYear;
+    final school = profile?.school?.trim();
+    final academicLine = gradYear != null
+        ? 'Class of $gradYear${school != null && school.isNotEmpty ? ' · $school' : ''}'
+        : school != null && school.isNotEmpty
+            ? school
+            : 'Add graduation year and school in Passport';
+
+    final usaId = profile?.usaSwimmingId?.trim();
+    final contactLine = usaId != null && usaId.isNotEmpty
+        ? 'USA Swimming ID: $usaId'
+        : 'Add USA Swimming ID in Passport for official verification';
+
+    final card = _buildCard(
+      displayName: displayName,
+      academicLine: academicLine,
+      highlights: highlights,
+      pbLines: pbLines,
+      contactLine: contactLine,
+      beyondLine: _beyondLine(profile),
+      tagline: 'Built in the Water. Driven by Possibility.',
+    );
+
+    return RecruitingPassportBrief(
+      headline: '$displayName — Recruiting Passport',
+      shareableCard: card,
+      highlights: highlights,
+      personalBests: pbLines,
+      academicLine: academicLine,
+      contactLine: contactLine,
+    );
+  }
+
+  static String _formatPb(RaceLog pb) =>
+      '${pb.distance} ${pb.stroke} ${pb.course} — ${SwimTime.fromSeconds(pb.timeSeconds)}';
+
+  static String _beyondLine(SwimmerProfile? profile) {
+    if (profile == null) return '';
+    final parts = <String>[];
+    if (profile.interestPassions.isNotEmpty) {
+      parts.add('Passions: ${profile.interestPassions.join(', ')}');
+    }
+    final bio = profile.beyondBio?.trim();
+    if (bio != null && bio.isNotEmpty) {
+      parts.add(bio);
+    }
+    return parts.join(' · ');
+  }
+
+  static String _buildCard({
+    required String displayName,
+    required String academicLine,
+    required List<String> highlights,
+    required List<String> pbLines,
+    required String contactLine,
+    required String beyondLine,
+    required String tagline,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('═══ SwimIQ Recruiting Passport ═══')
+      ..writeln(displayName)
+      ..writeln(academicLine)
+      ..writeln()
+      ..writeln('Highlights:');
+    for (final line in highlights) {
+      buffer.writeln('• $line');
+    }
+    buffer
+      ..writeln()
+      ..writeln('Personal bests:');
+    for (final line in pbLines) {
+      buffer.writeln('• $line');
+    }
+    buffer
+      ..writeln()
+      ..writeln(contactLine);
+    if (beyondLine.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln('Beyond the pool:')
+        ..writeln(beyondLine);
+    }
+    buffer
+      ..writeln()
+      ..writeln(tagline)
+      ..writeln('Generated by SwimIQ / StrokeIQ');
+    return buffer.toString().trim();
+  }
+}

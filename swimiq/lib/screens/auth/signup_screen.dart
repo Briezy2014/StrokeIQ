@@ -83,6 +83,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Card(
+                elevation: 8,
+                shadowColor: const Color(0xFF0B5CAD).withValues(alpha: 0.25),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Form(
@@ -91,24 +96,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Center(
-                          child: SwimIqLogo(size: 88, borderRadius: 20),
-                        ),
-                        const SizedBox(height: 12),
-                        const Center(child: SwimIqWordmark(fontSize: 28)),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Create your account',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Built in the Water. Driven by Possibility.',
-                          textAlign: TextAlign.center,
-                        ),
+                        const SwimIqAuthHeader(title: 'Create your account'),
                         const SizedBox(height: 24),
                         if (_successMessage != null) ...[
                           _SuccessBanner(message: _successMessage!),

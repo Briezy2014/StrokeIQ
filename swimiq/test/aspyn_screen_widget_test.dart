@@ -77,7 +77,7 @@ SwimmerData _buildHarnessData() {
     _fixture['meetResultCount'] as int,
     (index) => MeetResult(
       swimmerName: _fixture['swimmer'] as String,
-      meetName: _fixture['nextMeet'] as String,
+      meetName: (_fixture['meetNames'] as List).first as String,
       event: '200 Fly',
       swimTime: 190.13,
       course: 'LCM',
@@ -237,7 +237,7 @@ void main() {
 
       expect(find.text('Meet Results'), findsOneWidget);
       expect(
-        find.textContaining('Latest meet: ${_fixture['nextMeet']}'),
+        find.textContaining('latest: ${_fixture['lastMeetResult']}'),
         findsOneWidget,
       );
     });

@@ -22,15 +22,31 @@ dependencies:
   pose_detection: ^3.5.0
   path_provider: ^2.1.6
   web: ^1.1.1
+  google_fonts: ^6.2.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/branding/swimiq_icon.png
+  adaptive_icon_background: "#0B2D4D"
+  adaptive_icon_foreground: assets/branding/swimiq_icon.png
+  web:
+    generate: true
+    image_path: assets/branding/swimiq_icon.png
+    background_color: "#0B2D4D"
+    theme_color: "#0077C8"
 
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/branding/
     - assets/images/
     - assets/data/usa_time_standards_seed.json

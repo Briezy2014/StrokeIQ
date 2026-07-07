@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/constants/app_constants.dart';
+import 'package:swimiq/core/services/usa_motivational_standards_catalog.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 
@@ -63,5 +65,17 @@ void main() {
         containsAll(AppConstants.genders));
     expect(events.map((e) => e.course).toSet(),
         containsAll(AppConstants.courses));
+  });
+
+  test('parseJsonString matches bundled asset catalog', () async {
+    final fromAsset = await UsaMotivationalStandardsCatalog.loadFromAssets();
+    final raw = await rootBundle.loadString(
+      UsaMotivationalStandardsCatalog.assetPath,
+    );
+    final fromString = UsaMotivationalStandardsCatalog.parseJsonString(raw);
+
+    expect(fromString.versionLabel, fromAsset.versionLabel);
+    expect(fromString.events.length, fromAsset.events.length);
+    expect(fromString.flatStandards.length, fromAsset.flatStandards.length);
   });
 }

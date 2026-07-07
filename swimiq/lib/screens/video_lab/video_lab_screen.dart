@@ -118,12 +118,27 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (videoId == null) return;
 
     setState(() => _analyzingVideoId = videoId);
-    final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
+    final message = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
     setState(() => _analyzingVideoId = null);
+    final analysis = ref.read(swimmerDataProvider).value?.analysisForVideo(videoId);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? 'AI analysis saved.')),
+      SnackBar(
+        content: Text(_analysisStatusMessage(message, analysis)),
+      ),
     );
+  }
+
+  String _analysisStatusMessage(String? message, SwimVideoAnalysis? analysis) {
+    if (message != null) return message;
+    if (analysis?.isGeminiEngine == true &&
+        analysis?.hasPoseMetrics == true) {
+      return 'Gemini + MediaPipe analysis saved.';
+    }
+    if (analysis?.isGeminiEngine == true) {
+      return 'Gemini analysis saved.';
+    }
+    return 'AI analysis saved.';
   }
 
   String? _videoMotivationalCut(SwimmerData data, SwimVideo video) {
@@ -154,8 +169,12 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Video Lab'),
+      ),
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
@@ -167,7 +186,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             SwimIqScreenHeader(
               title: 'Video Lab',
               subtitle:
-                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
+                  'Full Gemini + MediaPipe critique — every phase: start, '
+                  'breakout, stroke, breathing, turns, and finish. '
+                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'AI Coach summarizes what to fix after you run analysis here. '
+              'Race Intelligence™ handles meet-day strategy.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -244,6 +271,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ],
         );
       },
+      ),
     );
   }
 }
@@ -345,9 +373,38 @@ class _VideoCardState extends State<_VideoCard> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Run AI Swim Analysis'),
+                    : const Text('Run Full Analysis (Gemini + MediaPipe)'),
               )
             else ...[
+              if (widget.analysis!.analysisEngine != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Engine: ${widget.analysis!.analysisEngine}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              if (!widget.analysis!.isGeminiEngine)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Gemini was not used — deploy analyze-swim-video with GEMINI_API_KEY.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                  ),
+                ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: widget.analyzing ? null : widget.onAnalyze,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Re-run analysis'),
+                ),
+              ),
               if (widget.analysis!.disclaimer != null) ...[
                 const SizedBox(height: 8),
                 Text(
