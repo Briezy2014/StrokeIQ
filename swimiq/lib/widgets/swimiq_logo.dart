@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'swimiq_branded_fallback.dart';
 import 'swimiq_branding.dart';
 
 /// Square SwimIQ™ icon for app bar, passport avatar, and compact slots.
@@ -21,7 +22,12 @@ class SwimIqLogo extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       borderRadius: borderRadius,
-      fallback: Icon(Icons.pool, size: size * 0.7, color: Colors.white),
+      fallback: SwimIqBrandedFallback(
+        variant: SwimIqBrandedVariant.icon,
+        width: size,
+        height: size,
+        borderRadius: borderRadius,
+      ),
     );
   }
 }
@@ -45,7 +51,12 @@ class SwimIqHeroBanner extends StatelessWidget {
       height: height,
       fit: BoxFit.contain,
       borderRadius: borderRadius,
-      fallback: const SwimIqWordmark(fontSize: 28),
+      fallback: SwimIqBrandedFallback(
+        variant: SwimIqBrandedVariant.hero,
+        width: double.infinity,
+        height: height,
+        borderRadius: borderRadius,
+      ),
     );
   }
 }

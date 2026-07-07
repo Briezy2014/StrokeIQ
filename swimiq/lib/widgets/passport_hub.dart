@@ -15,11 +15,13 @@ class PassportHub extends ConsumerWidget {
     required this.data,
     required this.swimmer,
     required this.snapshot,
+    this.onOpenRecruitingCenter,
   });
 
   final SwimmerData data;
   final String swimmer;
   final PassportSnapshot snapshot;
+  final VoidCallback? onOpenRecruitingCenter;
 
   static const hubTagline =
       '🤖 AI Coach   |   🧬 SwimDNA™   |   🎓 Recruiting Center   |   '
@@ -56,12 +58,7 @@ class PassportHub extends ConsumerWidget {
     WidgetRef ref,
     _PassportModule module,
   ) {
-    switch (module.status) {
-      case _PassportModuleStatus.live:
-        _openDestination(context, ref, module.destination!);
-      case _PassportModuleStatus.comingSoon:
-        _showComingSoon(context, module);
-    }
+    _openDestination(context, ref, module.destination);
   }
 
   void _openDestination(
@@ -83,54 +80,21 @@ class PassportHub extends ConsumerWidget {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const RaceIntelligenceScreen()),
         );
-      case PassportHubDestination.comingSoon:
-        break;
-    }
-  }
-
-  void _showComingSoon(BuildContext context, _PassportModule module) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${module.emoji} ${module.label}',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                module.comingSoonDetail,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Coming soon to Athlete Passport™',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ),
-            ],
-          ),
+      case PassportHubDestination.swimDna:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RaceIntelligenceScreen()),
         );
-      },
-    );
+      case PassportHubDestination.recruitingCenter:
+        if (onOpenRecruitingCenter != null) {
+          onOpenRecruitingCenter!();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Scroll to Recruiting snapshot on your Athlete Passport™'),
+            ),
+          );
+        }
+    }
   }
 }
 
@@ -146,18 +110,40 @@ class _HubIntro extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3FAFF),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.surfaceLight,
+          ],
+        ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFBFE8FF)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Coming Soon to Athlete Passport™',
+            'Athlete Passport™ Command Center',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFF0077C8),
+                  color: AppColors.primaryDark,
                   fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Live now — tap any module to open.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textDark.withValues(alpha: 0.75),
+                  fontWeight: FontWeight.w700,
                 ),
           ),
           const SizedBox(height: 10),
@@ -169,7 +155,7 @@ class _HubIntro extends StatelessWidget {
                 Text(
                   segments[i].trim(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF0B2D4D),
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.w700,
                         height: 1.5,
                       ),
@@ -178,7 +164,7 @@ class _HubIntro extends StatelessWidget {
                   Text(
                     '|',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF0077C8),
+                          color: AppColors.primaryDark,
                           fontWeight: FontWeight.w700,
                         ),
                   ),
@@ -191,22 +177,16 @@ class _HubIntro extends StatelessWidget {
   }
 }
 
-enum _PassportModuleStatus { live, comingSoon }
-
 class _PassportModule {
   const _PassportModule({
     required this.emoji,
     required this.label,
-    required this.status,
-    this.destination,
-    this.comingSoonDetail = '',
+    required this.destination,
   });
 
   final String emoji;
   final String label;
-  final _PassportModuleStatus status;
-  final PassportHubDestination? destination;
-  final String comingSoonDetail;
+  final PassportHubDestination destination;
 }
 
 class _ModuleStrip extends StatelessWidget {
@@ -218,41 +198,31 @@ class _ModuleStrip extends StatelessWidget {
     _PassportModule(
       emoji: '🤖',
       label: 'AI Coach',
-      status: _PassportModuleStatus.live,
       destination: PassportHubDestination.videoLab,
     ),
     _PassportModule(
       emoji: '🧬',
       label: 'SwimDNA™',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'Stroke fingerprinting from your PBs, splits, and video trends — '
-          'merged with Claude vision when frame analysis ships.',
+      destination: PassportHubDestination.swimDna,
     ),
     _PassportModule(
       emoji: '🎓',
       label: 'Recruiting Center',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'College recruiting timeline, academic profile, and meet targets '
-          'pulled from your passport and USA cuts.',
+      destination: PassportHubDestination.recruitingCenter,
     ),
     _PassportModule(
       emoji: '🎥',
       label: 'Video Lab',
-      status: _PassportModuleStatus.live,
       destination: PassportHubDestination.videoLab,
     ),
     _PassportModule(
       emoji: '🏁',
       label: 'Race Intelligence™',
-      status: _PassportModuleStatus.live,
       destination: PassportHubDestination.raceIntelligence,
     ),
     _PassportModule(
       emoji: '📊',
       label: 'USA Standards',
-      status: _PassportModuleStatus.live,
       destination: PassportHubDestination.usaStandards,
     ),
   ];
@@ -267,7 +237,6 @@ class _ModuleStrip extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final module = modules[index];
-          final isComingSoon = module.status == _PassportModuleStatus.comingSoon;
 
           return InkWell(
             onTap: () => onModuleTap(module),
@@ -276,15 +245,18 @@ class _ModuleStrip extends StatelessWidget {
               width: 132,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isComingSoon
-                    ? Colors.grey.shade100
-                    : AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isComingSoon
-                      ? Colors.grey.shade300
-                      : AppColors.primary.withValues(alpha: 0.25),
+                  color: AppColors.primary.withValues(alpha: 0.28),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,12 +276,10 @@ class _ModuleStrip extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isComingSoon ? 'Coming Soon' : 'Open',
+                    'Open',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isComingSoon
-                              ? Colors.grey.shade700
-                              : AppColors.primaryDark,
-                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryDark,
+                          fontWeight: FontWeight.w800,
                         ),
                   ),
                 ],

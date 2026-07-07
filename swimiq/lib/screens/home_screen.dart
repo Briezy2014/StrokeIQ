@@ -66,7 +66,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: SwimIqAppBarTitle(subtitle: swimmer),
+        toolbarHeight: 72,
+        titleSpacing: 0,
+        centerTitle: false,
+        title: const SwimIqAppBarBrand(),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -85,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           MaterialBanner(
             content: Text(
               user?.email != null
-                  ? 'Signed in as ${user!.email}'
+                  ? 'Signed in as ${user!.email} · Swimmer: $swimmer'
                   : 'Swimmer: $swimmer',
             ),
             backgroundColor: Colors.green.shade50,

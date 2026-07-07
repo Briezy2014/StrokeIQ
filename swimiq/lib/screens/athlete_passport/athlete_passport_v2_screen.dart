@@ -23,6 +23,8 @@ class AthletePassportV2Screen extends ConsumerStatefulWidget {
 
 class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Screen> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+  final _recruitingSnapshotKey = GlobalKey();
 
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
@@ -94,7 +96,19 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToRecruitingSnapshot() {
+    final target = _recruitingSnapshotKey.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOut,
+      alignment: 0.08,
+    );
   }
 
   String? _optionalText(String value) {
@@ -266,6 +280,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final snapshot = data.passportSnapshot(swimmer);
 
         return ListView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
@@ -284,7 +299,17 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               onUploadPhoto: _uploadProfilePhoto,
             ),
             const SizedBox(height: 16),
-            _RecruitingSnapshotCard(profile: profile),
+            PassportHub(
+              data: data,
+              swimmer: swimmer,
+              snapshot: snapshot,
+              onOpenRecruitingCenter: _scrollToRecruitingSnapshot,
+            ),
+            const SizedBox(height: 16),
+            _RecruitingSnapshotCard(
+              key: _recruitingSnapshotKey,
+              profile: profile,
+            ),
             if (!SwimIqStandardsProfile.isReady(profile)) ...[
               const SizedBox(height: 16),
               const SwimIqStandardsSetupBanner(),
@@ -304,7 +329,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   label: 'SwimIQ Score™',
                   value: snapshot.swimIqScore > 0
                       ? '${snapshot.swimIqScore}'
-                      : 'Coming Soon',
+                      : 'Log swims to score',
                   subtitle: snapshot.swimIqExplanation,
                 ),
                 SwimIqMetricCard(
@@ -379,12 +404,6 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 else
                   'No athlete notes added yet.',
               ],
-            ),
-            const SizedBox(height: 24),
-            PassportHub(
-              data: data,
-              swimmer: swimmer,
-              snapshot: snapshot,
             ),
             const SizedBox(height: 24),
             const Divider(),
@@ -643,130 +662,96 @@ class _PassportHero extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth > 420;
-          final logoSize = wide ? 156.0 : 132.0;
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth > 420;
 
-          final logoBlock = Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SwimIqLogo(size: logoSize, borderRadius: logoSize * 0.22),
-              const SizedBox(height: 8),
-              Text(
-                'SwimIQ',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.4,
+            return Column(
+              crossAxisAlignment:
+                  wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              children: [
+                _HeroAvatar(photoUrl: profilePhotoUrl),
+                if (onUploadPhoto != null) ...[
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: isUploadingPhoto ? null : onUploadPhoto,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white70),
                     ),
-              ),
-            ],
-          );
-
-          final identity = Column(
-            crossAxisAlignment:
-                wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-            children: [
-              _HeroAvatar(photoUrl: profilePhotoUrl),
-              if (onUploadPhoto != null) ...[
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: isUploadingPhoto ? null : onUploadPhoto,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white70),
-                  ),
-                  icon: isUploadingPhoto
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.photo_camera_outlined, size: 18),
-                  label: Text(
-                    isUploadingPhoto ? 'Uploading...' : 'Upload profile photo',
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Text(
-                'RECRUITING PASSPORT',
-                textAlign: wide ? TextAlign.start : TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.5,
+                    icon: isUploadingPhoto
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.photo_camera_outlined, size: 18),
+                    label: Text(
+                      isUploadingPhoto ? 'Uploading...' : 'Upload profile photo',
                     ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                displayName,
-                textAlign: wide ? TextAlign.start : TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              if (team != null && team!.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  team!.trim(),
-                  textAlign: wide ? TextAlign.start : TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                textAlign: wide ? TextAlign.start : TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                alignment: wide ? WrapAlignment.start : WrapAlignment.center,
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _HeroMetricChip(
-                    label: 'SwimIQ Score',
-                    value: swimIqScore ?? '—',
-                  ),
-                  _HeroMetricChip(
-                    label: 'Highest Cut',
-                    value: highestCut ?? '—',
                   ),
                 ],
-              ),
-            ],
-          );
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            child: wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(flex: 5, child: identity),
-                      const SizedBox(width: 8),
-                      Expanded(flex: 4, child: logoBlock),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      logoBlock,
-                      const SizedBox(height: 22),
-                      identity,
-                    ],
+                const SizedBox(height: 16),
+                Text(
+                  'RECRUITING PASSPORT',
+                  textAlign: wide ? TextAlign.start : TextAlign.center,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.5,
+                      ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  displayName,
+                  textAlign: wide ? TextAlign.start : TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                if (team != null && team!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    team!.trim(),
+                    textAlign: wide ? TextAlign.start : TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
-          );
-        },
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  textAlign: wide ? TextAlign.start : TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  alignment: wide ? WrapAlignment.start : WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _HeroMetricChip(
+                      label: 'SwimIQ Score',
+                      value: swimIqScore ?? '—',
+                    ),
+                    _HeroMetricChip(
+                      label: 'Highest Cut',
+                      value: highestCut ?? '—',
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -858,7 +843,7 @@ class _HeroMetricChip extends StatelessWidget {
 }
 
 class _RecruitingSnapshotCard extends StatelessWidget {
-  const _RecruitingSnapshotCard({required this.profile});
+  const _RecruitingSnapshotCard({super.key, required this.profile});
 
   final SwimmerProfile? profile;
 

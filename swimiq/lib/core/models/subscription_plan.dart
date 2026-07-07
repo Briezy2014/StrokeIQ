@@ -101,7 +101,7 @@ abstract final class SubscriptionCatalog {
         'Video Lab + SwimIQ AI coach',
         'Pose metrics & race intelligence',
         'Priority dashboard insights',
-        'Recruiting center (coming soon)',
+        'Recruiting center',
       ],
     ),
   ];

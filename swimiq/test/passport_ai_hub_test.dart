@@ -71,7 +71,7 @@ void main() {
 
       expect(recommendation.destination, PassportHubDestination.videoLab);
       expect(recommendation.detail, contains('Video Lab'));
-      expect(recommendation.engineLabel, contains('Claude'));
+      expect(recommendation.engineLabel, contains('SwimIQ AI Coach'));
     });
 
     test('recommends analysis for unanalyzed uploads', () {

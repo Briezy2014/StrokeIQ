@@ -61,6 +61,20 @@ class SwimIqFooter extends StatelessWidget {
   }
 }
 
+/// Full-width SwimIQ hero branding for the app bar.
+class SwimIqAppBarBrand extends StatelessWidget {
+  const SwimIqAppBarBrand({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(8, 6, 8, 6),
+      child: SwimIqHeroBanner(height: 56, borderRadius: 12),
+    );
+  }
+}
+
+@Deprecated('Use SwimIqAppBarBrand for the full-width hero logo in the app bar.')
 class SwimIqAppBarTitle extends StatelessWidget {
   const SwimIqAppBarTitle({super.key, this.subtitle});
 

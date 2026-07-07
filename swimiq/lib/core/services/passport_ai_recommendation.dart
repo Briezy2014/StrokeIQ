@@ -2,7 +2,13 @@ import '../../data/models/swim_video.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 
-enum PassportHubDestination { videoLab, usaStandards, raceIntelligence, comingSoon }
+enum PassportHubDestination {
+  videoLab,
+  usaStandards,
+  raceIntelligence,
+  swimDna,
+  recruitingCenter,
+}
 
 class PassportAiRecommendation {
   const PassportAiRecommendation({
@@ -12,8 +18,7 @@ class PassportAiRecommendation {
     required this.destination,
     this.suggestedEvent,
     this.priorities = const [],
-    this.engineLabel =
-        'SwimIQ V1 notes engine today · Claude vision analysis coming soon',
+    this.engineLabel = 'SwimIQ AI Coach · powered by your videos, notes, and race data',
   });
 
   final String headline;
@@ -82,7 +87,7 @@ class PassportAiRecommendation {
       detail:
           'Upload a $focus video in Video Lab with short race notes '
           '(start, underwater, strokes, breathing, finish). '
-          'SwimDNA™ and Claude frame-by-frame vision will plug in here next.',
+          'SwimDNA™ and Race Intelligence™ use that data for your next move.',
       actionLabel: 'Go to Video Lab',
       destination: PassportHubDestination.videoLab,
       suggestedEvent: focus,

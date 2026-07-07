@@ -188,6 +188,14 @@ void main() {
 
       expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
       expect(find.text('RECRUITING PASSPORT'), findsOneWidget);
+      expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Recruiting snapshot'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Recruiting snapshot'), findsOneWidget);
 
       await tester.scrollUntilVisible(
@@ -206,13 +214,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Athlete Details'), findsOneWidget);
 
-      await tester.scrollUntilVisible(
-        find.text('Coming Soon to Athlete Passport™'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Coming Soon to Athlete Passport™'), findsOneWidget);
+      expect(find.text('Coming Soon to Athlete Passport™'), findsNothing);
 
       await tester.scrollUntilVisible(
         find.text('Save Athlete Passport'),

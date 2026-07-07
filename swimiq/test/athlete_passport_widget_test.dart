@@ -104,14 +104,16 @@ void main() {
       expect(find.byType(DropdownButton<dynamic>), findsNothing);
 
       await tester.scrollUntilVisible(
-        find.text('Coming Soon to Athlete Passport™'),
+        find.text('Athlete Passport™ Command Center'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Coming Soon to Athlete Passport™'), findsOneWidget);
-      expect(find.text('Coming Soon'), findsWidgets);
+      expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
+      expect(find.text('Open'), findsWidgets);
+      expect(find.text('Coming Soon to Athlete Passport™'), findsNothing);
+      expect(find.text('Coming Soon'), findsNothing);
     });
 
     testWidgets('renders invalid saved strokes as text without crashing',
