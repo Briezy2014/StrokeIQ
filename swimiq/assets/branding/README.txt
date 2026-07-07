@@ -1,14 +1,16 @@
 SwimIQ branding folder
 ========================
 
-Drop your two logo files here, then run: flutter clean && flutter pub get
+Use ONE file for the entire app:
 
-Required files (use these exact names):
-  swimiq_icon.png  — square SWIMIQ icon (app bar, passport circle)
-  swimiq_hero.png  — wide banner with tagline (welcome / login screen)
+  swimiq_icon.png  — square SWIMIQ logo (splash, login, app bar, passport, headers)
 
-Alternate names also work:
-  icon.png, logo_icon.png  → square icon
-  hero.png, banner.png     → wide banner
+Put it in this folder:
+  swimiq/assets/branding/swimiq_icon.png
 
-After adding or renaming files, always run flutter clean before flutter run.
+After adding or replacing the file:
+  flutter clean
+  flutter pub get
+  flutter run -d chrome
+
+No hero banner or second logo file is needed.

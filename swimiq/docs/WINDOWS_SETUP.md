@@ -97,5 +97,5 @@ flutter run -d chrome
 
 ## Logos
 
-Brand files live in `assets\branding\` (`swimiq_icon.png`, `swimiq_hero.png`, `swimiq_logo.png`).  
-After replacing them: `flutter clean` then `flutter run -d chrome`.
+Use a single file: `assets\branding\swimiq_icon.png` (same icon everywhere).  
+After replacing it: `flutter clean` then `flutter run -d chrome`.

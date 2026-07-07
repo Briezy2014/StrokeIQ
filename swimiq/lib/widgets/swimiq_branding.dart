@@ -1,26 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Known branding asset filenames (first match wins).
+/// Single branding asset used across the entire app.
 abstract final class SwimIqBranding {
-  static const iconCandidates = [
-    'assets/branding/swimiq_icon.png',
-    'assets/images/swimiq_logo.png',
-    'assets/branding/icon.png',
-    'assets/branding/logo_icon.png',
-    'assets/branding/swimiq_logo_icon.png',
-    'assets/branding/swimiq_logo.png',
-  ];
+  static const assetPath = 'assets/branding/swimiq_icon.png';
 
-  static const heroCandidates = [
-    'assets/branding/swimiq_hero.png',
-    'assets/images/swimiq_logo.png',
-    'assets/branding/hero.png',
-    'assets/branding/banner.png',
-    'assets/branding/swimiq_banner.png',
-    'assets/branding/swimiq_logo_full.png',
-    // Legacy fallback when only one wide file was added.
-    'assets/branding/swimiq_logo.png',
-  ];
+  static const assetCandidates = [assetPath];
 }
 
 /// Loads the first existing asset from [candidates], then [fallback].
