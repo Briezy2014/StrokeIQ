@@ -67,10 +67,8 @@ class SwimmerData {
         .toList();
   }
 
-  List<PersonalBestEntry> get personalBests => SwimAnalytics.personalBestsUnified(
-        raceLogs: raceLogs,
-        meetResults: meetResults,
-      );
+  List<PersonalBestEntry> get personalBests =>
+      SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
 
   int get swimIqScore =>
       SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);

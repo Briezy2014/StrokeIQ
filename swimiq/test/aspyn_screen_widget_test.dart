@@ -74,17 +74,33 @@ SwimmerData _buildHarnessData() {
     ),
   );
 
-  final meetResults = List.generate(
-    _fixture['meetResultCount'] as int,
-    (index) => MeetResult(
+  final meetResults = pbTitles.asMap().entries.map((entry) {
+    final parts = entry.value.split(' ');
+    final distance = int.parse(parts.first);
+    final stroke = parts.sublist(1).join(' ');
+    return MeetResult(
       swimmerName: _fixture['swimmer'] as String,
       meetName: _fixture['nextMeet'] as String,
-      event: '200 Fly',
-      swimTime: 190.13,
-      course: 'LCM',
-      meetDate: DateTime(2026, 6, 28 - index),
-    ),
-  );
+      event: entry.value,
+      swimTime: (60 + entry.key).toDouble(),
+      course: 'SCY',
+      meetDate: DateTime(2026, 6, 28 - entry.key),
+    );
+  }).toList();
+
+  final meetResultTarget = _fixture['meetResultCount'] as int;
+  while (meetResults.length < meetResultTarget) {
+    meetResults.add(
+      MeetResult(
+        swimmerName: _fixture['swimmer'] as String,
+        meetName: _fixture['nextMeet'] as String,
+        event: '200 Fly',
+        swimTime: 190.13,
+        course: 'LCM',
+        meetDate: DateTime(2026, 6, 20 + meetResults.length),
+      ),
+    );
+  }
 
   final videos = List.generate(
     _fixture['userFacingVideoCount'] as int,
@@ -150,8 +166,8 @@ void main() {
       expect(find.textContaining('WELCOME BACK'), findsOneWidget);
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
       expect(find.text('${data.raceLogs.length}'), findsOneWidget);
-      expect(find.text('${data.personalBests.length}'), findsOneWidget);
-      expect(find.text('${data.goals.length}'), findsOneWidget);
+      expect(find.text('${data.personalBests.length}'), findsWidgets);
+      expect(find.text('${data.goals.length}'), findsWidgets);
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
       expect(
         find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),

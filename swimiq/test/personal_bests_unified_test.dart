@@ -4,7 +4,7 @@ import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 
 void main() {
-  test('personalBestsUnified includes faster meet result', () {
+  test('personalBestsFromMeets ignores training sessions', () {
     final raceLogs = [
       RaceLog(
         swimmer: 'Aspyn',
@@ -12,32 +12,60 @@ void main() {
         distance: 200,
         stroke: 'Butterfly',
         course: 'LCM',
-        timeSeconds: 140,
+        timeSeconds: 120,
         date: DateTime(2026, 5, 1),
       ),
     ];
+
+    final pbs = SwimAnalytics.personalBestsFromMeets(meetResults: const []);
+
+    expect(pbs, isEmpty);
+    expect(
+      SwimAnalytics.personalBestsFromMeets(
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Summer Invite',
+            event: '200 Fly',
+            swimTime: 130,
+            course: 'LCM',
+            meetDate: DateTime(2026, 6, 27),
+          ),
+        ],
+      ).first.timeSeconds,
+      130,
+    );
+    expect(raceLogs, isNotEmpty);
+  });
+
+  test('personalBestsFromMeets keeps fastest time per event', () {
     final meetResults = [
       MeetResult(
         swimmerName: 'Aspyn',
-        meetName: 'Summer Invite',
-        event: '200 Fly',
+        meetName: 'Invite',
+        event: '200 Butterfly',
         swimTime: 130,
         course: 'LCM',
         meetDate: DateTime(2026, 6, 27),
       ),
+      MeetResult(
+        swimmerName: 'Aspyn',
+        meetName: 'Championships',
+        event: '200 Butterfly',
+        swimTime: 125,
+        course: 'LCM',
+        meetDate: DateTime(2026, 7, 1),
+      ),
     ];
 
-    final pbs = SwimAnalytics.personalBestsUnified(
-      raceLogs: raceLogs,
-      meetResults: meetResults,
-    );
+    final pbs = SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
 
     expect(pbs.length, 1);
-    expect(pbs.first.timeSeconds, 130);
+    expect(pbs.first.timeSeconds, 125);
     expect(pbs.first.source.name, 'meet');
   });
 
-  test('personalBestsUnified keeps separate courses', () {
+  test('personalBestsFromMeets keeps separate courses', () {
     final meetResults = [
       MeetResult(
         swimmerName: 'Aspyn',
@@ -57,10 +85,7 @@ void main() {
       ),
     ];
 
-    final pbs = SwimAnalytics.personalBestsUnified(
-      raceLogs: const [],
-      meetResults: meetResults,
-    );
+    final pbs = SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
 
     expect(pbs.length, 2);
   });

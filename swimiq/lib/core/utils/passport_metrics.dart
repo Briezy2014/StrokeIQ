@@ -76,10 +76,7 @@ class PassportMetrics {
         )
         .toList();
 
-    final unifiedPbs = SwimAnalytics.personalBestsUnified(
-      raceLogs: raceLogs,
-      meetResults: meetResults,
-    );
+    final meetPbs = SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
     final swimIqScore = swimIqScoreValue(
       raceLogs: raceLogs,
       goals: goals,
@@ -93,7 +90,7 @@ class PassportMetrics {
         score: swimIqScore,
         raceLogs: raceLogs,
         goals: goals,
-        personalBestCount: unifiedPbs.length,
+        personalBestCount: meetPbs.length,
       ),
       currentFocus: currentFocus(
         profile: profile,
@@ -102,7 +99,7 @@ class PassportMetrics {
         analyses: userAnalyses,
       ),
       highestCut: SwimAnalytics.highestMotivationalCut(
-        personalBests: unifiedPbs,
+        personalBests: meetPbs,
         catalog: motivationalStandards,
         profile: profile,
       ),
@@ -122,7 +119,7 @@ class PassportMetrics {
         analyses: userAnalyses,
         raceLogs: raceLogs,
       ),
-      personalBests: personalBestLines(unifiedPbs),
+      personalBests: personalBestLines(meetPbs),
       goalLines: goalProgressLines(goals: goals, raceLogs: raceLogs),
       videoCount: userVideos.length,
       analysisCount: userAnalyses.length,
@@ -137,7 +134,7 @@ class PassportMetrics {
       usaStandardsSummary: usaStandardsSummary(
         catalog: motivationalStandards,
         profile: profile,
-        personalBests: unifiedPbs,
+        personalBests: meetPbs,
         meetResults: meetResults,
       ),
     );
@@ -360,7 +357,7 @@ class PassportMetrics {
     List<MeetResult> meetResults = const [],
   }) {
     if (personalBests.isEmpty) {
-      return '${catalog.versionLabel} loaded. Log sessions or meets to compare cuts.';
+      return '${catalog.versionLabel} loaded. Log meet results to compare cuts.';
     }
     if (!SwimIqStandardsProfile.isReady(profile)) {
       return SwimIqStandardsProfile.setupMessage;

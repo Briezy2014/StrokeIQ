@@ -34,19 +34,11 @@ class SwimAnalytics {
     return results;
   }
 
-  /// Best times across training sessions **and** meet results.
-  static List<PersonalBestEntry> personalBestsUnified({
-    required List<RaceLog> raceLogs,
+  /// Best times from **meet results only** (official meet swims).
+  static List<PersonalBestEntry> personalBestsFromMeets({
     required List<MeetResult> meetResults,
   }) {
     final bestByEvent = <String, PersonalBestEntry>{};
-
-    for (final log in raceLogs) {
-      if (log.timeSeconds <= 0) continue;
-      final entry = PersonalBestEntry.fromRaceLog(log);
-      if (!entry.isValid) continue;
-      _keepFastest(bestByEvent, entry);
-    }
 
     for (final result in meetResults) {
       if (result.swimTime <= 0) continue;
@@ -115,7 +107,7 @@ class SwimAnalytics {
     required SwimmerProfile? profile,
   }) {
     if (personalBests.isEmpty) {
-      return 'Log sessions or meets to compare against cuts';
+      return 'Log meet results to compare against cuts';
     }
     if (!SwimIqStandardsProfile.isReady(profile)) {
       return SwimIqStandardsProfile.setupMessageShort;

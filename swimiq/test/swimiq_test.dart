@@ -6,6 +6,7 @@ import 'package:swimiq/core/utils/swimiq_standards_profile.dart';
 import 'package:swimiq/core/utils/swim_analytics.dart';
 import 'package:swimiq/core/utils/swimiq_age_group.dart';
 import 'package:swimiq/core/utils/swim_time.dart';
+import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
@@ -286,19 +287,18 @@ void main() {
           graduationYear: 2028,
           athleteNotes: 'Gender: Girls',
         ),
-        raceLogs: [
-          RaceLog(
-            swimmer: 'Aspyn',
+        raceLogs: const [],
+        goals: const [],
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Test Meet',
             event: '100 Butterfly',
-            distance: 100,
-            stroke: 'Butterfly',
+            swimTime: 72.0,
             course: 'SCY',
-            timeSeconds: 72.0,
-            date: DateTime(2026, 6, 1),
+            meetDate: DateTime(2026, 6, 1),
           ),
         ],
-        goals: const [],
-        meetResults: const [],
         videos: const [],
         videoAnalyses: const [],
         motivationalStandards: testMotivationalCatalog,
@@ -321,19 +321,18 @@ void main() {
           birthday: DateTime(2014, 6, 1),
           athleteNotes: SwimmerProfile.composeAthleteNotes(gender: 'Female'),
         ),
-        raceLogs: [
-          RaceLog(
-            swimmer: 'Aspyn',
+        raceLogs: const [],
+        goals: const [],
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Test Meet',
             event: '100 Butterfly',
-            distance: 100,
-            stroke: 'Butterfly',
+            swimTime: 72.0,
             course: 'SCY',
-            timeSeconds: 72.0,
-            date: DateTime(2026, 6, 1),
+            meetDate: DateTime(2026, 6, 1),
           ),
         ],
-        goals: const [],
-        meetResults: const [],
         videos: const [],
         videoAnalyses: const [],
         motivationalStandards: testMotivationalCatalog,
@@ -378,7 +377,16 @@ void main() {
           ),
         ],
         goals: const [],
-        meetResults: const [],
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Denison Invite',
+            event: '50 Butterfly',
+            swimTime: 32.5,
+            course: 'LCM',
+            meetDate: DateTime(2026, 6, 1),
+          ),
+        ],
         videos: const [
           SwimVideo(
             swimmer: 'Aspyn',

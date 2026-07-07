@@ -29,12 +29,12 @@ class PersonalBestsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Fastest logged times for ${data.displayName(swimmer)}',
+                'Fastest official meet times for ${data.displayName(swimmer)}',
               ),
               const SizedBox(height: 16),
               const EmptyStateMessage(
                 message:
-                    'No personal bests yet. Add swim sessions or meet results to unlock this page.',
+                    'No personal bests yet. Add meet results on the Meets tab to unlock this page.',
               ),
             ],
           );
@@ -52,7 +52,7 @@ class PersonalBestsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${personalBests.length} events tracked from sessions and meets',
+              '${personalBests.length} events tracked from meet results',
             ),
             const SizedBox(height: 16),
             ...personalBests.map(
