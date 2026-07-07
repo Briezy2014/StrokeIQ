@@ -36,6 +36,8 @@ cd swimiq
 .\run-chrome.ps1
 ```
 
+See **[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)** for inviting parents via **TestFlight** (iOS beta).
+
 ### Everyone else
 
 ```bash
