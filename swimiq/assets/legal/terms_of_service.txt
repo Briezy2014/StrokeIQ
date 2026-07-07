@@ -7,7 +7,7 @@ By downloading or using SwimIQ, you agree to these Terms and our Privacy Policy.
 2. Service description
 SwimIQ is designed for competitive swimmers and student-athletes ages 8 through 30. It provides swim performance tracking, meet and training logs, USA motivational standards comparisons, athlete passport tools, and optional AI-generated coaching feedback. Features may vary by subscription plan.
 
-Web copy: https://swimiq.app/terms
+Web copy: https://swimiqapp.com/terms
 
 3. Not medical or officiating advice
 SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and time estimates — are for training guidance only. They are not medical advice, dietary prescriptions, or official meet results. Always follow your coach, physician, and meet officials.
@@ -48,8 +48,8 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW, KARA JAYNE WILLIAMS AND SWIMIQ WILL NOT 
 These Terms are governed by the laws of the State of Ohio, without regard to conflict-of-law rules.
 
 13. Contact
-support@swimiq.app
-privacy@swimiq.app
+support@swimiqapp.com
+privacy@swimiqapp.com
 
 Kara Jayne Williams · SwimIQ
 199 Harbinger Dr.

@@ -11,9 +11,9 @@ abstract final class LegalConstants {
   /// Planned operator after age-18 transition — do not use in public legal text until then.
   static const plannedOwnerAt18 = 'Aspyn Briez Williams';
   static const companyName = operatorName;
-  static const contactEmail = 'privacy@swimiq.app';
-  static const supportEmail = 'support@swimiq.app';
-  static const websiteUrl = 'https://swimiq.app';
+  static const contactEmail = 'privacy@swimiqapp.com';
+  static const supportEmail = 'support@swimiqapp.com';
+  static const websiteUrl = 'https://swimiqapp.com';
   static const governingLawState = 'Ohio';
   static const mailingAddressLine1 = '199 Harbinger Dr.';
   static const mailingCityStateZip = 'Groveport, OH 43125';

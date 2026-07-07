@@ -116,7 +116,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             'Tap a document to read it inside the app. Web links are for App Store '
-            'and sharing — host the same text at swimiq.app when your site is live.',
+            'and sharing — host the same text at swimiqapp.com when those pages are live.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),

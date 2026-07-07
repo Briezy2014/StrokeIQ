@@ -16,18 +16,18 @@ There are **three** legal documents in the app today — not dozens. Other docs 
 
 - **In-app:** Full text is bundled inside the app. Works offline. Tap **Settings → Legal & privacy**.
 - **Web (App Store):** Apple wants a public URL. Settings also lists:
-  - https://swimiq.app/privacy
-  - https://swimiq.app/terms
-  - https://swimiq.app/ai
+  - https://swimiqapp.com/privacy
+  - https://swimiqapp.com/terms
+  - https://swimiqapp.com/ai
 
-Host the **same text** on your website when `swimiq.app` is live. Until then, in-app copies are the source of truth.
+Host the **same text** on **swimiqapp.com** at `/privacy`, `/terms`, and `/ai`. The main site is live; those legal pages still need to be added.
 
 ## Operator (Ohio)
 
 - **Operator:** Kara Jayne Williams (SwimIQ)
 - **Address:** 199 Harbinger Dr., Groveport, OH 43125
 - **Governing law:** Ohio
-- **privacy@swimiq.app** / **support@swimiq.app**
+- **privacy@swimiqapp.com** / **support@swimiqapp.com**
 - **Planned LLC name:** SwimIQ LLC
 - **Planned owner at Aspyn’s 18th birthday:** Aspyn Briez Williams
 
@@ -91,7 +91,7 @@ Update `legal_constants.dart` and the three `.txt` files together when anything 
 1. Amend Ohio LLC operating agreement (add Aspyn as member/manager if using LLC)
 2. Replace operator name in `legal_constants.dart` and all three `assets/legal/*.txt` files
 3. Update App Store Connect “seller” / business info if needed
-4. Bump `lastUpdated` date and republish web copies at swimiq.app
+4. Bump `lastUpdated` date and republish web copies at swimiqapp.com
 
 **Planned owner name at 18:** Aspyn Briez Williams
 
@@ -112,5 +112,5 @@ Update `legal_constants.dart` and the three `.txt` files together when anything 
 
 1. Save the `.txt` under `assets/legal/`
 2. Bump `lastUpdated` in `legal_constants.dart` if the date changed
-3. Mirror the same text on swimiq.app when hosted
+3. Mirror the same text on swimiqapp.com when hosted
 4. Run `flutter test` (assets are bundled at build time)

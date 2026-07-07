@@ -103,7 +103,7 @@ class _ConfigErrorScreen extends StatelessWidget {
                 message ??
                     'This build is missing its cloud connection settings. '
                     'If you installed SwimIQ from the App Store, contact '
-                    'support@swimiq.app.',
+                    'support@swimiqapp.com.',
                 textAlign: TextAlign.center,
               ),
             ],

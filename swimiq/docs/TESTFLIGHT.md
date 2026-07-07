@@ -36,8 +36,7 @@ Use this when a parent says *“We want to try it!”* and your swimmers are **1
 6. **SKU:** `swimiq-ios` (any unique string)
 
 ### C. Privacy (required for TestFlight external testing)
-- **Privacy Policy URL:** For now use in-app policy; ideally host English text at a URL you control.  
-  *(swimiq.app currently shows a different Turkish app — fix domain or use another URL before App Store submission.)*
+- **Privacy Policy URL:** https://swimiqapp.com/privacy — host the same text as `assets/legal/privacy_policy.txt` (page not live yet; in-app copy works for beta)
 - In App Store Connect → your app → **App Privacy** → fill questionnaire to match `assets/legal/privacy_policy.txt`
 
 ---
@@ -121,7 +120,7 @@ Copy/paste:
 > 6. Add **meet results** on the Meets tab.  
 >
 > Privacy Policy: **Settings → Legal & privacy** inside the app.  
-> Questions: **support@swimiq.app**
+> Questions: **support@swimiqapp.com**
 
 ---
 

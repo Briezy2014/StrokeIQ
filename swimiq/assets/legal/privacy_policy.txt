@@ -4,10 +4,10 @@ Last updated: July 7, 2026
 Business / brand: SwimIQ
 Product founder: Aspyn Briez Williams (minor). SwimIQ was built for competitive swimmers like Aspyn. She is not the legal operator of the service.
 Parent / legal representative & operator: Kara Jayne Williams
-Support: support@swimiq.app
-Privacy: privacy@swimiq.app
-Website: https://swimiq.app
-Web copy of this policy: https://swimiq.app/privacy
+Support: support@swimiqapp.com
+Privacy: privacy@swimiqapp.com
+Website: https://swimiqapp.com
+Web copy of this policy: https://swimiqapp.com/privacy
 
 1. Who we are
 SwimIQ ("we," "us") is operated by Kara Jayne Williams, parent and legal representative for SwimIQ, from Groveport, Ohio. This policy explains how we collect, use, and share information when you use the SwimIQ mobile application and related services.
@@ -48,7 +48,7 @@ We do not sell your personal information.
 When you tap "Run AI Swim Analysis," your video and related swimmer context are transmitted to our servers and then to Google’s AI services to generate coaching feedback. We ask for your explicit in-app consent before the first transmission. You may decline and still use non-AI features.
 
 6. Data retention
-We retain your data while your account is active. You may request deletion by contacting privacy@swimiq.app. We may retain limited records where required by law.
+We retain your data while your account is active. You may request deletion by contacting privacy@swimiqapp.com. We may retain limited records where required by law.
 
 7. Children and athletes (ages 8–30)
 SwimIQ serves competitive swimmers ages 8 through 30.
@@ -59,10 +59,10 @@ Ages 8–12 (under 13): A parent or legal guardian must create and control the a
 
 Ages 13–30: Athletes may create and use their own account and accept this policy directly.
 
-If you believe someone under 13 created an account without parental consent, contact privacy@swimiq.app and we will delete it.
+If you believe someone under 13 created an account without parental consent, contact privacy@swimiqapp.com and we will delete it.
 
 8. User rights
-You may request access, correction, export, or deletion of eligible personal data by emailing privacy@swimiq.app. We will respond within a reasonable time. You may also:
+You may request access, correction, export, or deletion of eligible personal data by emailing privacy@swimiqapp.com. We will respond within a reasonable time. You may also:
 • Edit or delete performance data within the app where supported
 • Decline AI analysis consent (non-AI features remain available on eligible plans)
 • Sign out to end your session on a shared device
@@ -77,8 +77,8 @@ If you access SwimIQ from outside the United States, your information may be pro
 We may update this policy. We will revise the "Last updated" date and, where required, provide additional notice in the app.
 
 12. Contact
-privacy@swimiq.app
-support@swimiq.app
+privacy@swimiqapp.com
+support@swimiqapp.com
 
 Kara Jayne Williams · SwimIQ
 199 Harbinger Dr.

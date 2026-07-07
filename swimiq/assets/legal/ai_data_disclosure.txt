@@ -3,7 +3,7 @@ Last updated: July 7, 2026
 
 Required disclosure for Apple App Review Guideline 5.1.2(i) — third-party AI
 
-Web copy: https://swimiq.app/ai
+Web copy: https://swimiqapp.com/ai
 
 WHAT USES AI?
 • Video Lab — "Run AI Swim Analysis" on uploaded swim clips
@@ -25,13 +25,13 @@ CONSENT
 The first time you run AI video analysis, SwimIQ shows this disclosure and asks for your explicit permission. For athletes ages 8–12, a parent or guardian must provide this consent. You may decline and continue using non-AI features.
 
 REVOKE CONSENT
-Contact support@swimiq.app or delete your account to stop future AI processing. Clearing app data or signing out removes local consent flags on your device.
+Contact support@swimiqapp.com or delete your account to stop future AI processing. Clearing app data or signing out removes local consent flags on your device.
 
 ACCURACY
 AI output is estimated coaching feedback — not automatic video timing, not a substitute for your coach, and not medical or nutrition therapy.
 
 QUESTIONS
-privacy@swimiq.app
+privacy@swimiqapp.com
 
 Kara Jayne Williams · SwimIQ
 199 Harbinger Dr.
