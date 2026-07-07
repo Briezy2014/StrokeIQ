@@ -1,8 +1,56 @@
 # Build SwimIQ for web → upload to GoDaddy public_html
 # Run from S:\swimiq after .env has SUPABASE_URL and SUPABASE_ANON_KEY
+# See docs/WINDOWS_SETUP.md if you see: 'C:\Users\Kara' is not recognized
 
 $ErrorActionPreference = "Stop"
-Set-Location (Split-Path $PSScriptRoot -Parent)
+
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$strokeRoot = Split-Path -Parent $projectRoot
+
+# Flutter + Pub cache under "Kara Williams" break native hooks — map to drive letters.
+$flutterCandidates = @(
+    "$env:USERPROFILE\flutter",
+    "C:\flutter",
+    "C:\src\flutter"
+)
+
+$flutterBin = $null
+foreach ($candidate in $flutterCandidates) {
+    if (Test-Path "$candidate\bin\flutter.bat") {
+        $flutterBin = "$candidate\bin"
+        break
+    }
+}
+
+if (-not $flutterBin) {
+    $flutterCmd = Get-Command flutter -ErrorAction SilentlyContinue
+    if ($flutterCmd) { $flutterBin = Split-Path -Parent $flutterCmd.Source }
+}
+
+if (-not $flutterBin) {
+    Write-Host "ERROR: Flutter not found. Install to C:\flutter (no spaces) or see docs/WINDOWS_SETUP.md"
+    exit 1
+}
+
+$flutterRoot = $flutterBin.TrimEnd('\bin')
+if ($flutterRoot -match " ") {
+    subst F: $flutterRoot 2>$null
+    $flutterBin = "F:\bin"
+    Write-Host "Mapped Flutter to F:\ (path had spaces)"
+}
+
+if ($projectRoot -match " ") {
+    subst S: $strokeRoot 2>$null
+    $projectRoot = "S:\swimiq"
+    Write-Host "Mapped project to S:\swimiq (path had spaces)"
+}
+
+$pubCache = "S:\pub-cache"
+New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
+$env:PUB_CACHE = $pubCache
+$env:Path = "$flutterBin;$env:Path"
+
+Set-Location $projectRoot
 
 if (-not (Test-Path ".env")) {
     Write-Host "ERROR: Missing .env file. Copy .env.example to .env and add Supabase keys."
@@ -25,6 +73,7 @@ Write-Host "Building SwimIQ for web (release)..."
 Write-Host "Output will be in: build\web\"
 Write-Host ""
 
+flutter clean
 flutter pub get
 flutter build web --release `
     --dart-define=SUPABASE_URL=$url `
