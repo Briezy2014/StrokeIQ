@@ -32,9 +32,16 @@ That’s a complete, honest answer. No app install link needed yet.
 
 # PHASE 1 — THIS WEEK (website only)
 
-**Goal:** When someone clicks swimiqapp.com, they see features + “coming soon” + your timeline.
+**Goal:** People open **https://swimiqapp.com** and **use the real SwimIQ app in their browser** (Flutter web).
 
-### Step 1 — Get the website files on your PC
+👉 **Follow:** [docs/WALKTHROUGH_SWIMIQAPP_COM.md](docs/WALKTHROUGH_SWIMIQAPP_COM.md) (step-by-step)
+
+Quick version:
+1. `git pull origin main`
+2. `powershell -ExecutionPolicy Bypass -File scripts\build-web-godaddy.ps1`
+3. Upload **everything inside** `build\web\` to GoDaddy **`public_html`**
+
+The static `website/` folder is optional marketing pages only. **For “see the app work,” use Flutter web (`build/web`), not `website/`.**
 
 1. Open PowerShell
 2. Run:
