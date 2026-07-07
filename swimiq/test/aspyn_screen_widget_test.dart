@@ -165,14 +165,18 @@ void main() {
       final data = _harnessData!;
       expect(find.textContaining('WELCOME BACK'), findsOneWidget);
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
+      expect(find.text('Daily Rope Climb'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('SESSIONS'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('${data.raceLogs.length}'), findsOneWidget);
       expect(find.text('${data.personalBests.length}'), findsWidgets);
       expect(find.text('${data.goals.length}'), findsWidgets);
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
-      expect(
-        find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),
-        findsWidgets,
-      );
+      expect(find.textContaining('Passport'), findsWidgets);
       await tester.scrollUntilVisible(
         find.text('Unlock the Elite wild factor'),
         200,

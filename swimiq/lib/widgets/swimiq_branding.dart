@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Known branding asset filenames (first match wins).
 abstract final class SwimIqBranding {
@@ -18,7 +19,6 @@ abstract final class SwimIqBranding {
     'assets/branding/banner.png',
     'assets/branding/swimiq_banner.png',
     'assets/branding/swimiq_logo_full.png',
-    // Legacy fallback when only one wide file was added.
     'assets/branding/swimiq_logo.png',
   ];
 }
@@ -47,11 +47,44 @@ class SwimIqBrandedImage extends StatefulWidget {
 }
 
 class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
-  int _candidateIndex = 0;
+  String? _resolvedPath;
+  bool _resolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveAsset();
+  }
+
+  Future<void> _resolveAsset() async {
+    for (final path in widget.candidates) {
+      try {
+        await rootBundle.load(path);
+        if (!mounted) return;
+        setState(() {
+          _resolvedPath = path;
+          _resolved = true;
+        });
+        return;
+      } catch (_) {
+        continue;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _resolvedPath = null;
+      _resolved = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_candidateIndex >= widget.candidates.length) {
+    if (!_resolved) {
+      return SizedBox(width: widget.width, height: widget.height);
+    }
+
+    if (_resolvedPath == null) {
       return widget.fallback ??
           Icon(
             Icons.pool,
@@ -60,21 +93,12 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
           );
     }
 
-    final path = widget.candidates[_candidateIndex];
     final image = Image.asset(
-      path,
+      _resolvedPath!,
       width: widget.width,
       height: widget.height,
       fit: widget.fit,
-      errorBuilder: (context, error, stackTrace) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          if (_candidateIndex + 1 < widget.candidates.length) {
-            setState(() => _candidateIndex++);
-          }
-        });
-        return const SizedBox.shrink();
-      },
+      gaplessPlayback: true,
     );
 
     if (widget.borderRadius <= 0) return image;

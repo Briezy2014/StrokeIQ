@@ -15,7 +15,10 @@ import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
+import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../core/gamification/swimiq_badges.dart';
+import '../../core/gamification/swimiq_daily_progress.dart';
 import '../membership/membership_screen.dart';
 import '../race_intelligence/race_intelligence_screen.dart';
 
@@ -32,6 +35,25 @@ class DashboardScreen extends ConsumerWidget {
         final hasAnyActivity = logs.isNotEmpty || meetResults.isNotEmpty;
 
         if (!hasAnyActivity) {
+          final daily = SwimIqDailyProgress.calculate(
+            raceLogs: logs,
+            meetResults: meetResults,
+            videos: data.userFacingVideos,
+            goals: data.goals,
+            overallSwimIqScore: 0,
+          );
+          final badges = SwimIqBadgeCatalog.evaluate(
+            daily: daily,
+            raceLogs: logs,
+            meetResults: meetResults,
+            goals: data.goals,
+            personalBests: personalBests,
+            videos: data.userFacingVideos,
+            analyses: data.userFacingVideoAnalyses,
+            profile: data.profile,
+            snapshot: data.passportSnapshot(swimmer),
+          );
+
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -44,6 +66,8 @@ class DashboardScreen extends ConsumerWidget {
                 profile: data.profile,
                 catalog: data.motivationalStandards,
               ),
+              const SizedBox(height: 16),
+              SwimIqRopeClimbCard(daily: daily, badges: badges),
               const SizedBox(height: 16),
               const EmptyStateMessage(
                 message:
@@ -72,6 +96,24 @@ class DashboardScreen extends ConsumerWidget {
         );
         final subscription = ref.watch(subscriptionStateProvider).value;
         final dateFormat = DateFormat.yMMMd();
+        final daily = SwimIqDailyProgress.calculate(
+          raceLogs: logs,
+          meetResults: meetResults,
+          videos: data.userFacingVideos,
+          goals: data.goals,
+          overallSwimIqScore: data.swimIqScore,
+        );
+        final badges = SwimIqBadgeCatalog.evaluate(
+          daily: daily,
+          raceLogs: logs,
+          meetResults: meetResults,
+          goals: data.goals,
+          personalBests: personalBests,
+          videos: data.userFacingVideos,
+          analyses: data.userFacingVideoAnalyses,
+          profile: data.profile,
+          snapshot: snapshot,
+        );
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -85,6 +127,8 @@ class DashboardScreen extends ConsumerWidget {
               profile: data.profile,
               catalog: data.motivationalStandards,
             ),
+            const SizedBox(height: 16),
+            SwimIqRopeClimbCard(daily: daily, badges: badges),
             const SizedBox(height: 16),
             _ActivityStrip(
               sessions: logs.length,
