@@ -161,10 +161,12 @@ const analysisResponseSchema = {
   type: "OBJECT",
   properties: {
     quick_summary: { type: "STRING" },
+    quick_pro: { type: "STRING" },
+    quick_con: { type: "STRING" },
+    next_race_goal: { type: "STRING" },
     what_the_video_shows: { type: "ARRAY", items: { type: "STRING" } },
-    cannot_confirm_yet: { type: "ARRAY", items: { type: "STRING" } },
     top_3_priorities: { type: "ARRAY", items: { type: "STRING" } },
-    recommended_drills: { type: "ARRAY", items: { type: "STRING" } },
+    dryland_focus: { type: "STRING" },
     estimated_time_savings: { type: "STRING" },
     coach_notes_for_next_race: { type: "STRING" },
     technique_score: { type: "INTEGER" },
@@ -173,8 +175,12 @@ const analysisResponseSchema = {
   },
   required: [
     "quick_summary",
-    "what_the_video_shows",
+    "quick_pro",
+    "quick_con",
+    "next_race_goal",
     "top_3_priorities",
+    "dryland_focus",
+    "estimated_time_savings",
     "technique_score",
     "pace_score",
     "overall_score",
@@ -239,7 +245,10 @@ ${poseLines || "(pose metrics not available for this clip)"}
 Return JSON only (no markdown). Be specific about visible technique (body line, kick, pull, breathing, turns, underwater, finish).
 Reference the pose metrics when they support what you see, but do not invent numbers beyond them.
 Use parent-friendly language. Scores are 0-100 integers.
-If the camera angle limits certainty, say so in cannot_confirm_yet.
+Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences.
+Provide next_race_goal as one concrete race target sentence.
+For dryland_focus: explain why strength/mobility/stability matter for this stroke — do NOT list pool drills (the coach handles those).
+For estimated_time_savings: give a numeric range in seconds tied to the limiter you saw.
 Do not invent split times or stroke counts you cannot verify from the video.`;
 }
 
@@ -253,16 +262,19 @@ function normalizeAnalysis(
       : "";
 
   const whatShows = bullet(parsed.what_the_video_shows);
-  const cannotConfirm = bullet(parsed.cannot_confirm_yet);
   const priorities = bullet(parsed.top_3_priorities);
-  const drills = bullet(parsed.recommended_drills);
 
   const sections: Record<string, string> = {
     "Quick Summary": String(parsed.quick_summary ?? ""),
-    "What the video shows": whatShows,
-    "What cannot be confirmed from this angle": cannotConfirm,
+    "Quick pro from this video": String(
+      parsed.quick_pro ?? whatShows.split("\n")[0] ?? "",
+    ),
+    "Quick con from this video": String(parsed.quick_con ?? ""),
+    "Goal for your next race": String(parsed.next_race_goal ?? ""),
     "Top 3 priorities for the next practice": priorities,
-    "Specific drills": drills,
+    "Dryland focus (strength · mobility · stability)": String(
+      parsed.dryland_focus ?? "",
+    ),
     "Estimated time savings": String(parsed.estimated_time_savings ?? ""),
     "Coach notes for next race": String(
       parsed.coach_notes_for_next_race ?? "",
@@ -289,11 +301,8 @@ function normalizeAnalysis(
   ].join("\n");
 
   const strengths = [
-    "What the video shows",
-    whatShows,
-    "",
-    "Specific drills",
-    drills,
+    "Quick pro from this video",
+    sections["Quick pro from this video"],
   ].join("\n").trim();
 
   return {
@@ -313,9 +322,12 @@ function normalizeAnalysis(
       pose_metrics: body.pose_metrics ?? null,
       sections,
       top_3_priorities: parsed.top_3_priorities ?? [],
-      recommended_drills: parsed.recommended_drills ?? [],
       estimated_time_savings: parsed.estimated_time_savings,
       coach_notes_for_next_race: parsed.coach_notes_for_next_race,
+      quick_pro: parsed.quick_pro,
+      quick_con: parsed.quick_con,
+      next_race_goal: parsed.next_race_goal,
+      dryland_focus: parsed.dryland_focus,
     },
   };
 }

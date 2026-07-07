@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
+import '../core/services/video_analysis_presenter.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
@@ -496,6 +497,25 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     } catch (error) {
       return error.toString();
     }
+  }
+
+  Future<void> updateAnalysisCoachNotes({
+    required String videoId,
+    required String notes,
+  }) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final existing = current.analysisForVideo(videoId);
+    if (existing == null) return;
+
+    final updated = VideoAnalysisPresenter.withCoachNotes(existing, notes);
+    _localAnalysesByVideoId[videoId] = updated;
+    state = AsyncData(
+      current.copyWith(
+        videoAnalyses: _mergeAnalyses(current.videoAnalyses),
+      ),
+    );
   }
 
   Future<String?> uploadProfilePhoto({

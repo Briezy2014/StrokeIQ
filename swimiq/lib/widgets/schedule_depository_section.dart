@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -37,6 +40,8 @@ class _ScheduleDepositorySectionState
   DateTime _scheduleDate = DateTime.now();
   bool _isSaving = false;
   bool _showForm = false;
+  Uint8List? _schedulePhotoBytes;
+  String? _schedulePhotoName;
   final _saveSectionKey = GlobalKey();
 
   @override
@@ -77,12 +82,45 @@ class _ScheduleDepositorySectionState
     });
   }
 
+  Future<void> _pickSchedulePhoto() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) return;
+    setState(() {
+      _schedulePhotoBytes = file.bytes;
+      _schedulePhotoName = file.name;
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return;
 
     setState(() => _isSaving = true);
+
+    var notes = _optional(_notesController.text) ?? '';
+    if (_schedulePhotoBytes != null) {
+      try {
+        final url = await ref.read(profilePhotoServiceProvider).uploadSchedulePhoto(
+              swimmer: swimmer,
+              fileName: _schedulePhotoName ?? 'schedule.jpg',
+              bytes: _schedulePhotoBytes!,
+            );
+        notes = notes.isEmpty ? 'Schedule photo: $url' : '$notes\nSchedule photo: $url';
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not upload schedule photo.')),
+          );
+        }
+      }
+    }
+
     final entry = SwimScheduleEntry(
       swimmerName: swimmer,
       scheduleType: _scheduleType,
@@ -91,7 +129,7 @@ class _ScheduleDepositorySectionState
       startTime: _optional(_startTimeController.text),
       location: _optional(_locationController.text),
       eventsLine: _optional(_eventsController.text),
-      notes: _optional(_notesController.text),
+      notes: notes.isEmpty ? null : notes,
     );
 
     final error =
@@ -106,6 +144,8 @@ class _ScheduleDepositorySectionState
         _locationController.clear();
         _eventsController.clear();
         _notesController.clear();
+        _schedulePhotoBytes = null;
+        _schedulePhotoName = null;
       }
     });
 
@@ -309,6 +349,40 @@ class _ScheduleDepositorySectionState
                       ),
                       maxLines: 3,
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isSaving ? null : _pickSchedulePhoto,
+                      icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                      label: Text(
+                        _schedulePhotoName == null
+                            ? 'Attach schedule photo'
+                            : 'Change photo (${_schedulePhotoName!})',
+                      ),
+                    ),
+                    if (_schedulePhotoBytes != null) ...[
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          _schedulePhotoBytes!,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isSaving
+                              ? null
+                              : () => setState(() {
+                                    _schedulePhotoBytes = null;
+                                    _schedulePhotoName = null;
+                                  }),
+                          child: const Text('Remove photo'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     KeyedSubtree(
                       key: _saveSectionKey,

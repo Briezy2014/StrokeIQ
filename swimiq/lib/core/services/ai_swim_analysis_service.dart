@@ -29,17 +29,20 @@ class AiSwimAnalysisService {
 
     final suggestions = _whatVideoSuggests(ctx);
     final priorities = _topThreePriorities(ctx);
-    final drills = _specificDrills(ctx, priorities);
     final timeSavings = _estimatedTimeSavings(ctx);
     final coachNotes = _coachNotesForNextRace(ctx, priorities);
+    final quickPro = _quickPro(ctx, suggestions);
+    final quickCon = _quickCon(ctx, suggestions);
+    final nextRaceGoal = _nextRaceGoal(ctx, priorities);
+    final dryland = _drylandFocus(ctx);
 
     final sections = <String, String>{
       'Quick Summary': _quickSummary(ctx, priorities),
-      'What the video suggests': _bulletBlock(suggestions),
-      'What cannot be confirmed yet without frame-by-frame AI':
-          _cannotConfirmYet(ctx),
+      'Quick pro from this video': quickPro,
+      'Quick con from this video': quickCon,
+      'Goal for your next race': nextRaceGoal,
       'Top 3 priorities for the next practice': _bulletBlock(priorities),
-      'Specific drills': _bulletBlock(drills),
+      'Dryland focus (strength · mobility · stability)': dryland,
       'Estimated time savings': timeSavings,
       'Coach notes for next race': coachNotes,
     };
@@ -65,8 +68,12 @@ class AiSwimAnalysisService {
         'disclaimer': disclaimer,
         'sections': sections,
         'top_3_priorities': priorities,
-        'recommended_drills': drills,
         'estimated_time_savings': timeSavings,
+        'coach_notes_for_next_race': coachNotes,
+        'quick_pro': quickPro,
+        'quick_con': quickCon,
+        'next_race_goal': nextRaceGoal,
+        'dryland_focus': dryland,
         'personal_best_seconds': ctx.personalBestSeconds,
         'engine': 'swimiq-v1-notes',
       },
@@ -180,18 +187,56 @@ class AiSwimAnalysisService {
     return items.take(5).toList();
   }
 
-  String _cannotConfirmYet(_AnalysisContext ctx) {
-    final items = <String>[
-      'Exact reaction time, breakout distance, and stroke count from pixels',
-      'Breath timing and head position frame-by-frame',
-      'Underwater kick amplitude and body angle off the wall',
-      'Split times and velocity through each 25',
-    ];
-    if (ctx.isSprint) {
-      items.add('Touch timing and finish glide distance at the wall');
+  String _quickPro(_AnalysisContext ctx, List<String> suggestions) {
+    if (suggestions.isEmpty) {
+      return '• Upload notes with start, stroke count, and finish details to unlock a specific pro.';
     }
-    return '${_bulletBlock(items)}\n\n'
-        'SwimIQ V1 uses what you typed on upload plus logged times — not computer vision.';
+    return '• ${suggestions.first}';
+  }
+
+  String _quickCon(_AnalysisContext ctx, List<String> suggestions) {
+    final s = ctx.noteSignals;
+    if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
+      return '• Reaction time looks slow — early speed is leaking off the blocks.';
+    }
+    if (s.tempoRushedLate == true) {
+      return '• Late-race tempo fades — length and rhythm drop when it matters most.';
+    }
+    if (s.breathesEveryStroke == true && ctx.isSprint) {
+      return '• Breathing pattern may be costing rhythm on a sprint ${ctx.eventLabel}.';
+    }
+    if (suggestions.length > 1) {
+      return '• ${suggestions[1]}';
+    }
+    return '• Add side + head-on video next time for sharper feedback on body line.';
+  }
+
+  String _nextRaceGoal(_AnalysisContext ctx, List<String> priorities) {
+    if (ctx.matchingGoal != null) {
+      return 'Race ${ctx.eventLabel} at '
+          '${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)} or faster.';
+    }
+    if (ctx.personalBestSeconds != null) {
+      final target = ctx.personalBestSeconds! - 0.5;
+      return 'Drop ${ctx.eventLabel} toward '
+          '${SwimTime.fromSeconds(target > 0 ? target : ctx.personalBestSeconds!)} '
+          'on your next meet.';
+    }
+    if (priorities.isNotEmpty) {
+      return 'Execute your top practice priority in the next ${ctx.eventLabel} race.';
+    }
+    return 'Set a goal time for ${ctx.eventLabel} in Goals, then race it.';
+  }
+
+  String _drylandFocus(_AnalysisContext ctx) {
+    final stroke = ctx.stroke;
+    final lines = <String>[
+      'Dryland supports what you do in the water — your coach picks the exact exercises.',
+      'For $stroke, prioritize core stability, shoulder mobility, and hip activation '
+      'so your body line stays long under fatigue.',
+      '2–3 short sessions per week (10–15 min) can protect technique when yardage climbs.',
+    ];
+    return lines.map((line) => '• $line').join('\n');
   }
 
   List<String> _topThreePriorities(_AnalysisContext ctx) {
@@ -246,43 +291,6 @@ class AiSwimAnalysisService {
     add('Log a fresh $event time to track progress.');
 
     return items.take(3).toList();
-  }
-
-  List<String> _specificDrills(_AnalysisContext ctx, List<String> priorities) {
-    final drills = <String>[];
-    final lower = priorities.join(' ').toLowerCase();
-
-    if (lower.contains('block') || lower.contains('reaction') || lower.contains('start')) {
-      drills.add('5 block starts with reaction calls');
-    }
-    if (lower.contains('streamline') || lower.contains('breakout')) {
-      drills.add(
-        ctx.stroke == 'Butterfly'
-            ? '4 x 15m underwater fly kick to a marked breakout'
-            : 'Push-offs: streamline to a set breakout mark',
-      );
-    }
-    if (lower.contains('stroke count') || lower.contains('tempo') || lower.contains('rhythm')) {
-      drills.add('4 x 25 holding stroke count while building pace');
-    }
-    if (lower.contains('breath')) {
-      drills.add('6 x 25 with a fixed breath pattern');
-    }
-    if (lower.contains('finish')) {
-      drills.add('6 finishes from the flags — 3 strokes to the wall');
-    }
-
-    if (drills.isEmpty) {
-      if (ctx.stroke == 'Butterfly') {
-        drills.add('3-3-3 fly drill');
-      } else if (ctx.stroke == 'Freestyle') {
-        drills.add('Catch-up freestyle');
-      } else {
-        drills.add('Technique 25s at moderate effort');
-      }
-    }
-
-    return drills.take(4).toList();
   }
 
   String _estimatedTimeSavings(_AnalysisContext ctx) {

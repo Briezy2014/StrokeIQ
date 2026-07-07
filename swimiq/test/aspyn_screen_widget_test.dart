@@ -235,13 +235,10 @@ void main() {
       await tester.pumpWidget(_screenHarness(const VideoLabScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Video Lab'), findsOneWidget);
+      expect(find.text('VIDEO LAB'), findsOneWidget);
+      expect(find.text('AI coaching from your race footage'), findsOneWidget);
       expect(
-        find.textContaining(
-          '${_fixture['userFacingVideoCount']} videos · '
-          '${_fixture['analysisCount']} analyses for '
-          '${_fixture['displayName']}',
-        ),
+        find.textContaining('${_fixture['userFacingVideoCount']} videos'),
         findsOneWidget,
       );
     });
@@ -250,7 +247,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const GoalsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Swimmer Goals'), findsOneWidget);
+      expect(find.text('GOALS'), findsOneWidget);
       expect(
         find.textContaining('Target times for ${_fixture['displayName']}'),
         findsOneWidget,
@@ -262,9 +259,9 @@ void main() {
       await tester.pumpAndSettle();
 
       final pbCount = _harnessData!.personalBests.length;
-      expect(find.text('Personal Bests'), findsOneWidget);
+      expect(find.text('PERSONAL BESTS'), findsOneWidget);
       expect(
-        find.textContaining('$pbCount events tracked'),
+        find.textContaining('$pbCount events from meet results'),
         findsOneWidget,
       );
     });

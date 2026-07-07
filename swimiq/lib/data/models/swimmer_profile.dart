@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|Athlete Website|Other Interests):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|Athlete Website|Other Interests|Academic Honors|Athletic Honors|College Interests|Leadership & Service|Recruiting Email):\s*(.+)$',
   );
 
   final int? id;
@@ -68,6 +68,11 @@ class SwimmerProfile {
   String? get gpa => _structuredNotesValue('GPA');
   String? get athleteWebsite => _structuredNotesValue('Athlete Website');
   String? get otherInterests => _structuredNotesValue('Other Interests');
+  String? get academicHonors => _structuredNotesValue('Academic Honors');
+  String? get athleticHonors => _structuredNotesValue('Athletic Honors');
+  String? get collegeInterests => _structuredNotesValue('College Interests');
+  String? get leadershipService => _structuredNotesValue('Leadership & Service');
+  String? get recruitingEmail => _structuredNotesValue('Recruiting Email');
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -176,6 +181,11 @@ class SwimmerProfile {
     String? gpa,
     String? athleteWebsite,
     String? otherInterests,
+    String? academicHonors,
+    String? athleticHonors,
+    String? collegeInterests,
+    String? leadershipService,
+    String? recruitingEmail,
     String? notes,
   }) {
     final parts = <String>[];
@@ -195,6 +205,11 @@ class SwimmerProfile {
     addLine('GPA', gpa);
     addLine('Athlete Website', athleteWebsite);
     addLine('Other Interests', otherInterests);
+    addLine('Academic Honors', academicHonors);
+    addLine('Athletic Honors', athleticHonors);
+    addLine('College Interests', collegeInterests);
+    addLine('Leadership & Service', leadershipService);
+    addLine('Recruiting Email', recruitingEmail);
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {

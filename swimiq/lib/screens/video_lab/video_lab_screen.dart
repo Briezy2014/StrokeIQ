@@ -13,7 +13,9 @@ import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../widgets/video_analysis_report.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
   const VideoLabScreen({super.key});
@@ -182,10 +184,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
+            SwimIqPageHero(
               title: 'Video Lab',
-              subtitle:
-                  '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
+              subtitle: 'AI coaching from your race footage',
+              stats: [
+                SwimIqHeroStat('${videos.length} videos'),
+                SwimIqHeroStat('${data.userFacingVideoAnalyses.length} analyses'),
+              ],
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -257,6 +262,14 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
                   motivationalCut: _videoMotivationalCut(data, video),
+                  onCoachNotesChanged: video.id == null
+                      ? null
+                      : (notes) => ref
+                          .read(swimmerDataProvider.notifier)
+                          .updateAnalysisCoachNotes(
+                            videoId: video.id!,
+                            notes: notes,
+                          ),
                 ),
               ),
           ],
@@ -274,6 +287,7 @@ class _VideoCard extends StatefulWidget {
     required this.analyzing,
     required this.onAnalyze,
     this.motivationalCut,
+    this.onCoachNotesChanged,
   });
 
   final SwimVideo video;
@@ -282,6 +296,7 @@ class _VideoCard extends StatefulWidget {
   final bool analyzing;
   final VoidCallback onAnalyze;
   final String? motivationalCut;
+  final ValueChanged<String>? onCoachNotesChanged;
 
   @override
   State<_VideoCard> createState() => _VideoCardState();
@@ -366,51 +381,11 @@ class _VideoCardState extends State<_VideoCard> {
                     : const Text('Run AI Swim Analysis'),
               )
             else ...[
-              if (widget.analysis!.disclaimer != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  widget.analysis!.disclaimer!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontStyle: FontStyle.italic,
-                      ),
-                ),
-              ],
               const SizedBox(height: 12),
-              if (widget.analysis!.coachingSections.isNotEmpty)
-                ...widget.analysis!.coachingSections.entries.map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.key,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(entry.value),
-                      ],
-                    ),
-                  ),
-                ),
-              if (widget.analysis!.poseMetrics != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Body mechanics',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                ...widget.analysis!.poseMetrics!.observations.map(
-                  (line) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• $line'),
-                  ),
-                ),
-              ],
+              VideoAnalysisReport(
+                analysis: widget.analysis!,
+                onCoachNotesChanged: widget.onCoachNotesChanged ?? (_) {},
+              ),
             ],
           ],
         ),

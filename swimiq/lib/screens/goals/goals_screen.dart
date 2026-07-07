@@ -11,8 +11,11 @@ import '../../data/models/swim_goal.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
-import '../../widgets/swimmer_screen.dart';
+import '../../widgets/goals_progress_chart.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../core/constants/swimiq_quotes.dart';
+import '../../widgets/swimmer_screen.dart';
 
 class GoalsScreen extends ConsumerStatefulWidget {
   const GoalsScreen({super.key});
@@ -170,10 +173,14 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'Swimmer Goals',
+            SwimIqPageHero(
+              title: 'Goals',
               subtitle: 'Target times for ${data.displayName(swimmer)}',
+              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.goals),
+              stats: [SwimIqHeroStat('${data.goals.length} active goals')],
             ),
+            const SizedBox(height: 16),
+            GoalsProgressChart(goals: data.goals, data: data),
             const SizedBox(height: 16),
             Form(
               key: _formKey,

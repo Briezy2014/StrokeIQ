@@ -209,20 +209,25 @@ void main() {
 
       final sections = analysis.coachingSections;
       expect(sections.keys, contains('Quick Summary'));
-      expect(sections.keys, contains('What the video suggests'));
-      expect(sections.keys, contains(
-        'What cannot be confirmed yet without frame-by-frame AI',
-      ));
+      expect(sections.keys, contains('Quick pro from this video'));
+      expect(sections.keys, contains('Quick con from this video'));
+      expect(sections.keys, contains('Goal for your next race'));
       expect(sections.keys, contains('Top 3 priorities for the next practice'));
+      expect(sections.keys, contains(
+        'Dryland focus (strength · mobility · stability)',
+      ));
       expect(sections.keys, contains('Estimated time savings'));
       expect(sections.keys, contains('Coach notes for next race'));
+      expect(sections.keys, isNot(contains('What the video suggests')));
+      expect(
+        sections.keys,
+        isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
+      );
 
       expect(sections['Quick Summary'], contains('50 Butterfly LCM'));
-      expect(sections['What the video suggests'], contains('0.71'));
-      expect(sections['What the video suggests'],
-          isNot(contains('Reaction time 0.71 off the block')));
-      expect(sections['What cannot be confirmed yet without frame-by-frame AI'],
-          contains('computer vision'));
+      expect(sections['Quick pro from this video'], contains('0.71'));
+      expect(sections['Quick con from this video'], isNotEmpty);
+      expect(sections['Goal for your next race'], isNotEmpty);
 
       expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);

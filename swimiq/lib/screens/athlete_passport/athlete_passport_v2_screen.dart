@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
+import '../../data/models/personal_best_entry.dart';
 import '../../data/models/swimmer_profile.dart';
+import '../../core/utils/passport_metrics.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -42,6 +44,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _gpaController;
   late final TextEditingController _websiteController;
   late final TextEditingController _interestsController;
+  late final TextEditingController _academicHonorsController;
+  late final TextEditingController _athleticHonorsController;
+  late final TextEditingController _collegeInterestsController;
+  late final TextEditingController _leadershipController;
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
@@ -70,6 +76,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _gpaController = TextEditingController();
     _websiteController = TextEditingController();
     _interestsController = TextEditingController();
+    _academicHonorsController = TextEditingController();
+    _athleticHonorsController = TextEditingController();
+    _collegeInterestsController = TextEditingController();
+    _leadershipController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
@@ -93,6 +103,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _gpaController.dispose();
     _websiteController.dispose();
     _interestsController.dispose();
+    _academicHonorsController.dispose();
+    _athleticHonorsController.dispose();
+    _collegeInterestsController.dispose();
+    _leadershipController.dispose();
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
@@ -149,6 +163,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _gpaController.text = profile?.gpa ?? '';
     _websiteController.text = profile?.athleteWebsite ?? '';
     _interestsController.text = profile?.otherInterests ?? '';
+    _academicHonorsController.text = profile?.academicHonors ?? '';
+    _athleticHonorsController.text = profile?.athleticHonors ?? '';
+    _collegeInterestsController.text = profile?.collegeInterests ?? '';
+    _leadershipController.text = profile?.leadershipService ?? '';
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
@@ -206,6 +224,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         gpa: _gpaController.text,
         athleteWebsite: _websiteController.text,
         otherInterests: _interestsController.text,
+        academicHonors: _academicHonorsController.text,
+        athleticHonors: _athleticHonorsController.text,
+        collegeInterests: _collegeInterestsController.text,
+        leadershipService: _leadershipController.text,
         notes: _notesController.text,
       ),
     );
@@ -309,6 +331,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             _RecruitingSnapshotCard(
               key: _recruitingSnapshotKey,
               profile: profile,
+              snapshot: snapshot,
+              personalBests: data.personalBests.take(4).toList(),
             ),
             if (!SwimIqStandardsProfile.isReady(profile)) ...[
               const SizedBox(height: 16),
@@ -520,6 +544,30 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                      ),
+                      _field(
+                        controller: _academicHonorsController,
+                        label: 'Academic honors',
+                        hint: 'National Honor Society, AP Scholar, honor roll…',
+                        maxLines: 2,
+                      ),
+                      _field(
+                        controller: _athleticHonorsController,
+                        label: 'Athletic honors',
+                        hint: 'State finalist, team captain, conference champion…',
+                        maxLines: 2,
+                      ),
+                      _field(
+                        controller: _collegeInterestsController,
+                        label: 'College interests',
+                        hint: 'Division level, regions, academic majors…',
+                        maxLines: 2,
+                      ),
+                      _field(
+                        controller: _leadershipController,
+                        label: 'Leadership & service',
+                        hint: 'Community service, mentoring, club leadership…',
+                        maxLines: 2,
                       ),
                       _field(
                         controller: _websiteController,
@@ -843,19 +891,124 @@ class _HeroMetricChip extends StatelessWidget {
 }
 
 class _RecruitingSnapshotCard extends StatelessWidget {
-  const _RecruitingSnapshotCard({super.key, required this.profile});
+  const _RecruitingSnapshotCard({
+    super.key,
+    required this.profile,
+    required this.snapshot,
+    required this.personalBests,
+  });
 
   final SwimmerProfile? profile;
+  final PassportSnapshot snapshot;
+  final List<PersonalBestEntry> personalBests;
 
   @override
   Widget build(BuildContext context) {
-    final gpa = profile?.gpa;
-    final website = profile?.athleteWebsite;
-    final interests = profile?.otherInterests;
-    final hasGpa = gpa != null && gpa.trim().isNotEmpty;
-    final hasWebsite = website != null && website.trim().isNotEmpty;
-    final hasInterests = interests != null && interests.trim().isNotEmpty;
-    final hasAny = hasGpa || hasWebsite || hasInterests;
+    final rows = <Widget>[];
+
+    void addRow({
+      required IconData icon,
+      required String label,
+      required String? value,
+      bool highlight = false,
+      bool isLink = false,
+    }) {
+      if (value == null || value.trim().isEmpty) return;
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      rows.add(
+        _RecruitingRow(
+          icon: icon,
+          label: label,
+          value: value.trim(),
+          highlight: highlight,
+          isLink: isLink,
+        ),
+      );
+    }
+
+    addRow(
+      icon: Icons.bolt_outlined,
+      label: 'SwimIQ Score',
+      value: snapshot.swimIqScore > 0 ? '${snapshot.swimIqScore}' : null,
+      highlight: true,
+    );
+    addRow(
+      icon: Icons.emoji_events_outlined,
+      label: 'Highest USA cut',
+      value: snapshot.highestCut,
+    );
+    addRow(
+      icon: Icons.pool_outlined,
+      label: 'Primary stroke',
+      value: profile?.primaryStroke,
+    );
+    addRow(
+      icon: Icons.flag_outlined,
+      label: 'Favorite event',
+      value: profile?.favoriteEvent,
+    );
+    addRow(
+      icon: Icons.school_outlined,
+      label: 'School · Class of',
+      value: profile?.graduationYear != null
+          ? '${profile?.school ?? 'School TBD'} · Class of ${profile!.graduationYear}'
+          : profile?.school,
+    );
+    addRow(
+      icon: Icons.groups_outlined,
+      label: 'Club team',
+      value: profile?.team,
+    );
+    addRow(
+      icon: Icons.school_outlined,
+      label: 'GPA',
+      value: profile?.gpa,
+      highlight: true,
+    );
+    addRow(
+      icon: Icons.military_tech_outlined,
+      label: 'Academic honors',
+      value: profile?.academicHonors,
+    );
+    addRow(
+      icon: Icons.workspace_premium_outlined,
+      label: 'Athletic honors',
+      value: profile?.athleticHonors,
+    );
+    addRow(
+      icon: Icons.map_outlined,
+      label: 'College interests',
+      value: profile?.collegeInterests,
+    );
+    addRow(
+      icon: Icons.volunteer_activism_outlined,
+      label: 'Leadership & service',
+      value: profile?.leadershipService,
+    );
+    addRow(
+      icon: Icons.language_outlined,
+      label: 'Athlete website',
+      value: profile?.athleteWebsite,
+      isLink: true,
+    );
+    addRow(
+      icon: Icons.interests_outlined,
+      label: 'Other interests',
+      value: profile?.otherInterests,
+    );
+
+    if (personalBests.isNotEmpty) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      rows.add(
+        _RecruitingRow(
+          icon: Icons.timer_outlined,
+          label: 'Top meet times',
+          value: personalBests
+              .map((pb) => '${pb.displayTitle} ${pb.formattedTime} (${pb.course})')
+              .join('\n'),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -889,38 +1042,11 @@ class _RecruitingSnapshotCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          if (hasAny)
-            Column(
-              children: [
-                if (hasGpa)
-                  _RecruitingRow(
-                    icon: Icons.school_outlined,
-                    label: 'GPA',
-                    value: gpa.trim(),
-                    highlight: true,
-                  ),
-                if (hasWebsite) ...[
-                  if (hasGpa) const SizedBox(height: 10),
-                  _RecruitingRow(
-                    icon: Icons.language_outlined,
-                    label: 'Athlete website',
-                    value: website.trim(),
-                    isLink: true,
-                  ),
-                ],
-                if (hasInterests) ...[
-                  if (hasGpa || hasWebsite) const SizedBox(height: 10),
-                  _RecruitingRow(
-                    icon: Icons.interests_outlined,
-                    label: 'Other interests',
-                    value: interests.trim(),
-                  ),
-                ],
-              ],
-            )
+          if (rows.isNotEmpty)
+            Column(children: rows)
           else
             Text(
-              'Add GPA, your recruiting website, and other interests in Edit Athlete Passport — coaches scan this first.',
+              'Save your Athlete Passport to auto-build your recruiting snapshot for college coaches.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.65),
                     height: 1.45,
