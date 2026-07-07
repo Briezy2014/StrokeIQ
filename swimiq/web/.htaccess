@@ -1,0 +1,16 @@
+# SwimIQ Flutter web on GoDaddy / Apache (public_html)
+DirectoryIndex index.html
+
+<IfModule mod_mime.c>
+  AddType application/wasm .wasm
+  AddType application/javascript .js
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>

@@ -93,6 +93,12 @@ if (-not (Test-Path "build\web\main.dart.js")) {
     exit 1
 }
 
+$htaccess = Join-Path $PSScriptRoot "..\web\.htaccess"
+if (Test-Path $htaccess) {
+    Copy-Item $htaccess "build\web\.htaccess" -Force
+    Write-Host "Added build\web\.htaccess for GoDaddy"
+}
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "DONE. Next steps:" -ForegroundColor Green
