@@ -1,4 +1,10 @@
-# Supabase local config. Deploy functions with: supabase functions deploy analyze-swim-video
+# Supabase local config. Deploy functions with: supabase functions deploy <name>
 
 [functions.analyze-swim-video]
 verify_jwt = true
+
+[functions.create-stripe-checkout]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false

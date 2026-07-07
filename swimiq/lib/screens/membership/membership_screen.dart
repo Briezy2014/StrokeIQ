@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
@@ -26,6 +28,34 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
   }
 
   Future<void> _selectPlan(SubscriptionTier tier) async {
+    if (kIsWeb) {
+      setState(() {
+        _message = 'Opening secure Stripe checkout…';
+      });
+      try {
+        final url = await ref
+            .read(subscriptionStateProvider.notifier)
+            .startStripeCheckout(tier, _billingCycle);
+        if (!mounted) return;
+        final opened = await launchUrl(
+          Uri.parse(url),
+          webOnlyWindowName: '_self',
+        );
+        if (!mounted) return;
+        setState(() {
+          _message = opened
+              ? 'Complete payment in Stripe, then return to SwimIQ.'
+              : 'Could not open checkout. Allow pop-ups and try again.';
+        });
+      } catch (error) {
+        if (!mounted) return;
+        setState(() {
+          _message = 'Checkout error: $error';
+        });
+      }
+      return;
+    }
+
     await ref
         .read(subscriptionStateProvider.notifier)
         .selectPlan(tier, _billingCycle);
@@ -33,7 +63,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
     setState(() {
       _message =
           'Selected ${SubscriptionCatalog.planFor(tier).name} (${_billingCycle.name}). '
-          'App Store billing connects at launch.';
+          'Mobile app billing uses Google Play / App Store at launch.';
     });
   }
 

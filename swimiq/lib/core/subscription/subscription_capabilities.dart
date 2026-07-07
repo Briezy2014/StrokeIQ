@@ -19,9 +19,8 @@ class SubscriptionCapabilities {
   }
 
   static bool hasEliteAccess(SubscriptionState state) {
-    if (state.isTrialActive) return true;
-    if (state.tier == SubscriptionTier.elite) return true;
-    if (state.isCoachTrialActive && state.hasCoachElitePeek) return true;
+    if (state.isDemoMaster) return true;
+    if (state.effectiveTier == SubscriptionTier.elite) return true;
     return false;
   }
 

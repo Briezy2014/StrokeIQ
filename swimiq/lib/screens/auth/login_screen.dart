@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/demo_account_constants.dart';
 import '../../core/utils/auth_validators.dart';
+import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
 import '../../widgets/loading_button.dart';
@@ -44,6 +46,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authServiceProvider).signIn(
             email: _emailController.text,
             password: _passwordController.text,
+          );
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _demoLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authServiceProvider).signIn(
+            email: DemoAccountConstants.email,
+            password: DemoAccountConstants.password,
           );
     } on AuthException catch (e) {
       setState(() => _errorMessage = AuthErrorMapper.fromException(e));
@@ -136,6 +157,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextButton(
                           onPressed: widget.onSwitchToSignup,
                           child: const Text('Create an account'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: _isLoading ? null : _demoLogin,
+                          child: const Text('Coach demo login'),
                         ),
                       ],
                     ),

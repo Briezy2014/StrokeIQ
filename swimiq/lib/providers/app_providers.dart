@@ -6,6 +6,7 @@ import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
+import '../core/services/stripe_checkout_service.dart';
 import '../core/services/subscription_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
@@ -69,7 +70,11 @@ final profilePhotoServiceProvider = Provider<ProfilePhotoService>(
 );
 
 final subscriptionServiceProvider = Provider<SubscriptionService>(
-  (ref) => SubscriptionService(),
+  (ref) => SubscriptionService(client: ref.watch(supabaseClientProvider)),
+);
+
+final stripeCheckoutServiceProvider = Provider<StripeCheckoutService>(
+  (ref) => StripeCheckoutService(ref.watch(supabaseClientProvider)),
 );
 
 final subscriptionStateProvider =
@@ -81,11 +86,32 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   @override
   Future<SubscriptionState> build() async {
     final service = ref.read(subscriptionServiceProvider);
-    final state = await service.load();
-    if (!state.hasUsedTrial && !state.isTrialActive) {
-      return service.startTrialIfEligible(state);
+    var state = await service.load();
+    if (!state.isDemoMaster &&
+        !state.hasActiveServerPlan &&
+        !state.hasUsedTrial &&
+        !state.isTrialActive) {
+      state = await service.startTrialIfEligible(state);
     }
     return state;
+  }
+
+  Future<void> refreshFromServer() async {
+    final service = ref.read(subscriptionServiceProvider);
+    state = AsyncData(await service.refreshFromServer());
+  }
+
+  Future<String> startStripeCheckout(
+    SubscriptionTier tier,
+    BillingCycle cycle,
+  ) async {
+    final checkout = ref.read(stripeCheckoutServiceProvider);
+    return checkout.startCheckout(
+      tier: tier,
+      billingCycle: cycle,
+      successUrl: 'https://swimiqapp.com/?checkout=success',
+      cancelUrl: 'https://swimiqapp.com/?checkout=cancel',
+    );
   }
 
   Future<void> selectPlan(SubscriptionTier tier, BillingCycle cycle) async {

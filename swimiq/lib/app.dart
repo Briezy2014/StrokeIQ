@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,8 +67,15 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
                         user.userMetadata?['display_name'] as String?,
                     email: user.email,
                   );
+              await ref.read(subscriptionStateProvider.notifier).refreshFromServer();
             });
             return const SplashScreen();
+          }
+
+          if (kIsWeb && Uri.base.queryParameters['checkout'] == 'success') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(subscriptionStateProvider.notifier).refreshFromServer();
+            });
           }
 
           return const HomeScreen();

@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/subscription_plan.dart';
 
@@ -11,6 +12,8 @@ class SubscriptionState {
     required this.coachTrialStartedAt,
     required this.coachAiAnalysesUsed,
     required this.hasUsedTrial,
+    this.serverStatus,
+    this.isDemoMaster = false,
   });
 
   final SubscriptionTier tier;
@@ -20,6 +23,12 @@ class SubscriptionState {
   final DateTime? coachTrialStartedAt;
   final int coachAiAnalysesUsed;
   final bool hasUsedTrial;
+  /// From Supabase `user_subscriptions.status` when synced.
+  final String? serverStatus;
+  final bool isDemoMaster;
+
+  bool get hasActiveServerPlan =>
+      serverStatus == 'active' || serverStatus == 'trialing';
 
   bool get isTrialActive =>
       trialEndsAt != null && DateTime.now().isBefore(trialEndsAt!);
@@ -45,6 +54,8 @@ class SubscriptionState {
   }
 
   SubscriptionTier get effectiveTier {
+    if (isDemoMaster) return SubscriptionTier.elite;
+    if (hasActiveServerPlan) return tier;
     if (isCoachTrialActive) {
       return hasCoachElitePeek ? SubscriptionTier.elite : SubscriptionTier.pro;
     }
@@ -53,6 +64,10 @@ class SubscriptionState {
   }
 
   String get statusLabel {
+    if (isDemoMaster) return 'Demo master · Elite';
+    if (hasActiveServerPlan) {
+      return '${SubscriptionCatalog.planFor(tier).name} · Active';
+    }
     if (isCoachTrialActive) {
       return hasCoachElitePeek
           ? 'Coach preview · Elite AI sneak peek'
@@ -70,6 +85,8 @@ class SubscriptionState {
     DateTime? coachTrialStartedAt,
     int? coachAiAnalysesUsed,
     bool? hasUsedTrial,
+    String? serverStatus,
+    bool? isDemoMaster,
   }) {
     return SubscriptionState(
       tier: tier ?? this.tier,
@@ -79,11 +96,17 @@ class SubscriptionState {
       coachTrialStartedAt: coachTrialStartedAt ?? this.coachTrialStartedAt,
       coachAiAnalysesUsed: coachAiAnalysesUsed ?? this.coachAiAnalysesUsed,
       hasUsedTrial: hasUsedTrial ?? this.hasUsedTrial,
+      serverStatus: serverStatus ?? this.serverStatus,
+      isDemoMaster: isDemoMaster ?? this.isDemoMaster,
     );
   }
 }
 
 class SubscriptionService {
+  SubscriptionService({SupabaseClient? client}) : _client = client;
+
+  final SupabaseClient? _client;
+
   static const _tierKey = 'subscription_tier';
   static const _cycleKey = 'subscription_billing_cycle';
   static const _trialEndsKey = 'subscription_trial_ends';
@@ -102,7 +125,7 @@ class SubscriptionService {
     final coachAiAnalysesUsed = prefs.getInt(_coachAiAnalysesKey) ?? 0;
     final hasUsedTrial = prefs.getBool(_hasUsedTrialKey) ?? false;
 
-    return SubscriptionState(
+    var state = SubscriptionState(
       tier: _parseTier(tierName),
       billingCycle: cycleName == BillingCycle.annual.name
           ? BillingCycle.annual
@@ -113,6 +136,45 @@ class SubscriptionService {
       coachAiAnalysesUsed: coachAiAnalysesUsed,
       hasUsedTrial: hasUsedTrial,
     );
+
+    state = await _mergeServerState(state);
+    return state;
+  }
+
+  Future<SubscriptionState> refreshFromServer() async {
+    final current = await load();
+    return current;
+  }
+
+  Future<SubscriptionState> _mergeServerState(SubscriptionState local) async {
+    final client = _client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) return local;
+
+    try {
+      final row = await client
+          .from('user_subscriptions')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+      if (row == null) return local;
+
+      final isDemo = row['is_demo_master'] == true;
+      final status = row['status'] as String?;
+      final tier = _parseTier(row['tier'] as String?);
+      final cycle = row['billing_cycle'] == BillingCycle.annual.name
+          ? BillingCycle.annual
+          : BillingCycle.monthly;
+
+      return local.copyWith(
+        tier: tier,
+        billingCycle: cycle,
+        serverStatus: status,
+        isDemoMaster: isDemo,
+      );
+    } catch (_) {
+      return local;
+    }
   }
 
   Future<SubscriptionState> startTrialIfEligible(SubscriptionState current) async {
