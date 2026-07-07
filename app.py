@@ -1,7 +1,6 @@
 from datetime import date
 from pathlib import Path
 import base64
-from xxlimited import new
 
 import pandas as pd
 import plotly.express as px
@@ -42,10 +41,16 @@ def normalize_name(name: str) -> str:
 
 def load_table(table_name: str, swimmer: str | None = None) -> pd.DataFrame:
     """Load a Supabase table into a pandas DataFrame."""
+    swimmer_columns = {
+        "race_logs": "swimmer",
+        "goals": "swimmer_name",
+        "meet_results": "swimmer_name",
+    }
     try:
         query = supabase.table(table_name).select("*")
         if swimmer:
-            query = query.eq("swimmer", swimmer)
+            column = swimmer_columns.get(table_name, "swimmer")
+            query = query.eq(column, swimmer)
         response = query.execute()
         return pd.DataFrame(response.data)
     except Exception:
@@ -618,7 +623,7 @@ with tab5:
     else:
         display_results = add_formatted_time_column(
             meet_results,
-            source_column="time_s",
+            source_column="swim_time",
             new_column="formatted_time",
         )
 
@@ -755,7 +760,7 @@ with tab6:
     next_meet = "Coming Soon"
     imx_score = "Coming Soon"
     readiness = "Coming Soon"
-    swimiq_score = "Coming Soon"
+    swimiq_score = calculate_swimiq_score(race_logs, goals)
 
     st.markdown(
         """
