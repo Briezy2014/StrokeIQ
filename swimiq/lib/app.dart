@@ -94,15 +94,16 @@ class _ConfigErrorScreen extends StatelessWidget {
               const Icon(Icons.settings, size: 64),
               const SizedBox(height: 16),
               Text(
-                'Supabase is not configured',
+                'SwimIQ is not connected yet',
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 message ??
-                    'Copy swimiq/.env.example to swimiq/.env and add your '
-                    'SUPABASE_URL and SUPABASE_ANON_KEY.',
+                    'This build is missing its cloud connection settings. '
+                    'If you installed SwimIQ from the App Store, contact '
+                    'support@swimiq.app.',
                 textAlign: TextAlign.center,
               ),
             ],

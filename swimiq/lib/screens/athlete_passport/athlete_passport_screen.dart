@@ -338,7 +338,7 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
             const SwimIqScreenHeader(title: 'Edit Athlete Passport'),
             const SizedBox(height: 8),
             Text(
-              'Profile saves to Supabase for $swimmer.',
+              'Your profile is saved and synced for $swimmer.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),

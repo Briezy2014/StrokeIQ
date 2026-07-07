@@ -54,7 +54,7 @@ final usaMotivationalStandardsCatalogProvider =
 );
 
 final usaStandardsServiceProvider = Provider<UsaStandardsService>(
-  (ref) => UsaStandardsService(ref.watch(swimIqRepositoryProvider)),
+  (ref) => UsaStandardsService(),
 );
 
 final videoStorageServiceProvider = Provider<VideoStorageService>(

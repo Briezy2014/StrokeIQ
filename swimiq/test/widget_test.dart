@@ -7,6 +7,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: SwimIqApp()));
     await tester.pump();
 
-    expect(find.text('Supabase is not configured'), findsOneWidget);
+    expect(find.text('SwimIQ is not connected yet'), findsOneWidget);
   });
 }

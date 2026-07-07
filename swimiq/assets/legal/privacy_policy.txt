@@ -9,7 +9,7 @@ SwimIQ ("we," "us") is operated by [Your Company Legal Name] ("Company"). This p
 Contact: privacy@swimiq.app
 
 2. Information we collect
-Account information: email address, display name, and authentication identifiers from our identity provider (Supabase Auth).
+Account information: email address, display name, and authentication identifiers from our secure sign-in service.
 
 Athlete profile: name, birthday, gender, team, coach, school, graduation year, recruiting notes, and profile photo you choose to upload.
 
@@ -23,12 +23,12 @@ Device & usage: app version, basic diagnostic logs needed to operate the service
 We use information to:
 • Provide dashboards, logs, standards comparisons, and athlete passport features
 • Generate SwimIQ AI coaching reports when you request analysis
-• Store and sync your data across devices via Supabase
+• Store and sync your data securely across your devices
 • Improve reliability and security of the app
 
 4. Third-party service providers
 We use trusted processors, including:
-• Supabase (hosting, database, authentication, file storage)
+• Cloud infrastructure providers (hosting, database, authentication, file storage)
 • Google cloud AI services (video coaching analysis — video and context you submit are processed by Google as our subprocessors when you run SwimIQ AI analysis)
 
 We do not sell your personal information.

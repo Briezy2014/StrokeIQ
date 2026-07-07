@@ -254,12 +254,4 @@ class SwimIqRepository {
         .toList();
   }
 
-  Future<int> upsertUsaStandards(List<UsaTimeStandard> standards) async {
-    if (standards.isEmpty) return 0;
-    await _client.from('usa_time_standards').upsert(
-          standards.map((s) => s.toInsertJson()).toList(),
-          onConflict: 'age_group,gender,stroke,distance,course,standard_level',
-        );
-    return standards.length;
-  }
 }
