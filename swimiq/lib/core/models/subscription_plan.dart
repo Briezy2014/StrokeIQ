@@ -89,7 +89,7 @@ abstract final class SubscriptionCatalog {
       isFeatured: true,
       features: [
         'Everything in Pro',
-        'Video Lab + Gemini AI coach',
+        'Video Lab + SwimIQ AI coach',
         'Pose metrics & race intelligence',
         'Priority dashboard insights',
         'Recruiting center (coming soon)',

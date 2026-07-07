@@ -380,7 +380,7 @@ class _VideoCardState extends State<_VideoCard> {
               if (widget.analysis!.poseMetrics != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Pose metrics (MediaPipe)',
+                  'Body mechanics',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

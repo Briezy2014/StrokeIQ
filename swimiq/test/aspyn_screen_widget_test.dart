@@ -157,6 +157,12 @@ void main() {
         find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),
         findsWidgets,
       );
+      await tester.scrollUntilVisible(
+        find.text('Unlock the Elite wild factor'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Unlock the Elite wild factor'), findsOneWidget);
     });
 

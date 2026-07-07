@@ -8,8 +8,6 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
-import '../../providers/swimmer_data_provider.dart';
-import '../../widgets/common_widgets.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -21,7 +19,6 @@ class UsaStandardsScreen extends ConsumerStatefulWidget {
 }
 
 class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
-  bool _importing = false;
   final _searchController = TextEditingController();
   String? _selectedAgeGroup;
   String? _selectedGender;
@@ -31,21 +28,6 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _importStandards() async {
-    setState(() => _importing = true);
-    final error =
-        await ref.read(swimmerDataProvider.notifier).importUsaStandards();
-    if (!mounted) return;
-    setState(() => _importing = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          error ?? '2024-2028 motivational standards synced to Supabase.',
-        ),
-      ),
-    );
   }
 
   @override
@@ -65,6 +47,9 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
           _selectedAgeGroup ??= AppConstants.ageGroups[2];
           _selectedGender ??= AppConstants.genders.first;
         }
+
+        final pbAgeGroup = profileReady ? ageGroup : null;
+        final pbGender = profileReady ? gender : null;
 
         final results = catalog.search(
           ageGroup: _selectedAgeGroup,
@@ -94,12 +79,6 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            SwimIqSaveButton(
-              label: 'Sync Standards to Supabase',
-              isSaving: _importing,
-              onPressed: _importStandards,
-            ),
-            const SizedBox(height: 16),
             TextFormField(
               controller: _searchController,
               decoration: const InputDecoration(
@@ -111,6 +90,14 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             ),
             const SizedBox(height: 12),
             Text('Age group', style: Theme.of(context).textTheme.labelLarge),
+            if (profileReady)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'Your cuts use passport age ($ageGroup). Filters below browse the standards table only.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -158,7 +145,20 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             ),
             const SizedBox(height: 20),
             Text('Your PB Cuts', style: Theme.of(context).textTheme.titleMedium),
+            if (profileReady && pbAgeGroup != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
+                child: Text(
+                  'Using your passport: $pbAgeGroup · $pbGender',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             const SizedBox(height: 8),
+            if (!profileReady)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: SwimIqStandardsSetupBanner(),
+              ),
             if (pbs.isEmpty)
               const EmptyStateMessage(
                 message: 'Add training sessions to compare against standards.',
@@ -172,14 +172,16 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
                   distance: pb.distance,
                   course: pb.course,
                   timeSeconds: pb.timeSeconds,
-                  ageGroup: _selectedAgeGroup ?? ageGroup,
-                  gender: _selectedGender ?? gender,
+                  ageGroup: pbAgeGroup,
+                  gender: pbGender,
                 );
+                final cutLabel = cut ??
+                    (profileReady ? 'Below B' : SwimIqStandardsProfile.setupMessageShort);
                 return SwimIqEventListTile(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',
                   subtitle:
-                      '${pb.sourceLabel} · ${_selectedAgeGroup ?? ageGroup ?? '—'} · '
-                      '${_selectedGender ?? gender ?? '—'} · ${cut ?? 'Below B'} motivational cut',
+                      '${pb.sourceLabel} · ${pbAgeGroup ?? '—'} · '
+                      '${pbGender ?? '—'} · $cutLabel motivational cut',
                   trailing: SwimTime.fromSeconds(pb.timeSeconds),
                 );
               }),

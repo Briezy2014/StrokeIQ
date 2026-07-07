@@ -274,8 +274,8 @@ function normalizeAnalysis(
   const overallScore = clampScore(parsed.overall_score);
 
   const disclaimer = body.pose_metrics?.frames_with_pose
-    ? "Gemini video analysis combined with on-device MediaPipe pose metrics — estimates only; confirm with your coach."
-    : "Gemini video analysis from uploaded footage — estimates only; confirm with your coach.";
+    ? "SwimIQ AI analysis with on-device body mechanics — estimates only; confirm with your coach."
+    : "SwimIQ AI analysis from uploaded footage — estimates only; confirm with your coach.";
 
   const engine = body.pose_metrics?.frames_with_pose
     ? "swimiq-v2-gemini-mediapipe"

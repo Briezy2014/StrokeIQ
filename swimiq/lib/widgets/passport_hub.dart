@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../core/utils/passport_metrics.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../screens/race_intelligence/race_intelligence_screen.dart';
 import '../screens/usa_standards/usa_standards_screen.dart';
 
 class PassportHub extends ConsumerWidget {
@@ -77,6 +78,10 @@ class PassportHub extends ConsumerWidget {
       case PassportHubDestination.usaStandards:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const UsaStandardsScreen()),
+        );
+      case PassportHubDestination.raceIntelligence:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RaceIntelligenceScreen()),
         );
       case PassportHubDestination.comingSoon:
         break;
@@ -241,9 +246,8 @@ class _ModuleStrip extends StatelessWidget {
     _PassportModule(
       emoji: '🏁',
       label: 'Race Intelligence™',
-      status: _PassportModuleStatus.comingSoon,
-      comingSoonDetail:
-          'Meet-day race plans from your goals, standards gaps, and latest AI analysis.',
+      status: _PassportModuleStatus.live,
+      destination: PassportHubDestination.raceIntelligence,
     ),
     _PassportModule(
       emoji: '📊',

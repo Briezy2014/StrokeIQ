@@ -7,15 +7,24 @@ import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/schedule_depository_section.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../race_intelligence/race_intelligence_screen.dart';
 
-/// Training log with list, edit, and delete.
-class TrainingLogScreen extends ConsumerWidget {
+/// Training log with sessions plus schedule/meet depository.
+class TrainingLogScreen extends ConsumerStatefulWidget {
   const TrainingLogScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrainingLogScreen> createState() => _TrainingLogScreenState();
+}
+
+class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
+  int _tabIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
@@ -26,23 +35,45 @@ class TrainingLogScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
-              title: 'Training Log',
+              title: 'Log & Schedule Depot',
               subtitle: 'Sessions for ${data.displayName(swimmer)}',
             ),
+            const SizedBox(height: 12),
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 0, label: Text('Training')),
+                ButtonSegment(value: 1, label: Text('Schedules')),
+              ],
+              selected: {_tabIndex},
+              onSelectionChanged: (values) {
+                setState(() => _tabIndex = values.first);
+              },
+            ),
             const SizedBox(height: 16),
-            if (logs.isEmpty)
-              const EmptyStateMessage(
-                message:
-                    'No swim sessions yet. Use the Add tab to log your first training swim.',
-              )
-            else
-              ...logs.map(
-                (log) => _TrainingLogTile(
-                  log: log,
-                  dateFormat: dateFormat,
-                  onEdit: () => _editLog(context, ref, log),
-                  onDelete: () => _deleteLog(context, ref, log),
+            if (_tabIndex == 0) ...[
+              if (logs.isEmpty)
+                const EmptyStateMessage(
+                  message:
+                      'No swim sessions yet. Use the Add tab to log your first training swim.',
+                )
+              else
+                ...logs.map(
+                  (log) => _TrainingLogTile(
+                    log: log,
+                    dateFormat: dateFormat,
+                    onEdit: () => _editLog(context, ref, log),
+                    onDelete: () => _deleteLog(context, ref, log),
+                  ),
                 ),
+            ] else
+              ScheduleDepositorySection(
+                onOpenRaceIntelligence: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const RaceIntelligenceScreen(),
+                    ),
+                  );
+                },
               ),
           ],
         );

@@ -4,6 +4,7 @@ import '../../core/utils/supabase_parsers.dart';
 import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
+import '../models/swim_schedule_entry.dart';
 import '../models/swimmer_profile.dart';
 import '../models/usa_time_standard.dart';
 import '../models/video_models.dart';
@@ -95,6 +96,37 @@ class SwimIqRepository {
 
   Future<void> deleteMeetResult(int id) async {
     await _client.from('meet_results').delete().eq('id', id);
+  }
+
+  Future<List<SwimScheduleEntry>> fetchSchedules(String swimmerName) async {
+    final response = await _client
+        .from('swim_schedules')
+        .select()
+        .eq('swimmer_name', swimmerName)
+        .order('schedule_date', ascending: true)
+        .order('start_time', ascending: true);
+
+    return (response as List)
+        .map((row) => SwimScheduleEntry.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<void> insertSchedule(SwimScheduleEntry entry) async {
+    await _client.from('swim_schedules').insert(entry.toInsertJson());
+  }
+
+  Future<void> updateSchedule(SwimScheduleEntry entry) async {
+    if (entry.id == null) {
+      throw ArgumentError('Schedule id is required for update.');
+    }
+    await _client
+        .from('swim_schedules')
+        .update(entry.toInsertJson())
+        .eq('id', entry.id!);
+  }
+
+  Future<void> deleteSchedule(int id) async {
+    await _client.from('swim_schedules').delete().eq('id', id);
   }
 
   Future<SwimmerProfile?> fetchProfile(String swimmerName) async {

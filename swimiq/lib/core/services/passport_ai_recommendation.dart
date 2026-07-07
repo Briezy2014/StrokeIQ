@@ -2,7 +2,7 @@ import '../../data/models/swim_video.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 
-enum PassportHubDestination { videoLab, usaStandards, comingSoon }
+enum PassportHubDestination { videoLab, usaStandards, raceIntelligence, comingSoon }
 
 class PassportAiRecommendation {
   const PassportAiRecommendation({

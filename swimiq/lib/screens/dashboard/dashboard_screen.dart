@@ -14,8 +14,10 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/schedule_depository_section.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../membership/membership_screen.dart';
+import '../race_intelligence/race_intelligence_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -46,6 +48,17 @@ class DashboardScreen extends ConsumerWidget {
               const EmptyStateMessage(
                 message:
                     'No swim sessions or meet results yet. Log training or add a meet result to unlock your dashboard.',
+              ),
+              const SizedBox(height: 20),
+              ScheduleDepositorySection(
+                compact: true,
+                onOpenRaceIntelligence: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const RaceIntelligenceScreen(),
+                    ),
+                  );
+                },
               ),
             ],
           );
@@ -79,6 +92,17 @@ class DashboardScreen extends ConsumerWidget {
               meets: meetResults.length,
               personalBests: personalBests.length,
               videos: data.userFacingVideoAnalyses.length,
+            ),
+            const SizedBox(height: 16),
+            ScheduleDepositorySection(
+              compact: true,
+              onOpenRaceIntelligence: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RaceIntelligenceScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             _UpgradeCard(

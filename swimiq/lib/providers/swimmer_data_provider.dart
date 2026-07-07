@@ -11,6 +11,7 @@ import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
+import '../data/models/swim_schedule_entry.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
@@ -25,6 +26,7 @@ class SwimmerData {
     this.videos = const [],
     this.videoAnalyses = const [],
     this.usaStandards = const [],
+    this.schedules = const [],
     required this.motivationalStandards,
   });
 
@@ -35,6 +37,7 @@ class SwimmerData {
   final List<SwimVideo> videos;
   final List<SwimVideoAnalysis> videoAnalyses;
   final List<UsaTimeStandard> usaStandards;
+  final List<SwimScheduleEntry> schedules;
   final UsaMotivationalStandardsCatalog motivationalStandards;
 
   SwimVideoAnalysis? analysisForVideo(String? videoId) {
@@ -99,6 +102,7 @@ class SwimmerData {
     List<SwimVideo>? videos,
     List<SwimVideoAnalysis>? videoAnalyses,
     List<UsaTimeStandard>? usaStandards,
+    List<SwimScheduleEntry>? schedules,
     UsaMotivationalStandardsCatalog? motivationalStandards,
   }) {
     return SwimmerData(
@@ -109,6 +113,7 @@ class SwimmerData {
       videos: videos ?? this.videos,
       videoAnalyses: videoAnalyses ?? this.videoAnalyses,
       usaStandards: usaStandards ?? this.usaStandards,
+      schedules: schedules ?? this.schedules,
       motivationalStandards:
           motivationalStandards ?? this.motivationalStandards,
     );
@@ -145,6 +150,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
     List<SwimVideo> videos = [];
     List<SwimVideoAnalysis> videoAnalyses = [];
+    List<SwimScheduleEntry> schedules = [];
+
+    try {
+      schedules = await repository.fetchSchedules(swimmer);
+    } catch (_) {}
 
     try {
       videos = (await repository.fetchSwimVideos(swimmer))
@@ -176,6 +186,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       videos: videos,
       videoAnalyses: _mergeAnalyses(videoAnalyses),
       usaStandards: usaStandards,
+      schedules: schedules,
       motivationalStandards: motivationalStandards,
     );
   }
@@ -273,6 +284,36 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   Future<String?> deleteMeetResult(int id) async {
     try {
       await ref.read(swimIqRepositoryProvider).deleteMeetResult(id);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> addSchedule(SwimScheduleEntry entry) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).insertSchedule(entry);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> updateSchedule(SwimScheduleEntry entry) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).updateSchedule(entry);
+      await refresh();
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteSchedule(int id) async {
+    try {
+      await ref.read(swimIqRepositoryProvider).deleteSchedule(id);
       await refresh();
       return null;
     } catch (error) {
