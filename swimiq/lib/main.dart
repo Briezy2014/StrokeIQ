@@ -40,6 +40,11 @@ Future<void> _loadEnvironment() async {
     await dotenv.load(fileName: '.env');
     Env.loadFromDotenv(dotenv.env);
   } catch (_) {
-    // dart-define values are used when .env is unavailable.
+    try {
+      await dotenv.load(fileName: 'assets/.env');
+      Env.loadFromDotenv(dotenv.env);
+    } catch (_) {
+      // --dart-define values are used when .env is unavailable.
+    }
   }
 }
