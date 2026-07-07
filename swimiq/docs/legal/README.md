@@ -25,7 +25,12 @@ These files are **starting drafts** for launch. Replace bracketed placeholders a
 3. **App Privacy labels** — declare video, contact info, user content, and third-party AI (Google)
 4. **Subscription terms** — link Terms + auto-renewal disclosure on paywall when StoreKit is wired
 
-## Coach preview (product)
+## Product audience
+
+- **Athletes ages 8 through 30** (youth, junior, collegiate, post-collegiate)
+- **Under 13:** parent/guardian creates account, logs in, and consents (COPPA)
+- **13–17:** athlete may use own login; parent involvement recommended
+- **18–30:** athlete uses own account
 
 - Code: `COACH-EVAL-14` (legacy `COACH-TRIAL-30` still works)
 - 14-day Pro access + 7-day Elite AI sneak peek (5 video analyses max)

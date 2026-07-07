@@ -7,6 +7,11 @@ abstract final class LegalConstants {
   static const websiteUrl = 'https://swimiq.app';
   static const lastUpdated = 'July 7, 2026';
 
+  /// Athlete age range SwimIQ is designed for (see Terms and Privacy Policy).
+  static const athleteAgeMin = 8;
+  static const athleteAgeMax = 30;
+  static const athleteAgeRangeLabel = 'ages 8 through 30';
+
   static const privacyPolicyAsset = 'assets/legal/privacy_policy.txt';
   static const termsOfServiceAsset = 'assets/legal/terms_of_service.txt';
   static const aiDisclosureAsset = 'assets/legal/ai_data_disclosure.txt';

@@ -7,12 +7,18 @@ Last updated: July 7, 2026
 By downloading or using SwimIQ, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the app.
 
 2. Service description
-SwimIQ provides swim performance tracking, meet and training logs, USA motivational standards comparisons, athlete passport tools, and optional AI-generated coaching feedback. Features may vary by subscription plan.
+SwimIQ is designed for competitive swimmers and student-athletes ages 8 through 30. It provides swim performance tracking, meet and training logs, USA motivational standards comparisons, athlete passport tools, and optional AI-generated coaching feedback. Features may vary by subscription plan.
 
 3. Not medical or officiating advice
 SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and time estimates — are for training guidance only. They are not medical advice, dietary prescriptions, or official meet results. Always follow your coach, physician, and meet officials.
 
 4. Accounts
+SwimIQ is for athletes ages 8 through 30.
+
+If the athlete is under 13, a parent or legal guardian must create and control the account, accept these Terms and our Privacy Policy on the athlete's behalf, and provide consent for any AI video analysis.
+
+Athletes ages 13 through 30 may create and use their own account. If the athlete is 13–17, we recommend a parent or guardian remain involved in account setup and subscription decisions.
+
 You are responsible for safeguarding your login credentials and for activity under your account. Provide accurate profile information, especially birthday and gender used for USA age-group standards.
 
 5. Subscriptions & billing

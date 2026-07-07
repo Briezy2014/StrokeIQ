@@ -39,8 +39,16 @@ When you tap "Run AI Swim Analysis," your video and related swimmer context are 
 6. Data retention
 We retain your data while your account is active. You may request deletion by contacting privacy@swimiq.app. We may retain limited records where required by law.
 
-7. Children
-SwimIQ is used by athletes of varying ages. If you are a parent or guardian and believe a child provided information without appropriate consent, contact us to request deletion.
+7. Children and teen athletes (ages 8–30)
+SwimIQ serves youth, junior, collegiate, and post-collegiate swimmers ages 8 through 30.
+
+Under 13: A parent or legal guardian must own the account and log in. The parent consents to collection of the child's profile, performance data, photos, and videos, and must approve AI video analysis before any video is sent for processing.
+
+Ages 13–17: Athletes may use their own login; parents or guardians should supervise account creation and subscriptions where appropriate.
+
+Ages 18–30: Athletes may use SwimIQ on their own account.
+
+If you believe someone under 13 created an account without parental consent, contact privacy@swimiq.app and we will delete it.
 
 8. Security
 We use industry-standard transport encryption (HTTPS/TLS) and access controls. No method of transmission is 100% secure.
