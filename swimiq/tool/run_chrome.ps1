@@ -48,6 +48,11 @@ if ($projectRoot -match " ") {
 
 $env:Path = "$flutterBin;$env:Path"
 
+# Pub cache under a spaced username breaks native hooks — keep it on S:
+$pubCache = "S:\pub-cache"
+New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
+$env:PUB_CACHE = $pubCache
+
 Set-Location $projectRoot
 
 if (-not (Test-Path ".env")) {

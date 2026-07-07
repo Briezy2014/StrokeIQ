@@ -13,10 +13,13 @@ SwimIQ avoids heavy native desktop builds. **Gemini video coaching** still runs 
 
 ---
 
-## Easiest fix — use drive `S:`
+## Easiest fix — use drive `S:` and the launcher script
+
+**Do not run `flutter run -d chrome` directly** if your username is `Kara Williams`.  
+The Pub cache path (`C:\Users\Kara Williams\AppData\...`) breaks native hooks.
 
 1. In File Explorer, open your **StrokeIQ** folder (the one that contains the `swimiq` folder).
-2. Double-click **`swimiq\scripts\setup-short-path.bat`**
+2. Double-click **`swimiq\scripts\setup-short-path.bat`** (once per PC reboot).
 3. Open a **new** PowerShell window.
 4. Run:
 
@@ -25,6 +28,10 @@ S:
 cd swimiq
 .\run-chrome.ps1
 ```
+
+Or double-click **`run-chrome.bat`**.
+
+The launcher maps Flutter to `F:\` if needed, project to `S:\swimiq`, and sets **`PUB_CACHE=S:\pub-cache`** (no spaces).
 
 5. Chrome should open with the **Login** screen and SwimIQ logo.
 
@@ -68,11 +75,13 @@ subst S: "C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ"
 Then:
 
 ```powershell
+$env:PUB_CACHE = "S:\pub-cache"
+New-Item -ItemType Directory -Force -Path $env:PUB_CACHE | Out-Null
 $env:Path = "F:\bin;" + $env:Path
 cd S:\swimiq
 flutter clean
 flutter pub get
-flutter run -d chrome
+.\run-chrome.ps1
 ```
 
 ---
