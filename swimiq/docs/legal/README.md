@@ -20,7 +20,10 @@ There are **three** legal documents in the app today — not dozens. Other docs 
   - https://swimiqapp.com/terms
   - https://swimiqapp.com/ai
 
-Host the **same text** on **swimiqapp.com** at `/privacy`, `/terms`, and `/ai`. The main site is live; those legal pages still need to be added.
+Host the **same text** on **swimiqapp.com** at `/privacy`, `/terms`, and `/ai`.
+
+**Website source (upload to GoDaddy):** `swimiq/website/` — see `website/README.md`.  
+Run `python3 website/sync_legal.py` after editing legal `.txt` files to refresh HTML pages.
 
 ## Operator (Ohio)
 
