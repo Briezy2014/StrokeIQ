@@ -205,32 +205,53 @@ class _ScheduleDepositorySectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.compact ? 'Quick schedule upload' : 'Schedule & meet depot',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryDeep.withValues(alpha: 0.08),
+                AppColors.surfaceLight,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.compact
+                          ? 'Quick schedule upload'
+                          : 'Schedule & meet depot',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryDeep,
+                          ),
+                    ),
+                  ),
+                  if (widget.onOpenRaceIntelligence != null)
+                    FilledButton.tonalIcon(
+                      onPressed: widget.onOpenRaceIntelligence,
+                      icon: const Icon(Icons.flag_outlined, size: 18),
+                      label: const Text('Race plan'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Add meets, practices, race results, and schedule photos. '
+                'Tap a button below, fill the form, then tap Save.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textDark.withValues(alpha: 0.7),
+                      height: 1.4,
                     ),
               ),
-            ),
-            if (widget.onOpenRaceIntelligence != null)
-              TextButton.icon(
-                onPressed: widget.onOpenRaceIntelligence,
-                icon: const Icon(Icons.flag_outlined, size: 18),
-                label: const Text('Race plan'),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Add meets, practices, and race results (what she swam and her times). '
-          'Tap a button below, fill the form, then tap Save.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textDark.withValues(alpha: 0.7),
-                height: 1.4,
-              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(

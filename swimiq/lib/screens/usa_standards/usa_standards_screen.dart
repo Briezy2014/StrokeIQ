@@ -8,6 +8,9 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
+import '../../core/constants/swimiq_quotes.dart';
+import '../../widgets/swimiq_event_card.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -50,6 +53,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
 
         final pbAgeGroup = profileReady ? ageGroup : null;
         final pbGender = profileReady ? gender : null;
+        final snapshot = data.passportSnapshot(swimmer);
 
         final results = catalog.search(
           ageGroup: _selectedAgeGroup,
@@ -62,15 +66,20 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'USA Swimming Standards',
+            SwimIqPageHero(
+              title: 'USA Standards',
               subtitle: catalog.versionLabel,
+              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.usaStandards),
+              stats: [
+                SwimIqHeroStat('${pbs.length} PBs tracked'),
+                SwimIqHeroStat(snapshot.highestCut),
+              ],
             ),
+            const SizedBox(height: 16),
             if (!profileReady) ...[
-              const SizedBox(height: 12),
               const SwimIqStandardsSetupBanner(),
+              const SizedBox(height: 12),
             ],
-            const SizedBox(height: 8),
             Text(
               'Valid through ${catalog.bundle.effectiveThrough}. '
               '${catalog.events.length} official events · '
@@ -177,7 +186,7 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
                 );
                 final cutLabel = cut ??
                     (profileReady ? 'Below B' : SwimIqStandardsProfile.setupMessageShort);
-                return SwimIqEventListTile(
+                return SwimIqEventCard(
                   title: '${pb.distance} ${pb.stroke} · ${pb.course}',
                   subtitle:
                       '${pb.sourceLabel} · ${pbAgeGroup ?? '—'} · '

@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
+import '../../core/constants/swimiq_quotes.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
@@ -187,6 +188,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             SwimIqPageHero(
               title: 'Video Lab',
               subtitle: 'AI coaching from your race footage',
+              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.videoLab),
               stats: [
                 SwimIqHeroStat('${videos.length} videos'),
                 SwimIqHeroStat('${data.userFacingVideoAnalyses.length} analyses'),

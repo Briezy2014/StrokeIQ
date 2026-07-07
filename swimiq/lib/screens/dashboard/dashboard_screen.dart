@@ -15,6 +15,7 @@ import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
+import '../../widgets/swimiq_logo.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../core/gamification/swimiq_badges.dart';
@@ -268,6 +269,8 @@ class _DashboardHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SwimIqHeroBanner(height: 48, borderRadius: 12),
+          const SizedBox(height: 14),
           Text(
             'WELCOME BACK, ${displayName.toUpperCase()}',
             style: TextStyle(

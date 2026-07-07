@@ -270,9 +270,9 @@ void main() {
       await tester.pumpWidget(_screenHarness(const MeetResultsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Meet Results'), findsOneWidget);
+      expect(find.text('MEET RESULTS'), findsOneWidget);
       expect(
-        find.textContaining('Latest meet: ${_fixture['nextMeet']}'),
+        find.textContaining('Next: ${_fixture['nextMeet']}'),
         findsOneWidget,
       );
     });
@@ -281,7 +281,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const UsaStandardsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('USA Swimming Standards'), findsOneWidget);
+      expect(find.text('USA STANDARDS'), findsOneWidget);
       expect(
         find.textContaining('2024-2028 USA Swimming Motivational Standards'),
         findsOneWidget,

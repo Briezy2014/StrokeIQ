@@ -1012,7 +1012,6 @@ class _RecruitingSnapshotCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -1025,33 +1024,86 @@ class _RecruitingSnapshotCard extends StatelessWidget {
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.badge_outlined, color: AppColors.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                'Recruiting snapshot',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textDark,
-                    ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primaryDeep,
+                  AppColors.primary,
+                  AppColors.accent,
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          if (rows.isNotEmpty)
-            Column(children: rows)
-          else
-            Text(
-              'Save your Athlete Passport to auto-build your recruiting snapshot for college coaches.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textDark.withValues(alpha: 0.65),
-                    height: 1.45,
-                  ),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.badge_outlined, color: Colors.white, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Recruiting snapshot',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: const Text(
+                        'Auto-built for coaches',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'What college recruiters see when they open your Athlete Passport.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: rows.isNotEmpty
+                ? Column(children: rows)
+                : Text(
+                    'Save your Athlete Passport to auto-build your recruiting snapshot for college coaches.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textDark.withValues(alpha: 0.65),
+                          height: 1.45,
+                        ),
+                  ),
+          ),
         ],
       ),
     );

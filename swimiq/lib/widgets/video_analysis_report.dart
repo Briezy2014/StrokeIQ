@@ -47,12 +47,41 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
   @override
   Widget build(BuildContext context) {
     final sections = VideoAnalysisPresenter.visibleSections(widget.analysis);
+    final pro = sections['Quick pro from this video'];
+    final con = sections['Quick con from this video'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _ScoreStrip(analysis: widget.analysis),
         const SizedBox(height: 12),
+        if (pro != null || con != null) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (pro != null)
+                Expanded(
+                  child: _InsightCard(
+                    title: 'Quick pro',
+                    body: pro,
+                    icon: Icons.thumb_up_alt_outlined,
+                    accent: const Color(0xFF16A34A),
+                  ),
+                ),
+              if (pro != null && con != null) const SizedBox(width: 10),
+              if (con != null)
+                Expanded(
+                  child: _InsightCard(
+                    title: 'Quick con',
+                    body: con,
+                    icon: Icons.trending_down,
+                    accent: const Color(0xFFEA580C),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
         if (widget.analysis.disclaimer != null)
           Text(
             widget.analysis.disclaimer!,
@@ -63,7 +92,9 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           ),
         const SizedBox(height: 12),
         for (final entry in sections.entries)
-          if (entry.key != 'Coach notes for next race')
+          if (entry.key != 'Coach notes for next race' &&
+              entry.key != 'Quick pro from this video' &&
+              entry.key != 'Quick con from this video')
             _SectionCard(title: entry.key, body: entry.value),
         _CoachNotesEditor(
           controller: _coachNotesController,
@@ -113,13 +144,80 @@ class _ScoreChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primaryDeep,
+            AppColors.primary,
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Text(
         '$label $value',
-        style: const TextStyle(fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({
+    required this.title,
+    required this.body,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String title;
+  final String body;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.14),
+            Colors.white,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: accent, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: accent.withValues(alpha: 0.95),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(body, style: const TextStyle(height: 1.45)),
+        ],
       ),
     );
   }
@@ -140,7 +238,14 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +279,12 @@ class _CoachNotesEditor extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.surfaceLight,
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
@@ -185,6 +295,13 @@ class _CoachNotesEditor extends StatelessWidget {
             'Coach notes for next race',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Editable — add race-day cues your coach wants on deck.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
                 ),
           ),
           const SizedBox(height: 8),

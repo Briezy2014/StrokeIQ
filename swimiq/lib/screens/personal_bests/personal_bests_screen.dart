@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/swimiq_quotes.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimiq_event_card.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 
@@ -64,56 +64,13 @@ class PersonalBestsScreen extends ConsumerWidget {
                   timeSeconds: pb.timeSeconds,
                 );
                 final sourceDetail = pb.meetName ?? pb.eventLabel;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.surfaceLight,
-                        Colors.white,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.22),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    title: Text(
-                      pb.displayTitle,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    subtitle: Text(
+                return SwimIqEventCard(
+                  title: pb.displayTitle,
+                  subtitle:
                       '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)}\n'
                       '$sourceDetail · $cut cut',
-                    ),
-                    isThreeLine: true,
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        pb.formattedTime,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
+                  trailing: pb.formattedTime,
+                  highlight: cut == data.passportSnapshot(swimmer).highestCut,
                 );
               },
             ),
