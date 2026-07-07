@@ -31,6 +31,22 @@ Host the **same text** on your website when `swimiq.app` is live. Until then, in
 
 Update `legal_constants.dart` and the three `.txt` files together when anything changes.
 
+## Ownership plan (Ohio)
+
+**Now (before Aspyn is 18):** You (parent/guardian) should be the legal operator — not Aspyn’s name on Privacy Policy or Terms. She can be the featured athlete in the product; liability and COPPA consent stay with you.
+
+**Recommended entity:** Form **SwimIQ LLC** in Ohio (~$99) when you are close to App Store launch or first paid users — not required on day one, but it separates your personal assets from app liability. You can be the sole **Managing Member** now.
+
+**When Aspyn turns 18:** Update legal docs to name **Aspyn Briez Williams** as operator (or **Managing Member of SwimIQ LLC**). Steps:
+1. Amend Ohio LLC operating agreement (add Aspyn as member/manager if using LLC)
+2. Replace operator name in `legal_constants.dart` and all three `assets/legal/*.txt` files
+3. Update App Store Connect “seller” / business info if needed
+4. Bump `lastUpdated` date and republish web copies at swimiq.app
+
+**Planned owner name at 18:** Aspyn Briez Williams
+
+**Optional now:** In-app footer can stay “© SwimIQ” until transition; at 18 you may use “© SwimIQ · Aspyn Briez Williams” or “Operated by Aspyn Briez Williams.”
+
 ## Product audience
 
 - Athletes **ages 8 through 30**

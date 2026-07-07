@@ -1,7 +1,10 @@
-/// Legal document metadata — update [operatorName] if you form an LLC or use a DBA.
+/// Legal document metadata — update when forming LLC or when Aspyn Briez Williams
+/// assumes ownership at age 18 (see docs/legal/README.md).
 abstract final class LegalConstants {
   static const appName = 'SwimIQ';
   static const operatorName = 'SwimIQ';
+  /// Planned operator after age-18 transition — do not use in public legal text until then.
+  static const plannedOwnerAt18 = 'Aspyn Briez Williams';
   static const companyName = operatorName;
   static const contactEmail = 'privacy@swimiq.app';
   static const supportEmail = 'support@swimiq.app';
