@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +15,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_media_picker.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/video_analysis_report.dart';
@@ -69,35 +69,24 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 
   Future<void> _pickAndUpload() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      withData: true,
+    final picked = await pickSwimIqMedia(
+      context,
+      kind: SwimIqMediaKind.video,
     );
-    if (result == null || result.files.isEmpty) return;
+    if (picked == null) return;
 
-    final file = result.files.first;
-    final fileName = file.name;
+    final fileName = picked.fileName;
     if (_titleController.text.trim().isEmpty) {
       _titleController.text = fileName;
     }
     _applyEventInference(fileName);
     setState(() {});
 
-    if (file.bytes == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not read video bytes. Try a smaller file.'),
-        ),
-      );
-      return;
-    }
-
     setState(() => _uploading = true);
     final distance = int.tryParse(_distanceController.text.trim()) ?? 50;
     final error = await ref.read(swimmerDataProvider.notifier).uploadVideo(
           fileName: fileName,
-          bytes: file.bytes!,
+          bytes: picked.bytes,
           title: _titleController.text.trim().isEmpty
               ? fileName
               : _titleController.text.trim(),
@@ -257,8 +246,16 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.upload_file),
+                  : const Icon(Icons.upload_outlined),
               label: const Text('Upload Swim Video'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Camera, gallery, or file — pick what works on your device.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                  ),
             ),
             const SizedBox(height: 24),
             Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),

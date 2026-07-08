@@ -50,6 +50,19 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
+Write-Host 'Pulling latest SwimIQ code from GitHub...' -ForegroundColor Yellow
+Push-Location $paths.WorkDir
+try {
+    git fetch origin cursor/windows-chrome-spaces-fix-17e8 2>$null
+    git checkout cursor/windows-chrome-spaces-fix-17e8 2>$null
+    git pull origin cursor/windows-chrome-spaces-fix-17e8 2>$null
+    Write-Host '[OK] Code updated.' -ForegroundColor Green
+} catch {
+    Write-Host '[WARN] Git pull skipped — using local copy.' -ForegroundColor Yellow
+} finally {
+    Pop-Location
+}
+
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 

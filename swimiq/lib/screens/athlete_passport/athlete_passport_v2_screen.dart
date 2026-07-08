@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +12,7 @@ import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/swimiq_logo.dart';
+import '../../widgets/swimiq_media_picker.dart';
 
 /// Brand-new Athlete Passport — text fields and date picker only.
 class AthletePassportV2Screen extends ConsumerStatefulWidget {
@@ -255,24 +255,16 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   }
 
   Future<void> _uploadProfilePhoto() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
+    final picked = await pickSwimIqMedia(
+      context,
+      kind: SwimIqMediaKind.image,
     );
-    if (result == null || result.files.isEmpty) return;
-    final file = result.files.first;
-    if (file.bytes == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not read the selected image.')),
-      );
-      return;
-    }
+    if (picked == null) return;
 
     setState(() => _isUploadingPhoto = true);
     final error = await ref.read(swimmerDataProvider.notifier).uploadProfilePhoto(
-          fileName: file.name,
-          bytes: file.bytes!,
+          fileName: picked.fileName,
+          bytes: picked.bytes,
         );
     if (!mounted) return;
     setState(() {

@@ -29,10 +29,13 @@ class SwimIqDailyProgress {
 
   /// Combined rope position: mostly overall score, boosted by today's work.
   double get ropeClimbFraction {
-    if (overallSwimIqScore <= 0) {
-      return (climbFraction * 0.4).clamp(0.05, 1.0);
+    if (overallSwimIqScore <= 0 && todayPoints <= 0) {
+      return 0.12;
     }
-    return (scoreClimbFraction * 0.75 + climbFraction * 0.25).clamp(0.08, 1.0);
+    if (overallSwimIqScore <= 0) {
+      return (climbFraction * 0.55 + 0.12).clamp(0.12, 1.0);
+    }
+    return (scoreClimbFraction * 0.75 + climbFraction * 0.25).clamp(0.12, 1.0);
   }
 
   static SwimIqDailyProgress calculate({

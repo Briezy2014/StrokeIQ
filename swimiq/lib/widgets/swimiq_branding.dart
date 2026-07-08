@@ -22,6 +22,10 @@ abstract final class SwimIqBranding {
     ...iconMarkCandidates,
     ...fullLockupCandidates,
   ];
+
+  /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).
+  static const compactZoomScale = 5.0;
+  static const compactZoomAlignment = Alignment(0, -0.92);
 }
 
 /// Loads the first existing asset from [candidates], then [fallback].
@@ -120,8 +124,8 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
           width: w,
           height: h,
           child: Transform.scale(
-            scale: 2.75,
-            alignment: const Alignment(0, -0.72),
+            scale: SwimIqBranding.compactZoomScale,
+            alignment: SwimIqBranding.compactZoomAlignment,
             child: Image.asset(
               _resolvedPath!,
               fit: BoxFit.cover,

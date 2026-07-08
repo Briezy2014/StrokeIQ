@@ -50,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
             meetResults: meetResults,
             videos: data.userFacingVideos,
             goals: data.goals,
-            overallSwimIqScore: 0,
+            overallSwimIqScore: data.swimIqScore,
           );
           final badges = SwimIqBadgeCatalog.evaluate(
             daily: daily,
@@ -70,7 +70,7 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               _DashboardHero(
                 displayName: data.displayName(swimmer),
-                swimIqScore: 0,
+                swimIqScore: data.swimIqScore,
                 highestCut: showProFeatures ? 'Start logging' : 'Log to track',
                 spotlight: null,
                 profile: data.profile,
