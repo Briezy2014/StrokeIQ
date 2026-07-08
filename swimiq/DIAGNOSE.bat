@@ -1,46 +1,16 @@
 @echo off
-REM Quick check — double-click to see what's wrong
 title SwimIQ Diagnose
 cd /d "%~dp0"
-
 echo.
-echo === SwimIQ diagnose ===
+echo === SwimIQ Diagnose ===
 echo Folder: %CD%
 echo.
 
-if exist "%~dp0scripts\launch-chrome-tonight.ps1" (
-  echo [OK] launch-chrome-tonight.ps1 found
-) else (
-  echo [MISSING] scripts\launch-chrome-tonight.ps1 - run git pull
-)
+if exist "%~dp0launch-chrome.ps1" (echo [OK] launch-chrome.ps1) else (echo [MISSING] launch-chrome.ps1)
+if exist "%~dp0fix-kara-paths.ps1" (echo [OK] fix-kara-paths.ps1) else (echo [MISSING] fix-kara-paths.ps1)
+if exist "%~dp0.env" (echo [OK] .env) else (echo [MISSING] .env - create from .env.example)
+if exist "S:\swimiq" (echo [OK] S:\swimiq) else (echo [WARN] S:\swimiq - run FIX-KARA-PATHS.bat)
+if exist "F:\bin\flutter.bat" (echo [OK] F:\bin\flutter) else (echo [WARN] F:\bin - run FIX-KARA-PATHS.bat)
 
-if exist "%~dp0scripts\kara-fix-windows-once.ps1" (
-  echo [OK] kara-fix-windows-once.ps1 found
-) else (
-  echo [MISSING] scripts\kara-fix-windows-once.ps1 - run git pull
-)
-
-if exist "%~dp0.env" (
-  echo [OK] .env found
-) else (
-  echo [MISSING] .env - copy .env.example to .env and add Supabase keys
-)
-
-if exist "S:\swimiq" (
-  echo [OK] S:\swimiq drive mapped
-) else (
-  echo [WARN] S:\swimiq not mapped - run FIX-KARA-PATHS.bat
-)
-
-if exist "F:\bin\flutter.bat" (
-  echo [OK] F:\bin\flutter.bat found
-) else (
-  echo [WARN] F:\bin\flutter not mapped - run FIX-KARA-PATHS.bat
-)
-
-echo.
-echo PUB_CACHE user variable:
-setx 2>nul
-echo   (If empty, run FIX-KARA-PATHS.bat)
 echo.
 pause
