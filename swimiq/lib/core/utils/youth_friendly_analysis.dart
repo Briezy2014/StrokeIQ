@@ -3,7 +3,7 @@ import '../../data/models/swim_video_analysis.dart';
 /// Keeps AI swim analysis supportive and appropriate for youth + parents.
 abstract final class YouthFriendlyAnalysis {
   static const audienceNote =
-      'Kid- and parent-friendly coaching — swim technique only, not medical advice.';
+      'Kid- and parent-friendly coaching with precise swim technique (body line, hips up, head down, angles) — not medical advice.';
 
   static final _blockedPattern = RegExp(
     r'\b(sexy|hot body|ugly|fat|obese|overweight|skinny|stupid|idiot|'

@@ -14,6 +14,15 @@ void main() {
     );
   });
 
+  test('sanitize keeps precise body mechanics technique terms', () {
+    expect(
+      YouthFriendlyAnalysis.sanitize(
+        'Hips are dropping — keep hips up and head down in streamline.',
+      ),
+      contains('hips up'),
+    );
+  });
+
   test('sanitizeAnalysis cleans stored sections', () {
     final cleaned = YouthFriendlyAnalysis.sanitizeAnalysis(
       SwimVideoAnalysis(

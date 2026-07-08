@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/services/video_analysis_presenter.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/youth_friendly_analysis.dart';
+import '../data/models/swim_pose_metrics.dart';
 import '../data/models/swim_video_analysis.dart';
 
 class VideoAnalysisReport extends StatefulWidget {
@@ -91,6 +92,10 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
                   color: Colors.grey.shade700,
                 ),
           ),
+        if (widget.analysis.poseMetrics != null) ...[
+          const SizedBox(height: 12),
+          _MediaPipeBodyMechanicsCard(metrics: widget.analysis.poseMetrics!),
+        ],
         const SizedBox(height: 12),
         for (final entry in sections.entries)
           if (entry.key != 'Coach notes for next race' &&
@@ -101,15 +106,105 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           controller: _coachNotesController,
           onSave: () => widget.onCoachNotesChanged(_coachNotesController.text),
         ),
-        if (widget.analysis.poseMetrics != null) ...[
-          const SizedBox(height: 8),
-          _SectionCard(
-            title: 'Body mechanics snapshot',
-            body: '${widget.analysis.poseMetrics!.observations.map((line) => '• $line').join('\n')}\n\n'
-                '${YouthFriendlyAnalysis.audienceNote}',
+      ],
+    );
+  }
+}
+
+class _MediaPipeBodyMechanicsCard extends StatelessWidget {
+  const _MediaPipeBodyMechanicsCard({required this.metrics});
+
+  final SwimPoseMetrics metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final pro = metrics.bodyMechanicsPro;
+    final con = metrics.bodyMechanicsCon;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'MediaPipe body mechanics',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDeep,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Automated angle read from your video — hips up, head down, body line, elbow, and kick. '
+            'Read with your coach; not medical advice.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  height: 1.35,
+                ),
+          ),
+          if (pro != null || con != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (pro != null)
+                  Expanded(
+                    child: _InsightCard(
+                      title: 'Body mechanics pro',
+                      body: pro,
+                      icon: Icons.check_circle_outline,
+                      accent: const Color(0xFF16A34A),
+                    ),
+                  ),
+                if (pro != null && con != null) const SizedBox(width: 10),
+                if (con != null)
+                  Expanded(
+                    child: _InsightCard(
+                      title: 'Body mechanics con',
+                      body: con,
+                      icon: Icons.build_outlined,
+                      accent: const Color(0xFFEA580C),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          if (metrics.bodyMechanicsSuggestions.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Suggestions',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDeep,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            for (final suggestion in metrics.bodyMechanicsSuggestions)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text('• $suggestion', style: const TextStyle(height: 1.45)),
+              ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            'Angle snapshot',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey.shade800,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            metrics.observations.map((line) => '• $line').join('\n'),
+            style: const TextStyle(height: 1.45),
           ),
         ],
-      ],
+      ),
     );
   }
 }

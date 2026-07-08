@@ -49,6 +49,9 @@ type PoseMetrics = {
   avg_elbow_angle_deg?: number;
   estimated_stroke_cycles?: number;
   kick_symmetry_score?: number;
+  body_mechanics_pro?: string;
+  body_mechanics_con?: string;
+  body_mechanics_suggestions?: string[];
   observations?: string[];
 };
 
@@ -246,6 +249,9 @@ function buildPrompt(body: AnalyzeRequest): string {
         pose.hip_drop_degrees != null
           ? `Hip drop estimate: ${pose.hip_drop_degrees.toFixed(1)}`
           : null,
+        pose.head_lift_score != null
+          ? `Head lift score: ${pose.head_lift_score.toFixed(1)} (lower = head down, hips up)`
+          : null,
         pose.avg_elbow_angle_deg != null
           ? `Average elbow angle: ${pose.avg_elbow_angle_deg.toFixed(1)}°`
           : null,
@@ -254,6 +260,15 @@ function buildPrompt(body: AnalyzeRequest): string {
           : null,
         pose.kick_symmetry_score != null
           ? `Kick symmetry score: ${pose.kick_symmetry_score.toFixed(0)}/100`
+          : null,
+        pose.body_mechanics_pro
+          ? `MediaPipe body-mechanics PRO: ${pose.body_mechanics_pro}`
+          : null,
+        pose.body_mechanics_con
+          ? `MediaPipe body-mechanics CON: ${pose.body_mechanics_con}`
+          : null,
+        pose.body_mechanics_suggestions?.length
+          ? `MediaPipe suggestions: ${pose.body_mechanics_suggestions.join("; ")}`
           : null,
         pose.observations?.length
           ? `Pose observations: ${pose.observations.join("; ")}`
@@ -273,19 +288,31 @@ STRICT SAFETY RULES:
 - NO profanity, adult themes, bullying language, or personal insults.
 - If the video is unclear, describe what you CAN see; do not invent details.
 
+BODY MECHANICS PRECISION (REQUIRED):
+- Be specific about body angles and positions swimmers and parents can act on:
+  hips up / hips near the surface vs hips sinking, head down in streamline vs head lifting,
+  flat body line (shoulder–hip–ankle), elbow angle at the catch, kick from the hips, kick symmetry.
+- Use plain language after technical terms so a parent understands, e.g.
+  "hips dropping below the body line — think hips up, chest slightly down."
+- When MediaPipe pose metrics are provided below, you MUST weave them into quick_pro, quick_con,
+  and at least one top_3_priorities item. Do not ignore automated body-line data.
+- quick_pro should name a body-mechanics strength when pose data supports it.
+- quick_con should name the main body-mechanics limiter (hips, head, body line, elbow, or kick) when visible.
+
 Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context and on-device pose metrics below.
 
 Athlete context:
 ${contextLines || "(no extra context)"}
 
-On-device pose metrics (automated body-line estimates — not official timing):
+On-device pose metrics from MediaPipe (automated body-line estimates — not official timing):
 ${poseLines || "(pose metrics not available for this clip)"}
 
 Return JSON only (no markdown). Be specific about visible technique (body line, kick, pull, breathing, turns, underwater, finish).
 Reference the pose metrics when they support what you see, but do not invent numbers beyond them.
-Use short, parent-friendly sentences. Scores are 0-100 integers.
-Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences.
-Provide next_race_goal as one concrete race target sentence.
+Use clear sentences a parent can read with their swimmer — include enough detail to understand WHY a position matters.
+Scores are 0-100 integers.
+Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences with body-mechanics detail when relevant.
+Provide next_race_goal as one concrete race target sentence tied to technique.
 For dryland_focus: explain why strength/mobility/stability matter for this stroke — do NOT list pool drills (the coach handles those).
 For estimated_time_savings: give a numeric range in seconds tied to the limiter you saw.
 Do not invent split times or stroke counts you cannot verify from the video.`;
@@ -325,8 +352,8 @@ function normalizeAnalysis(
   const overallScore = clampScore(parsed.overall_score);
 
   const disclaimer = body.pose_metrics?.frames_with_pose
-    ? "SwimIQ AI coaching with automated body-line estimates — kid- and parent-friendly swim feedback only; confirm with your coach."
-    : "SwimIQ AI coaching from uploaded footage — kid- and parent-friendly swim feedback only; confirm with your coach.";
+    ? "SwimIQ AI coaching with MediaPipe body-mechanics estimates — precise technique feedback (hips, head, body line) for swimmers and parents; confirm with your coach."
+    : "SwimIQ AI coaching from uploaded footage — precise swim technique feedback for swimmers and parents; confirm with your coach.";
 
   const engine = body.pose_metrics?.frames_with_pose
     ? "swimiq-v2-gemini-mediapipe"

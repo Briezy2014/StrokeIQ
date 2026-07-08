@@ -10,6 +10,9 @@ class SwimPoseMetrics {
     this.avgElbowAngleDeg,
     this.estimatedStrokeCycles,
     this.kickSymmetryScore,
+    this.bodyMechanicsPro,
+    this.bodyMechanicsCon,
+    this.bodyMechanicsSuggestions = const [],
     this.observations = const [],
   });
 
@@ -24,6 +27,9 @@ class SwimPoseMetrics {
   final double? avgElbowAngleDeg;
   final int? estimatedStrokeCycles;
   final double? kickSymmetryScore;
+  final String? bodyMechanicsPro;
+  final String? bodyMechanicsCon;
+  final List<String> bodyMechanicsSuggestions;
   final List<String> observations;
 
   double get detectionRate =>
@@ -42,6 +48,9 @@ class SwimPoseMetrics {
         'avg_elbow_angle_deg': avgElbowAngleDeg,
         'estimated_stroke_cycles': estimatedStrokeCycles,
         'kick_symmetry_score': kickSymmetryScore,
+        'body_mechanics_pro': bodyMechanicsPro,
+        'body_mechanics_con': bodyMechanicsCon,
+        'body_mechanics_suggestions': bodyMechanicsSuggestions,
         'observations': observations,
       };
 
@@ -56,6 +65,13 @@ class SwimPoseMetrics {
       avgElbowAngleDeg: _asDouble(json['avg_elbow_angle_deg']),
       estimatedStrokeCycles: _asInt(json['estimated_stroke_cycles']),
       kickSymmetryScore: _asDouble(json['kick_symmetry_score']),
+      bodyMechanicsPro: json['body_mechanics_pro']?.toString(),
+      bodyMechanicsCon: json['body_mechanics_con']?.toString(),
+      bodyMechanicsSuggestions: (json['body_mechanics_suggestions'] as List?)
+              ?.map((item) => item.toString())
+              .where((item) => item.trim().isNotEmpty)
+              .toList() ??
+          const [],
       observations: (json['observations'] as List?)
               ?.map((item) => item.toString())
               .toList() ??
