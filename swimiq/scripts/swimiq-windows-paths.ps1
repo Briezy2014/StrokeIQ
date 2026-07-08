@@ -60,7 +60,13 @@ function Ensure-DirectoryJunction {
             }
             cmd /c "rmdir `"$link`"" | Out-Null
         } else {
-            throw "Cannot create junction — folder already exists and is not a link:`n$link"
+            $children = @(Get-ChildItem -LiteralPath $link -Force -ErrorAction SilentlyContinue)
+            if ($children.Count -eq 0) {
+                Remove-Item -LiteralPath $link -Force
+                Write-Host "OK  Removed empty folder blocking junction: $link" -ForegroundColor Yellow
+            } else {
+                throw "Cannot create junction — folder exists and is not a link:`n$link`nDelete or rename it, then run FIX-KARA-PATHS.bat again."
+            }
         }
     }
 
