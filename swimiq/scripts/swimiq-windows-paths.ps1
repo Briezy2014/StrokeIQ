@@ -2,10 +2,14 @@
 
 function Get-SubstMapping {
     $map = @{}
-    $lines = cmd /c subst 2>$null
-    foreach ($line in $lines) {
-        if ($line -match '^([A-Z]):\:\\?\s+=>\s+(.+)$') {
-            $map[$matches[1]] = $matches[2].Trim()
+    cmd /c subst 2>$null | ForEach-Object {
+        if ($_ -match '=>') {
+            $left, $right = $_ -split '=>', 2
+            $left = $left.Trim()
+            $right = $right.Trim()
+            if ($left -match '^([A-Z]):') {
+                $map[$matches[1]] = $right
+            }
         }
     }
     return $map
@@ -99,6 +103,9 @@ function Initialize-SwimIqWindowsPaths {
 
     $projectRoot = Get-PhysicalRootPath (Split-Path -Parent $ScriptsRoot)
     $strokeRoot = Get-PhysicalRootPath (Split-Path -Parent $projectRoot)
+
+    # Step off subst drives before remapping (prevents "directory name is invalid")
+    Set-Location C:\
 
     Write-Host "Physical SwimIQ: $projectRoot"
     Write-Host "Physical StrokeIQ: $strokeRoot"
