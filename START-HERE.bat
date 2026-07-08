@@ -5,10 +5,22 @@ echo ========================================
 echo  SwimIQ - START HERE
 echo ========================================
 echo.
-echo Step 1: Double-click FIX-KARA-PATHS.bat  (once)
-echo Step 2: Double-click KARA-CLICK-THIS.bat
+echo You only need ONE folder — use either:
+echo   StrokeIQ folder  (this window)
+echo   OR  StrokeIQ\swimiq folder
+echo Do NOT run both copies at the same time.
 echo.
-echo These files are in this folder AND in the swimiq subfolder.
+echo ----------------------------------------
+echo  STEP 1 of 2 — Fix paths (run ONCE)
+echo ----------------------------------------
 echo.
 pause
 call "%~dp0FIX-KARA-PATHS.bat"
+echo.
+echo ----------------------------------------
+echo  STEP 2 of 2 — Open SwimIQ in Chrome
+echo ----------------------------------------
+echo.
+echo When Step 1 says OK, press any key here to launch Chrome...
+pause >nul
+call "%~dp0KARA-CLICK-THIS.bat"

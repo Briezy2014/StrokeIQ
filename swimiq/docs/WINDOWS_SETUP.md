@@ -26,9 +26,19 @@ You should see **`START-HERE.bat`**, **`FIX-KARA-PATHS.bat`**, and **`KARA-CLICK
 
 ## Easiest fix (recommended)
 
-1. In File Explorer, open your **StrokeIQ** folder (parent of `swimiq`).
-2. Double-click **`START-HERE.bat`** or **`FIX-KARA-PATHS.bat`** once (creates `C:\SwimIQWork` junction — no spaces).
-3. Double-click **`KARA-CLICK-THIS.bat`** to launch Chrome.
+**Run one step at a time.** Do not double-click both `.bat` files at once.
+
+Pick **one folder** — either **StrokeIQ** (parent) or **StrokeIQ\swimiq**. The same three files exist in both places; use whichever folder you have open in File Explorer.
+
+| Step | File | How often |
+|------|------|-----------|
+| 1 | **`FIX-KARA-PATHS.bat`** | **Once** (first time, or if Flutter path errors come back) |
+| 2 | **`KARA-CLICK-THIS.bat`** | **Every time** you want to open SwimIQ in Chrome |
+
+**Or** double-click **`START-HERE.bat`** — it runs Step 1, waits, then Step 2 for you.
+
+1. In File Explorer, open your **StrokeIQ** folder.
+2. Double-click **`START-HERE.bat`** (easiest), **or** run Step 1 then Step 2 yourself.
 
 That is it. Wait 2–3 minutes for the first build.
 
