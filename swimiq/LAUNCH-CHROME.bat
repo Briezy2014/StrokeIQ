@@ -1,6 +1,7 @@
 @echo off
 title SwimIQ Launch Chrome
 cd /d "%~dp0"
+call "%~dp0scripts\ensure-logo-bats.cmd" 2>nul
 if exist "%~dp0scripts\launch-chrome-kara.ps1" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\launch-chrome-kara.ps1"
 ) else if exist "%~dp0SWIMIQ-CHROME-NOW.ps1" (

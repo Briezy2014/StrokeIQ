@@ -1,6 +1,7 @@
 @echo off
 title SwimIQ Fix Paths
 cd /d "%~dp0"
+call "%~dp0scripts\ensure-logo-bats.cmd" 2>nul
 echo.
 echo ========================================
 echo  SwimIQ - Fix Kara Paths
