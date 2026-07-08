@@ -1,4 +1,4 @@
-# SwimIQ TestFlight build helper (Windows — prepares commands; IPA requires macOS or Codemagic).
+# SwimIQ TestFlight build helper (Windows - prepares commands; IPA requires macOS or Codemagic).
 #
 # Usage on Windows (after pulling to S:\swimiq):
 #   $env:SUPABASE_URL = "https://xxxx.supabase.co"
@@ -16,7 +16,7 @@ $key = $env:SUPABASE_ANON_KEY
 if (-not $url -or -not $key) {
     Write-Host @"
 
-SwimIQ TestFlight — set Supabase keys first:
+SwimIQ TestFlight - set Supabase keys first:
 
   `$env:SUPABASE_URL = "https://YOUR_PROJECT.supabase.co"
   `$env:SUPABASE_ANON_KEY = "your-anon-key"

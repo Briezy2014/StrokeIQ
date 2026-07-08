@@ -1,4 +1,4 @@
-# SwimIQ — ONE FILE Chrome launcher (Kara Williams / Windows)
+# SwimIQ - ONE FILE Chrome launcher (Kara Williams / Windows)
 # Double-click SWIMIQ-CHROME-NOW.bat or KARA-CLICK-THIS.bat
 $ErrorActionPreference = 'Stop'
 
@@ -21,7 +21,7 @@ $envFile = Join-Path $paths.WorkDir '.env'
 if (-not (Test-Path -LiteralPath $envFile)) {
     $example = Join-Path $paths.WorkDir '.env.example'
     if (Test-Path -LiteralPath $example) { Copy-Item $example $envFile }
-    Write-Host 'Created .env — paste Supabase keys, save, run again.' -ForegroundColor Yellow
+    Write-Host 'Created .env - paste Supabase keys, save, run again.' -ForegroundColor Yellow
     notepad $envFile
     Read-Host 'Press Enter'; exit 1
 }
@@ -43,7 +43,7 @@ if (-not $url -or -not $key -or $url -match 'your-project') {
 Write-Host 'Cleaning old cache (fixes hook errors)...' -ForegroundColor Yellow
 & $paths.FlutterBat clean 2>$null | Out-Null
 
-Write-Host 'Starting Chrome — wait 2-3 minutes...' -ForegroundColor Cyan
+Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 & $paths.FlutterBat pub get
 if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }
 

@@ -65,7 +65,7 @@ function Ensure-DirectoryJunction {
                 Remove-Item -LiteralPath $link -Force
                 Write-Host "OK  Removed empty folder blocking junction: $link" -ForegroundColor Yellow
             } else {
-                throw "Cannot create junction — folder exists and is not a link:`n$link`nDelete or rename it, then run FIX-KARA-PATHS.bat again."
+                throw "Cannot create junction - folder exists and is not a link:`n$link`nDelete or rename it, then run FIX-KARA-PATHS.bat again."
             }
         }
     }

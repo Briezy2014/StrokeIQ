@@ -24,7 +24,7 @@ if (-not (Test-Path -LiteralPath $envFile)) {
     if (Test-Path -LiteralPath $exampleFile) {
         Copy-Item $exampleFile $envFile
     }
-    Write-Host 'Created .env — add Supabase URL + anon key, save, run again.' -ForegroundColor Yellow
+    Write-Host 'Created .env - add Supabase URL + anon key, save, run again.' -ForegroundColor Yellow
     notepad $envFile
     Read-Host 'Press Enter to close'
     exit 1
@@ -54,7 +54,7 @@ Write-Host 'OK  Supabase keys loaded' -ForegroundColor Green
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 & $paths.FlutterBat clean 2>$null | Out-Null
 
-Write-Host 'Starting Chrome — wait 2-3 minutes...' -ForegroundColor Cyan
+Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
 & $paths.FlutterBat pub get

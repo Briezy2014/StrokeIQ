@@ -1,4 +1,4 @@
-# SwimIQ — ONE FILE GoDaddy web build (Kara Williams / Windows)
+# SwimIQ - ONE FILE GoDaddy web build (Kara Williams / Windows)
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'scripts\swimiq-windows-paths.ps1')
@@ -45,12 +45,12 @@ if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }
 
 $webOut = Join-Path $paths.WorkDir 'build\web'
 if ($LASTEXITCODE -ne 0) {
-    Write-Host 'BUILD FAILED — do not upload to GoDaddy' -ForegroundColor Red
+    Write-Host 'BUILD FAILED - do not upload to GoDaddy' -ForegroundColor Red
     Read-Host 'Press Enter'; exit 1
 }
 
 if (-not (Test-Path (Join-Path $webOut 'main.dart.js'))) {
-    Write-Host 'BUILD FAILED — missing main.dart.js' -ForegroundColor Red
+    Write-Host 'BUILD FAILED - missing main.dart.js' -ForegroundColor Red
     Read-Host 'Press Enter'; exit 1
 }
 
