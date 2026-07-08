@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/subscription_plan.dart';
 import '../services/subscription_service.dart';
 
@@ -48,6 +50,17 @@ class SubscriptionCapabilities {
     }
     return 'SwimIQ AI coaching is included with Elite. Start a trial or upgrade '
         'from Plans & billing in Settings.';
+  }
+
+  static String upgradeUnavailableMessage(TargetPlatform platform) {
+    return switch (platform) {
+      TargetPlatform.android =>
+        'Paid upgrades on Android launch with Google Play billing soon.',
+      TargetPlatform.iOS =>
+        'Paid upgrades on iPhone launch with App Store billing soon.',
+      _ =>
+        'Upgrade from Plans & billing in Settings or subscribe on swimiqapp.com.',
+    };
   }
 
   static String coachPreviewSummary(SubscriptionState state) {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/subscription/subscription_billing_policy.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
@@ -28,7 +29,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
   }
 
   Future<void> _selectPlan(SubscriptionTier tier) async {
-    if (kIsWeb) {
+    if (SubscriptionBillingPolicy.supportsStripeCheckout) {
       setState(() {
         _message = 'Opening secure Stripe checkout…';
       });
@@ -56,14 +57,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
       return;
     }
 
-    await ref
-        .read(subscriptionStateProvider.notifier)
-        .selectPlan(tier, _billingCycle);
+    final blocked = SubscriptionBillingPolicy.paidPlanSelectionBlockedMessage(
+      defaultTargetPlatform,
+    );
     if (!mounted) return;
     setState(() {
-      _message =
-          'Selected ${SubscriptionCatalog.planFor(tier).name} (${_billingCycle.name}). '
-          'Mobile app billing uses Google Play / App Store at launch.';
+      _message = blocked;
     });
   }
 
@@ -92,6 +91,20 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Could not load plans: $error')),
         data: (subscription) {
+          final paidPlansAvailable =
+              SubscriptionBillingPolicy.supportsPaidPlanSelection;
+          final billingHeadline = paidPlansAvailable
+              ? 'Every new athlete gets a ${SubscriptionCatalog.trialDays}-day Elite trial. '
+                  'Choose monthly or annual billing when you are ready.'
+              : SubscriptionBillingPolicy.mobilePaidPlansHeadline(
+                  defaultTargetPlatform,
+                );
+          final billingDetail = paidPlansAvailable
+              ? null
+              : SubscriptionBillingPolicy.mobilePaidPlansDetail(
+                  defaultTargetPlatform,
+                );
+
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -131,13 +144,22 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Every new athlete gets a ${SubscriptionCatalog.trialDays}-day Elite trial. '
-                      'Choose monthly or annual billing when you are ready.',
+                      billingHeadline,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.92),
                         height: 1.4,
                       ),
                     ),
+                    if (billingDetail != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        billingDetail,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                     if (subscription.isCoachTrialActive) ...[
                       const SizedBox(height: 10),
                       Text(
@@ -153,29 +175,33 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              SegmentedButton<BillingCycle>(
-                segments: const [
-                  ButtonSegment(
-                    value: BillingCycle.monthly,
-                    label: Text('Monthly'),
-                  ),
-                  ButtonSegment(
-                    value: BillingCycle.annual,
-                    label: Text('Annual'),
-                  ),
-                ],
-                selected: {_billingCycle},
-                onSelectionChanged: (value) {
-                  setState(() => _billingCycle = value.first);
-                },
-              ),
-              const SizedBox(height: 20),
+              if (paidPlansAvailable)
+                SegmentedButton<BillingCycle>(
+                  segments: const [
+                    ButtonSegment(
+                      value: BillingCycle.monthly,
+                      label: Text('Monthly'),
+                    ),
+                    ButtonSegment(
+                      value: BillingCycle.annual,
+                      label: Text('Annual'),
+                    ),
+                  ],
+                  selected: {_billingCycle},
+                  onSelectionChanged: (value) {
+                    setState(() => _billingCycle = value.first);
+                  },
+                ),
+              if (paidPlansAvailable) const SizedBox(height: 20),
               ...SubscriptionCatalog.plans.map(
                 (plan) => _PlanCard(
                   plan: plan,
                   billingCycle: _billingCycle,
                   isCurrent: subscription.effectiveTier == plan.tier,
-                  onSelect: () => _selectPlan(plan.tier),
+                  paidPlansAvailable: paidPlansAvailable,
+                  onSelect: paidPlansAvailable
+                      ? () => _selectPlan(plan.tier)
+                      : null,
                 ),
               ),
               const SizedBox(height: 24),
@@ -232,13 +258,15 @@ class _PlanCard extends StatelessWidget {
     required this.plan,
     required this.billingCycle,
     required this.isCurrent,
+    required this.paidPlansAvailable,
     required this.onSelect,
   });
 
   final SubscriptionPlan plan;
   final BillingCycle billingCycle;
   final bool isCurrent;
-  final VoidCallback onSelect;
+  final bool paidPlansAvailable;
+  final VoidCallback? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -321,8 +349,13 @@ class _PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: onSelect,
-              child: Text(isCurrent ? 'Current plan' : 'Choose ${plan.name}'),
+              onPressed: paidPlansAvailable ? onSelect : null,
+              child: Text(
+                SubscriptionBillingPolicy.paidPlanButtonLabel(
+                  plan: plan,
+                  isCurrent: isCurrent,
+                ),
+              ),
             ),
           ],
         ),
