@@ -38,11 +38,11 @@ class PassportHub extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _HubIntro(tagline: hubTagline),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _ModuleStrip(
           onModuleTap: (module) => _handleModuleTap(context, ref, module),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _AiCoachCard(
           recommendation: recommendation,
           readiness: snapshot.readiness,
@@ -108,7 +108,7 @@ class _HubIntro extends StatelessWidget {
     final segments = tagline.split(RegExp(r'\s{3}\|\s{3}'));
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -138,7 +138,7 @@ class _HubIntro extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'Live now — tap any module to open.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -146,7 +146,7 @@ class _HubIntro extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 6,
             runSpacing: 8,

@@ -330,54 +330,72 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               const SizedBox(height: 16),
               const SwimIqStandardsSetupBanner(),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const SwimIqScreenHeader(title: 'Athlete Status'),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.35,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 2.35,
               children: [
-                SwimIqMetricCard(
-                  label: 'SwimIQ Score™',
-                  value: snapshot.swimIqScore > 0
-                      ? '${snapshot.swimIqScore}'
-                      : 'Log swims to score',
-                  subtitle: snapshot.swimIqExplanation,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'SwimIQ Score™',
+                    value: snapshot.swimIqScore > 0
+                        ? '${snapshot.swimIqScore}'
+                        : 'Log swims to score',
+                    subtitle: snapshot.swimIqExplanation,
+                  ),
                 ),
-                SwimIqMetricCard(
-                  label: 'Current Focus',
-                  value: snapshot.currentFocus,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'Current Focus',
+                    value: snapshot.currentFocus,
+                  ),
                 ),
-                SwimIqMetricCard(
-                  label: 'Highest Cut',
-                  value: snapshot.highestCut,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'Highest Cut',
+                    value: snapshot.highestCut,
+                  ),
                 ),
-                SwimIqMetricCard(
-                  label: 'Next Meet',
-                  value: snapshot.nextMeet,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'Next Meet',
+                    value: snapshot.nextMeet,
+                  ),
                 ),
-                SwimIqMetricCard(
-                  label: 'IMX / IMR',
-                  value: snapshot.imxScore,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'IMX / IMR',
+                    value: snapshot.imxScore,
+                  ),
                 ),
-                SwimIqMetricCard(
-                  label: 'Readiness',
-                  value: snapshot.readiness,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SwimIqMetricCard(
+                    label: 'Readiness',
+                    value: snapshot.readiness,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const SwimIqScreenHeader(title: 'Athlete Details'),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SwimIqSectionCard(
               title: 'USA Motivational Standards',
               lines: snapshot.usaStandardsSummary.split('\n'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SwimIqSectionCard(
               title: 'Athlete Identity',
               lines: [
@@ -388,7 +406,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 'School: ${_passportLabel(profile?.school)}',
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SwimIqSectionCard(
               title: 'USA Swimming Profile',
               lines: [
@@ -400,7 +418,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 'Favorite Event: ${_passportLabel(profile?.favoriteEvent)}',
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SwimIqSectionCard(
               title: 'SwimIQ Activity',
               lines: [
@@ -411,7 +429,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 'Video Analyses: ${data.userFacingVideoAnalyses.length}',
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SwimIqSectionCard(
               title: 'Athlete Notes',
               lines: [
@@ -906,7 +924,7 @@ class _RecruitingSnapshotCard extends StatelessWidget {
       bool isLink = false,
     }) {
       if (value == null || value.trim().isEmpty) return;
-      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
       rows.add(
         _RecruitingRow(
           icon: icon,
@@ -990,7 +1008,7 @@ class _RecruitingSnapshotCard extends StatelessWidget {
     );
 
     if (personalBests.isNotEmpty) {
-      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
       rows.add(
         _RecruitingRow(
           icon: Icons.timer_outlined,
@@ -1022,7 +1040,7 @@ class _RecruitingSnapshotCard extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -1034,65 +1052,32 @@ class _RecruitingSnapshotCard extends StatelessWidget {
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.badge_outlined, color: Colors.white, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Recruiting snapshot',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.35),
-                        ),
-                      ),
-                      child: const Text(
-                        'Auto-built for coaches',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                const Icon(Icons.badge_outlined, color: Colors.white, size: 22),
+                const SizedBox(width: 8),
                 Text(
-                  'What college recruiters see when they open your Athlete Passport.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  'Recruiting snapshot',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: rows.isNotEmpty
-                ? Column(children: rows)
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: rows,
+                  )
                 : Text(
-                    'Save your Athlete Passport to auto-build your recruiting snapshot for college coaches.',
+                    'Save your Athlete Passport to build your recruiting snapshot.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textDark.withValues(alpha: 0.65),
-                          height: 1.45,
+                          height: 1.35,
                         ),
                   ),
           ),
@@ -1121,7 +1106,7 @@ class _RecruitingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: highlight
             ? AppColors.surfaceLight
@@ -1136,8 +1121,8 @@ class _RecruitingRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(width: 12),
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1149,7 +1134,7 @@ class _RecruitingRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(

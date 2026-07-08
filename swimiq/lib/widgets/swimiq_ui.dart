@@ -64,9 +64,10 @@ class SwimIqMetricCard extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label.toUpperCase(),
@@ -76,7 +77,7 @@ class SwimIqMetricCard extends StatelessWidget {
                     letterSpacing: 1.1,
                   ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               value,
               maxLines: 3,
@@ -87,7 +88,7 @@ class SwimIqMetricCard extends StatelessWidget {
                   ),
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 subtitle!,
                 maxLines: 4,
