@@ -84,24 +84,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SwimIqHeroBanner(height: 160, borderRadius: 16),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Welcome back',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+              child: Column(
+                children: [
+                  const SwimIqAuthHeader(height: 180),
+                  const SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Center(
+                              child: SwimIqWordmark(
+                                fontSize: 28,
+                                onLightBackground: true,
                               ),
-                          textAlign: TextAlign.center,
-                        ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Welcome back',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
                         const SizedBox(height: 8),
                         const Text(
                           'Built in the Water. Driven by Possibility.',
@@ -161,10 +173,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           onPressed: _isLoading ? null : _demoLogin,
                           child: const Text('Coach demo login'),
                         ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
