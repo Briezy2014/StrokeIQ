@@ -1,9 +1,13 @@
 Kara - branding folder
 ======================
 
-REQUIRED FILE (512 x 512 pixels, square PNG). Either name works:
-  swimiq_icon.png   (preferred)
-  swimiq_logo.png   (also OK — Kara's current file)
+REQUIRED FILE (512 x 512 pixels, square PNG):
+  swimiq_logo.png   <-- USE THIS NAME (your current file)
+  swimiq_icon.png   (same file copied here by SYNC-LOGO-NOW.bat)
+
+The app loads swimiq_logo.png FIRST. If an OLD swimiq_icon.png with
+"Aspyn Briez" text is still on disk, drag your NEW PNG onto SYNC-LOGO-NOW.bat
+to overwrite BOTH files.
 
 Your square lockup (icon + SWIMIQ wordmark + tagline on black).
 Export at 512x512 from your designer — this is the one file the app uses.

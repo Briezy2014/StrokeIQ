@@ -1,17 +1,17 @@
 @echo off
-title SwimIQ Copy Logo (512x512)
+title SwimIQ Sync Logo Everywhere
 cd /d "%~dp0"
 
 if "%~1"=="" (
   echo.
   echo ========================================
-  echo  SwimIQ - COPY LOGO (512x512)
+  echo  SwimIQ - SYNC YOUR NEW LOGO
   echo ========================================
   echo.
-  echo Drag your 512x512 swimiq_icon.png ONTO this file,
-  echo OR run: COPY-LOGO.bat "C:\path\to\your\logo.png"
+  echo Drag your NEW 512x512 PNG onto this file.
   echo.
-  echo (Same as DRAG-LOGO-HERE.bat)
+  echo This overwrites ALL logo copies so the old
+  echo Aspyn icon cannot stick around.
   echo.
   pause
   exit /b 1
@@ -34,12 +34,20 @@ copy /Y "%SRC%" "web\icons\Icon-512.png"
 copy /Y "%SRC%" "web\icons\Icon-192.png"
 
 echo.
-echo Done! Logo copied to:
+echo ========================================
+echo  LOGO SYNCED
+echo ========================================
+echo.
+echo Your PNG is now in BOTH branding names:
 echo   assets\branding\swimiq_logo.png
 echo   assets\branding\swimiq_icon.png
-echo   web\favicon.png
-echo   web\icons\Icon-512.png
-echo   web\icons\Icon-192.png
+echo   web\favicon.png + web\icons\
 echo.
-echo Close Chrome, then run LAUNCH-CHROME.bat
+echo NEXT:
+echo   1. Close Chrome completely
+echo   2. Double-click LAUNCH-CHROME.bat
+echo   3. Ctrl+F5 on the login page
+echo.
+echo If swimiqapp.com still shows the old logo, rebuild GoDaddy later.
+echo.
 pause

@@ -63,6 +63,18 @@ try {
     Pop-Location
 }
 
+Write-Host 'Checking branding PNG...' -ForegroundColor Cyan
+$brandDir = Join-Path $paths.WorkDir 'assets\branding'
+$logo = Join-Path $brandDir 'swimiq_logo.png'
+$icon = Join-Path $brandDir 'swimiq_icon.png'
+if (Test-Path -LiteralPath $logo) {
+    Write-Host "OK  Using assets\branding\swimiq_logo.png" -ForegroundColor Green
+} elseif (Test-Path -LiteralPath $icon) {
+    Write-Host 'WARN Only swimiq_icon.png found — drag NEW logo onto SYNC-LOGO-NOW.bat' -ForegroundColor Yellow
+} else {
+    Write-Host 'WARN No logo PNG — drag 512x512 onto SYNC-LOGO-NOW.bat' -ForegroundColor Yellow
+}
+
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 

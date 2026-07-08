@@ -28,6 +28,7 @@ if not exist "%SRC%" (
 if not exist "assets\branding" mkdir "assets\branding"
 if not exist "web\icons" mkdir "web\icons"
 
+copy /Y "%SRC%" "assets\branding\swimiq_logo.png"
 copy /Y "%SRC%" "assets\branding\swimiq_icon.png"
 copy /Y "%SRC%" "web\favicon.png"
 copy /Y "%SRC%" "web\icons\Icon-512.png"
@@ -35,6 +36,7 @@ copy /Y "%SRC%" "web\icons\Icon-192.png"
 
 echo.
 echo Done! Logo copied to:
+echo   assets\branding\swimiq_logo.png
 echo   assets\branding\swimiq_icon.png
 echo   web\favicon.png
 echo   web\icons\Icon-512.png

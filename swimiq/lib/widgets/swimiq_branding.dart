@@ -9,18 +9,22 @@ abstract final class SwimIqBranding {
     'assets/branding/icon_mark.png',
   ];
 
-  /// Full square lockup (icon + wordmark + tagline on black) — for login/splash.
+  /// Full square lockup — swimiq_logo.png first (Kara's file; avoids stale swimiq_icon.png).
   static const fullLockupCandidates = [
-    'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_logo.png',
+    'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_logo_square.png',
     'assets/branding/icon.png',
   ];
 
-  /// Small slots: prefer mark-only, else zoom full lockup to the icon region.
+  /// Small slots: logo first, then mark-only crop, then legacy icon name.
   static const compactCandidates = [
-    ...iconMarkCandidates,
-    ...fullLockupCandidates,
+    'assets/branding/swimiq_logo.png',
+    'assets/branding/swimiq_icon_mark.png',
+    'assets/branding/icon_mark.png',
+    'assets/branding/swimiq_icon.png',
+    'assets/branding/swimiq_logo_square.png',
+    'assets/branding/icon.png',
   ];
 
   /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).

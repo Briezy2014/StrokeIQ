@@ -50,12 +50,16 @@ void main() {
 
   test('branding lists include lockup and mark paths', () {
     expect(
-      SwimIqBranding.fullLockupCandidates,
-      contains('assets/branding/swimiq_icon.png'),
+      SwimIqBranding.fullLockupCandidates.first,
+      'assets/branding/swimiq_logo.png',
+    );
+    expect(
+      SwimIqBranding.compactCandidates.first,
+      'assets/branding/swimiq_logo.png',
     );
     expect(
       SwimIqBranding.fullLockupCandidates,
-      contains('assets/branding/swimiq_logo.png'),
+      contains('assets/branding/swimiq_icon.png'),
     );
     expect(
       SwimIqBranding.iconMarkCandidates,
