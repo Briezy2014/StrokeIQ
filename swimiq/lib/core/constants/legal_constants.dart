@@ -21,6 +21,7 @@ abstract final class LegalConstants {
   static const lastUpdated = 'July 7, 2026';
 
   static const privacyPolicyWebUrl = '$websiteUrl/privacy';
+  static const dataDeletionWebUrl = '$websiteUrl/delete-account.html';
   static const termsOfServiceWebUrl = '$websiteUrl/terms';
   static const aiDisclosureWebUrl = '$websiteUrl/ai';
 
