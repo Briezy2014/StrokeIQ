@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/theme/app_theme.dart';
+
 /// Branding asset paths.
 abstract final class SwimIqBranding {
   /// Tight crop: triangle/swimmer mark only (best for app bar & tab headers).
@@ -99,8 +101,22 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
     final w = widget.width;
     final h = widget.height;
 
+    final isFullLockup = _resolvedPath != null &&
+        SwimIqBranding.fullLockupCandidates.contains(_resolvedPath);
+
     if (!_resolved) {
-      return SizedBox(width: w, height: h);
+      return widget.fallback ??
+          SizedBox(
+            width: w,
+            height: h,
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
     }
 
     if (_resolvedPath == null) {
@@ -108,7 +124,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
           Icon(
             Icons.pool,
             size: (h ?? w ?? 48) * 0.7,
-            color: Colors.white,
+            color: AppColors.primary,
           );
     }
 
@@ -119,10 +135,18 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
       fit: widget.fit,
       filterQuality: FilterQuality.high,
       gaplessPlayback: true,
-      errorBuilder: (_, __, ___) => widget.fallback ?? const SizedBox.shrink(),
+      errorBuilder: (_, __, ___) =>
+          widget.fallback ??
+          Icon(
+            Icons.pool,
+            size: (h ?? w ?? 48) * 0.7,
+            color: AppColors.primary,
+          ),
     );
 
-    final shouldZoom = widget.zoomToMark && !_isMarkOnly;
+    // Never zoom full lockup PNGs — zoom was cropping to empty black padding.
+    final shouldZoom =
+        widget.zoomToMark && !isFullLockup && !_isMarkOnly;
     if (shouldZoom && w != null && h != null) {
       image = ClipRect(
         child: SizedBox(

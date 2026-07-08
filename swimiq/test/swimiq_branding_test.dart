@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/widgets/swimiq_branding.dart';
+import 'package:swimiq/widgets/swimiq_branding.dart';
 import 'package:swimiq/widgets/swimiq_logo.dart';
 import 'package:swimiq/core/constants/app_constants.dart';
 
@@ -19,7 +20,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SwimIqLoginBrand), findsOneWidget);
-    expect(find.byType(SwimIqWordmark), findsOneWidget);
+    expect(find.byType(SwimIqBrandedImage), findsOneWidget);
   });
 
   testWidgets('full lockup widget builds', (tester) async {

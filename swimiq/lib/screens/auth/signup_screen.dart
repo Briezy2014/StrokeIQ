@@ -92,7 +92,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Center(
-                          child: SwimIqLoginBrand(iconSize: 96),
+                          child: SwimIqLoginBrand(),
                         ),
                         const SizedBox(height: 20),
                         Text(

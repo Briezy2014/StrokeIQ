@@ -22,20 +22,17 @@ class SwimIqCompactMark extends StatelessWidget {
       height: size,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: ColoredBox(
-          color: AppColors.primaryDeep,
-          child: SwimIqBrandedImage(
-            candidates: SwimIqBranding.compactCandidates,
+        child: SwimIqBrandedImage(
+          candidates: SwimIqBranding.compactCandidates,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          zoomToMark: true,
+          fallback: SwimIqBrandedFallback(
+            variant: SwimIqBrandedVariant.icon,
             width: size,
             height: size,
-            fit: BoxFit.cover,
-            zoomToMark: true,
-            fallback: SwimIqBrandedFallback(
-              variant: SwimIqBrandedVariant.icon,
-              width: size,
-              height: size,
-              borderRadius: 0,
-            ),
+            borderRadius: 0,
           ),
         ),
       ),
@@ -43,52 +40,31 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / signup on white cards: icon in black frame + readable wordmark (no PNG text).
+/// Login / signup: show swimiq_logo.png from assets/branding exactly as saved.
 class SwimIqLoginBrand extends StatelessWidget {
   const SwimIqLoginBrand({
     super.key,
-    this.iconSize = 108,
+    this.size = 220,
   });
 
-  final double iconSize;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: SwimIqCompactMark(
-            size: iconSize,
-            borderRadius: 14,
-          ),
+    return Center(
+      child: SwimIqBrandedImage(
+        candidates: SwimIqBranding.fullLockupCandidates,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        borderRadius: 12,
+        fallback: SwimIqBrandedFallback(
+          variant: SwimIqBrandedVariant.hero,
+          width: size,
+          height: size,
+          borderRadius: 12,
         ),
-        const SizedBox(height: 16),
-        const SwimIqWordmark(fontSize: 34, light: false),
-        const SizedBox(height: 8),
-        Text(
-          'Built in the Water. Driven by Possibility.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey.shade700,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
