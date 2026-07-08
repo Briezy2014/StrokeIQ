@@ -65,6 +65,14 @@ flutter test
 flutter analyze
 ```
 
+## Web deploy (share before mobile launch)
+
+Public Flutter web URL (after one-time GitHub + Supabase setup):
+
+**https://briezy2014.github.io/StrokeIQ/**
+
+See **[docs/WEB_DEPLOY.md](docs/WEB_DEPLOY.md)** for secrets, GitHub Pages, and Supabase auth URLs.
+
 ## Database schema
 
 No schema changes for V1. Auth uses `auth.users`. Swimmer data uses existing tables with `swimmer` / `swimmer_name` keys linked from the authenticated user's display name.
