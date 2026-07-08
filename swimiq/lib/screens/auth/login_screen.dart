@@ -132,6 +132,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 24),
                         if (_errorMessage != null) ...[
                           _ErrorBanner(message: _errorMessage!),
+                          if (_emailController.text.trim().toLowerCase() ==
+                              OwnerAccountConstants.email.toLowerCase())
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                'Owner login only works after you create this user in '
+                                'Supabase Dashboard (Authentication → Users). '
+                                'Run TEST-OWNER-LOGIN.bat on your PC to verify, or sign in with '
+                                'briezy682014@gmail.com / Create an account.',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey.shade800,
+                                      height: 1.35,
+                                    ),
+                              ),
+                            ),
                           const SizedBox(height: 16),
                         ],
                         TextFormField(

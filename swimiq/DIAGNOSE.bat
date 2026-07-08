@@ -27,6 +27,7 @@ if exist "%~dp0scripts\ensure-logo-bats.cmd" (echo [OK] scripts\ensure-logo-bats
 if exist "%~dp0scripts\build-web-godaddy.ps1" (echo [OK] scripts\build-web-godaddy.ps1) else (echo [MISSING] scripts\build-web-godaddy.ps1)
 if exist "%~dp0scripts\set-supabase-stripe-secrets.ps1" (echo [OK] scripts\set-supabase-stripe-secrets.ps1) else (echo [MISSING] scripts\set-supabase-stripe-secrets.ps1)
 if exist "%~dp0scripts\setup-short-path.bat" (echo [OK] scripts\setup-short-path.bat) else (echo [MISSING] scripts\setup-short-path.bat)
+if exist "%~dp0TEST-OWNER-LOGIN.bat" (echo [OK] TEST-OWNER-LOGIN.bat) else (echo [MISSING] TEST-OWNER-LOGIN.bat)
 echo.
 echo --- config ---
 if exist "%~dp0.env" (echo [OK] .env) else (echo [MISSING] .env)
