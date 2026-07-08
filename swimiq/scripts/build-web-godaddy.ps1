@@ -99,6 +99,16 @@ if (Test-Path $htaccess) {
     Write-Host "Added build\web\.htaccess for GoDaddy"
 }
 
+# Static legal pages (served as real HTML — required for Play Console data safety URL checks)
+$legalPages = @("delete-account.html")
+foreach ($page in $legalPages) {
+    $src = Join-Path $PSScriptRoot "..\web\$page"
+    if (Test-Path $src) {
+        Copy-Item $src "build\web\$page" -Force
+        Write-Host "Added build\web\$page"
+    }
+}
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "DONE. Next steps:" -ForegroundColor Green
