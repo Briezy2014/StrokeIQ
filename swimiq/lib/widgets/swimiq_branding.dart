@@ -13,6 +13,7 @@ abstract final class SwimIqBranding {
   ];
 
   static const heroCandidates = [
+    'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_hero.png',
     'assets/images/swimiq_logo.png',
     'assets/branding/hero.png',

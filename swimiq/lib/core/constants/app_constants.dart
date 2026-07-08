@@ -1,7 +1,7 @@
 class AppConstants {
   static const appName = 'SwimIQ';
   static const trademark = 'SwimIQ™';
-  /// Shown only when no swimiq_hero.png is bundled. Your PNG should include logo + tagline.
+  /// Icon-only branding (swimiq_icon.png). No hero banner asset used.
   static const tagline = '';
   static const founder = 'Kara Williams';
   static const copyright = '© 2026 SwimIQ™';
