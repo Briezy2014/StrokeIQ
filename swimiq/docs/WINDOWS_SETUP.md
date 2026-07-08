@@ -96,6 +96,19 @@ Move Flutter to `C:\flutter` and update PATH, **or** let `FIX-KARA-PATHS.bat` cr
 
 ---
 
+## `supabase is not recognized` in PowerShell
+
+That means the **Supabase CLI is not installed** — it is **not required** to run SwimIQ in Chrome.
+
+| What you want | What to run |
+|---------------|-------------|
+| **Open the app** | `KARA-CLICK-THIS.bat` |
+| **Deploy AI video / Stripe** | Install CLI first — see **[SUPABASE_CLI_WINDOWS.md](SUPABASE_CLI_WINDOWS.md)** or double-click **`INSTALL-SUPABASE-CLI.bat`** |
+
+Do **not** confuse `supabase login` with launching the Flutter app. They are separate steps.
+
+---
+
 ## Logos
 
 Brand files live in `assets\branding\` (`swimiq_icon.png`, `swimiq_hero.png`, `swimiq_logo.png`).  
