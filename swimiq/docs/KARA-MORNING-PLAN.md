@@ -25,7 +25,8 @@ Branch to use today: **`cursor/windows-chrome-spaces-fix-17e8`**
 ## Golden rules (avoid overnight errors)
 
 1. **Never** run `flutter run -d chrome` from VS Code or a random terminal.
-2. **Always** double-click **`SWIMIQ-CHROME-NOW.bat`** for local preview.
+2. **Never** type `S:\swimiq\scripts\launch-chrome-tonight.ps1` — that path often does not exist yet.
+3. **Always** double-click **`START-HERE.bat`** or **`SWIMIQ-CHROME-NOW.bat`** for local preview.
 3. **Always** double-click **`SWIMIQ-BUILD-GODADDY-NOW.bat`** for GoDaddy build.
 4. Your Windows username has a **space** (`Kara Williams`) — launchers map **S:** and **F:** drives for you.
 5. After a launcher runs, you should see work happening on **`S:\swimiq`**.
@@ -91,7 +92,10 @@ Save and close Notepad.
 ## Phase 4 — Preview in Chrome (5–10 minutes first time)
 
 1. Close any old Flutter/Chrome windows.
-2. Double-click **`SWIMIQ-CHROME-NOW.bat`** (not `LAUNCH-CHROME.bat`, not VS Code F5).
+2. In **File Explorer**, open folder  
+   `C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ\swimiq`
+3. Double-click **`START-HERE.bat`** (or **`SWIMIQ-CHROME-NOW.bat`**).
+4. **Do not** paste PowerShell commands with `S:\swimiq\scripts\...` — use the `.bat` files only.
 3. Wait **1–2 minutes** — first run runs `pub get`.
 4. Chrome should open SwimIQ login.
 
@@ -103,6 +107,43 @@ Save and close Notepad.
 | `directory name is invalid` (subst) | Pull latest branch; launcher now steps to `C:\` before mapping S: |
 | `.env needs real SUPABASE_URL` | Fix Phase 3 |
 | `assets/.env 404` | Same — launcher passes `--dart-define`; don’t use raw `flutter run` |
+| `launch-chrome-tonight.ps1 does not exist` | **Wrong command.** Use **`START-HERE.bat`** — never type `S:\swimiq\scripts\...` by hand |
+
+---
+
+## Fix right now (if scripts path failed)
+
+You are already in the right folder if PowerShell shows `...\StrokeIQ\swimiq>`.
+
+**Step A — see what you have:**
+
+```powershell
+dir START-HERE.bat
+dir SWIMIQ-CHROME-NOW.bat
+dir scripts
+```
+
+**Step B — if START-HERE.bat is missing, pull again:**
+
+```powershell
+git pull origin cursor/windows-chrome-spaces-fix-17e8
+```
+
+**Step C — if scripts folder is empty, restore:**
+
+Double-click **`RESTORE-SCRIPTS.bat`** in File Explorer (in the swimiq folder).
+
+**Step D — launch (use real path, NOT S:):**
+
+Double-click **`START-HERE.bat`** in File Explorer.
+
+Or in PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ\swimiq\SWIMIQ-CHROME-NOW.ps1"
+```
+
+Note: quotes around the full path because of the space in **Kara Williams**.
 
 ---
 

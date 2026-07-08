@@ -5,6 +5,9 @@ echo.
 echo === SwimIQ Diagnose ===
 echo Folder: %CD%
 echo.
+echo --- START HERE (double-click this) ---
+if exist "%~dp0START-HERE.bat" (echo [OK] START-HERE.bat) else (echo [MISSING] START-HERE.bat)
+echo.
 echo --- one-click launchers (USE THESE) ---
 if exist "%~dp0SWIMIQ-CHROME-NOW.bat" (echo [OK] SWIMIQ-CHROME-NOW.bat) else (echo [MISSING] SWIMIQ-CHROME-NOW.bat)
 if exist "%~dp0SWIMIQ-CHROME-NOW.ps1" (echo [OK] SWIMIQ-CHROME-NOW.ps1) else (echo [MISSING] SWIMIQ-CHROME-NOW.ps1)
