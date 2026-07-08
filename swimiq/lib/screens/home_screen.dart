@@ -36,12 +36,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     'AI Dryland Coach — strength, core & mobility',
   ];
 
-  static const _eliteTeaser = [
-    'AI Stroke Analysis — mechanics, kick, turns & more',
-    'Race Intelligence — pacing, splits & fatigue detection',
-    'AI Performance Reports & race strategy',
-  ];
-
   Widget _proGate(Widget child) {
     return SubscriptionGatedScreen(
       minimumTier: SubscriptionTier.pro,

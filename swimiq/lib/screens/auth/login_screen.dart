@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -179,15 +180,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: const Text('Create an account'),
                         ),
                         const SizedBox(height: 8),
-                        OutlinedButton(
-                          onPressed: _isLoading ? null : _demoLogin,
-                          child: const Text('Coach demo login'),
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: _isLoading ? null : _ownerLogin,
-                          child: const Text('Owner test login (Elite AI)'),
-                        ),
+                        if (!kReleaseMode) ...[
+                          OutlinedButton(
+                            onPressed: _isLoading ? null : _demoLogin,
+                            child: const Text('Coach demo login'),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: _isLoading ? null : _ownerLogin,
+                            child: const Text('Owner test login (Elite AI)'),
+                          ),
+                        ],
                       ],
                     ),
                   ),

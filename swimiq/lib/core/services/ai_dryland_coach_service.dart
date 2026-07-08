@@ -22,7 +22,7 @@ class AiDrylandCoachPlan {
     required this.primaryStroke,
     required this.workoutBlocks,
     required this.recoveryNotes,
-    required this.injuryPrevention,
+    required this.injuryPreventionAndStability,
     required this.engineLabel,
   });
 
@@ -30,7 +30,7 @@ class AiDrylandCoachPlan {
   final String primaryStroke;
   final List<DrylandWorkoutBlock> workoutBlocks;
   final String recoveryNotes;
-  final String injuryPrevention;
+  final String injuryPreventionAndStability;
   final String engineLabel;
 }
 
@@ -59,7 +59,7 @@ class AiDrylandCoachService {
         _mobilityBlock(stroke),
       ],
       recoveryNotes: _recoveryNotes(sessionsThisWeek),
-      injuryPrevention: _injuryPrevention(stroke),
+      injuryPreventionAndStability: _injuryPreventionAndStability(stroke),
       engineLabel: engineLabel,
     );
   }
@@ -171,7 +171,7 @@ class AiDrylandCoachService {
         'and focus on movement quality.';
   }
 
-  static String _injuryPrevention(String stroke) {
+  static String _injuryPreventionAndStability(String stroke) {
     return switch (stroke) {
       'Butterfly' =>
         'Watch shoulder volume — pair pull-heavy days with band external rotation. '

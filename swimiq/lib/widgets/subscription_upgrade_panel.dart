@@ -107,19 +107,29 @@ class SubscriptionGatedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (AppConstants.unlockAllTabsForPreview) return child;
 
-    final subscription = ref.watch(subscriptionStateProvider).value;
-    if (subscription == null ||
-        !SubscriptionCapabilities.meetsMinimumTier(
-          subscription,
-          minimumTier,
-        )) {
-      return SubscriptionUpgradePanel(
+    final subscriptionAsync = ref.watch(subscriptionStateProvider);
+    return subscriptionAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => SubscriptionUpgradePanel(
         minimumTier: minimumTier,
         title: title,
         message: message,
         teaserFeatures: teaserFeatures,
-      );
-    }
-    return child;
+      ),
+      data: (subscription) {
+        if (!SubscriptionCapabilities.meetsMinimumTier(
+          subscription,
+          minimumTier,
+        )) {
+          return SubscriptionUpgradePanel(
+            minimumTier: minimumTier,
+            title: title,
+            message: message,
+            teaserFeatures: teaserFeatures,
+          );
+        }
+        return child;
+      },
+    );
   }
 }

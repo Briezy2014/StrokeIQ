@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../config/env.dart';
-import '../core/theme/app_theme.dart';
-import '../providers/app_providers.dart';
-import '../providers/swimmer_data_provider.dart';
-import '../services/auth_service.dart';
+import 'config/env.dart';
+import 'core/theme/app_theme.dart';
+import 'providers/app_providers.dart';
+import 'providers/swimmer_data_provider.dart';
+import 'services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home_screen.dart';

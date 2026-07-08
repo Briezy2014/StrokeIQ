@@ -185,9 +185,9 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
         final subscription = ref.watch(subscriptionStateProvider).value;
-        final canRunAi = subscription == null ||
+        final canRunAi = subscription != null &&
             SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription);
-        final hasPro = subscription == null ||
+        final hasPro = subscription != null &&
             SubscriptionCapabilities.canUseProFeatures(subscription);
 
         return ListView(
@@ -270,7 +270,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             if (videos.isEmpty)
               const EmptyStateMessage(
                 message:
-                    'No videos yet. Upload a swim video to start AI analysis.',
+                    'No videos yet. Upload a swim video to build your library. '
+                    'Elite unlocks AI stroke analysis.',
               )
             else
               ...videos.map(

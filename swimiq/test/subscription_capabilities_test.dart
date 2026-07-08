@@ -73,6 +73,14 @@ void main() {
     expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isFalse);
   });
 
+  test('subscription loading locks pro tabs until loaded', () {
+    expect(SubscriptionCapabilities.canAccessHomeTab(0, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(4, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(5, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(6, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(7, null), isFalse);
+  });
+
   test('pro tier unlocks competitive tools but not elite ai', () {
     const state = SubscriptionState(
       tier: SubscriptionTier.pro,

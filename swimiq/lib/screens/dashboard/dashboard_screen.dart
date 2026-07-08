@@ -38,9 +38,9 @@ class DashboardScreen extends ConsumerWidget {
         final hasAnyActivity = logs.isNotEmpty || meetResults.isNotEmpty;
 
         final subscription = ref.watch(subscriptionStateProvider).value;
-        final showProFeatures = subscription == null ||
+        final showProFeatures = subscription != null &&
             SubscriptionCapabilities.canUseProFeatures(subscription);
-        final showEliteFeatures = subscription == null ||
+        final showEliteFeatures = subscription != null &&
             SubscriptionCapabilities.hasEliteAccess(subscription);
 
         if (!hasAnyActivity) {
@@ -546,7 +546,7 @@ class _DrylandCoachCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Personalized strength, core, mobility & recovery',
+                      'Personalized strength, core, mobility, stability & recovery',
                       style: TextStyle(color: Colors.grey.shade700),
                     ),
                   ],

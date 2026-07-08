@@ -119,7 +119,9 @@ class SubscriptionCapabilities {
   }
 
   static bool canAccessHomeTab(int tabIndex, SubscriptionState? state) {
-    if (state == null) return true;
+    if (state == null) {
+      return minimumTierForHomeTab(tabIndex) == SubscriptionTier.basic;
+    }
     return meetsMinimumTier(state, minimumTierForHomeTab(tabIndex));
   }
 

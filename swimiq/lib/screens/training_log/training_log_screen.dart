@@ -22,7 +22,7 @@ class TrainingLogScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
-  int _tabIndex = 1;
+  int _tabIndex = 0;
 
   @override
   Widget build(BuildContext context) {

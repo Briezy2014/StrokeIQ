@@ -681,8 +681,8 @@ class _PassportHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final strokeLabel = _passportLabel(primaryStroke);
     final specialist = strokeLabel == 'Not added yet'
-        ? 'Not added yet Specialist'
-        : '$strokeLabel Specialist';
+        ? 'Add primary stroke in passport'
+        : '$strokeLabel specialist';
     final classOf = graduationYear?.toString() ?? 'Not added yet';
     final coachLabel = _passportLabel(coach);
     final subtitle = 'Coach: $coachLabel · $specialist · Class of $classOf';

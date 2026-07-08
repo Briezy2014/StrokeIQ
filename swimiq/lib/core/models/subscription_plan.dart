@@ -94,7 +94,7 @@ abstract final class SubscriptionCatalog {
         'Official PBs, meet results & USA Swimming standards',
         'Athlete Passport & Recruiting Snapshot',
         'Video Lab (upload & organize videos)',
-        'AI Dryland Coach — strength, core, mobility & recovery',
+        'AI Dryland Coach — strength, core, mobility, injury prevention & stability',
         'Event-specific improvement recommendations',
         'Goal progression tracking',
         'Perfect for competitive swimmers complementing their coach\'s plan',

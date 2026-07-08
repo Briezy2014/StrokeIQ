@@ -255,7 +255,6 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                     subtitle:
                         '${result.meetName} · ${dateFormat.format(result.meetDate)} · '
                         '${cut ?? 'Below B'} cut',
-                    trailing: SwimTime.fromSeconds(result.swimTime),
                     highlight: cut == snapshot.highestCut,
                     trailingActions: Row(
                       mainAxisSize: MainAxisSize.min,

@@ -6,7 +6,6 @@ import '../../core/models/subscription_plan.dart';
 import '../../core/services/ai_dryland_coach_service.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
-import '../../providers/app_providers.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -25,7 +24,7 @@ class AiDrylandCoachScreen extends ConsumerWidget {
       teaserFeatures: const [
         'Personalized dryland workouts',
         'Strength, core & mobility plans',
-        'Injury prevention & recovery guidance',
+        'Injury prevention, stability & recovery guidance',
         'Official PBs, meets & Athlete Passport',
       ],
       child: SwimmerScreen(
@@ -61,8 +60,8 @@ class AiDrylandCoachScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _FocusCard(
-                title: 'Injury prevention',
-                body: plan.injuryPrevention,
+                title: 'Injury prevention & stability',
+                body: plan.injuryPreventionAndStability,
                 icon: Icons.health_and_safety_outlined,
               ),
               const SizedBox(height: 12),

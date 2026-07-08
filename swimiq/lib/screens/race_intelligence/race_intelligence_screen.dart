@@ -4,12 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/swimiq_quotes.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/race_intelligence_service.dart';
-import '../../core/subscription/subscription_capabilities.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_ui.dart';
 
 class RaceIntelligenceScreen extends ConsumerStatefulWidget {
   const RaceIntelligenceScreen({super.key});

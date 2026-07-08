@@ -8,14 +8,14 @@ class SwimIqEventCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    required this.trailing,
+    this.trailing,
     this.highlight = false,
     this.trailingActions,
   });
 
   final String title;
   final String subtitle;
-  final String trailing;
+  final String? trailing;
   final bool highlight;
   final Widget? trailingActions;
 
@@ -66,7 +66,7 @@ class SwimIqEventCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                trailing,
+                trailing ?? '',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
