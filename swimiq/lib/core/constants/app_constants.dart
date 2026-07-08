@@ -6,8 +6,8 @@ class AppConstants {
   static const founder = 'Kara Williams';
   static const copyright = '© 2026 SwimIQ™';
 
-  /// Set false before public launch to gray out paid tabs.
-  static const unlockAllTabsForPreview = true;
+  /// Set false to enforce Basic / Pro / Elite tab gates (before public launch).
+  static const unlockAllTabsForPreview = false;
 
   /// Official 2024-2028 USA Swimming age-group brackets from the motivational PDF.
   static const ageGroups = [

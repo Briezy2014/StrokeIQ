@@ -265,7 +265,27 @@ class _PlanCard extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                 ),
-                if (plan.isFeatured) ...[
+                if (plan.badgeLabel != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: plan.isFeatured
+                          ? AppColors.primary
+                          : AppColors.primaryDeep,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      plan.badgeLabel!.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ] else if (plan.isFeatured) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding:

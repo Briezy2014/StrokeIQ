@@ -178,12 +178,13 @@ void main() {
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
       expect(find.textContaining('Passport'), findsWidgets);
       await tester.scrollUntilVisible(
-        find.text('Unlock the Elite wild factor'),
+        find.text('Recent Activity'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('Unlock the Elite wild factor'), findsOneWidget);
+      expect(find.text('Recent Activity'), findsOneWidget);
+      expect(find.text('Unlock the Elite wild factor'), findsNothing);
     });
 
     testWidgets('Athlete Passport', (tester) async {

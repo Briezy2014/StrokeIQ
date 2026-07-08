@@ -8,6 +8,9 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../core/constants/swimiq_quotes.dart';
+import '../../core/models/subscription_plan.dart';
+import '../../core/services/subscription_service.dart';
+import '../../core/theme/app_theme.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
@@ -17,6 +20,7 @@ import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/video_analysis_report.dart';
+import '../membership/membership_screen.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
   const VideoLabScreen({super.key});
@@ -180,6 +184,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final dateFormat = DateFormat.yMMMd();
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final canRunAi = subscription == null ||
+            SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription);
+        final hasPro = subscription == null ||
+            SubscriptionCapabilities.canUseProFeatures(subscription);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -187,13 +196,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           children: [
             SwimIqPageHero(
               title: 'Video Lab',
-              subtitle: 'AI coaching from your race footage',
+              subtitle: canRunAi
+                  ? 'AI coaching from your race footage'
+                  : hasPro
+                      ? 'Upload & review — AI analysis is Elite'
+                      : 'Pro unlocks video library',
               quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.videoLab),
               stats: [
                 SwimIqHeroStat('${videos.length} videos'),
                 SwimIqHeroStat('${data.userFacingVideoAnalyses.length} analyses'),
               ],
             ),
+            if (hasPro && !canRunAi) ...[
+              const SizedBox(height: 12),
+              _VideoLabEliteBanner(subscription: subscription),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,
@@ -263,6 +280,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   dateFormat: dateFormat,
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
+                  canRunAi: canRunAi,
                   motivationalCut: _videoMotivationalCut(data, video),
                   onCoachNotesChanged: video.id == null
                       ? null
@@ -281,6 +299,69 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 }
 
+class _VideoLabEliteBanner extends StatelessWidget {
+  const _VideoLabEliteBanner({this.subscription});
+
+  final SubscriptionState? subscription;
+
+  @override
+  Widget build(BuildContext context) {
+    final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
+    final message = subscription != null
+        ? SubscriptionCapabilities.eliteGateMessage(subscription!)
+        : 'SwimIQ Elite unlocks AI video analysis, Race Intelligence, and '
+            'advanced performance planning.';
+
+    return Card(
+      color: AppColors.textDark,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  elite.name,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.92),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.textDark,
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MembershipScreen(),
+                  ),
+                );
+              },
+              child: Text('Upgrade to ${elite.name}'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _VideoCard extends StatefulWidget {
   const _VideoCard({
     required this.video,
@@ -288,6 +369,7 @@ class _VideoCard extends StatefulWidget {
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
+    required this.canRunAi,
     this.motivationalCut,
     this.onCoachNotesChanged,
   });
@@ -297,6 +379,7 @@ class _VideoCard extends StatefulWidget {
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
+  final bool canRunAi;
   final String? motivationalCut;
   final ValueChanged<String>? onCoachNotesChanged;
 
@@ -372,15 +455,23 @@ class _VideoCardState extends State<_VideoCard> {
               ),
             ],
             if (widget.analysis == null)
-              FilledButton.tonal(
+              FilledButton.tonalIcon(
                 onPressed: widget.analyzing ? null : widget.onAnalyze,
-                child: widget.analyzing
+                icon: widget.analyzing
                     ? const SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Run AI Swim Analysis'),
+                    : Icon(
+                        widget.canRunAi ? Icons.auto_awesome : Icons.lock_outline,
+                        size: 18,
+                      ),
+                label: Text(
+                  widget.canRunAi
+                      ? 'Run AI Swim Analysis'
+                      : 'Run AI Swim Analysis (Elite)',
+                ),
               )
             else ...[
               const SizedBox(height: 12),

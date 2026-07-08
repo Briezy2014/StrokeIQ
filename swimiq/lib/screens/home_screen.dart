@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/models/subscription_plan.dart';
 import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
+import '../widgets/subscription_upgrade_panel.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -27,24 +29,47 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  static const _proTeaser = [
+    'Personal bests & meet results',
+    'Goals with progress charts',
+    'Athlete Passport & recruiting snapshot',
+    'Video library & daily rope climb',
+  ];
+
+  static const _eliteTeaser = [
+    'SwimIQ AI video analysis',
+    'Race Intelligence meet-day plans',
+    'AI nutrition & warmup guidance',
+  ];
+
+  Widget _proGate(Widget child) {
+    return SubscriptionGatedScreen(
+      minimumTier: SubscriptionTier.pro,
+      title: 'Unlock SwimIQ Pro',
+      message: SubscriptionCapabilities.proGateMessage(),
+      teaserFeatures: _proTeaser,
+      child: child,
+    );
+  }
+
   Widget _screenAt(int index) {
     switch (index) {
       case HomeTab.dashboard:
         return const DashboardScreen();
       case HomeTab.personalBests:
-        return const PersonalBestsScreen();
+        return _proGate(const PersonalBestsScreen());
       case HomeTab.trainingLog:
         return const TrainingLogScreen();
       case HomeTab.addSession:
         return const AddSessionScreen();
       case HomeTab.goals:
-        return const GoalsScreen();
+        return _proGate(const GoalsScreen());
       case HomeTab.meetResults:
-        return const MeetResultsScreen();
+        return _proGate(const MeetResultsScreen());
       case HomeTab.videoLab:
-        return const VideoLabScreen();
+        return _proGate(const VideoLabScreen());
       case HomeTab.passport:
-        return const AthletePassportV2Screen();
+        return _proGate(const AthletePassportV2Screen());
       default:
         return const DashboardScreen();
     }
@@ -52,26 +77,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   bool _tabLocked(int index, SubscriptionState? subscription) {
     if (AppConstants.unlockAllTabsForPreview) return false;
-    if (subscription == null) return false;
-    switch (index) {
-      case HomeTab.videoLab:
-        return !SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription);
-      case HomeTab.passport:
-        return !SubscriptionCapabilities.hasProAccess(subscription);
-      default:
-        return false;
-    }
+    return !SubscriptionCapabilities.canAccessHomeTab(index, subscription);
   }
 
   void _onTabSelected(int index) {
     final subscription = ref.read(subscriptionStateProvider).value;
     if (_tabLocked(index, subscription)) {
+      final minTier = SubscriptionCapabilities.minimumTierForHomeTab(index);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            index == HomeTab.videoLab
+            minTier == SubscriptionTier.elite
                 ? SubscriptionCapabilities.eliteGateMessage(subscription!)
-                : 'Upgrade to Pro or Elite to unlock this tab.',
+                : SubscriptionCapabilities.proGateMessage(),
           ),
           action: SnackBarAction(
             label: 'Plans',

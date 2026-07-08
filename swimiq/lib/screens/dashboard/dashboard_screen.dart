@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/motivational_cut.dart';
@@ -35,26 +36,13 @@ class DashboardScreen extends ConsumerWidget {
         final personalBests = data.personalBests;
         final hasAnyActivity = logs.isNotEmpty || meetResults.isNotEmpty;
 
-        if (!hasAnyActivity) {
-          final daily = SwimIqDailyProgress.calculate(
-            raceLogs: logs,
-            meetResults: meetResults,
-            videos: data.userFacingVideos,
-            goals: data.goals,
-            overallSwimIqScore: 0,
-          );
-          final badges = SwimIqBadgeCatalog.evaluate(
-            daily: daily,
-            raceLogs: logs,
-            meetResults: meetResults,
-            goals: data.goals,
-            personalBests: personalBests,
-            videos: data.userFacingVideos,
-            analyses: data.userFacingVideoAnalyses,
-            profile: data.profile,
-            snapshot: data.passportSnapshot(swimmer),
-          );
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final showProFeatures = subscription == null ||
+            SubscriptionCapabilities.canUseProFeatures(subscription);
+        final showEliteFeatures = subscription == null ||
+            SubscriptionCapabilities.hasEliteAccess(subscription);
 
+        if (!hasAnyActivity) {
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -62,29 +50,60 @@ class DashboardScreen extends ConsumerWidget {
               _DashboardHero(
                 displayName: data.displayName(swimmer),
                 swimIqScore: 0,
-                highestCut: 'Start logging',
+                highestCut: showProFeatures ? 'Start logging' : 'Upgrade for cuts',
                 spotlight: null,
                 profile: data.profile,
                 catalog: data.motivationalStandards,
               ),
               const SizedBox(height: 16),
-              SwimIqRopeClimbCard(daily: daily, badges: badges),
-              const SizedBox(height: 16),
+              if (showProFeatures) ...[
+                SwimIqRopeClimbCard(
+                  daily: SwimIqDailyProgress.calculate(
+                    raceLogs: logs,
+                    meetResults: meetResults,
+                    videos: data.userFacingVideos,
+                    goals: data.goals,
+                    overallSwimIqScore: 0,
+                  ),
+                  badges: SwimIqBadgeCatalog.evaluate(
+                    daily: SwimIqDailyProgress.calculate(
+                      raceLogs: logs,
+                      meetResults: meetResults,
+                      videos: data.userFacingVideos,
+                      goals: data.goals,
+                      overallSwimIqScore: 0,
+                    ),
+                    raceLogs: logs,
+                    meetResults: meetResults,
+                    goals: data.goals,
+                    personalBests: personalBests,
+                    videos: data.userFacingVideos,
+                    analyses: data.userFacingVideoAnalyses,
+                    profile: data.profile,
+                    snapshot: data.passportSnapshot(swimmer),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                const _DashboardProUpsell(),
+                const SizedBox(height: 16),
+              ],
               const EmptyStateMessage(
                 message:
-                    'No swim sessions or meet results yet. Log training or add a meet result to unlock your dashboard.',
+                    'No swim sessions or meet results yet. Log training on the Log tab to get started.',
               ),
               const SizedBox(height: 20),
-              ScheduleDepositorySection(
-                compact: true,
-                onOpenRaceIntelligence: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RaceIntelligenceScreen(),
-                    ),
-                  );
-                },
-              ),
+              if (showProFeatures)
+                ScheduleDepositorySection(
+                  compact: true,
+                  onOpenRaceIntelligence: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const RaceIntelligenceScreen(),
+                      ),
+                    );
+                  },
+                ),
             ],
           );
         }
@@ -95,7 +114,6 @@ class DashboardScreen extends ConsumerWidget {
           catalog: data.motivationalStandards,
           profile: data.profile,
         );
-        final subscription = ref.watch(subscriptionStateProvider).value;
         final dateFormat = DateFormat.yMMMd();
         final daily = SwimIqDailyProgress.calculate(
           raceLogs: logs,
@@ -123,43 +141,42 @@ class DashboardScreen extends ConsumerWidget {
             _DashboardHero(
               displayName: data.displayName(swimmer),
               swimIqScore: data.swimIqScore,
-              highestCut: snapshot.highestCut,
-              spotlight: spotlight,
+              highestCut: showProFeatures ? snapshot.highestCut : 'Upgrade for cuts',
+              spotlight: showProFeatures ? spotlight : null,
               profile: data.profile,
               catalog: data.motivationalStandards,
             ),
             const SizedBox(height: 16),
-            SwimIqRopeClimbCard(daily: daily, badges: badges),
-            const SizedBox(height: 16),
-            _ActivityStrip(
-              sessions: logs.length,
-              goals: data.goals.length,
-              meets: meetResults.length,
-              personalBests: personalBests.length,
-              videos: data.userFacingVideoAnalyses.length,
-            ),
-            const SizedBox(height: 16),
-            ScheduleDepositorySection(
-              compact: true,
-              onOpenRaceIntelligence: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RaceIntelligenceScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            _UpgradeCard(
-              subscriptionLabel: subscription?.statusLabel ?? 'Elite trial',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const MembershipScreen(),
-                  ),
-                );
-              },
-            ),
+            if (showProFeatures) ...[
+              SwimIqRopeClimbCard(daily: daily, badges: badges),
+              const SizedBox(height: 16),
+              _ActivityStrip(
+                sessions: logs.length,
+                goals: data.goals.length,
+                meets: meetResults.length,
+                personalBests: personalBests.length,
+                videos: data.userFacingVideoAnalyses.length,
+              ),
+              const SizedBox(height: 16),
+              ScheduleDepositorySection(
+                compact: true,
+                onOpenRaceIntelligence: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const RaceIntelligenceScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              const _DashboardProUpsell(),
+              const SizedBox(height: 16),
+            ],
+            if (showProFeatures && !showEliteFeatures) ...[
+              const _DashboardEliteUpsell(),
+              const SizedBox(height: 16),
+            ],
             const SizedBox(height: 24),
             Text(
               'Recent Activity',
@@ -168,25 +185,39 @@ class DashboardScreen extends ConsumerWidget {
                   ),
             ),
             const SizedBox(height: 12),
-            ...personalBests.take(5).map(
-              (pb) {
-                final cut = MotivationalCut.labelForSwim(
-                  catalog: data.motivationalStandards,
-                  profile: data.profile,
-                  stroke: pb.stroke,
-                  distance: pb.distance,
-                  course: pb.course,
-                  timeSeconds: pb.timeSeconds,
-                );
-                return _ActivityTile(
-                  title: pb.displayTitle,
-                  subtitle:
-                      '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)} · $cut cut',
-                  trailing: pb.formattedTime,
-                  highlight: cut == snapshot.highestCut,
-                );
-              },
-            ),
+            if (showProFeatures)
+              ...personalBests.take(5).map(
+                (pb) {
+                  final cut = MotivationalCut.labelForSwim(
+                    catalog: data.motivationalStandards,
+                    profile: data.profile,
+                    stroke: pb.stroke,
+                    distance: pb.distance,
+                    course: pb.course,
+                    timeSeconds: pb.timeSeconds,
+                  );
+                  return _ActivityTile(
+                    title: pb.displayTitle,
+                    subtitle:
+                        '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)} · $cut cut',
+                    trailing: pb.formattedTime,
+                    highlight: cut == snapshot.highestCut,
+                  );
+                },
+              )
+            else if (logs.isEmpty)
+              const EmptyStateMessage(
+                message:
+                    'Log a training session on the Log tab. Upgrade to Pro for PBs, meets, goals, and passport.',
+              )
+            else
+              ...logs.take(5).map(
+                (log) => _ActivityTile(
+                  title: log.event,
+                  subtitle: dateFormat.format(log.date),
+                  trailing: SwimTime.fromSeconds(log.timeSeconds),
+                ),
+              ),
             if (logs.isNotEmpty) ...[
               const SizedBox(height: 24),
               Text(
@@ -469,70 +500,199 @@ class _ChipStat extends StatelessWidget {
   }
 }
 
-class _UpgradeCard extends StatelessWidget {
-  const _UpgradeCard({
-    required this.subscriptionLabel,
-    required this.onTap,
-  });
+class _DashboardProUpsell extends StatelessWidget {
+  const _DashboardProUpsell();
 
-  final String subscriptionLabel;
-  final VoidCallback onTap;
+  static const _features = [
+    'Personal bests & USA motivational cuts',
+    'Meet results & goals with progress',
+    'Athlete Passport & video library',
+    'Daily rope climb & badges',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final pro = SubscriptionCatalog.planFor(SubscriptionTier.pro);
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.workspace_premium, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    pro.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    (pro.badgeLabel ?? 'Most Popular').toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You are on Basic — great for logging. Upgrade to Pro when you want '
+              'analytics, PBs, meets, goals, and passport.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.4,
+                  ),
+            ),
+            const SizedBox(height: 14),
+            ..._features.map(
+              (feature) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.lock_outline,
+                        size: 18, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(feature)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MembershipScreen(),
+                  ),
+                );
+              },
+              child: Text('Upgrade to ${pro.name}'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardEliteUpsell extends StatelessWidget {
+  const _DashboardEliteUpsell();
+
+  static const _features = [
+    'SwimIQ AI video analysis',
+    'Race Intelligence meet-day plans',
+    'AI nutrition & warmup guidance',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Ink(
+    return Card(
+      color: AppColors.textDark,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: Padding(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.textDark,
-              AppColors.primaryDeep,
-            ],
-          ),
-        ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    subscriptionLabel.toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                      fontSize: 11,
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    elite.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
                   ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Unlock the Elite wild factor',
-                    style: TextStyle(
+                  child: Text(
+                    (elite.badgeLabel ?? 'Advanced AI Performance').toUpperCase(),
+                    style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'AI video coach, pose metrics, and race intelligence from '
-                    '${elite.priceLabel(BillingCycle.monthly)}.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      height: 1.35,
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You have Pro analytics. Elite adds AI coaching from your race footage '
+              'and meet-day intelligence.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.92),
+                height: 1.4,
               ),
             ),
-            const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+            const SizedBox(height: 14),
+            ..._features.map(
+              (feature) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.auto_awesome_outlined,
+                        size: 18, color: Colors.white.withValues(alpha: 0.9)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        feature,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.95),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.textDark,
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MembershipScreen(),
+                  ),
+                );
+              },
+              child: Text('Upgrade to ${elite.name}'),
+            ),
           ],
         ),
       ),

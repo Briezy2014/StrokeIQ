@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/swimiq_quotes.dart';
+import '../../core/models/subscription_plan.dart';
 import '../../core/services/race_intelligence_service.dart';
+import '../../core/subscription/subscription_capabilities.dart';
+import '../../widgets/subscription_upgrade_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -21,8 +24,18 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return SubscriptionGatedScreen(
+      minimumTier: SubscriptionTier.elite,
+      title: 'Unlock SwimIQ Elite',
+      message: 'Race Intelligence is included with Elite — meet-day checklists, '
+          'warmup plans, and AI nutrition guidance.',
+      teaserFeatures: const [
+        'SwimIQ AI video analysis',
+        'Race Intelligence meet-day plans',
+        'Advanced performance planning',
+      ],
+      child: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final plan = RaceIntelligenceService.build(
           data: data,
           swimmer: swimmer,
@@ -180,6 +193,7 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
           ],
         );
       },
+    ),
     );
   }
 }

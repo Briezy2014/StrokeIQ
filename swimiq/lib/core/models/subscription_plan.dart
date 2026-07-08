@@ -10,7 +10,8 @@ class SubscriptionPlan {
     required this.monthlyPriceUsd,
     required this.annualPriceUsd,
     required this.features,
-    required this.isFeatured,
+    this.isFeatured = false,
+    this.badgeLabel,
   });
 
   final SubscriptionTier tier;
@@ -20,6 +21,7 @@ class SubscriptionPlan {
   final double annualPriceUsd;
   final List<String> features;
   final bool isFeatured;
+  final String? badgeLabel;
 
   double priceFor(BillingCycle cycle) =>
       cycle == BillingCycle.monthly ? monthlyPriceUsd : annualPriceUsd;
@@ -63,45 +65,51 @@ abstract final class SubscriptionCatalog {
   static const plans = [
     SubscriptionPlan(
       tier: SubscriptionTier.basic,
-      name: 'Basic',
-      tagline: 'Train smarter every day',
+      name: 'SwimIQ Basic',
+      tagline: 'Logs & simple training tracking',
       monthlyPriceUsd: 4.99,
       annualPriceUsd: 39.99,
       isFeatured: false,
       features: [
-        'SwimIQ Dashboard',
-        'Training log',
-        'Goals tracking',
+        'Training log & add session',
+        'Simple dashboard overview',
         'Session history',
+        'Perfect for casual swimmers & parents',
       ],
     ),
     SubscriptionPlan(
       tier: SubscriptionTier.pro,
-      name: 'Pro',
-      tagline: 'Competition-ready analytics',
+      name: 'SwimIQ Pro',
+      tagline: 'Analytics, goals & race tracking',
       monthlyPriceUsd: 9.99,
       annualPriceUsd: 89.99,
-      isFeatured: false,
+      isFeatured: true,
+      badgeLabel: 'Most Popular',
       features: [
         'Everything in Basic',
-        'Personal bests + meet results',
-        'Motivational cuts & USA standards',
-        'Athlete Passport',
+        'Personal bests & meet results',
+        'Goals with progress tracking',
+        'Athlete Passport & recruiting snapshot',
+        'USA motivational cuts & standards',
+        'Video library (upload & review)',
+        'Daily rope climb & badges',
       ],
     ),
     SubscriptionPlan(
       tier: SubscriptionTier.elite,
-      name: 'Elite',
-      tagline: 'The full SwimIQ performance stack',
+      name: 'SwimIQ Elite',
+      tagline: 'Advanced AI performance coaching',
       monthlyPriceUsd: 19.99,
       annualPriceUsd: 149.99,
-      isFeatured: true,
+      isFeatured: false,
+      badgeLabel: 'Advanced AI Performance',
       features: [
         'Everything in Pro',
-        'Video Lab + SwimIQ AI coach',
-        'Pose metrics & race intelligence',
-        'Priority dashboard insights',
-        'Recruiting center',
+        'SwimIQ AI video analysis',
+        'Race Intelligence meet-day plans',
+        'AI nutrition & warmup guidance',
+        'Priority performance insights',
+        'Built for high-performance families & coaches',
       ],
     ),
   ];
