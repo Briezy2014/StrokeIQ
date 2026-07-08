@@ -16,14 +16,20 @@ Do **not** commit the key to git or paste it in chat.
 
 ## 2. Deploy the Edge Function
 
-Install the [Supabase CLI](https://supabase.com/docs/guides/cli) on a computer, then:
+Install the [Supabase CLI](https://supabase.com/docs/guides/cli) on a computer.
+
+**Windows (Kara):** see **[SUPABASE_CLI_WINDOWS.md](SUPABASE_CLI_WINDOWS.md)** — `supabase` is not installed by default. You can also double-click **`INSTALL-SUPABASE-CLI.bat`** in the `swimiq` folder.
+
+Then:
 
 ```bash
 cd swimiq
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy analyze-swim-video
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase functions deploy analyze-swim-video
 ```
+
+(`npx` works after `npm install supabase --save-dev`, or use `supabase` directly if installed via Scoop.)
 
 `YOUR_PROJECT_REF` is in Supabase → Project Settings → General → Reference ID.
 
