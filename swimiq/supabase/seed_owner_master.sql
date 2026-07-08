@@ -10,7 +10,7 @@
 -- OPTION B — Supabase CLI (if linked to your project):
 --   supabase auth admin create-user --email owner@swimiqapp.com --password SwimIQ-Owner-2026 --email-confirm
 --
--- VERIFY on Windows: double-click TEST-OWNER-LOGIN.bat (must say SUCCESS)
+-- VERIFY: sign in at supabase.com with owner@swimiqapp.com after creating the user.
 --
 -- If login still fails: delete the user in Dashboard and recreate with exact password above.
 

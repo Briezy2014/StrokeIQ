@@ -137,10 +137,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
                               child: Text(
-                                'Owner login only works after you create this user in '
-                                'Supabase Dashboard (Authentication → Users). '
-                                'Run TEST-OWNER-LOGIN.bat on your PC to verify, or sign in with '
-                                'briezy682014@gmail.com / Create an account.',
+                                'This owner account must be created at supabase.com '
+                                '(Authentication → Users → Add user). '
+                                'Or sign in with briezy682014@gmail.com — that account already works.',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Colors.grey.shade800,
                                       height: 1.35,
