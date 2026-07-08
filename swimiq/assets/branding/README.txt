@@ -10,7 +10,7 @@ Export at 512x512 from your designer — this is the one file the app uses.
 Copy to:
   C:\SwimIQWork\swimiq\assets\branding\swimiq_icon.png
 
-Or drag your PNG onto COPY-LOGO.bat in the swimiq folder (also updates web tab icon).
+Or drag your PNG onto **DRAG-LOGO-HERE.bat** or **COPY-LOGO.bat** in the swimiq folder (also updates web tab icon).
 
 WHERE IT SHOWS IN THE APP
 -------------------------

@@ -5,13 +5,14 @@ cd /d "%~dp0"
 if "%~1"=="" (
   echo.
   echo ========================================
-  echo  SwimIQ - COPY LOGO (512x512)
+  echo  SwimIQ - DRAG YOUR LOGO HERE
   echo ========================================
   echo.
-  echo Drag your 512x512 swimiq_icon.png ONTO this file,
-  echo OR run: COPY-LOGO.bat "C:\path\to\your\logo.png"
+  echo Drag your 512x512 swimiq_icon.png ONTO this file.
   echo.
-  echo (Same as DRAG-LOGO-HERE.bat)
+  echo Or run: DRAG-LOGO-HERE.bat "C:\path\to\your\logo.png"
+  echo.
+  echo Same as COPY-LOGO.bat - either file works.
   echo.
   pause
   exit /b 1
