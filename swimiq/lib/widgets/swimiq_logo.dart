@@ -43,6 +43,56 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
+/// Login / signup on white cards: icon in black frame + readable wordmark (no PNG text).
+class SwimIqLoginBrand extends StatelessWidget {
+  const SwimIqLoginBrand({
+    super.key,
+    this.iconSize = 108,
+  });
+
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: SwimIqCompactMark(
+            size: iconSize,
+            borderRadius: 14,
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SwimIqWordmark(fontSize: 34, light: false),
+        const SizedBox(height: 8),
+        Text(
+          'Built in the Water. Driven by Possibility.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Login / splash: full square lockup at readable size (icon + wordmark on black).
 class SwimIqFullLockup extends StatelessWidget {
   const SwimIqFullLockup({

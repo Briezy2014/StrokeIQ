@@ -7,6 +7,21 @@ import 'package:swimiq/core/constants/app_constants.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('login brand uses dark wordmark for white cards', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.white,
+          body: SwimIqLoginBrand(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SwimIqLoginBrand), findsOneWidget);
+    expect(find.byType(SwimIqWordmark), findsOneWidget);
+  });
+
   testWidgets('full lockup widget builds', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
