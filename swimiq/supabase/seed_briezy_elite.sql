@@ -1,4 +1,5 @@
 -- Grant Briezy / founder full Elite access (run once in Supabase SQL Editor).
+-- If you get "relation user_subscriptions does not exist", run setup_briezy_elite.sql instead.
 -- Dashboard -> Authentication -> Users: confirm briezy682014@gmail.com exists.
 
 INSERT INTO user_subscriptions (
