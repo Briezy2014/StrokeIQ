@@ -48,18 +48,20 @@ class SwimIqBrandedFallback extends StatelessWidget {
                   _Mark(size: (height ?? 72) * 0.42),
                   const SizedBox(height: 8),
                   const _Wordmark(fontSize: 22),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppConstants.tagline,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
-                  ),
+                  if (AppConstants.tagline.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      AppConstants.tagline,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                    ),
+                  ],
                 ],
               ),
       ),

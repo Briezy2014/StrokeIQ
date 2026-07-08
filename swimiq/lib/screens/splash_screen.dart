@@ -27,17 +27,7 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SwimIqLogo(size: 120, borderRadius: 28),
-              const SizedBox(height: 20),
-              const SwimIqWordmark(fontSize: 36),
-              const SizedBox(height: 8),
-              Text(
-                'Built in the Water. Driven by Possibility.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-              ),
+              const SwimIqHeroBanner(height: 200, borderRadius: 24),
               const SizedBox(height: 48),
               const CircularProgressIndicator(color: Colors.white),
             ],

@@ -22,15 +22,17 @@ class SwimIqHeader extends StatelessWidget {
                 letterSpacing: 1.5,
               ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          AppConstants.tagline,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.primaryDeep,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
+        if (AppConstants.tagline.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            AppConstants.tagline,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.primaryDeep,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
         const SizedBox(height: 4),
         Text(
           AppConstants.founder,

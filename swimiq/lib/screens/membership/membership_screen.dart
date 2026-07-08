@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
@@ -120,9 +121,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Built in the Water.\nDriven by Possibility.',
-                      style: TextStyle(
+                    Text(
+                      AppConstants.trademark,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.w900,

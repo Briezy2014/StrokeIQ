@@ -1,14 +1,21 @@
-SwimIQ branding folder
-========================
+Kara - add YOUR SwimIQ logo here
+=================================
 
-Required files (exact names):
-  swimiq_hero.png  — full logo + tagline (login / welcome / app bar)
-  swimiq_icon.png  — square icon only (app bar, splash, passport avatar)
+Copy your official PNG files into THIS folder:
 
-If PNGs are missing, the app shows a built-in gradient SWIMIQ logo automatically.
-Add your official SWIMIQ artwork here when ready:
-  black background, blue IQ, your tagline.
+  C:\SwimIQWork\swimiq\assets\branding\
 
-After replacing files, run: flutter clean && flutter pub get
+Required file names (exact spelling):
 
-Remove old PNGs with other names so the wrong art is not bundled.
+  swimiq_hero.png   - full logo + YOUR tagline (login screen)
+  swimiq_icon.png   - square icon only (app bar, small spots)
+
+Your PNG should include the logo AND tagline in the image.
+The app will show the full image - no extra text is added on login.
+
+After copying files:
+  1. Close Chrome
+  2. Double-click LAUNCH-CHROME.bat
+  3. Wait 2-3 minutes
+
+If logo still wrong, press R in the Chrome window to hot reload.

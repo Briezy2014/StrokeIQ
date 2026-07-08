@@ -49,7 +49,7 @@ class SwimIqHeroBanner extends StatelessWidget {
       candidates: SwimIqBranding.heroCandidates,
       width: double.infinity,
       height: height,
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
       borderRadius: borderRadius,
       fallback: SwimIqBrandedFallback(
         variant: SwimIqBrandedVariant.hero,
