@@ -134,10 +134,12 @@ function Initialize-SwimIqWindowsPaths {
     New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
     $env:PUB_CACHE = $pubCache
     [Environment]::SetEnvironmentVariable('PUB_CACHE', $pubCache, 'User')
-
+    [Environment]::SetEnvironmentVariable('PUB_CACHE', $pubCache, 'Process')
     if ($flutterBat -eq 'F:\bin\flutter.bat') {
+        $env:FLUTTER_ROOT = 'F:\'
         $env:Path = "F:\bin;$env:Path"
     } else {
+        $env:FLUTTER_ROOT = $flutterRoot
         $flutterBin = Split-Path -Parent $flutterBat
         $env:Path = "$flutterBin;$env:Path"
     }
