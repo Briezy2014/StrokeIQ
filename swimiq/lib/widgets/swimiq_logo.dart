@@ -46,18 +46,25 @@ class SwimIqHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwimIqBrandedImage(
-      candidates: SwimIqBranding.logoCandidates,
-      width: double.infinity,
-      height: height,
-      fit: BoxFit.contain,
-      borderRadius: borderRadius,
-      fallback: SwimIqBrandedFallback(
-        variant: SwimIqBrandedVariant.hero,
-        width: double.infinity,
-        height: height,
-        borderRadius: borderRadius,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.hasBoundedWidth && constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : double.infinity;
+        return SwimIqBrandedImage(
+          candidates: SwimIqBranding.logoCandidates,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
+          borderRadius: borderRadius,
+          fallback: SwimIqBrandedFallback(
+            variant: SwimIqBrandedVariant.hero,
+            width: width,
+            height: height,
+            borderRadius: borderRadius,
+          ),
+        );
+      },
     );
   }
 }

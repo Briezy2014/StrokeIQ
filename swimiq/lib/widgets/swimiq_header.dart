@@ -12,7 +12,7 @@ class SwimIqHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 8),
-        const SwimIqHeroBanner(height: 160, borderRadius: 24),
+        const SwimIqAuthHeader(height: 150),
         const SizedBox(height: 12),
         Text(
           AppConstants.trademark,
@@ -61,20 +61,24 @@ class SwimIqFooter extends StatelessWidget {
   }
 }
 
-/// Full-width SwimIQ hero branding for the app bar.
+/// Compact SwimIQ branding for the app bar (all main tabs).
 class SwimIqAppBarBrand extends StatelessWidget {
   const SwimIqAppBarBrand({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(8, 6, 8, 6),
-      child: SwimIqHeroBanner(height: 56, borderRadius: 12),
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SwimIqLogo(size: 40, borderRadius: 10),
+        SizedBox(width: 10),
+        SwimIqWordmark(fontSize: 20),
+      ],
     );
   }
 }
 
-@Deprecated('Use SwimIqAppBarBrand for the full-width hero logo in the app bar.')
+@Deprecated('Use SwimIqAppBarBrand — compact logo for the app bar.')
 class SwimIqAppBarTitle extends StatelessWidget {
   const SwimIqAppBarTitle({super.key, this.subtitle});
 

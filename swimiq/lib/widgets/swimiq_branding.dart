@@ -43,36 +43,55 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
   @override
   Widget build(BuildContext context) {
     if (_candidateIndex >= widget.candidates.length) {
-      return widget.fallback ??
-          Icon(
-            Icons.pool,
-            size: (widget.height ?? widget.width ?? 48) * 0.7,
-            color: Colors.white,
-          );
+      return _wrap(_fallbackWidget());
     }
 
     final path = widget.candidates[_candidateIndex];
-    final image = Image.asset(
-      path,
-      width: widget.width,
-      height: widget.height,
-      fit: widget.fit,
-      errorBuilder: (context, error, stackTrace) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
+    return _wrap(
+      Image.asset(
+        path,
+        fit: widget.fit,
+        errorBuilder: (context, error, stackTrace) {
           if (_candidateIndex + 1 < widget.candidates.length) {
-            setState(() => _candidateIndex++);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              setState(() => _candidateIndex++);
+            });
           }
-        });
-        return const SizedBox.shrink();
-      },
+          return _fallbackWidget();
+        },
+      ),
     );
+  }
 
-    if (widget.borderRadius <= 0) return image;
+  Widget _fallbackWidget() {
+    return widget.fallback ??
+        Icon(
+          Icons.pool,
+          size: (widget.height ?? widget.width ?? 48) * 0.7,
+          color: Colors.white,
+        );
+  }
+
+  Widget _wrap(Widget child) {
+    Widget content = child;
+    if (widget.width != null || widget.height != null) {
+      content = SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: FittedBox(
+          fit: widget.fit,
+          alignment: Alignment.center,
+          child: child,
+        ),
+      );
+    }
+
+    if (widget.borderRadius <= 0) return content;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
-      child: image,
+      child: content,
     );
   }
 }
