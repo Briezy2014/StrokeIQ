@@ -76,7 +76,7 @@ class SwimIqAppBarBrand extends StatelessWidget {
   }
 }
 
-@Deprecated('Use SwimIqAppBarBrand for the full-width hero logo in the app bar.')
+/// Compact app bar: icon + wordmark + swimmer (one line, never clipped).
 class SwimIqAppBarTitle extends StatelessWidget {
   const SwimIqAppBarTitle({super.key, this.subtitle});
 
@@ -85,23 +85,28 @@ class SwimIqAppBarTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        const SwimIqLogo(size: 32, borderRadius: 8),
+        const SwimIqLogo(size: 40, borderRadius: 10),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SwimIqWordmark(fontSize: 16),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white70,
-                    ),
-              ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SwimIqWordmark(fontSize: 17),
+              if (subtitle != null && subtitle!.trim().isNotEmpty)
+                Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.88),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+            ],
+          ),
         ),
       ],
     );

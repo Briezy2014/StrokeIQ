@@ -95,7 +95,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           child: SwimIqLogo(size: 100, borderRadius: 20),
                         ),
                         const SizedBox(height: 12),
-                        const Center(child: SwimIqWordmark(fontSize: 28)),
+                        const Center(
+                          child: SwimIqWordmark(fontSize: 28, light: false),
+                        ),
                         const SizedBox(height: 20),
                         Text(
                           'Create your account',

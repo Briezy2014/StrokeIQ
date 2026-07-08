@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/swimiq_quotes.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/race_intelligence_service.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
@@ -46,7 +45,6 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
             SwimIqPageHero(
               title: 'Race Intelligence',
               subtitle: plan.meetDayLabel,
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.raceIntelligence),
             ),
             const SizedBox(height: 12),
             _HeroCard(plan: plan),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/swimiq_quotes.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/utils/motivational_cut.dart';
@@ -32,7 +31,6 @@ class PersonalBestsScreen extends ConsumerWidget {
         final officialBests = data.personalBests;
         final trainingBests = SwimAnalytics.personalBests(data.raceLogs);
         final dateFormat = DateFormat.yMMMd();
-        final quote = SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.personalBests);
 
         if (showOfficial) {
           if (officialBests.isEmpty) {
@@ -43,7 +41,6 @@ class PersonalBestsScreen extends ConsumerWidget {
                 SwimIqPageHero(
                   title: 'Personal Bests',
                   subtitle: 'Official meet times & USA standards',
-                  quote: quote,
                 ),
                 const SizedBox(height: 16),
                 const EmptyStateMessage(
@@ -61,7 +58,6 @@ class PersonalBestsScreen extends ConsumerWidget {
               SwimIqPageHero(
                 title: 'Personal Bests',
                 subtitle: '${officialBests.length} official meet PBs',
-                quote: quote,
                 stats: [
                   SwimIqHeroStat('${officialBests.length} PBs'),
                   SwimIqHeroStat(data.passportSnapshot(swimmer).highestCut),
@@ -103,7 +99,6 @@ class PersonalBestsScreen extends ConsumerWidget {
               SwimIqPageHero(
                 title: 'Personal Bests',
                 subtitle: 'In-app tracking from your training log',
-                quote: quote,
               ),
               const SizedBox(height: 16),
               const EmptyStateMessage(
@@ -124,7 +119,6 @@ class PersonalBestsScreen extends ConsumerWidget {
             SwimIqPageHero(
               title: 'Personal Bests',
               subtitle: '${trainingBests.length} in-app bests from training',
-              quote: quote,
               stats: [
                 SwimIqHeroStat('${trainingBests.length} events'),
                 const SwimIqHeroStat('Training log'),

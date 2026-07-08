@@ -5,11 +5,8 @@ import 'package:flutter/services.dart';
 abstract final class SwimIqBranding {
   static const iconCandidates = [
     'assets/branding/swimiq_icon.png',
-    'assets/images/swimiq_logo.png',
     'assets/branding/icon.png',
     'assets/branding/logo_icon.png',
-    'assets/branding/swimiq_logo_icon.png',
-    'assets/branding/swimiq_logo.png',
   ];
 
   static const heroCandidates = [

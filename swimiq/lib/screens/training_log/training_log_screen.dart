@@ -9,7 +9,6 @@ import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../race_intelligence/race_intelligence_screen.dart';
 
@@ -38,7 +37,6 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
             SwimIqPageHero(
               title: 'Log & Schedule',
               subtitle: 'Training sessions · meets · practice schedules',
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.trainingLog),
               stats: [
                 SwimIqHeroStat('${logs.length} sessions'),
                 SwimIqHeroStat('${data.schedules.length} schedule items'),

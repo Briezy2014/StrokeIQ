@@ -8,7 +8,6 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../widgets/swimiq_event_card.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -69,7 +68,6 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
             SwimIqPageHero(
               title: 'USA Standards',
               subtitle: catalog.versionLabel,
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.usaStandards),
               stats: [
                 SwimIqHeroStat('${pbs.length} PBs tracked'),
                 SwimIqHeroStat(snapshot.highestCut),

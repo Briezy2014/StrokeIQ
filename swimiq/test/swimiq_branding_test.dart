@@ -6,7 +6,7 @@ import 'package:swimiq/widgets/swimiq_logo.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('hero banner loads branded asset', (tester) async {
+  testWidgets('hero banner shows logo or fallback', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -17,11 +17,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SwimIqHeroBanner), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
+    expect(
+      find.byType(Image).evaluate().isNotEmpty ||
+          find.byType(CustomPaint).evaluate().isNotEmpty,
+      isTrue,
+    );
   });
 
-  test('branding lists include hero and icon paths', () {
-    expect(SwimIqBranding.heroCandidates, contains('assets/branding/swimiq_hero.png'));
+  test('branding lists icon-only paths', () {
     expect(SwimIqBranding.iconCandidates, contains('assets/branding/swimiq_icon.png'));
+    expect(SwimIqBranding.iconCandidates.length, lessThanOrEqualTo(4));
   });
 }

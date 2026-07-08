@@ -14,7 +14,6 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/goals_progress_chart.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../widgets/swimmer_screen.dart';
 
 class GoalsScreen extends ConsumerStatefulWidget {
@@ -176,7 +175,6 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             SwimIqPageHero(
               title: 'Goals',
               subtitle: 'Target times for ${data.displayName(swimmer)}',
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.goals),
               stats: [SwimIqHeroStat('${data.goals.length} active goals')],
             ),
             const SizedBox(height: 16),

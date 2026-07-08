@@ -242,8 +242,11 @@ void main() {
       await tester.pumpWidget(_screenHarness(const VideoLabScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('VIDEO LAB'), findsOneWidget);
-      expect(find.text('AI coaching from your race footage'), findsOneWidget);
+      expect(find.text('Video Lab'), findsOneWidget);
+      expect(
+        find.textContaining('AI coaching from your race footage'),
+        findsOneWidget,
+      );
       expect(
         find.textContaining('${_fixture['userFacingVideoCount']} videos'),
         findsOneWidget,
@@ -254,7 +257,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const GoalsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('GOALS'), findsOneWidget);
+      expect(find.text('Goals'), findsOneWidget);
       expect(
         find.textContaining('Target times for ${_fixture['displayName']}'),
         findsOneWidget,
@@ -266,7 +269,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final pbCount = _harnessData!.personalBests.length;
-      expect(find.text('PERSONAL BESTS'), findsOneWidget);
+      expect(find.text('Personal Bests'), findsOneWidget);
       expect(
         find.textContaining('$pbCount official meet PBs'),
         findsOneWidget,
@@ -277,7 +280,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const MeetResultsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('MEET RESULTS'), findsOneWidget);
+      expect(find.text('Meet Results'), findsOneWidget);
       expect(
         find.textContaining('Top cut:'),
         findsOneWidget,
@@ -288,7 +291,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const UsaStandardsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('USA STANDARDS'), findsOneWidget);
+      expect(find.text('USA Standards'), findsOneWidget);
       expect(
         find.textContaining('2024-2028 USA Swimming Motivational Standards'),
         findsOneWidget,

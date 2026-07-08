@@ -7,7 +7,6 @@ import 'package:video_player/video_player.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/subscription_service.dart';
 import '../../core/theme/app_theme.dart';
@@ -201,7 +200,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   : hasPro
                       ? 'Upload & review — AI analysis is Elite'
                       : 'Pro unlocks video library',
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.videoLab),
               stats: [
                 SwimIqHeroStat('${videos.length} videos'),
                 SwimIqHeroStat('${data.userFacingVideoAnalyses.length} analyses'),

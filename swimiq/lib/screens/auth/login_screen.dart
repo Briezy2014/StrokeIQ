@@ -121,7 +121,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Center(child: SwimIqWordmark(fontSize: 28)),
+                        const Center(
+                          child: SwimIqWordmark(fontSize: 28, light: false),
+                        ),
                         const SizedBox(height: 20),
                         Text(
                           'Welcome back',

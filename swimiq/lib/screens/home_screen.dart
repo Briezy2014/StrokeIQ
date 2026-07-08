@@ -118,19 +118,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final swimmer = ref.watch(activeSwimmerProvider)!;
     final selectedIndex = ref.watch(homeTabIndexProvider);
-    final user = ref.watch(currentUserProvider);
     final subscription = ref.watch(subscriptionStateProvider).value;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 56,
-        titleSpacing: 0,
+        toolbarHeight: 64,
+        titleSpacing: 8,
         centerTitle: false,
-        title: SwimIqAppBarTitle(
-          subtitle: user?.email != null
-              ? '$swimmer · ${user!.email}'
-              : swimmer,
-        ),
+        title: SwimIqAppBarTitle(subtitle: swimmer),
         actions: [
           IconButton(
             tooltip: 'Refresh',

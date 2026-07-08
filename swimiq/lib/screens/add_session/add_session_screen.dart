@@ -6,7 +6,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/swimiq_page_hero.dart';
@@ -141,7 +140,6 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
             SwimIqPageHero(
               title: 'Add Session',
               subtitle: 'Log training for ${data.displayName(swimmer)}',
-              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.addSession),
               stats: [
                 SwimIqHeroStat('${data.raceLogs.length} sessions logged'),
               ],

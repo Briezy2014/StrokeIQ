@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/swimiq_quotes.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/ai_dryland_coach_service.dart';
 import '../../core/subscription/subscription_capabilities.dart';
@@ -38,7 +37,6 @@ class AiDrylandCoachScreen extends ConsumerWidget {
               SwimIqPageHero(
                 title: 'AI Dryland Coach',
                 subtitle: plan.headline,
-                quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.trainingLog),
               ),
               const SizedBox(height: 16),
               _FocusCard(
