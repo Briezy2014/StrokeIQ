@@ -1,74 +1,32 @@
 # SwimIQ Chrome launcher (Kara Williams / paths with spaces)
-# Called by: LAUNCH-CHROME.bat, run-chrome.ps1, launch-chrome.ps1
-
 $ErrorActionPreference = 'Stop'
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
-$strokeRoot = Split-Path -Parent $projectRoot
+. (Join-Path $PSScriptRoot 'swimiq-windows-paths.ps1')
 
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ' SwimIQ - Launch Chrome' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host "SwimIQ folder: $projectRoot"
 Write-Host ''
 
-# --- Find Flutter ---
-$flutterRoot = $null
-foreach ($candidate in @("$env:USERPROFILE\flutter", 'C:\flutter', 'C:\src\flutter')) {
-    if (Test-Path "$candidate\bin\flutter.bat") {
-        $flutterRoot = $candidate
-        break
-    }
-}
-if (-not $flutterRoot) {
-    $cmd = Get-Command flutter -ErrorAction SilentlyContinue
-    if ($cmd) { $flutterRoot = (Split-Path -Parent $cmd.Source).TrimEnd('\bin') }
-}
-if (-not $flutterRoot) {
-    Write-Host 'ERROR: Flutter not found. Install to C:\flutter' -ForegroundColor Red
+try {
+    $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
     Read-Host 'Press Enter to close'
     exit 1
 }
 
-# --- Map F: and S: (fixes C:\Users\Kara error) ---
-subst F: /D 2>$null | Out-Null
-subst S: /D 2>$null | Out-Null
-subst F: $flutterRoot | Out-Null
-subst S: $strokeRoot | Out-Null
-
-$flutterBat = 'F:\bin\flutter.bat'
-$workDir = 'S:\swimiq'
-$pubCache = 'S:\pub-cache'
-
-New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
-$env:PUB_CACHE = $pubCache
-[Environment]::SetEnvironmentVariable('PUB_CACHE', $pubCache, 'User')
-$env:Path = 'F:\bin;' + $env:Path
-
-if (-not (Test-Path $flutterBat)) {
-    Write-Host 'ERROR: F:\bin\flutter.bat not found after mapping.' -ForegroundColor Red
-    Read-Host 'Press Enter to close'
-    exit 1
-}
-if (-not (Test-Path $workDir)) {
-    Write-Host 'ERROR: S:\swimiq not found after mapping.' -ForegroundColor Red
-    Read-Host 'Press Enter to close'
-    exit 1
-}
-
-Set-Location $workDir
-Write-Host 'OK  Flutter: F:\bin' -ForegroundColor Green
-Write-Host 'OK  Project: S:\swimiq' -ForegroundColor Green
-Write-Host "OK  PUB_CACHE: $pubCache" -ForegroundColor Green
+Write-Host "OK  Working folder: $($paths.WorkDir)" -ForegroundColor Green
+Write-Host "OK  Flutter: $($paths.FlutterBat)" -ForegroundColor Green
+Write-Host "OK  PUB_CACHE: $($paths.PubCache)" -ForegroundColor Green
 Write-Host ''
 
-# --- .env in swimiq folder ---
-$envFile = Join-Path $workDir '.env'
-$exampleFile = Join-Path $workDir '.env.example'
+$envFile = Join-Path $paths.WorkDir '.env'
+$exampleFile = Join-Path $paths.WorkDir '.env.example'
 
-if (-not (Test-Path $envFile)) {
-    if (Test-Path $exampleFile) {
+if (-not (Test-Path -LiteralPath $envFile)) {
+    if (Test-Path -LiteralPath $exampleFile) {
         Copy-Item $exampleFile $envFile
     }
     Write-Host 'Created .env — add Supabase URL + anon key, save, run LAUNCH-CHROME.bat again.' -ForegroundColor Yellow
@@ -91,7 +49,7 @@ if ($url) {
 }
 
 if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your-supabase') {
-    Write-Host 'ERROR: Edit S:\swimiq\.env with real Supabase keys.' -ForegroundColor Red
+    Write-Host 'ERROR: Edit .env with real Supabase keys.' -ForegroundColor Red
     notepad $envFile
     Read-Host 'Press Enter to close'
     exit 1
@@ -101,14 +59,13 @@ Write-Host 'OK  Supabase keys loaded' -ForegroundColor Green
 Write-Host 'Starting Chrome — wait 1-2 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
-& $flutterBat pub get
+& $paths.FlutterBat pub get
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "flutter pub get failed (code $LASTEXITCODE)" -ForegroundColor Red
     Read-Host 'Press Enter to close'
     exit $LASTEXITCODE
 }
 
-& $flutterBat run -d chrome `
+& $paths.FlutterBat run -d chrome `
     --dart-define=SUPABASE_URL=$url `
     --dart-define=SUPABASE_ANON_KEY=$key
 
