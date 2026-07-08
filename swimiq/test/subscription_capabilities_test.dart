@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/constants/founder_account_constants.dart';
 import 'package:swimiq/core/models/subscription_plan.dart';
 import 'package:swimiq/core/services/subscription_service.dart';
 import 'package:swimiq/core/subscription/subscription_capabilities.dart';
@@ -117,6 +118,31 @@ void main() {
     expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isTrue);
     expect(SubscriptionCapabilities.canUseRaceIntelligence(state), isTrue);
     expect(SubscriptionCapabilities.canAccessAiPerformanceReports(state), isTrue);
+  });
+
+  test('founder emails are recognized', () {
+    expect(FounderAccountConstants.isFounderEmail('briezy682014@gmail.com'), isTrue);
+    expect(FounderAccountConstants.isFounderEmail('owner@swimiqapp.com'), isTrue);
+    expect(FounderAccountConstants.isFounderEmail('random@gmail.com'), isFalse);
+  });
+
+  test('founder elite state unlocks all features', () {
+    const state = SubscriptionState(
+      tier: SubscriptionTier.elite,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+      serverStatus: 'active',
+      isDemoMaster: true,
+    );
+
+    expect(SubscriptionCapabilities.canUseProFeatures(state), isTrue);
+    expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(6, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(7, state), isTrue);
   });
 
   test('plan catalog uses updated tier names and badges', () {

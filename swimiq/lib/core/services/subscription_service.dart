@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/founder_account_constants.dart';
 import '../models/subscription_plan.dart';
 
 class SubscriptionState {
@@ -151,17 +152,24 @@ class SubscriptionService {
     final user = client?.auth.currentUser;
     if (client == null || user == null) return local;
 
+    final founder = FounderAccountConstants.isFounderEmail(user.email);
+
     try {
       final row = await client
           .from('user_subscriptions')
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
-      if (row == null) return local;
 
-      final isDemo = row['is_demo_master'] == true;
+      if (row == null) {
+        return founder ? _founderEliteState(local) : local;
+      }
+
+      final isDemo = row['is_demo_master'] == true || founder;
       final status = row['status'] as String?;
-      final tier = _parseTier(row['tier'] as String?);
+      final tier = founder
+          ? SubscriptionTier.elite
+          : _parseTier(row['tier'] as String?);
       final cycle = row['billing_cycle'] == BillingCycle.annual.name
           ? BillingCycle.annual
           : BillingCycle.monthly;
@@ -169,12 +177,23 @@ class SubscriptionService {
       return local.copyWith(
         tier: tier,
         billingCycle: cycle,
-        serverStatus: status,
+        serverStatus: founder || status == 'active' || status == 'trialing'
+            ? 'active'
+            : status,
         isDemoMaster: isDemo,
       );
     } catch (_) {
-      return local;
+      return founder ? _founderEliteState(local) : local;
     }
+  }
+
+  SubscriptionState _founderEliteState(SubscriptionState local) {
+    return local.copyWith(
+      tier: SubscriptionTier.elite,
+      billingCycle: BillingCycle.monthly,
+      serverStatus: 'active',
+      isDemoMaster: true,
+    );
   }
 
   Future<SubscriptionState> startTrialIfEligible(SubscriptionState current) async {
