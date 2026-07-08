@@ -17,7 +17,6 @@ abstract final class SwimIqQuotes {
 
   static const meetResults = [
     '"Every meet is a chance to show coaches what you\'ve built in practice."',
-    '"Race with confidence — the clock remembers effort."',
     '"College recruiters watch consistency across meets, not just one swim."',
   ];
 
@@ -42,7 +41,6 @@ abstract final class SwimIqQuotes {
 
   static const raceIntelligence = [
     '"Meet day is won in the warmup lane — execute your plan before you touch the blocks."',
-    '"Race with confidence — the clock remembers effort."',
   ];
 
   static String pickFor(String swimmer, List<String> pool) {

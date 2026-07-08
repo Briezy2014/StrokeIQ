@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/constants/app_constants.dart';
+import '../core/services/subscription_service.dart';
+import '../core/subscription/subscription_capabilities.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
@@ -9,6 +12,7 @@ import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
+import 'membership/membership_screen.dart';
 import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
 import 'settings/settings_screen.dart';
@@ -46,6 +50,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  bool _tabLocked(int index, SubscriptionState? subscription) {
+    if (AppConstants.unlockAllTabsForPreview) return false;
+    if (subscription == null) return false;
+    switch (index) {
+      case HomeTab.videoLab:
+        return !SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription);
+      case HomeTab.passport:
+        return !SubscriptionCapabilities.hasProAccess(subscription);
+      default:
+        return false;
+    }
+  }
+
+  void _onTabSelected(int index) {
+    final subscription = ref.read(subscriptionStateProvider).value;
+    if (_tabLocked(index, subscription)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            index == HomeTab.videoLab
+                ? SubscriptionCapabilities.eliteGateMessage(subscription!)
+                : 'Upgrade to Pro or Elite to unlock this tab.',
+          ),
+          action: SnackBarAction(
+            label: 'Plans',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MembershipScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    ref.read(homeTabIndexProvider.notifier).state = index;
+  }
+
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -63,13 +107,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final swimmer = ref.watch(activeSwimmerProvider)!;
     final selectedIndex = ref.watch(homeTabIndexProvider);
     final user = ref.watch(currentUserProvider);
+    final subscription = ref.watch(subscriptionStateProvider).value;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 72,
+        toolbarHeight: 56,
         titleSpacing: 0,
         centerTitle: false,
-        title: const SwimIqAppBarBrand(),
+        title: SwimIqAppBarTitle(
+          subtitle: user?.email != null
+              ? '$swimmer · ${user!.email}'
+              : swimmer,
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -83,74 +132,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          MaterialBanner(
-            content: Text(
-              user?.email != null
-                  ? 'Signed in as ${user!.email} · Swimmer: $swimmer'
-                  : 'Swimmer: $swimmer',
-            ),
-            backgroundColor: Colors.green.shade50,
-            actions: const [SizedBox.shrink()],
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: _screenAt(selectedIndex),
-            ),
-          ),
-          const SwimIqFooter(),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: _screenAt(selectedIndex),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          ref.read(homeTabIndexProvider.notifier).state = index;
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.emoji_events_outlined),
-            selectedIcon: Icon(Icons.emoji_events),
-            label: 'PBs',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
-            selectedIcon: Icon(Icons.list_alt),
-            label: 'Log',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Add',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.flag_outlined),
-            selectedIcon: Icon(Icons.flag),
-            label: 'Goals',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.stadium_outlined),
-            selectedIcon: Icon(Icons.stadium),
-            label: 'Meets',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.videocam_outlined),
-            selectedIcon: Icon(Icons.videocam),
-            label: 'Video',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.badge_outlined),
-            selectedIcon: Icon(Icons.badge),
-            label: 'Passport',
-          ),
+        onDestinationSelected: _onTabSelected,
+        destinations: [
+          _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 0, subscription),
+          _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', 1, subscription),
+          _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', 2, subscription),
+          _dest(Icons.add_circle_outline, Icons.add_circle, 'Add', 3, subscription),
+          _dest(Icons.flag_outlined, Icons.flag, 'Goals', 4, subscription),
+          _dest(Icons.stadium_outlined, Icons.stadium, 'Meets', 5, subscription),
+          _dest(Icons.videocam_outlined, Icons.videocam, 'Video', 6, subscription),
+          _dest(Icons.badge_outlined, Icons.badge, 'Passport', 7, subscription),
         ],
       ),
+    );
+  }
+
+  NavigationDestination _dest(
+    IconData icon,
+    IconData selected,
+    String label,
+    int index,
+    SubscriptionState? subscription,
+  ) {
+    final locked = _tabLocked(index, subscription);
+    return NavigationDestination(
+      icon: Icon(locked ? Icons.lock_outline : icon),
+      selectedIcon: Icon(locked ? Icons.lock : selected),
+      label: label,
     );
   }
 }

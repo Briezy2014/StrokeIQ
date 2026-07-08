@@ -269,8 +269,6 @@ class _DashboardHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SwimIqHeroBanner(height: 48, borderRadius: 12),
-          const SizedBox(height: 14),
           Text(
             'WELCOME BACK, ${displayName.toUpperCase()}',
             style: TextStyle(

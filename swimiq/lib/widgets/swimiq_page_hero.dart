@@ -46,16 +46,22 @@ class SwimIqPageHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SwimIqHeroBanner(height: 52, borderRadius: 12),
-          const SizedBox(height: 14),
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.6,
-              fontSize: 13,
-            ),
+          Row(
+            children: [
+              const SwimIqLogo(size: 36, borderRadius: 10),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.6,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 6),

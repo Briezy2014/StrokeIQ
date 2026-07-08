@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/demo_account_constants.dart';
+import '../../core/constants/owner_account_constants.dart';
 import '../../core/utils/auth_validators.dart';
 import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
@@ -65,6 +66,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authServiceProvider).signIn(
             email: DemoAccountConstants.email,
             password: DemoAccountConstants.password,
+          );
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _ownerLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authServiceProvider).signIn(
+            email: OwnerAccountConstants.email,
+            password: OwnerAccountConstants.password,
           );
     } on AuthException catch (e) {
       setState(() => _errorMessage = AuthErrorMapper.fromException(e));
@@ -155,6 +175,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         OutlinedButton(
                           onPressed: _isLoading ? null : _demoLogin,
                           child: const Text('Coach demo login'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _isLoading ? null : _ownerLogin,
+                          child: const Text('Owner test login (Elite AI)'),
                         ),
                       ],
                     ),

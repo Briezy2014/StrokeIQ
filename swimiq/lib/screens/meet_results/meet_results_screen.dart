@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/constants/swimiq_quotes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_event_parser.dart';
@@ -150,7 +149,6 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
         final snapshot = data.passportSnapshot(swimmer);
-        final quote = SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.meetResults);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -158,11 +156,11 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
           children: [
             SwimIqPageHero(
               title: 'Meet Results',
-              subtitle: '${data.meetResults.length} official meet swims logged',
-              quote: quote,
+              subtitle: 'Your meet times and motivational cuts',
               stats: [
-                SwimIqHeroStat('Next: ${snapshot.nextMeet}'),
-                SwimIqHeroStat(snapshot.highestCut),
+                if (data.meetResults.isNotEmpty)
+                  SwimIqHeroStat('${data.meetResults.length} results'),
+                SwimIqHeroStat('Top cut: ${snapshot.highestCut}'),
               ],
             ),
             const SizedBox(height: 16),
@@ -255,8 +253,7 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                   return SwimIqEventCard(
                     title: result.event,
                     subtitle:
-                        '${result.meetName} · ${result.course} · '
-                        '${dateFormat.format(result.meetDate)} · '
+                        '${result.meetName} · ${dateFormat.format(result.meetDate)} · '
                         '${cut ?? 'Below B'} cut',
                     trailing: SwimTime.fromSeconds(result.swimTime),
                     highlight: cut == snapshot.highestCut,

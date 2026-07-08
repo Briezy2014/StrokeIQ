@@ -33,6 +33,8 @@ void main() {
 
     expect(progress.todayPoints, 20);
     expect(progress.climbFraction, 0.2);
+    expect(progress.scoreClimbFraction, closeTo(0.55, 0.001));
+    expect(progress.ropeClimbFraction, greaterThan(0.4));
   });
 
   test('badge catalog includes earned first splash', () {

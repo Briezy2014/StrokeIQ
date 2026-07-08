@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../core/theme/app_theme.dart';
@@ -82,7 +83,7 @@ class _ScheduleDepositorySectionState
     });
   }
 
-  Future<void> _pickSchedulePhoto() async {
+  Future<void> _pickSchedulePhotoFromFiles() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       withData: true,
@@ -93,6 +94,22 @@ class _ScheduleDepositorySectionState
     setState(() {
       _schedulePhotoBytes = file.bytes;
       _schedulePhotoName = file.name;
+    });
+  }
+
+  Future<void> _takeSchedulePhoto() async {
+    final picker = ImagePicker();
+    final photo = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+      maxWidth: 2400,
+    );
+    if (photo == null) return;
+    final bytes = await photo.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _schedulePhotoBytes = bytes;
+      _schedulePhotoName = photo.name;
     });
   }
 
@@ -371,15 +388,34 @@ class _ScheduleDepositorySectionState
                       maxLines: 3,
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _isSaving ? null : _pickSchedulePhoto,
-                      icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                      label: Text(
-                        _schedulePhotoName == null
-                            ? 'Attach schedule photo'
-                            : 'Change photo (${_schedulePhotoName!})',
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _isSaving ? null : _takeSchedulePhoto,
+                            icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                            label: const Text('Camera'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                _isSaving ? null : _pickSchedulePhotoFromFiles,
+                            icon: const Icon(Icons.upload_file_outlined, size: 18),
+                            label: const Text('Upload'),
+                          ),
+                        ),
+                      ],
                     ),
+                    if (_schedulePhotoName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          _schedulePhotoName!,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
                     if (_schedulePhotoBytes != null) ...[
                       const SizedBox(height: 10),
                       ClipRRect(

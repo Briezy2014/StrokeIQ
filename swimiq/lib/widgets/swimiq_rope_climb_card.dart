@@ -62,8 +62,8 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Climb the rope over the pool with today\'s training. '
-              'Overall SwimIQ Score: ${daily.overallSwimIqScore}.',
+              'Your SwimIQ Score (${daily.overallSwimIqScore}) sets your height on the rope. '
+              'Log today\'s work (+${daily.todayPoints} pts) to climb higher.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.72),
                     height: 1.35,
@@ -72,7 +72,7 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               height: 220,
-              child: _RopeClimbScene(climbFraction: daily.climbFraction),
+              child: _RopeClimbScene(climbFraction: daily.ropeClimbFraction),
             ),
             const SizedBox(height: 16),
             Text(
@@ -233,7 +233,7 @@ class _AvatarBubble extends StatelessWidget {
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Text(
-            '${(climbFraction * 100).round()}%',
+            '${(climbFraction * 100).round()}% up',
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w900,

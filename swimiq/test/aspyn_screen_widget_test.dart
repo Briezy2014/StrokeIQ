@@ -272,7 +272,7 @@ void main() {
 
       expect(find.text('MEET RESULTS'), findsOneWidget);
       expect(
-        find.textContaining('Next: ${_fixture['nextMeet']}'),
+        find.textContaining('Top cut:'),
         findsOneWidget,
       );
     });
