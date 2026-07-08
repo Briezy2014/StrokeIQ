@@ -42,20 +42,34 @@ class SubscriptionCapabilities {
     return false;
   }
 
-  /// Casual swimmer / parent: log sessions, simple dashboard.
+  // ── Basic (foundation) ──────────────────────────────────────────────
+
   static bool canUseTrainingLog(SubscriptionState state) => true;
 
   static bool canUseAddSession(SubscriptionState state) => true;
 
   static bool canUseBasicDashboard(SubscriptionState state) => true;
 
-  /// Serious age-group: analytics, PBs, meets, goals, passport, video library.
+  static bool canAccessGoals(SubscriptionState state) => true;
+
+  static bool canAccessBasicPersonalBests(SubscriptionState state) => true;
+
+  static bool canAccessWeeklyProgressReport(SubscriptionState state) => true;
+
+  static bool canAccessDashboardGamification(SubscriptionState state) => true;
+
+  static bool canAccessProgressCharts(SubscriptionState state) => true;
+
+  // ── Pro (competitive tools) ─────────────────────────────────────────
+
   static bool canUseProFeatures(SubscriptionState state) => hasProAccess(state);
 
-  static bool canAccessPersonalBests(SubscriptionState state) =>
+  static bool canAccessOfficialPbsAndStandards(SubscriptionState state) =>
       hasProAccess(state);
 
-  static bool canAccessGoals(SubscriptionState state) => hasProAccess(state);
+  /// Legacy alias — official meet PBs & USA standards.
+  static bool canAccessPersonalBests(SubscriptionState state) =>
+      canAccessOfficialPbsAndStandards(state);
 
   static bool canAccessMeetResults(SubscriptionState state) =>
       hasProAccess(state);
@@ -64,10 +78,14 @@ class SubscriptionCapabilities {
 
   static bool canAccessVideoLab(SubscriptionState state) => hasProAccess(state);
 
-  static bool canAccessDashboardGamification(SubscriptionState state) =>
+  static bool canAccessAiDrylandCoach(SubscriptionState state) =>
       hasProAccess(state);
 
-  /// High-performance: AI video, race intelligence, advanced planning.
+  static bool canAccessMotivationalCuts(SubscriptionState state) =>
+      hasProAccess(state);
+
+  // ── Elite (AI performance intelligence) ─────────────────────────────
+
   static bool canRunSwimIqAiAnalysis(SubscriptionState state) {
     if (!hasEliteAccess(state)) return false;
     if (state.isCoachTrialActive && state.hasCoachElitePeek) {
@@ -80,14 +98,17 @@ class SubscriptionCapabilities {
   static bool canUseRaceIntelligence(SubscriptionState state) =>
       hasEliteAccess(state);
 
+  static bool canAccessAiPerformanceReports(SubscriptionState state) =>
+      hasEliteAccess(state);
+
   static SubscriptionTier minimumTierForHomeTab(int tabIndex) {
     switch (tabIndex) {
       case 0: // dashboard
+      case 1: // PBs (in-app tracking on Basic; official on Pro)
       case 2: // log
       case 3: // add
-        return SubscriptionTier.basic;
-      case 1: // PBs
       case 4: // goals
+        return SubscriptionTier.basic;
       case 5: // meets
       case 6: // video
       case 7: // passport
@@ -103,8 +124,9 @@ class SubscriptionCapabilities {
   }
 
   static String proGateMessage({String feature = 'This feature'}) =>
-      '$feature is included with SwimIQ Pro — analytics, goals, meet results, '
-      'passport, and video library. Most families start here.';
+      '$feature is included with SwimIQ Pro — official PBs, meet results, USA '
+      'standards, Athlete Passport, Video Lab, and AI Dryland Coach. Most '
+      'competitive families start here.';
 
   static String eliteGateMessage(SubscriptionState state) {
     if (state.isCoachTrialActive && !state.hasCoachElitePeek) {
@@ -113,11 +135,11 @@ class SubscriptionCapabilities {
         return 'Coach Elite sneak peek: ${SubscriptionCatalog.coachEliteAnalysisLimit} '
             'SwimIQ AI analyses used. Upgrade to Elite for unlimited AI coaching.';
       }
-      return 'Coach Elite sneak peek ended. Upgrade to Elite for Video Lab AI, '
-          'Race Intelligence, and advanced meet planning.';
+      return 'Coach Elite sneak peek ended. Upgrade to Elite for AI Stroke Analysis, '
+          'Race Intelligence, and AI performance reports.';
     }
-    return 'SwimIQ Elite unlocks AI video analysis, Race Intelligence, and '
-        'advanced performance planning.';
+    return 'SwimIQ Elite unlocks AI Stroke Analysis, Race Intelligence, AI performance '
+        'reports, and personalized race strategy.';
   }
 
   static String coachPreviewSummary(SubscriptionState state) {

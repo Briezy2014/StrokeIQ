@@ -168,7 +168,7 @@ void main() {
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('SESSIONS'),
-        100,
+        200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
@@ -176,7 +176,13 @@ void main() {
       expect(find.text('${data.personalBests.length}'), findsWidgets);
       expect(find.text('${data.goals.length}'), findsWidgets);
       expect(find.text('${data.meetResults.length}'), findsOneWidget);
-      expect(find.textContaining('Passport'), findsWidgets);
+      await tester.scrollUntilVisible(
+        find.textContaining('Dryland'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Dryland'), findsWidgets);
       await tester.scrollUntilVisible(
         find.text('Recent Activity'),
         200,
@@ -262,7 +268,7 @@ void main() {
       final pbCount = _harnessData!.personalBests.length;
       expect(find.text('PERSONAL BESTS'), findsOneWidget);
       expect(
-        find.textContaining('$pbCount events from meet results'),
+        find.textContaining('$pbCount official meet PBs'),
         findsOneWidget,
       );
     });

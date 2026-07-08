@@ -9,6 +9,7 @@ import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/legal_footer.dart';
+import '../../widgets/subscription_feature_matrix.dart';
 
 class MembershipScreen extends ConsumerStatefulWidget {
   const MembershipScreen({super.key});
@@ -170,6 +171,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   setState(() => _billingCycle = value.first);
                 },
               ),
+              const SizedBox(height: 20),
+              const SubscriptionFeatureMatrix(),
               const SizedBox(height: 20),
               ...SubscriptionCatalog.plans.map(
                 (plan) => _PlanCard(

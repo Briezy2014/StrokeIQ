@@ -27,12 +27,12 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
     return SubscriptionGatedScreen(
       minimumTier: SubscriptionTier.elite,
       title: 'Unlock SwimIQ Elite',
-      message: 'Race Intelligence is included with Elite — meet-day checklists, '
-          'warmup plans, and AI nutrition guidance.',
+      message: 'Race Intelligence is included with Elite — race pacing, split analysis, '
+          'tempo trends, fatigue detection, and AI race strategy.',
       teaserFeatures: const [
-        'SwimIQ AI video analysis',
-        'Race Intelligence meet-day plans',
-        'Advanced performance planning',
+        'AI Stroke Analysis — mechanics, kick, turns & more',
+        'Race Intelligence — pacing, splits & fatigue detection',
+        'AI Performance Reports & race strategy',
       ],
       child: SwimmerScreen(
         builder: (context, ref, data, swimmer) {

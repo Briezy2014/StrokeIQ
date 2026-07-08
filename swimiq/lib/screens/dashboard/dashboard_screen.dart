@@ -16,13 +16,14 @@ import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
-import '../../widgets/swimiq_logo.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/weekly_progress_report_card.dart';
 import '../../core/gamification/swimiq_badges.dart';
 import '../../core/gamification/swimiq_daily_progress.dart';
 import '../membership/membership_screen.dart';
 import '../race_intelligence/race_intelligence_screen.dart';
+import '../dryland/ai_dryland_coach_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -43,6 +44,25 @@ class DashboardScreen extends ConsumerWidget {
             SubscriptionCapabilities.hasEliteAccess(subscription);
 
         if (!hasAnyActivity) {
+          final daily = SwimIqDailyProgress.calculate(
+            raceLogs: logs,
+            meetResults: meetResults,
+            videos: data.userFacingVideos,
+            goals: data.goals,
+            overallSwimIqScore: 0,
+          );
+          final badges = SwimIqBadgeCatalog.evaluate(
+            daily: daily,
+            raceLogs: logs,
+            meetResults: meetResults,
+            goals: data.goals,
+            personalBests: personalBests,
+            videos: data.userFacingVideos,
+            analyses: data.userFacingVideoAnalyses,
+            profile: data.profile,
+            snapshot: data.passportSnapshot(swimmer),
+          );
+
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -50,50 +70,26 @@ class DashboardScreen extends ConsumerWidget {
               _DashboardHero(
                 displayName: data.displayName(swimmer),
                 swimIqScore: 0,
-                highestCut: showProFeatures ? 'Start logging' : 'Upgrade for cuts',
+                highestCut: showProFeatures ? 'Start logging' : 'Log to track',
                 spotlight: null,
                 profile: data.profile,
                 catalog: data.motivationalStandards,
               ),
               const SizedBox(height: 16),
-              if (showProFeatures) ...[
-                SwimIqRopeClimbCard(
-                  daily: SwimIqDailyProgress.calculate(
-                    raceLogs: logs,
-                    meetResults: meetResults,
-                    videos: data.userFacingVideos,
-                    goals: data.goals,
-                    overallSwimIqScore: 0,
-                  ),
-                  badges: SwimIqBadgeCatalog.evaluate(
-                    daily: SwimIqDailyProgress.calculate(
-                      raceLogs: logs,
-                      meetResults: meetResults,
-                      videos: data.userFacingVideos,
-                      goals: data.goals,
-                      overallSwimIqScore: 0,
-                    ),
-                    raceLogs: logs,
-                    meetResults: meetResults,
-                    goals: data.goals,
-                    personalBests: personalBests,
-                    videos: data.userFacingVideos,
-                    analyses: data.userFacingVideoAnalyses,
-                    profile: data.profile,
-                    snapshot: data.passportSnapshot(swimmer),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ] else ...[
+              SwimIqRopeClimbCard(daily: daily, badges: badges),
+              const SizedBox(height: 16),
+              WeeklyProgressReportCard(raceLogs: logs, goals: data.goals),
+              const SizedBox(height: 16),
+              if (!showProFeatures) ...[
                 const _DashboardProUpsell(),
                 const SizedBox(height: 16),
               ],
               const EmptyStateMessage(
                 message:
-                    'No swim sessions or meet results yet. Log training on the Log tab to get started.',
+                    'No swim sessions yet. Log training on the Log tab to get started.',
               ),
-              const SizedBox(height: 20),
-              if (showProFeatures)
+              if (showProFeatures) ...[
+                const SizedBox(height: 20),
                 ScheduleDepositorySection(
                   compact: true,
                   onOpenRaceIntelligence: () {
@@ -104,6 +100,7 @@ class DashboardScreen extends ConsumerWidget {
                     );
                   },
                 ),
+              ],
             ],
           );
         }
@@ -141,21 +138,37 @@ class DashboardScreen extends ConsumerWidget {
             _DashboardHero(
               displayName: data.displayName(swimmer),
               swimIqScore: data.swimIqScore,
-              highestCut: showProFeatures ? snapshot.highestCut : 'Upgrade for cuts',
+              highestCut: showProFeatures ? snapshot.highestCut : 'Log to track',
               spotlight: showProFeatures ? spotlight : null,
               profile: data.profile,
               catalog: data.motivationalStandards,
             ),
             const SizedBox(height: 16),
-            if (showProFeatures) ...[
-              SwimIqRopeClimbCard(daily: daily, badges: badges),
+            SwimIqRopeClimbCard(daily: daily, badges: badges),
+            const SizedBox(height: 16),
+            WeeklyProgressReportCard(raceLogs: logs, goals: data.goals),
+            const SizedBox(height: 16),
+            if (!showProFeatures) ...[
+              const _DashboardProUpsell(),
               const SizedBox(height: 16),
+            ],
+            if (showProFeatures) ...[
               _ActivityStrip(
                 sessions: logs.length,
                 goals: data.goals.length,
                 meets: meetResults.length,
                 personalBests: personalBests.length,
                 videos: data.userFacingVideoAnalyses.length,
+              ),
+              const SizedBox(height: 16),
+              _DrylandCoachCard(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AiDrylandCoachScreen(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               ScheduleDepositorySection(
@@ -168,9 +181,6 @@ class DashboardScreen extends ConsumerWidget {
                   );
                 },
               ),
-              const SizedBox(height: 16),
-            ] else ...[
-              const _DashboardProUpsell(),
               const SizedBox(height: 16),
             ],
             if (showProFeatures && !showEliteFeatures) ...[
@@ -208,7 +218,7 @@ class DashboardScreen extends ConsumerWidget {
             else if (logs.isEmpty)
               const EmptyStateMessage(
                 message:
-                    'Log a training session on the Log tab. Upgrade to Pro for PBs, meets, goals, and passport.',
+                    'Log a training session on the Log tab. Your progress charts update automatically.',
               )
             else
               ...logs.take(5).map(
@@ -500,14 +510,65 @@ class _ChipStat extends StatelessWidget {
   }
 }
 
+class _DrylandCoachCard extends StatelessWidget {
+  const _DrylandCoachCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.fitness_center, color: AppColors.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AI Dryland Coach',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Personalized strength, core, mobility & recovery',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DashboardProUpsell extends StatelessWidget {
   const _DashboardProUpsell();
 
   static const _features = [
-    'Personal bests & USA motivational cuts',
-    'Meet results & goals with progress',
-    'Athlete Passport & video library',
-    'Daily rope climb & badges',
+    'Official PBs, meet results & USA Swimming standards',
+    'Athlete Passport & Recruiting Snapshot',
+    'Video Lab (upload & organize videos)',
+    'AI Dryland Coach — strength, core & mobility',
   ];
 
   @override
@@ -556,8 +617,8 @@ class _DashboardProUpsell extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'You are on Basic — great for logging. Upgrade to Pro when you want '
-              'analytics, PBs, meets, goals, and passport.',
+              'You have Basic — great foundation. Upgrade to Pro for official meet '
+              'tracking, USA standards, passport, video library, and AI Dryland Coach.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     height: 1.4,
                   ),
@@ -599,9 +660,9 @@ class _DashboardEliteUpsell extends StatelessWidget {
   const _DashboardEliteUpsell();
 
   static const _features = [
-    'SwimIQ AI video analysis',
-    'Race Intelligence meet-day plans',
-    'AI nutrition & warmup guidance',
+    'AI Stroke Analysis — mechanics, kick, turns & more',
+    'Race Intelligence — pacing, splits & fatigue detection',
+    'AI Performance Reports & race strategy',
   ];
 
   @override
@@ -649,8 +710,8 @@ class _DashboardEliteUpsell extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'You have Pro analytics. Elite adds AI coaching from your race footage '
-              'and meet-day intelligence.',
+              'You have Pro — powerful competitive tools. Elite adds AI stroke analysis '
+              'from your race footage and advanced race intelligence.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
                 height: 1.4,

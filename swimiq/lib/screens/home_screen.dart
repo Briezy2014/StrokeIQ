@@ -30,16 +30,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const _proTeaser = [
-    'Personal bests & meet results',
-    'Goals with progress charts',
-    'Athlete Passport & recruiting snapshot',
-    'Video library & daily rope climb',
+    'Official PBs, meet results & USA Swimming standards',
+    'Athlete Passport & Recruiting Snapshot',
+    'Video Lab (upload & organize videos)',
+    'AI Dryland Coach — strength, core & mobility',
   ];
 
   static const _eliteTeaser = [
-    'SwimIQ AI video analysis',
-    'Race Intelligence meet-day plans',
-    'AI nutrition & warmup guidance',
+    'AI Stroke Analysis — mechanics, kick, turns & more',
+    'Race Intelligence — pacing, splits & fatigue detection',
+    'AI Performance Reports & race strategy',
   ];
 
   Widget _proGate(Widget child) {
@@ -57,13 +57,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case HomeTab.dashboard:
         return const DashboardScreen();
       case HomeTab.personalBests:
-        return _proGate(const PersonalBestsScreen());
+        return const PersonalBestsScreen();
       case HomeTab.trainingLog:
         return const TrainingLogScreen();
       case HomeTab.addSession:
         return const AddSessionScreen();
       case HomeTab.goals:
-        return _proGate(const GoalsScreen());
+        return const GoalsScreen();
       case HomeTab.meetResults:
         return _proGate(const MeetResultsScreen());
       case HomeTab.videoLab:
