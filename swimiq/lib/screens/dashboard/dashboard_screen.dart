@@ -55,37 +55,43 @@ class DashboardScreen extends ConsumerWidget {
             snapshot: data.passportSnapshot(swimmer),
           );
 
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            children: [
-              _DashboardHero(
-                displayName: data.displayName(swimmer),
-                swimIqScore: data.swimIqScore,
-                highestCut: 'Start logging',
-                spotlight: null,
-                profile: data.profile,
-                catalog: data.motivationalStandards,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _DashboardHero(
+                    displayName: data.displayName(swimmer),
+                    swimIqScore: data.swimIqScore,
+                    highestCut: 'Start logging',
+                    spotlight: null,
+                    profile: data.profile,
+                    catalog: data.motivationalStandards,
+                  ),
+                  const SizedBox(height: 16),
+                  SwimIqRopeClimbCard(daily: daily, badges: badges),
+                  const SizedBox(height: 16),
+                  const EmptyStateMessage(
+                    message:
+                        'No swim sessions or meet results yet. Log training or add a meet result to unlock your dashboard.',
+                  ),
+                  const SizedBox(height: 20),
+                  ScheduleDepositorySection(
+                    compact: true,
+                    onOpenRaceIntelligence: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const RaceIntelligenceScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              SwimIqRopeClimbCard(daily: daily, badges: badges),
-              const SizedBox(height: 16),
-              const EmptyStateMessage(
-                message:
-                    'No swim sessions or meet results yet. Log training or add a meet result to unlock your dashboard.',
-              ),
-              const SizedBox(height: 20),
-              ScheduleDepositorySection(
-                compact: true,
-                onOpenRaceIntelligence: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RaceIntelligenceScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           );
         }
 
@@ -116,10 +122,14 @@ class DashboardScreen extends ConsumerWidget {
           snapshot: snapshot,
         );
 
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              children: [
             _DashboardHero(
               displayName: data.displayName(swimmer),
               swimIqScore: data.swimIqScore,
@@ -206,7 +216,9 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
             ],
-          ],
+              ],
+            ),
+          ),
         );
       },
     );
@@ -271,6 +283,7 @@ class _DashboardHero extends StatelessWidget {
         children: [
           const SwimIqCompactMark(size: 48, borderRadius: 12),
           const SizedBox(height: 14),
+          const SwimIqWordmark(fontSize: 20),
           Text(
             'WELCOME BACK, ${displayName.toUpperCase()}',
             style: TextStyle(

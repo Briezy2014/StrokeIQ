@@ -3,29 +3,37 @@ import 'package:flutter/services.dart';
 
 /// Branding asset paths.
 abstract final class SwimIqBranding {
-  /// Tight crop: triangle/swimmer mark only (best for app bar & tab headers).
-  static const iconMarkCandidates = [
+  /// Square icon only — safe for app bar, tab headers, dashboard hero.
+  static const iconOnlyCandidates = [
+    'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_icon_mark.png',
     'assets/branding/icon_mark.png',
+    'assets/branding/icon.png',
+  ];
+
+  /// Tight crop: triangle/swimmer mark only (best for app bar & tab headers).
+  static const iconMarkCandidates = [
+    ...iconOnlyCandidates,
   ];
 
   /// Full square lockup (icon + wordmark + tagline on black) — for login/splash.
   static const fullLockupCandidates = [
     'assets/branding/swimiq_icon.png',
+    'assets/branding/swimiq_hero.png',
     'assets/images/swimiq_logo.png',
     'assets/branding/swimiq_logo.png',
     'assets/branding/swimiq_logo_square.png',
     'assets/branding/icon.png',
   ];
 
-  /// Small slots: prefer mark-only, else zoom full lockup to the icon region.
+  /// Small slots: icon first; huge lockup PNG only as last resort (no zoom).
   static const compactCandidates = [
-    ...iconMarkCandidates,
-    ...fullLockupCandidates,
+    ...iconOnlyCandidates,
   ];
 
   static const heroCandidates = [
     'assets/branding/swimiq_hero.png',
+    'assets/branding/swimiq_icon.png',
     'assets/images/swimiq_logo.png',
     'assets/branding/hero.png',
     'assets/branding/banner.png',
@@ -42,10 +50,6 @@ abstract final class SwimIqBranding {
     'assets/branding/swimiq_logo_icon.png',
     'assets/branding/swimiq_logo.png',
   ];
-
-  /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).
-  static const compactZoomScale = 5.0;
-  static const compactZoomAlignment = Alignment(0, -0.92);
 }
 
 /// Loads the first existing asset from [candidates], then [fallback].
@@ -58,7 +62,6 @@ class SwimIqBrandedImage extends StatefulWidget {
     this.fit = BoxFit.contain,
     this.borderRadius = 0,
     this.fallback,
-    this.zoomToMark = false,
   });
 
   final List<String> candidates;
@@ -67,8 +70,6 @@ class SwimIqBrandedImage extends StatefulWidget {
   final BoxFit fit;
   final double borderRadius;
   final Widget? fallback;
-  /// When true, zooms into the top of a full lockup so the swimmer mark fills the slot.
-  final bool zoomToMark;
 
   @override
   State<SwimIqBrandedImage> createState() => _SwimIqBrandedImageState();
@@ -77,10 +78,6 @@ class SwimIqBrandedImage extends StatefulWidget {
 class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
   String? _resolvedPath;
   bool _resolved = false;
-
-  bool get _isMarkOnly =>
-      _resolvedPath != null &&
-      SwimIqBranding.iconMarkCandidates.contains(_resolvedPath);
 
   @override
   void initState() {
@@ -137,22 +134,13 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
       gaplessPlayback: true,
     );
 
-    final shouldZoom = widget.zoomToMark && !_isMarkOnly;
-    if (shouldZoom && w != null && h != null) {
-      image = ClipRect(
-        child: SizedBox(
-          width: w,
-          height: h,
-          child: Transform.scale(
-            scale: SwimIqBranding.compactZoomScale,
-            alignment: SwimIqBranding.compactZoomAlignment,
-            child: Image.asset(
-              _resolvedPath!,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-              gaplessPlayback: true,
-            ),
-          ),
+    if (w != null && h != null) {
+      image = SizedBox(
+        width: w,
+        height: h,
+        child: ClipRect(
+          clipBehavior: Clip.hardEdge,
+          child: image,
         ),
       );
     }
@@ -161,6 +149,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
+      clipBehavior: Clip.hardEdge,
       child: image,
     );
   }

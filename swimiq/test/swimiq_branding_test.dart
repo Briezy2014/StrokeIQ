@@ -24,6 +24,6 @@ void main() {
   test('branding lists include hero and icon paths', () {
     expect(SwimIqBranding.heroCandidates, contains('assets/branding/swimiq_hero.png'));
     expect(SwimIqBranding.iconCandidates, contains('assets/branding/swimiq_icon.png'));
-    expect(SwimIqBranding.compactCandidates, isNotEmpty);
+    expect(SwimIqBranding.compactCandidates, contains('assets/branding/swimiq_icon.png'));
   });
 }

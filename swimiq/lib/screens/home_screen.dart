@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,7 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
+import '../widgets/swimiq_logo.dart';
 import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -66,10 +68,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 72,
-        titleSpacing: 0,
+        toolbarHeight: 64,
+        titleSpacing: 8,
         centerTitle: false,
-        title: const SwimIqAppBarBrand(),
+        title: Row(
+          children: [
+            const SwimIqCompactMark(size: 40, borderRadius: 10),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SwimIqWordmark(fontSize: 18, showTm: true),
+                  Text(
+                    swimmer,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -83,28 +108,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          MaterialBanner(
-            content: Text(
-              user?.email != null
-                  ? 'Signed in as ${user!.email} · Swimmer: $swimmer'
-                  : 'Swimmer: $swimmer',
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: kIsWeb ? 920 : double.infinity,
             ),
-            backgroundColor: Colors.green.shade50,
-            actions: const [SizedBox.shrink()],
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: _screenAt(selectedIndex),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (user?.email != null)
+                  Material(
+                    color: Colors.green.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'Signed in as ${user!.email}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: _screenAt(selectedIndex),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: SwimIqFooter(),
+                ),
+              ],
             ),
           ),
-          const SwimIqFooter(),
-        ],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) {
           ref.read(homeTabIndexProvider.notifier).state = index;
         },

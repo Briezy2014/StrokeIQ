@@ -4,7 +4,7 @@ import '../core/theme/app_theme.dart';
 import 'swimiq_branded_fallback.dart';
 import 'swimiq_branding.dart';
 
-/// Small slot: swimmer mark only (zooms full lockup PNG to the icon region).
+/// Small slot: square swimmer icon only — never stretches a wide lockup.
 class SwimIqCompactMark extends StatelessWidget {
   const SwimIqCompactMark({
     super.key,
@@ -22,14 +22,14 @@ class SwimIqCompactMark extends StatelessWidget {
       height: size,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
+        clipBehavior: Clip.hardEdge,
         child: ColoredBox(
           color: AppColors.primaryDeep,
           child: SwimIqBrandedImage(
             candidates: SwimIqBranding.compactCandidates,
             width: size,
             height: size,
-            fit: BoxFit.cover,
-            zoomToMark: true,
+            fit: BoxFit.contain,
             fallback: SwimIqBrandedFallback(
               variant: SwimIqBrandedVariant.icon,
               width: size,
@@ -43,7 +43,7 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / splash: full square lockup at readable size (icon + wordmark on black).
+/// Login / splash: full square lockup at a fixed, readable size.
 class SwimIqFullLockup extends StatelessWidget {
   const SwimIqFullLockup({
     super.key,
@@ -56,19 +56,21 @@ class SwimIqFullLockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwimIqBrandedImage(
-      candidates: SwimIqBranding.fullLockupCandidates,
-      width: width,
-      height: width,
-      fit: BoxFit.contain,
-      borderRadius: borderRadius,
-      fallback: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SwimIqCompactMark(size: width * 0.45, borderRadius: borderRadius),
-          const SizedBox(height: 12),
-          SwimIqWordmark(fontSize: width * 0.12, light: false),
-        ],
+    return Center(
+      child: SwimIqBrandedImage(
+        candidates: SwimIqBranding.fullLockupCandidates,
+        width: width,
+        height: width,
+        fit: BoxFit.contain,
+        borderRadius: borderRadius,
+        fallback: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwimIqCompactMark(size: width * 0.45, borderRadius: borderRadius),
+            const SizedBox(height: 12),
+            SwimIqWordmark(fontSize: width * 0.12, light: false),
+          ],
+        ),
       ),
     );
   }
@@ -91,23 +93,25 @@ class SwimIqLogo extends StatelessWidget {
   }
 }
 
-/// Dashboard / passport hero: compact mark + wordmark (never stretch a wide lockup).
+/// Compact branding row — never full-width stretched PNGs.
 class SwimIqHeroBanner extends StatelessWidget {
   const SwimIqHeroBanner({
     super.key,
     this.height = 140,
     this.borderRadius = 20,
     this.light = true,
+    this.centered = true,
   });
 
   final double height;
   final double borderRadius;
   final bool light;
+  final bool centered;
 
   @override
   Widget build(BuildContext context) {
-    final markSize = height.clamp(40.0, 64.0);
-    return Row(
+    final markSize = height.clamp(40.0, 72.0);
+    final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         SwimIqCompactMark(size: markSize, borderRadius: borderRadius * 0.6),
@@ -120,6 +124,9 @@ class SwimIqHeroBanner extends StatelessWidget {
         ),
       ],
     );
+
+    if (!centered) return row;
+    return Center(child: row);
   }
 }
 
