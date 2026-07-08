@@ -40,6 +40,11 @@ abstract final class SwimIqQuotes {
     '"Grades, goals, and grit — recruiters notice athletes who show all three."',
   ];
 
+  static const raceIntelligence = [
+    '"Meet day is won in the warmup lane — execute your plan before you touch the blocks."',
+    '"Race with confidence — the clock remembers effort."',
+  ];
+
   static String pickFor(String swimmer, List<String> pool) {
     if (pool.isEmpty) return '';
     return pool[swimmer.hashCode.abs() % pool.length];

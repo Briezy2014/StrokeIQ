@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/swimiq_quotes.dart';
 import '../../core/services/race_intelligence_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -30,9 +32,10 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'Race Intelligence™',
+            SwimIqPageHero(
+              title: 'Race Intelligence',
               subtitle: plan.meetDayLabel,
+              quote: SwimIqQuotes.pickFor(swimmer, SwimIqQuotes.raceIntelligence),
             ),
             const SizedBox(height: 12),
             _HeroCard(plan: plan),

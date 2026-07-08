@@ -5,6 +5,12 @@ echo.
 echo === SwimIQ Diagnose ===
 echo Folder: %CD%
 echo.
+echo --- one-click launchers (USE THESE) ---
+if exist "%~dp0SWIMIQ-CHROME-NOW.bat" (echo [OK] SWIMIQ-CHROME-NOW.bat) else (echo [MISSING] SWIMIQ-CHROME-NOW.bat)
+if exist "%~dp0SWIMIQ-CHROME-NOW.ps1" (echo [OK] SWIMIQ-CHROME-NOW.ps1) else (echo [MISSING] SWIMIQ-CHROME-NOW.ps1)
+if exist "%~dp0SWIMIQ-BUILD-GODADDY-NOW.bat" (echo [OK] SWIMIQ-BUILD-GODADDY-NOW.bat) else (echo [MISSING] SWIMIQ-BUILD-GODADDY-NOW.bat)
+if exist "%~dp0SWIMIQ-BUILD-GODADDY-NOW.ps1" (echo [OK] SWIMIQ-BUILD-GODADDY-NOW.ps1) else (echo [MISSING] SWIMIQ-BUILD-GODADDY-NOW.ps1)
+echo.
 echo --- scripts folder ---
 if exist "%~dp0scripts\launch-chrome-tonight.ps1" (echo [OK] scripts\launch-chrome-tonight.ps1) else (echo [MISSING] scripts\launch-chrome-tonight.ps1)
 if exist "%~dp0scripts\kara-fix-windows-once.ps1" (echo [OK] scripts\kara-fix-windows-once.ps1) else (echo [MISSING] scripts\kara-fix-windows-once.ps1)
