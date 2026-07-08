@@ -60,10 +60,20 @@ if (Test-Path $htaccess) {
     Write-Host 'OK  Added .htaccess for GoDaddy' -ForegroundColor Green
 }
 
+$zipScript = Join-Path $PSScriptRoot 'scripts\zip-web-godaddy.ps1'
+$zipPath = Join-Path $paths.WorkDir 'build\swimiq-web-godaddy.zip'
+if (Test-Path $zipScript) {
+    & $zipScript -WebDir $webOut -ZipPath $zipPath
+}
+
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Green
 Write-Host ' BUILD DONE' -ForegroundColor Green
 Write-Host '========================================' -ForegroundColor Green
-Write-Host " Upload ALL files in:`n  $webOut" -ForegroundColor Green
+Write-Host " Option A - ZIP (easiest on GoDaddy):" -ForegroundColor Green
+Write-Host "   Upload ONE file:`n   $zipPath" -ForegroundColor Green
+Write-Host '   Then Extract in File Manager (see below)' -ForegroundColor Green
+Write-Host ''
+Write-Host " Option B - upload folder:`n   $webOut" -ForegroundColor Green
 Write-Host ' to GoDaddy public_html (keep cgi-bin)' -ForegroundColor Green
 Read-Host 'Press Enter to close'
