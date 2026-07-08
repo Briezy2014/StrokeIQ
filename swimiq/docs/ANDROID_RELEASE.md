@@ -6,19 +6,24 @@ Use this when uploading SwimIQ to Google Play. **Web** builds are unchanged (`sc
 
 ## One-time: create upload keystore
 
-Run once on your dev machine (Windows PowerShell). **Back up the `.jks` file and passwords** in two secure places — you cannot recover a lost upload key without Google support.
+**Easiest:** double-click **`CREATE-KEYSTORE.bat`** in the `swimiq` folder (finds `keytool` from Android Studio automatically).
+
+Or in PowerShell:
 
 ```powershell
 cd S:\swimiq
-mkdir android\keystores -Force
-
-keytool -genkey -v `
-  -keystore android\keystores\swimiq-upload-keystore.jks `
-  -keyalg RSA -keysize 2048 -validity 10000 `
-  -alias swimiq
+powershell -ExecutionPolicy Bypass -File scripts\create-android-keystore.ps1
 ```
 
-Use real values when prompted (name: Kara Williams, org: SwimIQ, city: Groveport, state: OH).
+If you see **`keytool is not recognized`**, Android Studio’s Java is not on PATH. Use the full path:
+
+```powershell
+& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkey -v -keystore android\keystores\swimiq-upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias swimiq
+```
+
+**No Android Studio?** Install it first: https://developer.android.com/studio — then run `CREATE-KEYSTORE.bat` again.
+
+Use real values when prompted (name: Kara Williams, org: SwimIQ, city: Groveport, state: OH). **Write down the password.**
 
 Copy the example config and fill in your passwords:
 
