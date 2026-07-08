@@ -21,22 +21,28 @@ class SwimIqDailyProgress {
 
   double get climbFraction => (todayPoints / 100).clamp(0.0, 1.0);
 
-  /// Rope height from overall SwimIQ score (550 of 1000 = 55% base).
+  /// SwimIQ score maps directly to rope height (550 of 1000 = 55% up the rope).
   static const int ropeScoreMax = 1000;
 
-  double get scoreClimbFraction =>
+  double get scoreRopePercent =>
       (overallSwimIqScore / ropeScoreMax).clamp(0.0, 1.0);
 
-  /// Combined rope position: mostly overall score, boosted by today's work.
+  /// Today's logged work adds up to 10% extra climb on top of score height.
+  double get todayBoostFraction => climbFraction * 0.10;
+
+  /// Rope position: SwimIQ score height plus a small boost from today's points.
   double get ropeClimbFraction {
     if (overallSwimIqScore <= 0 && todayPoints <= 0) {
-      return 0.12;
+      return 0.08;
     }
     if (overallSwimIqScore <= 0) {
-      return (climbFraction * 0.55 + 0.12).clamp(0.12, 1.0);
+      return (climbFraction * 0.45 + 0.08).clamp(0.08, 1.0);
     }
-    return (scoreClimbFraction * 0.75 + climbFraction * 0.25).clamp(0.12, 1.0);
+    return (scoreRopePercent + todayBoostFraction).clamp(0.08, 1.0);
   }
+
+  /// Whole-number percent shown on the rope (matches score when no boost).
+  int get ropeClimbPercent => (ropeClimbFraction * 100).round();
 
   static SwimIqDailyProgress calculate({
     required List<RaceLog> raceLogs,

@@ -62,8 +62,9 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Your SwimIQ Score (${daily.overallSwimIqScore}) sets your height on the rope. '
-              'Log today\'s work (+${daily.todayPoints} pts) to climb higher.',
+              'SwimIQ Score ${daily.overallSwimIqScore} = '
+              '${(daily.scoreRopePercent * 100).round()}% up the rope. '
+              'Log today\'s work (+${daily.todayPoints} pts) for a small boost.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.72),
                     height: 1.35,
@@ -72,7 +73,11 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               height: 220,
-              child: _RopeClimbScene(climbFraction: daily.ropeClimbFraction),
+              child: _RopeClimbScene(
+                climbFraction: daily.ropeClimbFraction,
+                swimIqScore: daily.overallSwimIqScore,
+                climbPercent: daily.ropeClimbPercent,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -165,24 +170,51 @@ class _BadgeChip extends StatelessWidget {
 }
 
 class _RopeClimbScene extends StatelessWidget {
-  const _RopeClimbScene({required this.climbFraction});
+  const _RopeClimbScene({
+    required this.climbFraction,
+    required this.swimIqScore,
+    required this.climbPercent,
+  });
 
   final double climbFraction;
+  final int swimIqScore;
+  final int climbPercent;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return CustomPaint(
-          size: Size(constraints.maxWidth, constraints.maxHeight),
-          painter: _RopeClimbPainter(climbFraction: climbFraction),
-          child: Align(
-            alignment: Alignment(
-              -0.72,
-              0.95 - (climbFraction * 1.75),
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final poolTop = height * 0.72;
+        final ropeTop = height * 0.08;
+        final ropeBottom = poolTop + 8;
+        final ropeX = width * 0.18;
+        final progressY =
+            ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
+        const avatarSize = 46.0;
+        const labelHeight = 22.0;
+        const bubbleGap = 4.0;
+        final bubbleHeight = avatarSize + bubbleGap + labelHeight;
+        final top = (progressY - avatarSize / 2).clamp(0.0, height - bubbleHeight);
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CustomPaint(
+              size: Size(width, height),
+              painter: _RopeClimbPainter(climbFraction: climbFraction),
             ),
-            child: _AvatarBubble(climbFraction: climbFraction),
-          ),
+            Positioned(
+              left: ropeX - (avatarSize / 2),
+              top: top,
+              child: _AvatarBubble(
+                climbFraction: climbFraction,
+                swimIqScore: swimIqScore,
+                climbPercent: climbPercent,
+              ),
+            ),
+          ],
         );
       },
     );
@@ -190,9 +222,15 @@ class _RopeClimbScene extends StatelessWidget {
 }
 
 class _AvatarBubble extends StatelessWidget {
-  const _AvatarBubble({required this.climbFraction});
+  const _AvatarBubble({
+    required this.climbFraction,
+    required this.swimIqScore,
+    required this.climbPercent,
+  });
 
   final double climbFraction;
+  final int swimIqScore;
+  final int climbPercent;
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +271,9 @@ class _AvatarBubble extends StatelessWidget {
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Text(
-            '${(climbFraction * 100).round()}% up',
+            swimIqScore > 0
+                ? '$climbPercent% · Score $swimIqScore'
+                : '$climbPercent% up',
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w900,

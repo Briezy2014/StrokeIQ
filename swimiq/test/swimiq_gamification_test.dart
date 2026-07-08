@@ -33,8 +33,21 @@ void main() {
 
     expect(progress.todayPoints, 20);
     expect(progress.climbFraction, 0.2);
-    expect(progress.scoreClimbFraction, closeTo(0.55, 0.001));
-    expect(progress.ropeClimbFraction, greaterThan(0.4));
+    expect(progress.scoreRopePercent, closeTo(0.55, 0.001));
+    expect(progress.ropeClimbFraction, closeTo(0.57, 0.001));
+    expect(progress.ropeClimbPercent, 57);
+  });
+
+  test('rope climb matches SwimIQ score when no activity today', () {
+    final scored = SwimIqDailyProgress.calculate(
+      raceLogs: const [],
+      meetResults: const [],
+      videos: const [],
+      goals: const [],
+      overallSwimIqScore: 550,
+    );
+    expect(scored.ropeClimbFraction, closeTo(0.55, 0.001));
+    expect(scored.ropeClimbPercent, 55);
   });
 
   test('rope climb never sticks at zero when score or activity exists', () {
@@ -45,7 +58,7 @@ void main() {
       goals: const [],
       overallSwimIqScore: 0,
     );
-    expect(empty.ropeClimbFraction, greaterThanOrEqualTo(0.12));
+    expect(empty.ropeClimbFraction, greaterThanOrEqualTo(0.08));
 
     final scored = SwimIqDailyProgress.calculate(
       raceLogs: const [],
@@ -54,7 +67,7 @@ void main() {
       goals: const [],
       overallSwimIqScore: 550,
     );
-    expect(scored.ropeClimbFraction, greaterThan(0.4));
+    expect(scored.ropeClimbFraction, closeTo(0.55, 0.001));
   });
 
   test('badge catalog includes earned first splash', () {
