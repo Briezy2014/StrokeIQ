@@ -1,8 +1,9 @@
 Kara - branding folder
 ======================
 
-REQUIRED FILE (512 x 512 pixels, square PNG):
-  swimiq_icon.png
+REQUIRED FILE (512 x 512 pixels, square PNG). Either name works:
+  swimiq_icon.png   (preferred)
+  swimiq_logo.png   (also OK — Kara's current file)
 
 Your square lockup (icon + SWIMIQ wordmark + tagline on black).
 Export at 512x512 from your designer — this is the one file the app uses.

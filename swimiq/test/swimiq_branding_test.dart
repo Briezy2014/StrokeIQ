@@ -39,6 +39,10 @@ void main() {
       contains('assets/branding/swimiq_icon.png'),
     );
     expect(
+      SwimIqBranding.fullLockupCandidates,
+      contains('assets/branding/swimiq_logo.png'),
+    );
+    expect(
       SwimIqBranding.iconMarkCandidates,
       contains('assets/branding/swimiq_icon_mark.png'),
     );

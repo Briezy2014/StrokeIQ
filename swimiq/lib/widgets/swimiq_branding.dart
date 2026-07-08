@@ -12,6 +12,7 @@ abstract final class SwimIqBranding {
   /// Full square lockup (icon + wordmark + tagline on black) — for login/splash.
   static const fullLockupCandidates = [
     'assets/branding/swimiq_icon.png',
+    'assets/branding/swimiq_logo.png',
     'assets/branding/swimiq_logo_square.png',
     'assets/branding/icon.png',
   ];
