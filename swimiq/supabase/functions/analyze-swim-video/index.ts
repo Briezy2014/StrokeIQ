@@ -5,6 +5,25 @@ const BUCKET = "swim-videos";
 const MAX_VIDEO_BYTES = 18 * 1024 * 1024;
 const GEMINI_MODEL = "gemini-2.0-flash";
 
+const GEMINI_SAFETY_SETTINGS = [
+  {
+    category: "HARM_CATEGORY_HARASSMENT",
+    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    category: "HARM_CATEGORY_HATE_SPEECH",
+    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+  },
+];
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -115,6 +134,7 @@ Deno.serve(async (req) => {
           ],
         },
       ],
+      safetySettings: GEMINI_SAFETY_SETTINGS,
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: analysisResponseSchema,
@@ -136,7 +156,16 @@ Deno.serve(async (req) => {
     }
 
     const geminiJson = await geminiResponse.json();
-    const textPart = geminiJson?.candidates?.[0]?.content?.parts?.find(
+    const candidate = geminiJson?.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+    if (finishReason === "SAFETY" || finishReason === "BLOCKLIST") {
+      return jsonError(
+        "SwimIQ could not generate coaching feedback for this clip. Try a shorter pool-only video.",
+        422,
+      );
+    }
+
+    const textPart = candidate?.content?.parts?.find(
       (part: { text?: string }) => typeof part.text === "string",
     )?.text;
 
@@ -234,17 +263,27 @@ function buildPrompt(body: AnalyzeRequest): string {
 
   return `You are an experienced youth swim coach reviewing a race or practice video for SwimIQ.
 
+AUDIENCE: Youth swimmers (ages 8–18) and their parents. Write so a parent can read this aloud with their child.
+
+STRICT SAFETY RULES:
+- Supportive, encouraging coach tone only — never harsh, scary, shaming, or sarcastic.
+- Comment ONLY on swimming technique: starts, underwater, stroke, kick, turns, finish, pacing, race strategy.
+- NEVER comment on appearance, body shape, weight, clothing, or anything non-swim-related.
+- NO medical advice, injury diagnosis, or treatment — say "ask your coach" for health questions.
+- NO profanity, adult themes, bullying language, or personal insults.
+- If the video is unclear, describe what you CAN see; do not invent details.
+
 Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context and on-device pose metrics below.
 
 Athlete context:
 ${contextLines || "(no extra context)"}
 
-On-device pose metrics (MediaPipe-compatible BlazePose, estimates only):
+On-device pose metrics (automated body-line estimates — not official timing):
 ${poseLines || "(pose metrics not available for this clip)"}
 
 Return JSON only (no markdown). Be specific about visible technique (body line, kick, pull, breathing, turns, underwater, finish).
 Reference the pose metrics when they support what you see, but do not invent numbers beyond them.
-Use parent-friendly language. Scores are 0-100 integers.
+Use short, parent-friendly sentences. Scores are 0-100 integers.
 Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences.
 Provide next_race_goal as one concrete race target sentence.
 For dryland_focus: explain why strength/mobility/stability matter for this stroke — do NOT list pool drills (the coach handles those).
@@ -265,20 +304,20 @@ function normalizeAnalysis(
   const priorities = bullet(parsed.top_3_priorities);
 
   const sections: Record<string, string> = {
-    "Quick Summary": String(parsed.quick_summary ?? ""),
-    "Quick pro from this video": String(
+    "Quick Summary": sanitizeCoachText(String(parsed.quick_summary ?? "")),
+    "Quick pro from this video": sanitizeCoachText(String(
       parsed.quick_pro ?? whatShows.split("\n")[0] ?? "",
-    ),
-    "Quick con from this video": String(parsed.quick_con ?? ""),
-    "Goal for your next race": String(parsed.next_race_goal ?? ""),
-    "Top 3 priorities for the next practice": priorities,
-    "Dryland focus (strength · mobility · stability)": String(
+    )),
+    "Quick con from this video": sanitizeCoachText(String(parsed.quick_con ?? "")),
+    "Goal for your next race": sanitizeCoachText(String(parsed.next_race_goal ?? "")),
+    "Top 3 priorities for the next practice": sanitizeCoachText(priorities),
+    "Dryland focus (strength · mobility · stability)": sanitizeCoachText(String(
       parsed.dryland_focus ?? "",
-    ),
-    "Estimated time savings": String(parsed.estimated_time_savings ?? ""),
-    "Coach notes for next race": String(
+    )),
+    "Estimated time savings": sanitizeCoachText(String(parsed.estimated_time_savings ?? "")),
+    "Coach notes for next race": sanitizeCoachText(String(
       parsed.coach_notes_for_next_race ?? "",
-    ),
+    )),
   };
 
   const techniqueScore = clampScore(parsed.technique_score);
@@ -286,8 +325,8 @@ function normalizeAnalysis(
   const overallScore = clampScore(parsed.overall_score);
 
   const disclaimer = body.pose_metrics?.frames_with_pose
-    ? "SwimIQ AI analysis with on-device body mechanics — estimates only; confirm with your coach."
-    : "SwimIQ AI analysis from uploaded footage — estimates only; confirm with your coach.";
+    ? "SwimIQ AI coaching with automated body-line estimates — kid- and parent-friendly swim feedback only; confirm with your coach."
+    : "SwimIQ AI coaching from uploaded footage — kid- and parent-friendly swim feedback only; confirm with your coach.";
 
   const engine = body.pose_metrics?.frames_with_pose
     ? "swimiq-v2-gemini-mediapipe"
@@ -321,13 +360,16 @@ function normalizeAnalysis(
       disclaimer,
       pose_metrics: body.pose_metrics ?? null,
       sections,
-      top_3_priorities: parsed.top_3_priorities ?? [],
-      estimated_time_savings: parsed.estimated_time_savings,
-      coach_notes_for_next_race: parsed.coach_notes_for_next_race,
-      quick_pro: parsed.quick_pro,
-      quick_con: parsed.quick_con,
-      next_race_goal: parsed.next_race_goal,
-      dryland_focus: parsed.dryland_focus,
+      top_3_priorities: Array.isArray(parsed.top_3_priorities)
+        ? parsed.top_3_priorities.map((item) => sanitizeCoachText(String(item)))
+        : [],
+      estimated_time_savings: sanitizeCoachText(String(parsed.estimated_time_savings)),
+      coach_notes_for_next_race: sanitizeCoachText(String(parsed.coach_notes_for_next_race)),
+      quick_pro: sanitizeCoachText(String(parsed.quick_pro)),
+      quick_con: sanitizeCoachText(String(parsed.quick_con)),
+      next_race_goal: sanitizeCoachText(String(parsed.next_race_goal)),
+      dryland_focus: sanitizeCoachText(String(parsed.dryland_focus)),
+      youth_friendly: true,
     },
   };
 }
@@ -336,6 +378,17 @@ function clampScore(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return 70;
   return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function sanitizeCoachText(value: string): string {
+  return value
+    .replace(
+      /\b(sexy|hot body|ugly|fat|obese|overweight|skinny|stupid|idiot|damn|hell|shit|fuck|wtf)\b/gi,
+      "",
+    )
+    .replace(/\s{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function mimeTypeForPath(path: string): string {

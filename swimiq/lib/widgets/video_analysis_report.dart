@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/services/video_analysis_presenter.dart';
 import '../core/theme/app_theme.dart';
+import '../core/utils/youth_friendly_analysis.dart';
 import '../data/models/swim_video_analysis.dart';
 
 class VideoAnalysisReport extends StatefulWidget {
@@ -84,7 +85,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         ],
         if (widget.analysis.disclaimer != null)
           Text(
-            widget.analysis.disclaimer!,
+            '${widget.analysis.disclaimer!}\n${YouthFriendlyAnalysis.audienceNote}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                   color: Colors.grey.shade700,
@@ -103,10 +104,9 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         if (widget.analysis.poseMetrics != null) ...[
           const SizedBox(height: 8),
           _SectionCard(
-            title: 'Body mechanics (MediaPipe)',
-            body: widget.analysis.poseMetrics!.observations
-                .map((line) => '• $line')
-                .join('\n'),
+            title: 'Body mechanics snapshot',
+            body: '${widget.analysis.poseMetrics!.observations.map((line) => '• $line').join('\n')}\n\n'
+                '${YouthFriendlyAnalysis.audienceNote}',
           ),
         ],
       ],

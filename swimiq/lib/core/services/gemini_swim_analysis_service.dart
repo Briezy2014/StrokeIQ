@@ -6,6 +6,7 @@ import '../../data/models/swim_goal.dart';
 import '../../data/models/swim_pose_metrics.dart';
 import '../../data/models/swim_video.dart';
 import '../../data/models/swim_video_analysis.dart';
+import '../utils/youth_friendly_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 
 /// Calls the Supabase Edge Function that sends swim video to Google Gemini.
@@ -45,7 +46,9 @@ class GeminiSwimAnalysisService {
       );
     }
 
-    return parseAnalysisResponse(Map<String, dynamic>.from(data));
+    return YouthFriendlyAnalysis.sanitizeAnalysis(
+      parseAnalysisResponse(Map<String, dynamic>.from(data)),
+    );
   }
 
   static Map<String, dynamic> buildRequestBody({

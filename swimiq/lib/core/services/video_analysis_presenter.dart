@@ -1,4 +1,5 @@
 import '../../data/models/swim_video_analysis.dart';
+import '../utils/youth_friendly_analysis.dart';
 
 /// Normalizes analysis sections for display — hides legacy/unwanted blocks.
 abstract final class VideoAnalysisPresenter {
@@ -29,7 +30,7 @@ abstract final class VideoAnalysisPresenter {
         continue;
       }
       if (entry.value.trim().isEmpty) continue;
-      filtered[entry.key] = entry.value.trim();
+      filtered[entry.key] = YouthFriendlyAnalysis.sanitize(entry.value);
     }
 
     final ordered = <String, String>{};

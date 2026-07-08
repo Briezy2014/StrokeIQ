@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
+import '../core/utils/youth_friendly_analysis.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/video_analysis_presenter.dart';
 import '../core/utils/passport_metrics.dart';
@@ -445,13 +447,15 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       } on GeminiAnalysisException catch (error) {
         return error.message;
       } catch (_) {
-        analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
-              video: video,
-              raceLogs: current.raceLogs,
-              goals: current.goals,
-              profile: current.profile,
-              standards: current.usaStandards,
-            );
+        analysis = YouthFriendlyAnalysis.sanitizeAnalysis(
+          ref.read(aiSwimAnalysisServiceProvider).analyze(
+                video: video,
+                raceLogs: current.raceLogs,
+                goals: current.goals,
+                profile: current.profile,
+                standards: current.usaStandards,
+              ),
+        );
         if (poseMetrics != null) {
           analysis = analysis.copyWith(
             analysisJson: {
