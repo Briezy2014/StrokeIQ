@@ -41,7 +41,7 @@ class DashboardScreen extends ConsumerWidget {
             meetResults: meetResults,
             videos: data.userFacingVideos,
             goals: data.goals,
-            overallSwimIqScore: 0,
+            overallSwimIqScore: data.swimIqScore,
           );
           final badges = SwimIqBadgeCatalog.evaluate(
             daily: daily,
@@ -61,7 +61,7 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               _DashboardHero(
                 displayName: data.displayName(swimmer),
-                swimIqScore: 0,
+                swimIqScore: data.swimIqScore,
                 highestCut: 'Start logging',
                 spotlight: null,
                 profile: data.profile,
@@ -91,7 +91,7 @@ class DashboardScreen extends ConsumerWidget {
 
         final snapshot = data.passportSnapshot(swimmer);
         final spotlight = SwimAnalytics.spotlightPersonalBest(
-          personalBests: personalBests,
+          personalBests: personalBests.where((pb) => pb.isValid).toList(),
           catalog: data.motivationalStandards,
           profile: data.profile,
         );
@@ -269,7 +269,7 @@ class _DashboardHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SwimIqHeroBanner(height: 48, borderRadius: 12),
+          const SwimIqCompactMark(size: 48, borderRadius: 12),
           const SizedBox(height: 14),
           Text(
             'WELCOME BACK, ${displayName.toUpperCase()}',

@@ -69,7 +69,7 @@ class SwimIqAppBarBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.fromLTRB(8, 6, 8, 6),
-      child: SwimIqHeroBanner(height: 56, borderRadius: 12),
+      child: SwimIqCompactMark(size: 44, borderRadius: 12),
     );
   }
 }

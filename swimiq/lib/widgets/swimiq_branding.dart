@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Known branding asset filenames (first match wins).
+/// Branding asset paths.
 abstract final class SwimIqBranding {
-  static const iconCandidates = [
+  /// Tight crop: triangle/swimmer mark only (best for app bar & tab headers).
+  static const iconMarkCandidates = [
+    'assets/branding/swimiq_icon_mark.png',
+    'assets/branding/icon_mark.png',
+  ];
+
+  /// Full square lockup (icon + wordmark + tagline on black) — for login/splash.
+  static const fullLockupCandidates = [
     'assets/branding/swimiq_icon.png',
     'assets/images/swimiq_logo.png',
-    'assets/branding/icon.png',
-    'assets/branding/logo_icon.png',
-    'assets/branding/swimiq_logo_icon.png',
     'assets/branding/swimiq_logo.png',
+    'assets/branding/swimiq_logo_square.png',
+    'assets/branding/icon.png',
+  ];
+
+  /// Small slots: prefer mark-only, else zoom full lockup to the icon region.
+  static const compactCandidates = [
+    ...iconMarkCandidates,
+    ...fullLockupCandidates,
   ];
 
   static const heroCandidates = [
@@ -21,6 +33,19 @@ abstract final class SwimIqBranding {
     'assets/branding/swimiq_logo_full.png',
     'assets/branding/swimiq_logo.png',
   ];
+
+  static const iconCandidates = [
+    'assets/branding/swimiq_icon.png',
+    'assets/images/swimiq_logo.png',
+    'assets/branding/icon.png',
+    'assets/branding/logo_icon.png',
+    'assets/branding/swimiq_logo_icon.png',
+    'assets/branding/swimiq_logo.png',
+  ];
+
+  /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).
+  static const compactZoomScale = 5.0;
+  static const compactZoomAlignment = Alignment(0, -0.92);
 }
 
 /// Loads the first existing asset from [candidates], then [fallback].
@@ -33,6 +58,7 @@ class SwimIqBrandedImage extends StatefulWidget {
     this.fit = BoxFit.contain,
     this.borderRadius = 0,
     this.fallback,
+    this.zoomToMark = false,
   });
 
   final List<String> candidates;
@@ -41,6 +67,8 @@ class SwimIqBrandedImage extends StatefulWidget {
   final BoxFit fit;
   final double borderRadius;
   final Widget? fallback;
+  /// When true, zooms into the top of a full lockup so the swimmer mark fills the slot.
+  final bool zoomToMark;
 
   @override
   State<SwimIqBrandedImage> createState() => _SwimIqBrandedImageState();
@@ -49,6 +77,10 @@ class SwimIqBrandedImage extends StatefulWidget {
 class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
   String? _resolvedPath;
   bool _resolved = false;
+
+  bool get _isMarkOnly =>
+      _resolvedPath != null &&
+      SwimIqBranding.iconMarkCandidates.contains(_resolvedPath);
 
   @override
   void initState() {
@@ -80,26 +112,50 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
 
   @override
   Widget build(BuildContext context) {
+    final w = widget.width;
+    final h = widget.height;
+
     if (!_resolved) {
-      return SizedBox(width: widget.width, height: widget.height);
+      return SizedBox(width: w, height: h);
     }
 
     if (_resolvedPath == null) {
       return widget.fallback ??
           Icon(
             Icons.pool,
-            size: (widget.height ?? widget.width ?? 48) * 0.7,
+            size: (h ?? w ?? 48) * 0.7,
             color: Colors.white,
           );
     }
 
-    final image = Image.asset(
+    Widget image = Image.asset(
       _resolvedPath!,
-      width: widget.width,
-      height: widget.height,
+      width: w,
+      height: h,
       fit: widget.fit,
+      filterQuality: FilterQuality.high,
       gaplessPlayback: true,
     );
+
+    final shouldZoom = widget.zoomToMark && !_isMarkOnly;
+    if (shouldZoom && w != null && h != null) {
+      image = ClipRect(
+        child: SizedBox(
+          width: w,
+          height: h,
+          child: Transform.scale(
+            scale: SwimIqBranding.compactZoomScale,
+            alignment: SwimIqBranding.compactZoomAlignment,
+            child: Image.asset(
+              _resolvedPath!,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+              gaplessPlayback: true,
+            ),
+          ),
+        ),
+      );
+    }
 
     if (widget.borderRadius <= 0) return image;
 

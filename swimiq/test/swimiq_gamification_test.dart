@@ -35,6 +35,26 @@ void main() {
     expect(progress.climbFraction, 0.2);
   });
 
+  test('rope climb uses overall score so swimmer is not stuck at zero', () {
+    final scored = SwimIqDailyProgress.calculate(
+      raceLogs: const [],
+      meetResults: const [],
+      videos: const [],
+      goals: const [],
+      overallSwimIqScore: 550,
+    );
+    expect(scored.ropeClimbFraction, greaterThan(0.4));
+
+    final empty = SwimIqDailyProgress.calculate(
+      raceLogs: const [],
+      meetResults: const [],
+      videos: const [],
+      goals: const [],
+      overallSwimIqScore: 0,
+    );
+    expect(empty.ropeClimbFraction, greaterThanOrEqualTo(0.12));
+  });
+
   test('badge catalog includes earned first splash', () {
     final logs = [
       RaceLog(

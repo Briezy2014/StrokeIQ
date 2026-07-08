@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import 'swimiq_logo.dart';
 
-/// Gradient hero block for tab screens — logo + title + optional quote/stats.
+/// Tab header: centered square icon + title (no wide banner, no stretched lockup).
 class SwimIqPageHero extends StatelessWidget {
   const SwimIqPageHero({
     super.key,
@@ -20,59 +20,35 @@ class SwimIqPageHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF050505),
-            AppColors.primaryDeep,
-            AppColors.primary,
-            AppColors.accent,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SwimIqHeroBanner(height: 52, borderRadius: 12),
-          const SizedBox(height: 14),
+          const SwimIqCompactMark(size: 56, borderRadius: 14),
+          const SizedBox(height: 12),
           Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.6,
-              fontSize: 13,
-            ),
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDeep,
+                  height: 1.15,
+                ),
           ),
-          if (subtitle != null) ...[
+          if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               subtitle!,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-            ),
-          ] else ...[
-            const SizedBox(height: 6),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textDark.withValues(alpha: 0.72),
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
                   ),
             ),
           ],
@@ -82,14 +58,17 @@ class SwimIqPageHero extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.22),
+                ),
               ),
               child: Text(
                 quote!,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: AppColors.textDark.withValues(alpha: 0.9),
                   fontStyle: FontStyle.italic,
                   fontWeight: FontWeight.w600,
                   height: 1.45,
@@ -98,8 +77,9 @@ class SwimIqPageHero extends StatelessWidget {
             ),
           ],
           if (stats.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Wrap(
+              alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 8,
               children: stats
@@ -107,22 +87,21 @@ class SwimIqPageHero extends StatelessWidget {
                     (stat) => Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 8,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
+                        color: AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: AppColors.primary.withValues(alpha: 0.22),
                         ),
                       ),
                       child: Text(
                         stat.label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.primaryDeep,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                     ),
                   )

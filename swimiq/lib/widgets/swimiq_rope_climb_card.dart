@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/gamification/swimiq_badges.dart';
@@ -18,6 +20,7 @@ class SwimIqRopeClimbCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final earned = badges.where((badge) => badge.isEarned).toList();
     final locked = badges.where((badge) => !badge.isEarned).take(6).toList();
+    final climbPercent = (daily.ropeClimbFraction * 100).round();
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -51,7 +54,7 @@ class SwimIqRopeClimbCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '${daily.todayPoints}/100 pts',
+                    '${daily.todayPoints}/100 pts today',
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: AppColors.primaryDark,
@@ -62,8 +65,8 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Climb the rope over the pool with today\'s training. '
-              'Overall SwimIQ Score: ${daily.overallSwimIqScore}.',
+              'Your SwimIQ Score (${daily.overallSwimIqScore}) sets your height on the rope. '
+              'Log today\'s work (+${daily.todayPoints} pts) to climb higher.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.72),
                     height: 1.35,
@@ -71,8 +74,18 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 220,
-              child: _RopeClimbScene(climbFraction: daily.climbFraction),
+              height: 240,
+              child: _RopeClimbScene(climbFraction: daily.ropeClimbFraction),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                '$climbPercent% up the rope',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -164,6 +177,33 @@ class _BadgeChip extends StatelessWidget {
   }
 }
 
+class _RopeGeometry {
+  const _RopeGeometry({
+    required this.ropeX,
+    required this.ropeTop,
+    required this.ropeBottom,
+    required this.poolTop,
+  });
+
+  final double ropeX;
+  final double ropeTop;
+  final double ropeBottom;
+  final double poolTop;
+
+  double progressY(double climbFraction) =>
+      ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
+
+  static _RopeGeometry fromSize(Size size) {
+    final poolTop = size.height * 0.72;
+    return _RopeGeometry(
+      ropeX: size.width * 0.22,
+      ropeTop: size.height * 0.06,
+      ropeBottom: poolTop + 6,
+      poolTop: poolTop,
+    );
+  }
+}
+
 class _RopeClimbScene extends StatelessWidget {
   const _RopeClimbScene({required this.climbFraction});
 
@@ -173,93 +213,160 @@ class _RopeClimbScene extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return CustomPaint(
-          size: Size(constraints.maxWidth, constraints.maxHeight),
-          painter: _RopeClimbPainter(climbFraction: climbFraction),
-          child: Align(
-            alignment: Alignment(
-              -0.72,
-              0.95 - (climbFraction * 1.75),
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final geometry = _RopeGeometry.fromSize(size);
+        final progressY = geometry.progressY(climbFraction);
+        const avatarSize = 48.0;
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CustomPaint(
+              size: size,
+              painter: _RopeClimbPainter(
+                climbFraction: climbFraction,
+                geometry: geometry,
+              ),
             ),
-            child: _AvatarBubble(climbFraction: climbFraction),
-          ),
+            Positioned(
+              left: geometry.ropeX - avatarSize * 0.42,
+              top: (progressY - avatarSize * 0.88).clamp(
+                geometry.ropeTop - 8,
+                geometry.ropeBottom - avatarSize * 0.35,
+              ),
+              child: _ClimbingAvatar(
+                climbFraction: climbFraction,
+                size: avatarSize,
+              ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-class _AvatarBubble extends StatelessWidget {
-  const _AvatarBubble({required this.climbFraction});
+class _ClimbingAvatar extends StatelessWidget {
+  const _ClimbingAvatar({
+    required this.climbFraction,
+    required this.size,
+  });
 
   final double climbFraction;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final hue = (120 * climbFraction).clamp(0, 120).toDouble();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                HSLColor.fromAHSL(1, hue, 0.75, 0.55).toColor(),
-                AppColors.primary,
-              ],
-            ),
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
+    final wiggle = math.sin(climbFraction * math.pi * 4) * 0.04;
+
+    return Transform.rotate(
+      angle: wiggle,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              HSLColor.fromAHSL(1, hue, 0.75, 0.55).toColor(),
+              AppColors.primary,
             ],
           ),
-          child: const Center(
-            child: Text('🏊', style: TextStyle(fontSize: 22)),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          ),
-          child: Text(
-            '${(climbFraction * 100).round()}%',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryDeep,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.35),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
+          ],
         ),
-      ],
+        child: CustomPaint(
+          painter: _ClimbingSwimmerPainter(),
+        ),
+      ),
     );
   }
 }
 
+/// Vertical climber with arms reaching up the rope (not a sideways crawl).
+class _ClimbingSwimmerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w * 0.5;
+
+    final bodyPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.09
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fillPaint = Paint()..color = Colors.white;
+
+    // Head
+    canvas.drawCircle(Offset(cx, h * 0.24), w * 0.11, fillPaint);
+
+    // Torso
+    canvas.drawLine(
+      Offset(cx, h * 0.34),
+      Offset(cx, h * 0.62),
+      bodyPaint,
+    );
+
+    // Arms reaching upward on the rope
+    final leftArm = Path()
+      ..moveTo(cx, h * 0.38)
+      ..quadraticBezierTo(cx - w * 0.08, h * 0.18, cx - w * 0.02, h * 0.08);
+    final rightArm = Path()
+      ..moveTo(cx, h * 0.42)
+      ..quadraticBezierTo(cx + w * 0.1, h * 0.2, cx + w * 0.04, h * 0.06);
+    canvas.drawPath(leftArm, bodyPaint);
+    canvas.drawPath(rightArm, bodyPaint);
+
+    // Legs bent as if bracing on the rope
+    final leftLeg = Path()
+      ..moveTo(cx, h * 0.62)
+      ..quadraticBezierTo(cx - w * 0.14, h * 0.78, cx - w * 0.06, h * 0.9);
+    final rightLeg = Path()
+      ..moveTo(cx, h * 0.62)
+      ..quadraticBezierTo(cx + w * 0.12, h * 0.8, cx + w * 0.08, h * 0.92);
+    canvas.drawPath(leftLeg, bodyPaint);
+    canvas.drawPath(rightLeg, bodyPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _RopeClimbPainter extends CustomPainter {
-  _RopeClimbPainter({required this.climbFraction});
+  _RopeClimbPainter({
+    required this.climbFraction,
+    required this.geometry,
+  });
 
   final double climbFraction;
+  final _RopeGeometry geometry;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final poolRect = Rect.fromLTWH(0, size.height * 0.72, size.width, size.height * 0.28);
+    final poolRect = Rect.fromLTWH(
+      0,
+      geometry.poolTop,
+      size.width,
+      size.height - geometry.poolTop,
+    );
     final poolPaint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          AppColors.primary.withValues(alpha: 0.55),
+          Color(0x88009CFF),
           AppColors.primaryDeep,
         ],
       ).createShader(poolRect);
@@ -268,20 +375,17 @@ class _RopeClimbPainter extends CustomPainter {
       poolPaint,
     );
 
-    for (var i = 0; i < 6; i++) {
-      final y = poolRect.top + 8 + (i * 7);
+    // Soft water shimmer — not heavy horizontal stripes.
+    for (var i = 0; i < 3; i++) {
+      final y = poolRect.top + 14 + (i * 18);
       canvas.drawLine(
-        Offset(12, y),
-        Offset(size.width - 12, y + 3),
+        Offset(20, y),
+        Offset(size.width - 20, y + 2),
         Paint()
-          ..color = Colors.white.withValues(alpha: 0.12)
-          ..strokeWidth = 2,
+          ..color = Colors.white.withValues(alpha: 0.08)
+          ..strokeWidth = 1.5,
       );
     }
-
-    final ropeX = size.width * 0.18;
-    final ropeTop = size.height * 0.08;
-    final ropeBottom = poolRect.top + 8;
 
     final ropeColors = [
       const Color(0xFFEF4444),
@@ -293,23 +397,32 @@ class _RopeClimbPainter extends CustomPainter {
       const Color(0xFF8B5CF6),
     ];
 
-    final segmentHeight = (ropeBottom - ropeTop) / ropeColors.length;
+    final segmentHeight =
+        (geometry.ropeBottom - geometry.ropeTop) / ropeColors.length;
     for (var i = 0; i < ropeColors.length; i++) {
       canvas.drawLine(
-        Offset(ropeX, ropeTop + segmentHeight * i),
-        Offset(ropeX, ropeTop + segmentHeight * (i + 1)),
+        Offset(geometry.ropeX, geometry.ropeTop + segmentHeight * i),
+        Offset(geometry.ropeX, geometry.ropeTop + segmentHeight * (i + 1)),
         Paint()
           ..color = ropeColors[i]
-          ..strokeWidth = 10
+          ..strokeWidth = 9
           ..strokeCap = StrokeCap.round,
       );
     }
 
-    final progressY = ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
+    final progressY = geometry.progressY(climbFraction);
     canvas.drawCircle(
-      Offset(ropeX, progressY),
-      8,
+      Offset(geometry.ropeX, progressY),
+      7,
       Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      Offset(geometry.ropeX, progressY),
+      10,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
   }
 
