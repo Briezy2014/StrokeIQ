@@ -148,13 +148,33 @@ function Find-FlutterRoot {
 function Clear-SwimIqDartTool {
     param([string]$WorkDir)
 
-    $dartTool = Join-Path $WorkDir '.dart_tool'
-    $buildDir = Join-Path $WorkDir 'build'
-    foreach ($dir in @($dartTool, $buildDir)) {
-        if (Test-Path -LiteralPath $dir) {
-            Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
+    foreach ($name in @('.dart_tool', 'build')) {
+        $dir = Join-Path $WorkDir $name
+        if (-not (Test-Path -LiteralPath $dir)) { continue }
+        try {
+            Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction Stop
             Write-Host "OK  Removed $dir" -ForegroundColor Yellow
+        } catch {
+            Write-Host "WARN Skipped locked folder (OK): $dir" -ForegroundColor Yellow
+            Write-Host '      Close VS Code before launch if Chrome fails later.' -ForegroundColor DarkYellow
         }
+    }
+}
+
+function Invoke-FlutterCleanSafe {
+    param([string]$FlutterBat)
+
+    $oldPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $FlutterBat clean 2>&1 | Out-Null
+    } catch {
+        Write-Host 'WARN flutter clean skipped (folder locked).' -ForegroundColor Yellow
+    } finally {
+        $ErrorActionPreference = $oldPref
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host 'WARN flutter clean had warnings (continuing anyway).' -ForegroundColor Yellow
     }
 }
 

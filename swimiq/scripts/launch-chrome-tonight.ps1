@@ -50,9 +50,8 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
-Write-Host 'OK  Supabase keys loaded' -ForegroundColor Green
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
-& $paths.FlutterBat clean 2>$null | Out-Null
+Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 
 Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''

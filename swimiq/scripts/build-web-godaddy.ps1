@@ -32,7 +32,7 @@ if (-not $url -or -not $key) {
     exit 1
 }
 
-& $paths.FlutterBat clean
+Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 & $paths.FlutterBat pub get
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

@@ -35,7 +35,7 @@ if (-not $url -or -not $key -or $url -match 'your-project') {
 }
 
 Write-Host 'Building release web app (3-5 minutes)...' -ForegroundColor Cyan
-& $paths.FlutterBat clean
+Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 & $paths.FlutterBat pub get
 if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }
 

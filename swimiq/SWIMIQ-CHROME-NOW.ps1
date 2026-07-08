@@ -41,7 +41,7 @@ if (-not $url -or -not $key -or $url -match 'your-project') {
 }
 
 Write-Host 'Cleaning old cache (fixes hook errors)...' -ForegroundColor Yellow
-& $paths.FlutterBat clean 2>$null | Out-Null
+Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 
 Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 & $paths.FlutterBat pub get

@@ -16,7 +16,7 @@ try {
     Write-Host ''
 
     $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot -CleanDartTool
-    & $paths.FlutterBat clean 2>$null | Out-Null
+    Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 
     Write-Host ''
     Write-Host 'DONE. Paths now use C:\SwimIQWork (no spaces, no OneDrive S: drive).' -ForegroundColor Green
