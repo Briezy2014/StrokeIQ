@@ -9,6 +9,7 @@ import '../../core/constants/legal_constants.dart';
 import '../legal/legal_document_screen.dart';
 import '../membership/membership_screen.dart';
 import '../../widgets/legal_footer.dart';
+import '../../widgets/swimiq_header.dart';
 import '../../services/auth_service.dart';
 
 /// Account and app settings — Milestone 4.
@@ -41,7 +42,7 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const SwimIqScreenAppBarTitle('Settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

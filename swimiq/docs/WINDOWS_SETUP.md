@@ -131,5 +131,12 @@ Do **not** use raw `flutter run -d chrome` — use `run-chrome.bat` so keys and 
 
 ## Logos
 
-Brand files live in `assets\branding\` (`swimiq_icon.png`, `swimiq_hero.png`, `swimiq_logo.png`).  
-After replacing them: `flutter clean` then `flutter run -d chrome`.
+One file only — **512×512 square PNG**:
+
+```
+assets\branding\swimiq_icon.png
+```
+
+Drag your PNG onto **`COPY-LOGO.bat`** (also updates web tab icon in `web\favicon.png` and `web\icons\`).
+
+After replacing: close Chrome completely, then run **`LAUNCH-CHROME.bat`** (not hot reload).

@@ -108,6 +108,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
       width: w,
       height: h,
       fit: widget.fit,
+      filterQuality: FilterQuality.high,
       gaplessPlayback: true,
     );
 
@@ -123,6 +124,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
             child: Image.asset(
               _resolvedPath!,
               fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
               gaplessPlayback: true,
             ),
           ),

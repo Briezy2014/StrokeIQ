@@ -70,7 +70,7 @@ Copy to your Android phone → open → install → sign in.
 
 ## Logo
 
-Icon only: copy `swimiq_icon.png` to `assets\branding\` if the app shows a placeholder.
+Logo: copy your **512×512** `swimiq_icon.png` to `assets\branding\` (or drag onto `COPY-LOGO.bat`).
 
 ---
 

@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/legal_footer.dart';
 import '../../widgets/subscription_feature_matrix.dart';
+import '../../widgets/swimiq_header.dart';
+import '../../widgets/swimiq_logo.dart';
 
 class MembershipScreen extends ConsumerStatefulWidget {
   const MembershipScreen({super.key});
@@ -88,7 +89,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SwimIQ Membership'),
+        title: const SwimIqScreenAppBarTitle('Membership'),
       ),
       body: subscriptionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -121,15 +122,15 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                         letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppConstants.trademark,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                      ),
+                    const SizedBox(height: 12),
+                    const Row(
+                      children: [
+                        SwimIqCompactMark(size: 52, borderRadius: 14),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: SwimIqWordmark(fontSize: 26),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     Text(

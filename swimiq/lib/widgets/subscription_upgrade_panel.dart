@@ -7,6 +7,7 @@ import '../core/subscription/subscription_capabilities.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
 import '../screens/membership/membership_screen.dart';
+import 'swimiq_logo.dart';
 
 /// Full-screen upgrade prompt when a tier is required.
 class SubscriptionUpgradePanel extends ConsumerWidget {
@@ -35,12 +36,11 @@ class SubscriptionUpgradePanel extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
       children: [
-        Icon(
-          minimumTier == SubscriptionTier.elite
-              ? Icons.auto_awesome
-              : Icons.workspace_premium_outlined,
-          size: 56,
-          color: AppColors.primary,
+        Center(
+          child: SwimIqCompactMark(
+            size: 64,
+            borderRadius: 16,
+          ),
         ),
         const SizedBox(height: 16),
         Text(

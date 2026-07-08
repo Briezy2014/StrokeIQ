@@ -18,6 +18,7 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
+import '../../widgets/swimiq_logo.dart';
 import '../../widgets/weekly_progress_report_card.dart';
 import '../../core/gamification/swimiq_badges.dart';
 import '../../core/gamification/swimiq_daily_progress.dart';
@@ -310,14 +311,22 @@ class _DashboardHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'WELCOME BACK, ${displayName.toUpperCase()}',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.88),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              fontSize: 12,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'WELCOME BACK, ${displayName.toUpperCase()}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SwimIqCompactMark(size: 44, borderRadius: 12),
+            ],
           ),
           const SizedBox(height: 14),
           Wrap(

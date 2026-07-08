@@ -11,6 +11,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
+import 'widgets/swimiq_logo.dart';
 
 /// Routes between splash, auth, and the main app based on session state.
 class SwimIqApp extends ConsumerStatefulWidget {
@@ -99,8 +100,8 @@ class _ConfigErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.settings, size: 64),
-              const SizedBox(height: 16),
+              const SwimIqFullLockup(width: 200, borderRadius: 16),
+              const SizedBox(height: 20),
               Text(
                 'SwimIQ is not connected yet',
                 style: Theme.of(context).textTheme.headlineSmall,

@@ -27,7 +27,7 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SwimIqFullLockup(width: 200, borderRadius: 24),
+              const SwimIqFullLockup(width: 280, borderRadius: 24),
               const SizedBox(height: 24),
               const CircularProgressIndicator(color: Colors.white),
             ],

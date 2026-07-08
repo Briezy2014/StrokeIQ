@@ -76,6 +76,29 @@ class SwimIqAppBarBrand extends StatelessWidget {
   }
 }
 
+/// Secondary screens (Settings, Membership, Legal): mark + screen label.
+class SwimIqScreenAppBarTitle extends StatelessWidget {
+  const SwimIqScreenAppBarTitle(this.label, {super.key});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SwimIqCompactMark(size: 32, borderRadius: 8),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Compact app bar: icon + wordmark + swimmer (one line, never clipped).
 class SwimIqAppBarTitle extends StatelessWidget {
   const SwimIqAppBarTitle({super.key, this.subtitle});
