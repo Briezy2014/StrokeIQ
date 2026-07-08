@@ -36,7 +36,10 @@ if %ERR% NEQ 0 (
   echo Try: double-click RESTORE-SCRIPTS.bat then run this again.
 ) else (
   echo [OK] Fix finished.
-  echo Next: double-click KARA-CLICK-THIS.bat
+  echo Next: double-click ONE of these (same thing):
+  echo   KARA-CLICK-THIS.bat
+  echo   LAUNCH-CHROME.bat
+  echo   SWIMIQ-CHROME-NOW.bat
 )
 
 :done

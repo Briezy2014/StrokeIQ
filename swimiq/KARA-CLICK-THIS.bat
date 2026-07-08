@@ -5,10 +5,18 @@ echo.
 echo ========================================
 echo  SwimIQ - Kara Click This
 echo ========================================
-echo.
-echo Launching Chrome - wait 2-3 minutes...
+echo  (Same as LAUNCH-CHROME or SWIMIQ-CHROME-NOW)
+echo ========================================
 echo.
 
+if exist "%~dp0LAUNCH-CHROME.bat" (
+  call "%~dp0LAUNCH-CHROME.bat"
+  exit /b %ERRORLEVEL%
+)
+if exist "%~dp0SWIMIQ-CHROME-NOW.bat" (
+  call "%~dp0SWIMIQ-CHROME-NOW.bat"
+  exit /b %ERRORLEVEL%
+)
 if exist "%~dp0scripts\launch-chrome-kara.ps1" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\launch-chrome-kara.ps1"
   goto done
@@ -17,16 +25,10 @@ if exist "%~dp0SWIMIQ-CHROME-NOW.ps1" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0SWIMIQ-CHROME-NOW.ps1"
   goto done
 )
-if exist "%~dp0scripts\launch-chrome-tonight.ps1" (
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\launch-chrome-tonight.ps1"
-  goto done
-)
 
-echo [ERROR] No launcher found.
-echo Run: git pull origin main
-echo Then double-click KARA-CLICK-THIS.bat in this folder.
+echo [ERROR] No launcher found. You should have LAUNCH-CHROME.bat or SWIMIQ-CHROME-NOW.bat
+echo in this folder. Run: git pull
 
 :done
 echo.
-echo Press any key to close...
-pause >nul
+pause

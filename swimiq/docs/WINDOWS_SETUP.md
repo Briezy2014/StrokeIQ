@@ -33,7 +33,7 @@ Pick **one folder** — either **StrokeIQ** (parent) or **StrokeIQ\swimiq**. The
 | Step | File | How often |
 |------|------|-----------|
 | 1 | **`FIX-KARA-PATHS.bat`** | **Once** (first time, or if Flutter path errors come back) |
-| 2 | **`KARA-CLICK-THIS.bat`** | **Every time** you want to open SwimIQ in Chrome |
+| 2 | **`LAUNCH-CHROME.bat`** or **`SWIMIQ-CHROME-NOW.bat`** or **`KARA-CLICK-THIS.bat`** | **Every time** you want to open SwimIQ in Chrome |
 
 **Or** double-click **`START-HERE.bat`** — it runs Step 1, waits, then Step 2 for you.
 
