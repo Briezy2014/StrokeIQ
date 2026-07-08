@@ -1,20 +1,28 @@
-Kara - branding folder (icon only)
-====================================
+Kara - branding folder
+======================
 
-Use ONE square PNG file:
+YOUR FILE WORKS. The app now handles it two ways:
 
-  swimiq_icon.png   (512 x 512 px recommended, square logo on transparent or white)
+1) FULL SQUARE (what you have now)
+   File: swimiq_icon.png
+   - Black square with icon + SWIMIQ + tagline
+   - Shows LARGE on Login / Signup / Splash
+   - App bar & tab headers auto-zoom to the swimmer icon at the top
 
-The app shows ONLY the icon — no wide banner, no cropped hero image.
+2) ICON MARK ONLY (optional, from designer later)
+   File: swimiq_icon_mark.png
+   - Tight square crop: just the blue triangle + swimmer
+   - Even sharper in the small top bar
 
-Copy to:
+Copy your square PNG to:
   C:\SwimIQWork\swimiq\assets\branding\swimiq_icon.png
 
-IMPORTANT:
-- Must be SQUARE (same width and height)
-- Logo should fill most of the square with a little padding
-- Do NOT use a wide banner image as swimiq_icon.png — it will look tiny
+NOT a vector problem. NOT a banner problem.
+Your PNG has lots of black padding — the app now accounts for that.
 
 After copying:
 1. Close Chrome completely
 2. Double-click LAUNCH-CHROME.bat
+
+Ask designer later for:
+  swimiq_icon_mark.png (512x512, icon only, transparent or black bg)

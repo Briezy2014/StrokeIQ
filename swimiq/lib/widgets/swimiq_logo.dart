@@ -4,7 +4,77 @@ import '../core/theme/app_theme.dart';
 import 'swimiq_branded_fallback.dart';
 import 'swimiq_branding.dart';
 
-/// Square SwimIQ icon — padded so the full logo stays readable in every slot.
+/// Small slot: swimmer mark only (zooms full lockup PNG to the icon region).
+class SwimIqCompactMark extends StatelessWidget {
+  const SwimIqCompactMark({
+    super.key,
+    this.size = 48,
+    this.borderRadius = 12,
+  });
+
+  final double size;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: ColoredBox(
+          color: AppColors.primaryDeep,
+          child: SwimIqBrandedImage(
+            candidates: SwimIqBranding.compactCandidates,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            zoomToMark: true,
+            fallback: SwimIqBrandedFallback(
+              variant: SwimIqBrandedVariant.icon,
+              width: size,
+              height: size,
+              borderRadius: 0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Login / splash: full square lockup at readable size (icon + wordmark on black).
+class SwimIqFullLockup extends StatelessWidget {
+  const SwimIqFullLockup({
+    super.key,
+    this.width = 280,
+    this.borderRadius = 16,
+  });
+
+  final double width;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwimIqBrandedImage(
+      candidates: SwimIqBranding.fullLockupCandidates,
+      width: width,
+      height: width,
+      fit: BoxFit.contain,
+      borderRadius: borderRadius,
+      fallback: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SwimIqCompactMark(size: width * 0.45, borderRadius: borderRadius),
+          const SizedBox(height: 12),
+          SwimIqWordmark(fontSize: width * 0.12, light: false),
+        ],
+      ),
+    );
+  }
+}
+
+/// Legacy alias — compact mark for tight slots.
 class SwimIqLogo extends StatelessWidget {
   const SwimIqLogo({
     super.key,
@@ -17,39 +87,10 @@ class SwimIqLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pad = (size * 0.1).clamp(4.0, 12.0);
-    final inner = size - pad * 2;
-
-    return SizedBox(
-      width: size,
-      height: size,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: ColoredBox(
-          color: AppColors.primaryDeep.withValues(alpha: 0.08),
-          child: Padding(
-            padding: EdgeInsets.all(pad),
-            child: SwimIqBrandedImage(
-              candidates: SwimIqBranding.iconCandidates,
-              width: inner,
-              height: inner,
-              fit: BoxFit.contain,
-              borderRadius: 0,
-              fallback: SwimIqBrandedFallback(
-                variant: SwimIqBrandedVariant.icon,
-                width: inner,
-                height: inner,
-                borderRadius: 0,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return SwimIqCompactMark(size: size, borderRadius: borderRadius);
   }
 }
 
-/// Centered icon for login / splash — no wide banner asset.
 class SwimIqHeroBanner extends StatelessWidget {
   const SwimIqHeroBanner({
     super.key,
@@ -62,9 +103,11 @@ class SwimIqHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = (height * 0.85).clamp(72.0, 160.0);
     return Center(
-      child: SwimIqLogo(size: iconSize, borderRadius: borderRadius),
+      child: SwimIqFullLockup(
+        width: height * 1.4,
+        borderRadius: borderRadius,
+      ),
     );
   }
 }

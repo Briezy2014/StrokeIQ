@@ -86,7 +86,7 @@ class SwimIqAppBarTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const SwimIqLogo(size: 40, borderRadius: 10),
+        const SwimIqCompactMark(size: 40, borderRadius: 10),
         const SizedBox(width: 10),
         Expanded(
           child: Column(

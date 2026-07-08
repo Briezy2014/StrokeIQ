@@ -114,15 +114,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Center(
-                          child: SwimIqLogo(
-                            size: 120,
-                            borderRadius: 20,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         const Center(
-                          child: SwimIqWordmark(fontSize: 28, light: false),
+                          child: SwimIqFullLockup(width: 280, borderRadius: 12),
                         ),
                         const SizedBox(height: 20),
                         Text(

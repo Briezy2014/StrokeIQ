@@ -46,7 +46,7 @@ class SwimIqPageHero extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SwimIqLogo(size: 48, borderRadius: 12),
+              const SwimIqCompactMark(size: 48, borderRadius: 12),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

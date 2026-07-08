@@ -6,26 +6,40 @@ import 'package:swimiq/widgets/swimiq_logo.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('hero banner shows logo or fallback', (tester) async {
+  testWidgets('full lockup widget builds', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: SwimIqHeroBanner(height: 120),
+          body: SwimIqFullLockup(width: 200),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(SwimIqHeroBanner), findsOneWidget);
-    expect(
-      find.byType(Image).evaluate().isNotEmpty ||
-          find.byType(CustomPaint).evaluate().isNotEmpty,
-      isTrue,
-    );
+    expect(find.byType(SwimIqFullLockup), findsOneWidget);
   });
 
-  test('branding lists icon-only paths', () {
-    expect(SwimIqBranding.iconCandidates, contains('assets/branding/swimiq_icon.png'));
-    expect(SwimIqBranding.iconCandidates.length, lessThanOrEqualTo(4));
+  testWidgets('compact mark widget builds', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SwimIqCompactMark(size: 48),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SwimIqCompactMark), findsOneWidget);
+  });
+
+  test('branding lists include lockup and mark paths', () {
+    expect(
+      SwimIqBranding.fullLockupCandidates,
+      contains('assets/branding/swimiq_icon.png'),
+    );
+    expect(
+      SwimIqBranding.iconMarkCandidates,
+      contains('assets/branding/swimiq_icon_mark.png'),
+    );
   });
 }
