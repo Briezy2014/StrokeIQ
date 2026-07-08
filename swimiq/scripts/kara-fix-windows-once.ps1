@@ -10,7 +10,7 @@ Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
 
 try {
-    $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot
+    $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot -CleanDartTool
     & $paths.FlutterBat clean 2>$null | Out-Null
 } catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
@@ -19,5 +19,6 @@ try {
 }
 
 Write-Host ''
-Write-Host 'DONE. Close VS Code, then double-click LAUNCH-CHROME.bat' -ForegroundColor Green
+Write-Host 'DONE. Paths now use C:\SwimIQWork (no spaces, no OneDrive S: drive).' -ForegroundColor Green
+Write-Host 'Close VS Code, then double-click KARA-CLICK-THIS.bat' -ForegroundColor Green
 Read-Host 'Press Enter to close'

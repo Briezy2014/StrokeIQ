@@ -1,4 +1,4 @@
-# Shared Windows path helpers for Kara Williams (spaces + subst drives)
+# Shared Windows path helpers for Kara Williams (spaces + OneDrive + hooks)
 
 function Get-SubstMapping {
     $map = @{}
@@ -20,19 +20,61 @@ function Get-PhysicalRootPath {
     if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
 
     $normalized = $Path.TrimEnd('\')
-    if ($normalized -match '^[A-Z]:$') {
-        $letter = $normalized[0]
+    if ($normalized -match '^([A-Z]):\\?(.*)$') {
+        $letter = $matches[1]
+        $rest = $matches[2]
         $subst = Get-SubstMapping
         if ($subst.ContainsKey($letter)) {
-            return $subst[$letter]
+            if ([string]::IsNullOrEmpty($rest)) { return $subst[$letter].TrimEnd('\') }
+            return (Join-Path $subst[$letter] $rest)
         }
     }
 
     try {
-        return (Get-Item -LiteralPath $normalized -ErrorAction Stop).FullName
+        return (Get-Item -LiteralPath $normalized -ErrorAction Stop).FullName.TrimEnd('\')
     } catch {
         return $normalized
     }
+}
+
+function Ensure-DirectoryJunction {
+    param(
+        [string]$LinkPath,
+        [string]$TargetPath
+    )
+
+    $link = $LinkPath.TrimEnd('\')
+    $target = (Get-PhysicalRootPath $TargetPath).TrimEnd('\')
+    if (-not (Test-Path -LiteralPath $target)) {
+        throw "Target folder not found for junction ${link}:`n$target"
+    }
+
+    if (Test-Path -LiteralPath $link) {
+        $item = Get-Item -LiteralPath $link -Force
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            $existing = $item.Target
+            if ($existing -is [array]) { $existing = $existing[0] }
+            if ($existing -and ($existing.TrimEnd('\') -ieq $target)) {
+                Write-Host "OK  Junction $link -> $target" -ForegroundColor Green
+                return $link
+            }
+            cmd /c "rmdir `"$link`"" | Out-Null
+        } else {
+            throw "Cannot create junction — folder already exists and is not a link:`n$link"
+        }
+    }
+
+    $parent = Split-Path -Parent $link
+    if ($parent -and -not (Test-Path -LiteralPath $parent)) {
+        New-Item -ItemType Directory -Force -Path $parent | Out-Null
+    }
+
+    cmd /c "mklink /J `"$link`" `"$target`"" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "mklink failed for $link -> $target"
+    }
+    Write-Host "OK  Created junction $link -> $target" -ForegroundColor Green
+    return $link
 }
 
 function Ensure-SubstDrive {
@@ -57,6 +99,7 @@ function Ensure-SubstDrive {
         return "${Letter}:\"
     }
 
+    Set-Location C:\
     if ($current) {
         cmd /c "subst ${Letter}: /D" | Out-Null
     }
@@ -73,6 +116,7 @@ function Ensure-SubstDrive {
 
 function Find-FlutterRoot {
     foreach ($candidate in @(
+            'C:\FlutterWork',
             "$env:USERPROFILE\flutter",
             'C:\flutter',
             'C:\src\flutter'
@@ -86,63 +130,67 @@ function Find-FlutterRoot {
     $cmd = Get-Command flutter -ErrorAction SilentlyContinue
     if ($cmd -and $cmd.Source) {
         $bin = Split-Path -Parent $cmd.Source
-        $root = $bin.TrimEnd('\bin').TrimEnd('\')
-        $physical = Get-PhysicalRootPath $root
-        if (Test-Path -LiteralPath "$physical\bin\flutter.bat") {
-            return $physical
+        $root = (Get-PhysicalRootPath (Join-Path $bin '..')).TrimEnd('\')
+        if (Test-Path -LiteralPath "$root\bin\flutter.bat") {
+            return $root
         }
     }
 
     return $null
 }
 
+function Clear-SwimIqDartTool {
+    param([string]$WorkDir)
+
+    $dartTool = Join-Path $WorkDir '.dart_tool'
+    $buildDir = Join-Path $WorkDir 'build'
+    foreach ($dir in @($dartTool, $buildDir)) {
+        if (Test-Path -LiteralPath $dir) {
+            Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "OK  Removed $dir" -ForegroundColor Yellow
+        }
+    }
+}
+
 function Initialize-SwimIqWindowsPaths {
     param(
-        [string]$ScriptsRoot
+        [string]$ScriptsRoot,
+        [switch]$CleanDartTool
     )
+
+    Set-Location C:\
 
     $projectRoot = Get-PhysicalRootPath (Split-Path -Parent $ScriptsRoot)
     $strokeRoot = Get-PhysicalRootPath (Split-Path -Parent $projectRoot)
 
-    # Step off subst drives before remapping (prevents "directory name is invalid")
-    Set-Location C:\
-
-    Write-Host "Physical SwimIQ: $projectRoot"
+    Write-Host "Physical SwimIQ:  $projectRoot"
     Write-Host "Physical StrokeIQ: $strokeRoot"
     Write-Host ''
 
-    $flutterRoot = Find-FlutterRoot
-    if (-not $flutterRoot) {
+    $strokeLink = Ensure-DirectoryJunction -LinkPath 'C:\SwimIQWork' -TargetPath $strokeRoot
+    $workDir = Join-Path $strokeLink 'swimiq'
+
+    $flutterRootPhysical = Find-FlutterRoot
+    if (-not $flutterRootPhysical) {
         throw 'Flutter not found. Install to C:\flutter or C:\Users\Kara Williams\flutter'
     }
-    Write-Host "Physical Flutter: $flutterRoot"
+    Write-Host "Physical Flutter: $flutterRootPhysical"
 
-    $needsMapping = ($flutterRoot -match ' ') -or ($strokeRoot -match ' ') -or ($projectRoot -match ' ')
+    $flutterRoot = $flutterRootPhysical
     $flutterBat = Join-Path $flutterRoot 'bin\flutter.bat'
-    $workDir = $projectRoot
 
-    if ($needsMapping) {
-        Ensure-SubstDrive -Letter 'S' -TargetPath $strokeRoot | Out-Null
-        if ($flutterRoot -match ' ') {
-            Ensure-SubstDrive -Letter 'F' -TargetPath $flutterRoot | Out-Null
-            $flutterBat = 'F:\bin\flutter.bat'
-        }
-        $workDir = 'S:\swimiq'
+    if ($flutterRootPhysical -match ' ') {
+        $flutterRoot = Ensure-DirectoryJunction -LinkPath 'C:\FlutterWork' -TargetPath $flutterRootPhysical
+        $flutterBat = Join-Path $flutterRoot 'bin\flutter.bat'
     }
 
-    $pubCache = 'S:\pub-cache'
+    $pubCache = 'C:\SwimIQPub'
     New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
     $env:PUB_CACHE = $pubCache
     [Environment]::SetEnvironmentVariable('PUB_CACHE', $pubCache, 'User')
     [Environment]::SetEnvironmentVariable('PUB_CACHE', $pubCache, 'Process')
-    if ($flutterBat -eq 'F:\bin\flutter.bat') {
-        $env:FLUTTER_ROOT = 'F:\'
-        $env:Path = "F:\bin;$env:Path"
-    } else {
-        $env:FLUTTER_ROOT = $flutterRoot
-        $flutterBin = Split-Path -Parent $flutterBat
-        $env:Path = "$flutterBin;$env:Path"
-    }
+    $env:FLUTTER_ROOT = $flutterRoot
+    $env:Path = "$(Split-Path $flutterBat -Parent);$env:Path"
 
     if (-not (Test-Path -LiteralPath $flutterBat)) {
         throw "Flutter not found at $flutterBat"
@@ -151,7 +199,16 @@ function Initialize-SwimIqWindowsPaths {
         throw "SwimIQ folder not found at $workDir"
     }
 
+    if ($CleanDartTool) {
+        Clear-SwimIqDartTool -WorkDir $workDir
+    }
+
     Set-Location -LiteralPath $workDir
+
+    Write-Host "OK  Working folder: $workDir" -ForegroundColor Green
+    Write-Host "OK  PUB_CACHE: $pubCache" -ForegroundColor Green
+    Write-Host "OK  Flutter: $flutterBat" -ForegroundColor Green
+    Write-Host ''
 
     return [PSCustomObject]@{
         FlutterBat = $flutterBat

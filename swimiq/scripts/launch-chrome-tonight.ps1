@@ -1,4 +1,4 @@
-# SwimIQ Chrome launcher (Kara Williams / paths with spaces)
+# SwimIQ Chrome launcher (Kara Williams / OneDrive / spaces / objective_c hooks)
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'swimiq-windows-paths.ps1')
@@ -10,17 +10,12 @@ Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
 
 try {
-    $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot
+    $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot $PSScriptRoot -CleanDartTool
 } catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
     Read-Host 'Press Enter to close'
     exit 1
 }
-
-Write-Host "OK  Working folder: $($paths.WorkDir)" -ForegroundColor Green
-Write-Host "OK  Flutter: $($paths.FlutterBat)" -ForegroundColor Green
-Write-Host "OK  PUB_CACHE: $($paths.PubCache)" -ForegroundColor Green
-Write-Host ''
 
 $envFile = Join-Path $paths.WorkDir '.env'
 $exampleFile = Join-Path $paths.WorkDir '.env.example'
@@ -29,7 +24,7 @@ if (-not (Test-Path -LiteralPath $envFile)) {
     if (Test-Path -LiteralPath $exampleFile) {
         Copy-Item $exampleFile $envFile
     }
-    Write-Host 'Created .env — add Supabase URL + anon key, save, run LAUNCH-CHROME.bat again.' -ForegroundColor Yellow
+    Write-Host 'Created .env — add Supabase URL + anon key, save, run again.' -ForegroundColor Yellow
     notepad $envFile
     Read-Host 'Press Enter to close'
     exit 1
@@ -56,7 +51,10 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
 }
 
 Write-Host 'OK  Supabase keys loaded' -ForegroundColor Green
-Write-Host 'Starting Chrome — wait 1-2 minutes...' -ForegroundColor Cyan
+Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
+& $paths.FlutterBat clean 2>$null | Out-Null
+
+Write-Host 'Starting Chrome — wait 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
 & $paths.FlutterBat pub get
