@@ -54,6 +54,23 @@ if (-not (Test-Path (Join-Path $webOut 'main.dart.js'))) {
     Read-Host 'Press Enter'; exit 1
 }
 
+$brandDir = Join-Path $paths.WorkDir 'assets\branding'
+$hasLogo = @(
+    'swimiq_icon.png',
+    'swimiq_logo.png',
+    'swimiq_logo_square.png',
+    'icon.png'
+) | Where-Object { Test-Path (Join-Path $brandDir $_) }
+if (-not $hasLogo) {
+    Write-Host ''
+    Write-Host 'WARNING: No logo PNG in assets\branding\' -ForegroundColor Yellow
+    Write-Host '  Login will show fallback until you add swimiq_logo.png' -ForegroundColor Yellow
+    Write-Host '  Copy your 512x512 PNG, rebuild, then re-upload to GoDaddy.' -ForegroundColor Yellow
+    Write-Host ''
+} else {
+    Write-Host "OK  Logo bundled: $($hasLogo[0])" -ForegroundColor Green
+}
+
 $htaccess = Join-Path $paths.WorkDir 'web\.htaccess'
 if (Test-Path $htaccess) {
     Copy-Item $htaccess (Join-Path $webOut '.htaccess') -Force

@@ -49,6 +49,53 @@ class SwimIqFullLockup extends StatelessWidget {
     super.key,
     this.width = 280,
     this.borderRadius = 16,
+    this.framed = false,
+  });
+
+  final double width;
+  final double borderRadius;
+  /// Black frame — use on white login/signup cards so the lockup always reads.
+  final bool framed;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = SwimIqBrandedImage(
+      candidates: SwimIqBranding.fullLockupCandidates,
+      width: width,
+      height: width,
+      fit: BoxFit.contain,
+      borderRadius: framed ? 0 : borderRadius,
+      fallback: _FullLockupFallback(width: width, borderRadius: borderRadius),
+    );
+
+    if (!framed) return image;
+
+    return Container(
+      width: width + 24,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius - 4),
+        child: image,
+      ),
+    );
+  }
+}
+
+class _FullLockupFallback extends StatelessWidget {
+  const _FullLockupFallback({
+    required this.width,
+    required this.borderRadius,
   });
 
   final double width;
@@ -56,20 +103,24 @@ class SwimIqFullLockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwimIqBrandedImage(
-      candidates: SwimIqBranding.fullLockupCandidates,
-      width: width,
-      height: width,
-      fit: BoxFit.contain,
-      borderRadius: borderRadius,
-      fallback: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SwimIqCompactMark(size: width * 0.45, borderRadius: borderRadius),
-          const SizedBox(height: 12),
-          SwimIqWordmark(fontSize: width * 0.12, light: false),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SwimIqCompactMark(size: width * 0.5, borderRadius: borderRadius),
+        const SizedBox(height: 12),
+        SwimIqWordmark(fontSize: width * 0.13, light: true),
+        const SizedBox(height: 6),
+        Text(
+          'Built in the Water. Driven by Possibility.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.88),
+            fontSize: width * 0.034,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -126,7 +177,7 @@ class SwimIqWordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final swimColor = light ? Colors.white : AppColors.textDark;
+    final swimColor = light ? Colors.white : Colors.black;
     final iqColor = light ? AppColors.primary : AppColors.primaryDeep;
 
     return Row(

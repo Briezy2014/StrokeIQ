@@ -115,6 +115,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
       fit: widget.fit,
       filterQuality: FilterQuality.high,
       gaplessPlayback: true,
+      errorBuilder: (_, __, ___) => widget.fallback ?? const SizedBox.shrink(),
     );
 
     final shouldZoom = widget.zoomToMark && !_isMarkOnly;
