@@ -17,7 +17,6 @@ abstract final class SwimIqQuotes {
 
   static const meetResults = [
     '"Every meet is a chance to show coaches what you\'ve built in practice."',
-    '"Race with confidence — the clock remembers effort."',
     '"College recruiters watch consistency across meets, not just one swim."',
   ];
 
