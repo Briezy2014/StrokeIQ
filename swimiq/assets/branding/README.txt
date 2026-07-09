@@ -1,6 +1,12 @@
 SwimIQ branding — three short file names
 ========================================
 
+*** CODE UPDATES ARE NOT IN THIS FOLDER ***
+To pull app updates: go UP one level to the swimiq folder
+and double-click:  KARA-SEE-UPDATES-NOW.bat
+
+This folder (assets/branding) is ONLY where you drop PNG pictures.
+
 Put PNGs in this folder. The app tries the short names first.
 
 1) icon.png   (REQUIRED)
