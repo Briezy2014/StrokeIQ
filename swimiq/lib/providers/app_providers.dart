@@ -37,6 +37,9 @@ abstract final class HomeTab {
 
 final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);
 
+/// 0 = training sessions, 1 = meets & results inside [TrainingLogScreen].
+final trainingLogSegmentProvider = StateProvider<int>((ref) => 0);
+
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
 );

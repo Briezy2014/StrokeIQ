@@ -163,33 +163,21 @@ void main() {
       await tester.pumpAndSettle();
 
       final data = _harnessData!;
-      expect(find.textContaining('WELCOME BACK'), findsOneWidget);
+      expect(find.text(data.displayName(_fixture['swimmer'] as String)), findsOneWidget);
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('SESSIONS'),
+        find.text('Events & USA cuts'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('${data.raceLogs.length}'), findsOneWidget);
-      expect(find.text('${data.personalBests.length}'), findsWidgets);
-      expect(find.text('${data.goals.length}'), findsWidgets);
-      expect(find.text('${data.meetResults.length}'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.textContaining('Dryland'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Dryland'), findsWidgets);
-      await tester.scrollUntilVisible(
-        find.text('Recent Activity'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Recent Activity'), findsOneWidget);
+      expect(find.text('Events & USA cuts'), findsOneWidget);
+      expect(find.text('Log tab'), findsOneWidget);
+      expect(find.text('Log meets'), findsOneWidget);
+      expect(find.text('Add meet'), findsNothing);
+      expect(find.text('Recent Activity'), findsNothing);
+      expect(find.textContaining('Dryland'), findsNothing);
       expect(find.text('Unlock the Elite wild factor'), findsNothing);
     });
 

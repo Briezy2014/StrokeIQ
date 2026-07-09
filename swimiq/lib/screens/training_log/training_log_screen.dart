@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
@@ -21,7 +22,11 @@ class TrainingLogScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
-  int _tabIndex = 0;
+  int get _tabIndex => ref.watch(trainingLogSegmentProvider);
+
+  void _setTabIndex(int index) {
+    ref.read(trainingLogSegmentProvider.notifier).state = index;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,55 +35,72 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
         final logs = data.raceLogs;
         final dateFormat = DateFormat.yMMMd();
 
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SwimIqPageHero(
-              title: 'Log & Schedule',
-              subtitle: 'Training sessions · meets · practice schedules',
-              stats: [
-                SwimIqHeroStat('${logs.length} sessions'),
-                SwimIqHeroStat('${data.schedules.length} schedule items'),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Training')),
-                ButtonSegment(value: 1, label: Text('Meets & results')),
-              ],
-              selected: {_tabIndex},
-              onSelectionChanged: (values) {
-                setState(() => _tabIndex = values.first);
-              },
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SwimIqPageHero(
+                    title: 'Log & Schedule',
+                    subtitle: 'Training sessions · meets · practice schedules',
+                    stats: [
+                      SwimIqHeroStat('${logs.length} sessions'),
+                      SwimIqHeroStat('${data.schedules.length} schedule items'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment(value: 0, label: Text('Training')),
+                      ButtonSegment(value: 1, label: Text('Meets & results')),
+                    ],
+                    selected: {_tabIndex},
+                    onSelectionChanged: (values) {
+                      _setTabIndex(values.first);
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            if (_tabIndex == 0) ...[
-              if (logs.isEmpty)
-                const EmptyStateMessage(
-                  message:
-                      'No swim sessions yet. Use the Add tab to log your first training swim.',
-                )
-              else
-                ...logs.map(
-                  (log) => _TrainingLogTile(
-                    log: log,
-                    dateFormat: dateFormat,
-                    onEdit: () => _editLog(context, ref, log),
-                    onDelete: () => _deleteLog(context, ref, log),
-                  ),
-                ),
-            ] else
-              ScheduleDepositorySection(
-                onOpenRaceIntelligence: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RaceIntelligenceScreen(),
+            Expanded(
+              child: _tabIndex == 0
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        if (logs.isEmpty)
+                          const EmptyStateMessage(
+                            message:
+                                'No swim sessions yet. Use the Add tab to log your first training swim.',
+                          )
+                        else
+                          ...logs.map(
+                            (log) => _TrainingLogTile(
+                              log: log,
+                              dateFormat: dateFormat,
+                              onEdit: () => _editLog(context, ref, log),
+                              onDelete: () => _deleteLog(context, ref, log),
+                            ),
+                          ),
+                      ],
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ScheduleDepositorySection(
+                        onOpenRaceIntelligence: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const RaceIntelligenceScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  );
-                },
-              ),
+            ),
           ],
         );
       },
