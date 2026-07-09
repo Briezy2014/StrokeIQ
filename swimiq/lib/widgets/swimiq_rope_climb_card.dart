@@ -200,12 +200,13 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const avatarSize = 68.0;
+        const markerWidth = 40.0;
+        const markerHeight = 48.0;
         const labelHeight = 24.0;
-        const bubbleGap = 6.0;
-        final bubbleHeight = avatarSize + bubbleGap + labelHeight;
+        const labelGap = 4.0;
+        final markerHeightTotal = markerHeight + labelGap + labelHeight;
         final top =
-            (progressY - avatarSize / 2).clamp(0.0, height - bubbleHeight);
+            (progressY - markerHeight / 2).clamp(0.0, height - markerHeightTotal);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -215,27 +216,13 @@ class _RopeClimbScene extends StatelessWidget {
               painter: _RopeClimbPainter(climbFraction: climbFraction),
             ),
             Positioned(
-              left: ropeX - (avatarSize / 2),
+              left: ropeX - (markerWidth / 2),
               top: top,
-              child: _RopeClimberBadge(
-                size: avatarSize,
-                climbFraction: climbFraction,
+              child: _RopeSwimmerMarker(
+                width: markerWidth,
+                height: markerHeight,
                 swimIqScore: swimIqScore,
                 climbPercent: climbPercent,
-              ),
-            ),
-            Positioned(
-              left: ropeX - 2,
-              top: top + 4,
-              height: avatarSize - 8,
-              child: IgnorePointer(
-                child: Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF78350F).withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
               ),
             ),
           ],
@@ -245,76 +232,39 @@ class _RopeClimbScene extends StatelessWidget {
   }
 }
 
-class _RopeClimberBadge extends StatelessWidget {
-  const _RopeClimberBadge({
-    required this.size,
-    required this.climbFraction,
+class _RopeSwimmerMarker extends StatelessWidget {
+  const _RopeSwimmerMarker({
+    required this.width,
+    required this.height,
     required this.swimIqScore,
     required this.climbPercent,
   });
 
-  final double size;
-  final double climbFraction;
+  final double width;
+  final double height;
   final int swimIqScore;
   final int climbPercent;
 
   @override
   Widget build(BuildContext context) {
-    final ringColor = Color.lerp(
-      AppColors.primary,
-      AppColors.accent,
-      climbFraction.clamp(0.0, 1.0),
-    )!;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: size + 10,
-          height: size + 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: ringColor.withValues(alpha: 0.35),
-                blurRadius: 16,
-                spreadRadius: 1,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: ringColor, width: 3.5),
-              color: Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: ClipOval(
-                child: CustomPaint(
-                  painter: const RopeClimbingSwimmerPainter(),
-                  child: SizedBox(width: size, height: size),
-                ),
-              ),
-            ),
-          ),
+        CustomPaint(
+          painter: const RopeClimbingSwimmerPainter(),
+          size: Size(width, height),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                blurRadius: 8,
+                color: AppColors.primary.withValues(alpha: 0.1),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -324,7 +274,7 @@ class _RopeClimberBadge extends StatelessWidget {
                 ? '$climbPercent% · Score $swimIqScore'
                 : '$climbPercent% up',
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w900,
               color: AppColors.primaryDeep,
               letterSpacing: 0.2,
