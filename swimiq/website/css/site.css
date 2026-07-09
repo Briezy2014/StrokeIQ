@@ -178,6 +178,14 @@ section h2 {
   box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.3);
 }
 
+.plan-tagline {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0.35rem 0 0;
+  line-height: 1.35;
+}
+
 .plan-price {
   font-size: 1.25rem;
   font-weight: 800;
