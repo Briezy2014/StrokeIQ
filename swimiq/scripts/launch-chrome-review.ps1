@@ -32,7 +32,7 @@ Get-Content $envFile | ForEach-Object {
 }
 if ($url) {
     $url = $url -replace 'https:https//', 'https://'
-    $url = $url -replace 'https://', 'https://'
+    $url = $url -replace 'https//', 'https://'
     if ($url -notmatch '^https://') { $url = "https://$url" }
 }
 
