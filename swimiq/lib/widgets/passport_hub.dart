@@ -24,10 +24,6 @@ class PassportHub extends ConsumerWidget {
   final PassportSnapshot snapshot;
   final VoidCallback? onOpenRecruitingCenter;
 
-  static const hubTagline =
-      '🤖 AI Coach   |   🧬 SwimDNA™   |   🎓 Recruiting Center   |   '
-      '🎥 Video Lab   |   🏁 Race Intelligence™   |   📊 USA Swimming Standards';
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recommendation = PassportAiRecommendation.build(
@@ -38,9 +34,9 @@ class PassportHub extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _HubIntro(tagline: hubTagline),
-        const SizedBox(height: 10),
-        _ModuleStrip(
+        _HubIntro(),
+        const SizedBox(height: 12),
+        _ModuleGrid(
           onModuleTap: (module) => _handleModuleTap(context, ref, module),
         ),
         const SizedBox(height: 12),
@@ -94,14 +90,10 @@ class PassportHub extends ConsumerWidget {
 }
 
 class _HubIntro extends StatelessWidget {
-  const _HubIntro({required this.tagline});
-
-  final String tagline;
+  const _HubIntro();
 
   @override
   Widget build(BuildContext context) {
-    final segments = tagline.split(RegExp(r'\s{3}\|\s{3}'));
-
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
@@ -141,31 +133,6 @@ class _HubIntro extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 8,
-            children: [
-              for (var i = 0; i < segments.length; i++) ...[
-                Text(
-                  segments[i].trim(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.w700,
-                        height: 1.5,
-                      ),
-                ),
-                if (i < segments.length - 1)
-                  Text(
-                    '|',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primaryDark,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-              ],
-            ],
-          ),
         ],
       ),
     );
@@ -184,8 +151,8 @@ class _PassportModule {
   final PassportHubDestination destination;
 }
 
-class _ModuleStrip extends StatelessWidget {
-  const _ModuleStrip({required this.onModuleTap});
+class _ModuleGrid extends StatelessWidget {
+  const _ModuleGrid({required this.onModuleTap});
 
   final void Function(_PassportModule module) onModuleTap;
 
@@ -224,65 +191,72 @@ class _ModuleStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 136,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: modules.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final module = modules[index];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 560 ? 3 : 2;
 
-          return InkWell(
-            onTap: () => onModuleTap(module),
-            borderRadius: BorderRadius.circular(18),
-            child: Ink(
-              width: 132,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.28),
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: modules.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.45,
+          ),
+          itemBuilder: (context, index) {
+            final module = modules[index];
+
+            return InkWell(
+              onTap: () => onModuleTap(module),
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.28),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(module.emoji, style: const TextStyle(fontSize: 22)),
+                    const Spacer(),
+                    Text(
+                      module.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                            height: 1.15,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Open',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppColors.primaryDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(module.emoji, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(height: 8),
-                  Text(
-                    module.label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDark,
-                          height: 1.15,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Open',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.primaryDark,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }

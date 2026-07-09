@@ -112,6 +112,8 @@ void main() {
 
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
       expect(find.text('Open'), findsWidgets);
+      expect(find.text('SwimDNA™'), findsOneWidget);
+      expect(find.text('Race Intelligence™'), findsOneWidget);
       expect(find.text('Coming Soon to Athlete Passport™'), findsNothing);
       expect(find.text('Coming Soon'), findsNothing);
     });
