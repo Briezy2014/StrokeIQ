@@ -168,7 +168,8 @@ class RaceIntelligenceService {
       RaceChecklistItem(
         title: 'Midday fuel checkpoint',
         detail:
-            'Eat your planned pre-race snack. Avoid heavy grease, new foods, or huge portions.',
+            'Eat familiar fuel only: oatmeal, banana, honey, organic berry chews, '
+            'rice/sushi bites, or half a protein bar. No new foods or heavy grease.',
         timingHint: '2.5–3 hours before $focusEvent',
       ),
       RaceChecklistItem(
@@ -304,37 +305,55 @@ class RaceIntelligenceService {
     final age = profile?.age;
     final isDistance = _isDistanceEvent(focusEvent);
     final isSprint = !isDistance;
+    final caffeineOk = age != null && age >= 14;
 
     final breakfastSuggestions = <String>[
       if (age != null && age <= 12)
-        'Oatmeal with banana and a small glass of milk'
+        'Oatmeal with banana slices and a little honey'
       else
-        'Oatmeal or whole-grain toast with banana and nut butter',
-      'Greek yogurt with berries (if dairy sits well)',
-      'Water + optional small orange or apple',
+        'Oatmeal (plain or overnight oats) with banana and honey or nut butter',
+      'Whole-grain toast with banana and honey',
+      'Greek yogurt with organic berries (if dairy sits well)',
+      'Half a protein bar + banana if you need more staying power',
+      'Water; add electrolytes if the meet starts late morning',
     ];
 
-    final snackSuggestions = isSprint
-        ? [
-            'Half a bagel or rice cakes with honey',
-            'Fig bar or low-fiber granola bar',
-            'Sports drink sip if racing in afternoon heat',
-          ]
-        : [
-            'Banana + pretzels or dry cereal',
-            'Peanut butter sandwich (light on the jelly)',
-            'Electrolyte drink between prelims and finals',
-          ];
+    final snackSuggestions = <String>[
+      'Banana (easy digesting potassium + carbs)',
+      'Oatmeal cup or plain instant oats made with water',
+      'Rice-based sushi bites / onigiri (plain, cucumber, or cooked filling — skip raw fish on meet day)',
+      'Honey packet or honey on rice cakes / half bagel',
+      if (caffeineOk)
+        'Honey + electrolyte + caffeine bite (e.g. Honey Stinger waffle or similar) — only if you have tested it in practice'
+      else
+        'Honey + electrolyte bite or chew (caffeine-free) — test in practice first',
+      'Organic berry energy chews or gummies (low fiber, familiar brand)',
+      if (isSprint)
+        'Half a protein bar or fig bar between prelims and finals'
+      else
+        'Light protein bar (half to full) + pretzels or dry cereal for distance schedules',
+      'Electrolyte drink sip (not chug) if racing in heat or long session',
+    ];
 
     final preRaceSuggestions = isSprint
         ? [
-            'Small carb bite only if 60+ min out: applesauce pouch or half banana',
-            'Stop solid food 60–90 min before sprint races',
+            '60–90 min out: half banana, applesauce pouch, or 1–2 organic berry chews',
+            '30–45 min out: small honey sip or electrolyte-only — stop solids 60 min before sprint races',
+            if (caffeineOk)
+              'Caffeine only if coach/parent approved and you have used it before hard sets (never first-time on meet day)',
           ]
         : [
-            'Light carb 2–3 hr out: toast, rice, or pasta (moderate portion)',
-            'Small top-off 60 min out if hungry: banana or sports drink',
+            '2–3 hr out: oatmeal, rice, pasta, or sushi rice bites (moderate portion)',
+            '60–90 min out: banana, honey, or organic berry chews if still hungry',
+            'Electrolyte drink between prelims and finals for 200+ events',
           ];
+
+    final recoverySuggestions = <String>[
+      'Chocolate milk or protein + carb snack within 30 min',
+      'Banana + honey or half protein bar if racing again within 2 hours',
+      'Water + electrolytes if sweating heavily',
+      'Organic berry chews for quick carbs before the next heat (small portion)',
+    ];
 
     final raceTime = upcoming?.startTime;
     final breakfastTiming = raceTime != null
@@ -346,37 +365,37 @@ class RaceIntelligenceService {
         mealLabel: 'Breakfast / morning base',
         timing: breakfastTiming,
         suggestions: breakfastSuggestions,
-        avoid: 'Skip sugary cereal alone, heavy bacon, or trying new foods.',
+        avoid:
+            'Skip sugary cereal alone, heavy bacon, energy drinks, or anything you have not eaten before practice.',
       ),
       NutritionBlock(
         mealLabel: 'Midday meet fuel',
         timing: '2–3 hours before $focusEvent',
         suggestions: snackSuggestions,
-        avoid: 'No fried food, soda bursts, or large fatty meals between events.',
+        avoid:
+            'Skip fried food, soda, giant meals, high-fiber bars, raw/new sushi, and untested supplements on meet day.',
       ),
       NutritionBlock(
         mealLabel: 'Pre-race top-off',
         timing: '60–90 min before race',
         suggestions: preRaceSuggestions,
-        avoid: 'No full meals, high fiber, or dairy if it bothers your stomach.',
+        avoid:
+            'No full meals, greasy food, dairy if it upsets your stomach, or caffeine if you are under 14 or have not tested it.',
       ),
       NutritionBlock(
         mealLabel: 'Recovery between events',
         timing: 'Within 30 min after each race',
-        suggestions: [
-          'Chocolate milk or protein + carb snack',
-          'Water + electrolytes if sweating heavily',
-          'Simple carbs if racing again within 2 hours',
-        ],
-        avoid: 'Skip energy drinks and heavy protein-only snacks mid-meet.',
+        suggestions: recoverySuggestions,
+        avoid:
+            'Skip energy drinks, heavy protein-only snacks, and large portions if you race again soon.',
       ),
     ];
   }
 
   static String _hydrationNotes({required String focusEvent}) {
-    return 'SwimIQ AI Nutrition targets steady hydration for $focusEvent: '
-        '8–12 oz water each hour on meet day, more in warm pools. '
-        'This is general guidance — confirm with your coach or a sports dietitian.';
+    return 'SwimIQ AI Nutrition for $focusEvent: sip 8–12 oz water each hour on meet day; '
+        'add electrolytes (especially with honey chews or caffeine fuel) in warm pools or long sessions. '
+        'Carbs first (banana, oatmeal, honey, berry gummies), light protein as needed — confirm with your coach or sports dietitian.';
   }
 
   static bool _isDistanceEvent(String event) {

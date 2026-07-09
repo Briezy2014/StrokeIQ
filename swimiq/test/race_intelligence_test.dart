@@ -54,6 +54,15 @@ void main() {
       expect(plan.warmUpPlan.any((line) => line.contains('400 easy')), isFalse);
       expect(plan.nutritionPlan.length, 4);
       expect(plan.nutritionPlan.first.mealLabel, contains('Breakfast'));
+      final middayFuel = plan.nutritionPlan
+          .firstWhere((block) => block.mealLabel.contains('Midday'));
+      expect(middayFuel.suggestions.any((s) => s.toLowerCase().contains('honey')), isTrue);
+      expect(middayFuel.suggestions.any((s) => s.toLowerCase().contains('banana')), isTrue);
+      expect(middayFuel.suggestions.any((s) => s.toLowerCase().contains('oatmeal')), isTrue);
+      expect(
+        middayFuel.suggestions.any((s) => s.toLowerCase().contains('gumm')),
+        isTrue,
+      );
       expect(plan.focusEvent, contains('Butterfly'));
       expect(plan.engineLabel, contains('SwimIQ AI'));
     });
