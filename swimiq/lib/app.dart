@@ -110,9 +110,15 @@ class _ConfigErrorScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 message ??
-                    'This build is missing its cloud connection settings. '
-                    'If you installed SwimIQ from the App Store, contact '
-                    'support@swimiqapp.com.',
+                    (kDebugMode
+                        ? 'Local Chrome builds need Supabase keys.\n\n'
+                          '1. Copy .env.example to .env and add your keys\n'
+                          '2. Run: flutter pub get\n'
+                          '3. Run: flutter run -d chrome --dart-define-from-file=.env\n\n'
+                          'Or double-click LAUNCH-CHROME.bat / REVIEW-NOW.bat'
+                        : 'This build is missing its cloud connection settings. '
+                          'If you installed SwimIQ from the App Store, contact '
+                          'support@swimiqapp.com.'),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -88,8 +88,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 & $paths.FlutterBat run -d chrome `
-    --dart-define=SUPABASE_URL=$url `
-    --dart-define=SUPABASE_ANON_KEY=$key
+    --dart-define-from-file=$envFile
 
 $code = $LASTEXITCODE
 Write-Host ''

@@ -52,7 +52,6 @@ Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }
 
 & $paths.FlutterBat run -d chrome `
-    --dart-define=SUPABASE_URL=$url `
-    --dart-define=SUPABASE_ANON_KEY=$key
+    --dart-define-from-file=$envFile
 
 Read-Host 'Press Enter to close'
