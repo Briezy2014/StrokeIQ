@@ -1,0 +1,40 @@
+SwimIQ on S: drive — GET YOUR UPDATES
+=====================================
+
+If KARA-SEE-UPDATES-NOW.bat is missing, your folder is on OLD main branch.
+All new features are on branch: cursor/dashboard-rope-schedule-fix-17e8
+
+OPTION A — paste in Command Prompt (works even with no .bat files)
+-----------------------------------------------------------------
+cd /d S:\swimiq
+git fetch origin cursor/dashboard-rope-schedule-fix-17e8
+git checkout cursor/dashboard-rope-schedule-fix-17e8
+git pull origin cursor/dashboard-rope-schedule-fix-17e8
+dir KARA*.bat
+
+OPTION B — after one successful pull, double-click:
+---------------------------------------------------
+GET-UPDATES-NOW.bat
+or
+KARA-SEE-UPDATES-NOW.bat
+
+THEN run Chrome:
+----------------
+Close Chrome completely, then double-click KARA-SEE-UPDATES-NOW.bat
+
+CONFIRM IT WORKED:
+------------------
+Dashboard shows blue strip:
+  Updates build — dashboard, passport, video, banner (PR #45)
+
+BRANDING PICTURES (separate from code updates):
+-----------------------------------------------
+Put in: S:\swimiq\assets\branding\
+  icon.png
+  banner.png
+  SwimIQ_Mark.PNG
+
+If git says "not a git repository":
+  cd /d S:\
+  dir /s /b .git
+  Then cd to the folder that contains .git and run the git commands above.
