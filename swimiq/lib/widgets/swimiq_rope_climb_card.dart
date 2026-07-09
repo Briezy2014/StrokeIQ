@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../core/gamification/swimiq_badges.dart';
 import '../core/gamification/swimiq_daily_progress.dart';
 import '../core/theme/app_theme.dart';
-import 'swimiq_branded_fallback.dart';
 import 'swimiq_branding.dart';
+import 'rope_climbing_swimmer_painter.dart';
 
 class SwimIqRopeClimbCard extends StatelessWidget {
   const SwimIqRopeClimbCard({
@@ -36,7 +36,7 @@ class SwimIqRopeClimbCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text('🪢', style: TextStyle(fontSize: 24)),
+                Icon(Icons.trending_up, color: AppColors.primaryDeep, size: 26),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -201,9 +201,9 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const avatarSize = 52.0;
-        const labelHeight = 22.0;
-        const bubbleGap = 4.0;
+        const avatarSize = 68.0;
+        const labelHeight = 24.0;
+        const bubbleGap = 6.0;
         final bubbleHeight = avatarSize + bubbleGap + labelHeight;
         final top =
             (progressY - avatarSize / 2).clamp(0.0, height - bubbleHeight);
@@ -218,10 +218,25 @@ class _RopeClimbScene extends StatelessWidget {
             Positioned(
               left: ropeX - (avatarSize / 2),
               top: top,
-              child: _AvatarBubble(
+              child: _RopeClimberBadge(
+                size: avatarSize,
                 climbFraction: climbFraction,
                 swimIqScore: swimIqScore,
                 climbPercent: climbPercent,
+              ),
+            ),
+            Positioned(
+              left: ropeX - 2,
+              top: top + 4,
+              height: avatarSize - 8,
+              child: IgnorePointer(
+                child: Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF78350F).withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
             ),
           ],
@@ -231,98 +246,88 @@ class _RopeClimbScene extends StatelessWidget {
   }
 }
 
-class _AvatarBubble extends StatelessWidget {
-  const _AvatarBubble({
+class _RopeClimberBadge extends StatelessWidget {
+  const _RopeClimberBadge({
+    required this.size,
     required this.climbFraction,
     required this.swimIqScore,
     required this.climbPercent,
   });
 
+  final double size;
   final double climbFraction;
   final int swimIqScore;
   final int climbPercent;
 
   @override
   Widget build(BuildContext context) {
-    final hue = (200 * climbFraction).clamp(0, 200).toDouble();
-    final glow = 0.25 + (climbFraction * 0.45);
+    final ringColor = Color.lerp(
+      AppColors.primary,
+      AppColors.accent,
+      climbFraction.clamp(0.0, 1.0),
+    )!;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: HSLColor.fromAHSL(1, hue, 0.9, 0.55)
-                        .toColor()
-                        .withValues(alpha: glow),
-                    blurRadius: 18,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                gradient: SweepGradient(
-                  colors: [
-                    HSLColor.fromAHSL(1, hue, 0.85, 0.6).toColor(),
-                    AppColors.accent,
-                    AppColors.primary,
-                    HSLColor.fromAHSL(1, hue + 40, 0.85, 0.55).toColor(),
-                  ],
-                ),
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.45),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: SwimIqBrandedImage(
-                    candidates: SwimIqBranding.markCandidates,
-                    width: 38,
-                    height: 38,
-                    fit: BoxFit.contain,
-                    fallback: const SwimIqPaintedMark(size: 38),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          width: size + 10,
+          height: size + 10,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white,
-                AppColors.surfaceLight,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.15),
-                blurRadius: 6,
+                color: ringColor.withValues(alpha: 0.35),
+                blurRadius: 16,
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: ringColor, width: 3.5),
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: ClipOval(
+                child: ColoredBox(
+                  color: Colors.black,
+                  child: SwimIqBrandedImage(
+                    candidates: [
+                      SwimIqBranding.iconAsset,
+                      ...SwimIqBranding.markCandidates,
+                    ],
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    fallback: CustomPaint(
+                      painter: const RopeClimbingSwimmerPainter(),
+                      child: SizedBox(width: size, height: size),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -332,9 +337,10 @@ class _AvatarBubble extends StatelessWidget {
                 ? '$climbPercent% · Score $swimIqScore'
                 : '$climbPercent% up',
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
               color: AppColors.primaryDeep,
+              letterSpacing: 0.2,
             ),
           ),
         ),
