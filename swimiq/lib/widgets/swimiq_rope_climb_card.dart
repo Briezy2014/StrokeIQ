@@ -46,33 +46,21 @@ class SwimIqRopeClimbCard extends StatelessWidget {
                         ),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.accent.withValues(alpha: 0.35),
-                        AppColors.primary.withValues(alpha: 0.2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '${daily.todayPoints}/100 pts',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.primaryDark,
-                        ),
-                  ),
+                _ScorePill(
+                  label: 'Score',
+                  value: '${daily.overallSwimIqScore}/${SwimIqDailyProgress.ropeScoreMax}',
+                ),
+                const SizedBox(width: 6),
+                _ScorePill(
+                  label: 'Today\'s log',
+                  value: '${daily.todayPoints}/100',
+                  muted: daily.todayPoints == 0,
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              'SwimIQ Score ${daily.overallSwimIqScore} = '
-              '${(daily.scoreRopePercent * 100).round()}% up the rope. '
-              'Log today\'s work (+${daily.todayPoints} pts) for a small boost.',
+              _ropeClimbExplanation(daily),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.72),
                     height: 1.35,
@@ -130,6 +118,78 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+String _ropeClimbExplanation(SwimIqDailyProgress daily) {
+  final scorePercent = (daily.scoreRopePercent * 100).round();
+  final boost = daily.todayPoints;
+  if (boost > 0) {
+    return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
+        '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
+        'Today\'s log adds +$boost boost pts on top (max 100 per day).';
+  }
+  return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
+      '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
+      'Log a practice, meet, or video today to earn up to 100 daily boost points.';
+}
+
+class _ScorePill extends StatelessWidget {
+  const _ScorePill({
+    required this.label,
+    required this.value,
+    this.muted = false,
+  });
+
+  final String label;
+  final String value;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: muted
+              ? [
+                  Colors.grey.shade100,
+                  Colors.grey.shade50,
+                ]
+              : [
+                  AppColors.accent.withValues(alpha: 0.35),
+                  AppColors.primary.withValues(alpha: 0.2),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: muted
+              ? Colors.grey.shade300
+              : AppColors.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: muted ? Colors.grey.shade600 : AppColors.primaryDeep,
+                  fontSize: 9,
+                  letterSpacing: 0.2,
+                ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: muted ? Colors.grey.shade700 : AppColors.primaryDark,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -271,7 +331,7 @@ class _RopeSwimmerMarker extends StatelessWidget {
           ),
           child: Text(
             swimIqScore > 0
-                ? '$climbPercent% · Score $swimIqScore'
+                ? '$swimIqScore/${SwimIqDailyProgress.ropeScoreMax} · $climbPercent%'
                 : '$climbPercent% up',
             style: const TextStyle(
               fontSize: 10,
