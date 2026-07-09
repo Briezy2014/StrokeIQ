@@ -96,7 +96,7 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
               );
             }),
             const SizedBox(height: 16),
-            _SectionTitle('Warm-up plan'),
+            _SectionTitle('Dryland warm-up (5–15 min)'),
             const SizedBox(height: 8),
             Card(
               child: Padding(
@@ -241,7 +241,7 @@ class _HeroCard extends StatelessWidget {
             runSpacing: 8,
             children: const [
               _HeroChip(label: 'Midday checklist'),
-              _HeroChip(label: 'Warm-up plan'),
+              _HeroChip(label: 'Dryland warm-up'),
               _HeroChip(label: 'AI nutrition'),
             ],
           ),

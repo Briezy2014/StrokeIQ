@@ -207,23 +207,93 @@ class RaceIntelligenceService {
     required List<String> priorities,
     required String readiness,
   }) {
-    final stroke = profile?.primaryStroke ?? 'Freestyle';
+    final stroke = _strokeFromEvent(focusEvent, profile?.primaryStroke);
+    final isDistance = _isDistanceEvent(focusEvent);
+    final durationLabel = isDistance ? '10–15 min' : '8–12 min';
+
     final lines = <String>[
       'Event focus: $focusEvent · Primary stroke: $stroke · Readiness: $readiness',
-      '400 easy mixed swim — breathe both sides, loose shoulders.',
-      '8 × 50 drill/swim by stroke (25 drill / 25 swim) — stay long and relaxed.',
-      '4 × 25 build @ :45 — smooth acceleration, no sprinting yet.',
-      '2 × 25 race-pace with full breakout and finish — simulate $focusEvent rhythm.',
+      'Dryland warm-up · $durationLabel total (complete before pool warm-up lanes).',
+      'Phase 1 — Activate (2 min): light jog or marching in place, 30 sec jumping jacks '
+          '(low impact if legs are tired), 10 arm circles forward/back.',
+      'Phase 2 — Mobility (3–4 min): 10 cross-body arm swings, 10 overhead reach-and-lean, '
+          '${_mobilityCueForStroke(stroke)} '
+          '10 leg swings each leg (front/back), 20 ankle circles each foot.',
     ];
-    if (priorities.isNotEmpty) {
-      lines.add('Technique carry-in: ${priorities.take(2).join(' · ')}');
+
+    if (isDistance) {
+      lines.add(
+        'Phase 3 — Core & posture (2 min): 30 sec dead-bug or hollow hold, '
+            '10 bird-dogs each side, 10 hip hinges with flat back — stay tall for distance pacing.',
+      );
+    } else {
+      lines.add(
+        'Phase 3 — Power primer (2–3 min): 8 bodyweight squats, 6 squat jumps (soft landing), '
+            '4 explosive streamlines from squat — drive through legs like a start.',
+      );
     }
+
+    lines.add(
+      'Phase 4 — Race activation (2–3 min): ${_raceActivationForStroke(stroke, focusEvent)}',
+    );
+
+    if (priorities.isNotEmpty) {
+      lines.add('Technique cue carry-in: ${priorities.take(2).join(' · ')}');
+    }
+
     lines.addAll([
-      '100 easy choice — flush lactate, calm breathing.',
-      'Deck activation: arm swings, ankle mobility, 2 explosive starts (dry) if allowed.',
-      'Final 5 min: cap & goggles on, confirm heat sheet, one deep-breath race visualization.',
+      'Phase 5 — Start & mind (1–2 min): 2–3 dry block starts (or crouch explode if no blocks), '
+          '10 sec race visualization for $focusEvent, cap & goggles on, confirm heat/lane.',
+      'Finish: walk to pool warm-up calm and breathing steady — this dryland block primes the nervous system; '
+          'save race pace for the water.',
     ]);
+
     return lines;
+  }
+
+  static String _strokeFromEvent(String event, String? primaryStroke) {
+    final lower = event.toLowerCase();
+    if (lower.contains('fly') || lower.contains('butterfly')) return 'Butterfly';
+    if (lower.contains('back') || lower.contains('backstroke')) return 'Backstroke';
+    if (lower.contains('breast')) return 'Breaststroke';
+    if (lower.contains('free') || lower.contains('freestyle')) return 'Freestyle';
+    if (lower.contains(' im') || lower.contains('individual medley')) return 'IM';
+    return primaryStroke ?? 'Freestyle';
+  }
+
+  static String _mobilityCueForStroke(String stroke) {
+    switch (stroke) {
+      case 'Butterfly':
+        return '8 thoracic extensions + chest openers for fly catch, ';
+      case 'Backstroke':
+        return '8 shoulder external-rotation pulses + hip flexor stretch each side, ';
+      case 'Breaststroke':
+        return '8 hip openers + 10 ankle dorsiflexion rocks for breast kick, ';
+      case 'IM':
+        return '6 reps each: thoracic rotation, hip opener, ankle rock, ';
+      default:
+        return '8 thoracic rotations each side for freestyle reach, ';
+    }
+  }
+
+  static String _raceActivationForStroke(String stroke, String focusEvent) {
+    switch (stroke) {
+      case 'Butterfly':
+        return '6 streamline pulses with strong core, 4 dolphin-kick arm drivers (standing), '
+            '2×10 sec fly tempo arm swings — stay long through shoulders.';
+      case 'Backstroke':
+        return '6 streamline-to-backstroke arm cycles (standing), 8 fast double-arm back strokes '
+            '(no resistance), 2×10 sec hip-up start drive.';
+      case 'Breaststroke':
+        return '6 standing breaststroke pull-throughs, 8 narrow squat-to-glide pulses, '
+            '2×10 sec fast hands-to-chin tempo.';
+      case 'IM':
+        return '2 reps each stroke arm pattern (fly/back/breast/free), '
+            '4 IM transition snaps (fly→back, back→breast), one smooth full-IM visualization.';
+      default:
+        return '6 freestyle catch pulls (standing), 8 high-elbow band pulls or arm drivers, '
+            '2×10 sec race-pace arm tempo for $focusEvent.';
+    }
   }
 
   static List<NutritionBlock> _nutritionPlan({

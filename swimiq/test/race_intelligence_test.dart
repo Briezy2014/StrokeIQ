@@ -50,6 +50,8 @@ void main() {
 
       expect(plan.middayChecklist.length, greaterThanOrEqualTo(5));
       expect(plan.warmUpPlan, isNotEmpty);
+      expect(plan.warmUpPlan.any((line) => line.contains('Dryland')), isTrue);
+      expect(plan.warmUpPlan.any((line) => line.contains('400 easy')), isFalse);
       expect(plan.nutritionPlan.length, 4);
       expect(plan.nutritionPlan.first.mealLabel, contains('Breakfast'));
       expect(plan.focusEvent, contains('Butterfly'));
