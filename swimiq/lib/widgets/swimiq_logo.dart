@@ -40,11 +40,11 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / signup: show swimiq_logo.png from assets/branding exactly as saved.
+/// Login / signup: square app icon PNG only (icon.png).
 class SwimIqLoginBrand extends StatelessWidget {
   const SwimIqLoginBrand({
     super.key,
-    this.size = 220,
+    this.size = 200,
   });
 
   final double size;
@@ -52,17 +52,35 @@ class SwimIqLoginBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SwimIqBrandedImage(
-        candidates: SwimIqBranding.fullLockupCandidates,
+      child: Container(
         width: size,
         height: size,
-        fit: BoxFit.contain,
-        borderRadius: 12,
-        fallback: SwimIqBrandedFallback(
-          variant: SwimIqBrandedVariant.hero,
-          width: size,
-          height: size,
-          borderRadius: 12,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SwimIqBrandedImage(
+            candidates: SwimIqBranding.loginIconCandidates,
+            width: size - 20,
+            height: size - 20,
+            fit: BoxFit.contain,
+            fallback: SwimIqBrandedFallback(
+              variant: SwimIqBrandedVariant.icon,
+              width: size - 20,
+              height: size - 20,
+              borderRadius: 0,
+            ),
+          ),
         ),
       ),
     );
@@ -86,7 +104,7 @@ class SwimIqFullLockup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final image = SwimIqBrandedImage(
-      candidates: SwimIqBranding.fullLockupCandidates,
+      candidates: SwimIqBranding.loginIconCandidates,
       width: width,
       height: width,
       fit: BoxFit.contain,

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/widgets/swimiq_branding.dart';
-import 'package:swimiq/widgets/swimiq_branding.dart';
 import 'package:swimiq/widgets/swimiq_logo.dart';
 import 'package:swimiq/core/constants/app_constants.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('login brand uses dark wordmark for white cards', (tester) async {
+  testWidgets('login brand shows square icon slot', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -49,23 +48,16 @@ void main() {
     expect(find.byType(SwimIqCompactMark), findsOneWidget);
   });
 
-  test('branding lists include lockup and mark paths', () {
+  test('login uses icon.png first', () {
     expect(
-      SwimIqBranding.fullLockupCandidates.first,
-      'assets/branding/swimiq_logo.png',
+      SwimIqBranding.loginIconCandidates.first,
+      SwimIqBranding.iconAsset,
     );
     expect(
       SwimIqBranding.compactCandidates.first,
-      'assets/branding/swimiq_logo.png',
+      SwimIqBranding.markAsset,
     );
-    expect(
-      SwimIqBranding.fullLockupCandidates,
-      contains('assets/branding/swimiq_icon.png'),
-    );
-    expect(
-      SwimIqBranding.iconMarkCandidates,
-      contains('assets/branding/swimiq_icon_mark.png'),
-    );
+    expect(AppConstants.brandIconAsset, SwimIqBranding.iconAsset);
     expect(AppConstants.brandIconSizePx, 512);
   });
 }

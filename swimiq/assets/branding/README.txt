@@ -1,42 +1,16 @@
-Kara - branding folder
-======================
+SwimIQ branding — three short file names
+========================================
 
-REQUIRED FILE (512 x 512 pixels, square PNG):
-  swimiq_logo.png   <-- USE THIS NAME (your current file)
-  swimiq_icon.png   (same file copied here by SYNC-LOGO-NOW.bat)
+*** LOGIN PAGE USES icon.png — put your square app picture here ***
 
-The app loads swimiq_logo.png FIRST. If an OLD swimiq_icon.png with
-"Aspyn Briez" text is still on disk, drag your NEW PNG onto SYNC-LOGO-NOW.bat
-to overwrite BOTH files.
+1) icon.png   (REQUIRED)
+   Square app picture — 512 x 512 px.
+   Login, splash, membership. Drag PNG onto DRAG-LOGO-HERE.bat to save.
 
-Your square lockup (icon + SWIMIQ wordmark + tagline on black).
-Export at 512x512 from your designer — this is the one file the app uses.
+2) banner.png (RECOMMENDED)
+   Wide tab strip — ~1200 x 400 px.
 
-Copy to:
-  C:\SwimIQWork\swimiq\assets\branding\swimiq_icon.png
+3) mark.png or SwimIQ_Mark.PNG (OPTIONAL)
+   Tight swimmer mark for app bar / tab banner.
 
-Or drag your PNG onto **DRAG-LOGO-HERE.bat** or **COPY-LOGO.bat** in the swimiq folder (also updates web tab icon).
-
-WHERE IT SHOWS IN THE APP
--------------------------
-- Login, Signup, Splash — full lockup at large size
-- App bar, every tab header, Dashboard hero — zoomed swimmer mark
-- Settings, Membership, Legal — mark in the top bar
-- Upgrade screens — mark instead of generic icons
-- Config error screen — full lockup
-
-OPTIONAL (sharper small slots, from designer later):
-  swimiq_icon_mark.png (512x512, icon-only tight crop)
-
-TAB BANNER (wide horizontal promo — shows on every tab except Dashboard):
-  SwimIQ_banner.PNG   <-- Kara's file name (also accepts swimiq_banner.png)
-  Copy to: assets/branding/SwimIQ_banner.PNG
-  Recommended: wide landscape (~1200×400 or similar), swimmer + tagline artwork.
-
-After copying:
-1. Close Chrome completely
-2. Double-click LAUNCH-CHROME.bat
-   (hot reload does NOT pick up new image files)
-
-NOT a vector problem. NOT a banner problem.
-Your PNG may have black padding — the app zooms the mark for small slots.
+After adding PNGs: close Chrome, run KARA-SEE-UPDATES-NOW.bat
