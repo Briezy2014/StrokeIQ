@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants/founder_account_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
@@ -86,6 +87,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
   @override
   Widget build(BuildContext context) {
     final subscriptionAsync = ref.watch(subscriptionStateProvider);
+    final user = ref.watch(currentUserProvider);
+    final showCoachAdmin = FounderAccountConstants.canViewCoachAdminCodes(user?.email);
 
     return Scaffold(
       appBar: AppBar(
@@ -183,35 +186,37 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   onSelect: () => _selectPlan(plan.tier),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Coach preview access',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Coaches evaluate SwimIQ before buying for their team:\n'
-                '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
-                '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
-                '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
-                'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}',
-                style: TextStyle(color: Colors.grey.shade700, height: 1.45),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _coachCodeController,
-                decoration: InputDecoration(
-                  labelText: 'Coach access code',
-                  hintText: SubscriptionCatalog.coachAccessCode,
+              if (showCoachAdmin) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Coach preview access',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: _redeemCoachCode,
-                child: const Text('Unlock coach preview'),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  'Coaches evaluate SwimIQ before buying for their team:\n'
+                  '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
+                  '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
+                  '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
+                  'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}',
+                  style: TextStyle(color: Colors.grey.shade700, height: 1.45),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _coachCodeController,
+                  decoration: InputDecoration(
+                    labelText: 'Coach access code',
+                    hintText: SubscriptionCatalog.coachAccessCode,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: _redeemCoachCode,
+                  child: const Text('Unlock coach preview'),
+                ),
+              ],
               if (_message != null) ...[
                 const SizedBox(height: 16),
                 Text(

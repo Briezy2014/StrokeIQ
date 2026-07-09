@@ -123,6 +123,21 @@ void main() {
     expect(FounderAccountConstants.isFounderEmail('random@gmail.com'), isFalse);
   });
 
+  test('coach admin codes visible only for Briezy login', () {
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('briezy682014@gmail.com'),
+      isTrue,
+    );
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('owner@swimiqapp.com'),
+      isFalse,
+    );
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('aspyn@example.com'),
+      isFalse,
+    );
+  });
+
   test('founder elite state unlocks all features', () {
     const state = SubscriptionState(
       tier: SubscriptionTier.elite,
