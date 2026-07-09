@@ -13,10 +13,6 @@ class AppConstants {
   /// Set false to enforce Basic / Pro / Elite tab gates (before public launch).
   static const unlockAllTabsForPreview = false;
 
-  /// Shown on Dashboard so Kara can confirm she is on the updates branch.
-  static const previewBuildLabel =
-      'Updates build — dashboard, passport, video, banner (PR #45)';
-
   /// Official 2024-2028 USA Swimming age-group brackets from the motivational PDF.
   static const ageGroups = [
     '10 & under',

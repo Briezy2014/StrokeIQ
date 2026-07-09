@@ -17,8 +17,10 @@ import 'package:swimiq/screens/dashboard/dashboard_screen.dart';
 import 'package:swimiq/screens/goals/goals_screen.dart';
 import 'package:swimiq/screens/meet_results/meet_results_screen.dart';
 import 'package:swimiq/screens/personal_bests/personal_bests_screen.dart';
+import 'package:swimiq/screens/training_log/training_log_screen.dart';
 import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
+import 'package:swimiq/widgets/swimiq_logo.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 import 'support/subscription_test_helper.dart';
@@ -248,6 +250,17 @@ void main() {
         find.textContaining('$pbCount official meet PBs'),
         findsOneWidget,
       );
+      expect(find.byType(SwimIqCompactMark), findsNothing);
+    });
+
+    testWidgets('Training Log', (tester) async {
+      await tester.pumpWidget(_screenHarness(const TrainingLogScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log'), findsOneWidget);
+      expect(find.text('Training & practices'), findsWidgets);
+      expect(find.text('Meets & results'), findsOneWidget);
+      expect(find.byType(SwimIqCompactMark), findsNothing);
     });
 
     testWidgets('Meet Results', (tester) async {

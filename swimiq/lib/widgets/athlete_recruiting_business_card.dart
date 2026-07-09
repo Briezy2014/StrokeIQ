@@ -244,9 +244,10 @@ class _PhotoMark extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: photoUrl != null && photoUrl!.isNotEmpty
           ? Image.network(photoUrl!, fit: BoxFit.cover)
-          : const Padding(
-              padding: EdgeInsets.all(6),
-              child: SwimIqCompactMark(size: 32, borderRadius: 16),
+          : const Icon(
+              Icons.person_outline,
+              color: Colors.white70,
+              size: 28,
             ),
     );
   }

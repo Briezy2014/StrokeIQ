@@ -10,6 +10,7 @@ import '../../providers/swimmer_data_provider.dart';
 import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/passport_hub.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/swimiq_media_picker.dart';
@@ -334,6 +335,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
+            const SwimIqPageHero(
+              title: 'Athlete Passport',
+              subtitle: 'Recruiting profile, SwimDNA hub & college tools',
+            ),
+            const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
                 final wide = constraints.maxWidth >= 720;

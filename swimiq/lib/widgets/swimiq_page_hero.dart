@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import 'swimiq_logo.dart';
 
-/// Tab header: centered square icon + title (no wide banner, no stretched lockup).
+/// Tab header: title + optional stats (brand banner is above on [HomeScreen]).
 class SwimIqPageHero extends StatelessWidget {
   const SwimIqPageHero({
     super.key,
     required this.title,
     this.subtitle,
     this.stats = const [],
-    this.showMark = true,
+    this.showMark = false,
   });
 
   final String title;

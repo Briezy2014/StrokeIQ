@@ -27,7 +27,7 @@ class SwimIqCompactMark extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          zoomToMark: true,
+          zoomToMark: false,
           fallback: SwimIqBrandedFallback(
             variant: SwimIqBrandedVariant.icon,
             width: size,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_constants.dart';
 import '../providers/app_providers.dart';
 import 'swimiq_branding.dart';
 import 'swimiq_branded_fallback.dart';
@@ -13,17 +14,18 @@ class SwimIqTabBanner extends StatelessWidget {
 
   final int tabIndex;
 
-  static String? moduleLabelForTab(int index) {
-    return switch (index) {
-      HomeTab.dashboard => 'Dashboard',
-      HomeTab.personalBests => 'Personal Bests',
-      HomeTab.trainingLog => 'Training Log',
-      HomeTab.goals => 'Goals',
-      HomeTab.videoLab => 'Video Lab',
-      HomeTab.passport => 'Recruiting Passport',
-      _ => null,
-    };
-  }
+  static const tabModuleLabels = <int, String>{
+    HomeTab.dashboard: 'Dashboard',
+    HomeTab.personalBests: 'PBs',
+    HomeTab.trainingLog: 'Log',
+    HomeTab.goals: 'Goals',
+    HomeTab.videoLab: 'Video Lab',
+    HomeTab.passport: 'Passport',
+  };
+
+  static String? moduleLabelForTab(int index) => tabModuleLabels[index];
+
+  static bool hasBannerForTab(int index) => tabModuleLabels.containsKey(index);
 
   @override
   Widget build(BuildContext context) {
@@ -31,36 +33,64 @@ class SwimIqTabBanner extends StatelessWidget {
     if (module == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: SizedBox(
-          height: 104,
-          width: double.infinity,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const ColoredBox(color: Color(0xFF020812)),
-              SwimIqBrandedImage(
-                candidates: SwimIqBranding.tabBannerCandidates,
-                fit: BoxFit.fitWidth,
-                alignment: Alignment.center,
-                fallback: const _BannerMarkFallback(),
+      padding: const EdgeInsets.only(bottom: 4),
+      child: SizedBox(
+        height: 116,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: Color(0xFF020812)),
+            SwimIqBrandedImage(
+              candidates: SwimIqBranding.tabBannerCandidates,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              fallback: const _BannerMarkFallback(),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.72),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 18, 12, 8),
+                  child: Text(
+                    AppConstants.brandTagline,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                  ),
+                ),
               ),
-              Positioned(
-                top: 10,
-                right: 12,
-                child: _ModuleChip(label: module),
-              ),
-            ],
-          ),
+            ),
+            Positioned(
+              top: 10,
+              right: 12,
+              child: _ModuleChip(label: module),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Centered mark/icon when banner.png is missing.
+/// Centered mark when banner.png is missing.
 class _BannerMarkFallback extends StatelessWidget {
   const _BannerMarkFallback();
 
@@ -82,9 +112,12 @@ class _BannerMarkFallback extends StatelessWidget {
       ),
       child: Center(
         child: SwimIqBrandedImage(
-          candidates: SwimIqBranding.tabBannerCandidates,
+          candidates: [
+            SwimIqBranding.markAsset,
+            ...SwimIqBranding.markCandidates,
+          ],
           height: 88,
-          fit: BoxFit.fitHeight,
+          fit: BoxFit.contain,
           fallback: const SwimIqPaintedMark(size: 72),
         ),
       ),
