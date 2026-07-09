@@ -247,9 +247,10 @@ void main() {
 
       expect(find.text('Goals'), findsOneWidget);
       expect(
-        find.textContaining('Target times for ${_fixture['displayName']}'),
+        find.textContaining('Targets, progress & USA cuts for'),
         findsOneWidget,
       );
+      expect(find.text('Goal tracker'), findsOneWidget);
     });
 
     testWidgets('Personal Bests', (tester) async {

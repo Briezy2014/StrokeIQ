@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swim_analytics.dart';
-import '../../core/utils/swim_event_parser.dart';
+import '../../core/utils/goal_progress_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/swim_goal.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/goal_progress_visuals.dart';
 import '../../widgets/goals_progress_chart.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -34,6 +33,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   int _distance = 100;
   DateTime _targetDate = DateTime.now();
   bool _isSaving = false;
+  bool _showAddForm = false;
 
   @override
   void dispose() {
@@ -50,9 +50,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2045),
     );
-    if (picked != null) {
-      setState(() => _targetDate = picked);
-    }
+    if (picked != null) setState(() => _targetDate = picked);
   }
 
   Future<void> _saveGoal() async {
@@ -93,6 +91,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           const SnackBar(content: Text('Goal saved.')),
         );
         _timeController.clear();
+        setState(() => _showAddForm = false);
       }
     } on FormatException {
       if (mounted) {
@@ -141,32 +140,17 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     );
   }
 
-  String _progressText(SwimGoal goal, SwimmerData data) {
-    final best = SwimAnalytics.bestTimeForGoal(
-      goal: goal,
-      raceLogs: data.raceLogs,
-    );
-    final toGoal = SwimAnalytics.secondsToGoal(
-      goal: goal,
-      raceLogs: data.raceLogs,
-    );
-
-    if (best == null) return 'No swims logged for this event yet';
-    if (toGoal != null && toGoal <= 0) {
-      return 'Goal achieved! PB: ${SwimTime.fromSeconds(best)}';
-    }
-    if (toGoal != null) {
-      return 'Current: ${SwimTime.fromSeconds(best)} · '
-          '${SwimTime.fromSeconds(toGoal)} to go';
-    }
-    return 'Current: ${SwimTime.fromSeconds(best)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
+        final snapshots = buildGoalSnapshots(data);
+        final achieved = snapshots
+            .where((s) => s.status == GoalProgressStatus.achieved)
+            .length;
+        final showForm = _showAddForm || data.goals.isEmpty;
+        final snapshot = data.passportSnapshot(swimmer);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -174,137 +158,152 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           children: [
             SwimIqPageHero(
               title: 'Goals',
-              subtitle: 'Target times for ${data.displayName(swimmer)}',
-              stats: [SwimIqHeroStat('${data.goals.length} active goals')],
+              subtitle: 'Targets, progress & USA cuts for ${data.displayName(swimmer)}',
+              stats: [
+                SwimIqHeroStat('${data.goals.length} active goals'),
+                if (achieved > 0) SwimIqHeroStat('$achieved achieved'),
+                SwimIqHeroStat('Top cut: ${snapshot.highestCut}'),
+              ],
             ),
             const SizedBox(height: 16),
-            GoalsProgressChart(goals: data.goals, data: data),
+            if (data.goals.isNotEmpty) ...[
+              GoalsCutsBanner(snapshots: snapshots),
+              const SizedBox(height: 16),
+              GoalsProgressChart(snapshots: snapshots),
+              const SizedBox(height: 16),
+              Text(
+                'Your goals',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Charts use training swims and official meet results from Log.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              ...snapshots.map(
+                (snapshot) => GoalProgressCard(
+                  snapshot: snapshot,
+                  onDelete: () => _deleteGoal(snapshot.goal),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ] else
+              const EmptyStateMessage(
+                message:
+                    'Set a goal below, then log swims on the Log tab. '
+                    'Progress charts and USA cuts update automatically.',
+              ),
             const SizedBox(height: 16),
-            Form(
-              key: _formKey,
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _strokeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Stroke',
-                      hintText:
-                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    initialValue: '$_distance',
-                    decoration:
-                        const InputDecoration(labelText: 'Goal Distance'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      final parsed = int.tryParse(value);
-                      if (parsed != null && parsed >= 25) {
-                        setState(() => _distance = parsed);
-                      }
-                    },
-                    validator: (value) {
-                      final parsed = int.tryParse(value ?? '');
-                      if (parsed == null || parsed < 25) {
-                        return 'Distance must be at least 25';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _timeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Target Time',
-                      hintText: 'Example: 35.43 or 1:24.32',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Target time is required';
-                      }
-                      try {
-                        SwimTime.toSeconds(value);
-                      } on FormatException {
-                        return 'Use 35.43 or M:SS.hh format';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Target Date'),
-                    subtitle: Text(dateFormat.format(_targetDate)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _pickDate,
+                    title: const Text(
+                      'Set a new goal',
+                      style: TextStyle(fontWeight: FontWeight.w900),
                     ),
+                    subtitle: const Text(
+                      'Add a target time — we track progress from your logs.',
+                    ),
+                    trailing: Icon(
+                      showForm ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    onTap: () => setState(() => _showAddForm = !_showAddForm),
                   ),
-                  const SizedBox(height: 20),
-                  SwimIqSaveButton(
-                    label: 'Save Goal',
-                    isSaving: _isSaving,
-                    onPressed: _saveGoal,
-                  ),
+                  if (showForm)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _strokeController,
+                              decoration: const InputDecoration(
+                                labelText: 'Goal stroke',
+                                hintText:
+                                    'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              initialValue: '$_distance',
+                              decoration: const InputDecoration(
+                                labelText: 'Goal distance',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                final parsed = int.tryParse(value);
+                                if (parsed != null && parsed >= 25) {
+                                  setState(() => _distance = parsed);
+                                }
+                              },
+                              validator: (value) {
+                                final parsed = int.tryParse(value ?? '');
+                                if (parsed == null || parsed < 25) {
+                                  return 'Distance must be at least 25';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _timeController,
+                              decoration: const InputDecoration(
+                                labelText: 'Target time',
+                                hintText: 'Example: 35.43 or 1:24.32',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Target time is required';
+                                }
+                                try {
+                                  SwimTime.toSeconds(value);
+                                } on FormatException {
+                                  return 'Use 35.43 or M:SS.hh format';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _courseController,
+                              decoration: const InputDecoration(
+                                labelText: 'Goal course',
+                                hintText: 'SCY, SCM, or LCM',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Target date'),
+                              subtitle: Text(dateFormat.format(_targetDate)),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.calendar_today),
+                                onPressed: _pickDate,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SwimIqSaveButton(
+                              label: 'Save goal',
+                              isSaving: _isSaving,
+                              onPressed: _saveGoal,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-            Text(
-              'Goal Progress',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            if (data.goals.isEmpty)
-              const EmptyStateMessage(message: 'No goals yet.')
-            else
-              ...data.goals.map((goal) {
-                final parts = SwimEventParser.parse(goal.event);
-                final cut = parts == null
-                    ? null
-                    : MotivationalCut.labelForSwim(
-                        catalog: data.motivationalStandards,
-                        profile: data.profile,
-                        stroke: parts.stroke,
-                        distance: parts.distance,
-                        course: goal.course,
-                        timeSeconds: goal.goalTime,
-                      );
-                final progress = _progressText(goal, data);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    title: Text('${goal.event} (${goal.course})'),
-                    subtitle: Text(
-                      'Target ${SwimTime.fromSeconds(goal.goalTime)} · '
-                      '${cut ?? 'Below B'} cut\n$progress',
-                    ),
-                    isThreeLine: true,
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'delete') _deleteGoal(goal);
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                    ),
-                  ),
-                );
-              }),
           ],
         );
       },

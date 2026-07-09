@@ -2,45 +2,33 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
-import '../core/utils/swim_analytics.dart';
-import '../data/models/swim_goal.dart';
-import '../providers/swimmer_data_provider.dart';
+import '../core/utils/goal_progress_analytics.dart';
 
 class GoalsProgressChart extends StatelessWidget {
   const GoalsProgressChart({
     super.key,
-    required this.goals,
-    required this.data,
+    required this.snapshots,
   });
 
-  final List<SwimGoal> goals;
-  final SwimmerData data;
+  final List<GoalProgressSnapshot> snapshots;
 
   @override
   Widget build(BuildContext context) {
-    if (goals.isEmpty) return const SizedBox.shrink();
+    if (snapshots.isEmpty) return const SizedBox.shrink();
 
     var achieved = 0;
     var onTrack = 0;
     var needsWork = 0;
 
-    for (final goal in goals) {
-      final best = SwimAnalytics.bestTimeForGoal(
-        goal: goal,
-        raceLogs: data.raceLogs,
-      );
-      final toGoal = SwimAnalytics.secondsToGoal(
-        goal: goal,
-        raceLogs: data.raceLogs,
-      );
-      if (best == null) {
-        needsWork++;
-      } else if (toGoal != null && toGoal <= 0) {
-        achieved++;
-      } else if (toGoal != null && toGoal <= 2) {
-        onTrack++;
-      } else {
-        needsWork++;
+    for (final snapshot in snapshots) {
+      switch (snapshot.status) {
+        case GoalProgressStatus.achieved:
+          achieved++;
+        case GoalProgressStatus.close:
+          onTrack++;
+        case GoalProgressStatus.building:
+        case GoalProgressStatus.noData:
+          needsWork++;
       }
     }
 
@@ -51,7 +39,9 @@ class GoalsProgressChart extends StatelessWidget {
     ].where((slice) => slice.value > 0).toList();
 
     if (sections.isEmpty) {
-      sections.add(_ChartSlice('Goals set', goals.length, AppColors.primary));
+      sections.add(
+        _ChartSlice('Goals set', snapshots.length, AppColors.primary),
+      );
     }
 
     return Card(
@@ -69,7 +59,7 @@ class GoalsProgressChart extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Where your goals stand today',
+              'Progress from training logs & official meet results',
               style: TextStyle(color: Colors.grey.shade700),
             ),
             const SizedBox(height: 16),
