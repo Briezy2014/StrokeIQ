@@ -58,5 +58,17 @@ void main() {
       isTrue,
     );
     expect(report.timeProjections.first.targetSchoolName, isNotNull);
+    expect(report.divisionFit, isNotEmpty);
+    expect(report.genericReachSchools, isNotEmpty);
+    expect(report.genericTargetSchools, isNotEmpty);
+    expect(report.genericLikelySchools, isNotEmpty);
+    expect(
+      report.genericReachSchools.any((line) => line.contains('D1')),
+      isTrue,
+    );
+    expect(
+      report.genericLikelySchools.any((line) => line.contains('D2') || line.contains('NAIA')),
+      isTrue,
+    );
   });
 }

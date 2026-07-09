@@ -143,30 +143,26 @@ class _RecruitingIntelligenceScreenState
                 emoji: '🎯',
                 title: 'College Match AI',
                 lines: [
-                  if (report.usedNamedSchoolMatching)
-                    'Named schools matched to your official times and illustrative '
-                    'recruiting benchmarks (Ohio & Midwest seed data):'
-                  else
-                    'Based on your times and improvement rate, you are currently '
-                    'competitive for:',
-                  if (!report.usedNamedSchoolMatching)
-                    ...report.divisionFit.map((d) => '• $d'),
+                  'Based on your times and improvement rate, you are currently '
+                  'competitive for:',
+                  ...report.divisionFit.map((d) => '• $d'),
+                  '',
+                  'Division overview — reach / target / likely (projections):',
+                  'Reach schools:',
+                  ...report.genericReachSchools,
+                  'Target schools:',
+                  ...report.genericTargetSchools,
+                  'Likely schools:',
+                  ...report.genericLikelySchools,
                   if (report.usedNamedSchoolMatching) ...[
                     '',
+                    'Named schools matched to your official times (Ohio & Midwest benchmarks):',
                     'Reach schools (need faster times):',
                     ...report.reachSchools,
                     'Target schools (close to recruit range):',
                     ...report.targetSchools,
                     'Likely schools (times already in range):',
                     ...report.likelySchools,
-                  ] else ...[
-                    '',
-                    'Reach schools:',
-                    ...report.reachSchools.map((s) => '  ◦ $s'),
-                    'Target schools:',
-                    ...report.targetSchools.map((s) => '  ◦ $s'),
-                    'Likely schools:',
-                    ...report.likelySchools.map((s) => '  ◦ $s'),
                   ],
                 ],
               ),

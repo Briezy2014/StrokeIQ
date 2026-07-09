@@ -14,6 +14,9 @@ class RecruitingIntelligenceReport {
     required this.reachSchools,
     required this.targetSchools,
     required this.likelySchools,
+    required this.genericReachSchools,
+    required this.genericTargetSchools,
+    required this.genericLikelySchools,
     required this.timeProjections,
     required this.eventRecommendations,
     required this.improvementCurve,
@@ -31,6 +34,9 @@ class RecruitingIntelligenceReport {
   final List<String> reachSchools;
   final List<String> targetSchools;
   final List<String> likelySchools;
+  final List<String> genericReachSchools;
+  final List<String> genericTargetSchools;
+  final List<String> genericLikelySchools;
   final List<TimeProjection> timeProjections;
   final List<String> eventRecommendations;
   final List<String> improvementCurve;
@@ -107,13 +113,19 @@ class RecruitingIntelligenceEngine {
       divisionFit: divisionFit,
       reachSchools: usedNamed
           ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.reach)
-          : _schoolBucket(divisionFit, 'reach'),
+          : _schoolBucket(divisionFit, 'reach').map((s) => '  ◦ $s').toList(),
       targetSchools: usedNamed
           ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.target)
-          : _schoolBucket(divisionFit, 'target'),
+          : _schoolBucket(divisionFit, 'target').map((s) => '  ◦ $s').toList(),
       likelySchools: usedNamed
           ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.likely)
-          : _schoolBucket(divisionFit, 'likely'),
+          : _schoolBucket(divisionFit, 'likely').map((s) => '  ◦ $s').toList(),
+      genericReachSchools:
+          _schoolBucket(divisionFit, 'reach').map((s) => '  ◦ $s').toList(),
+      genericTargetSchools:
+          _schoolBucket(divisionFit, 'target').map((s) => '  ◦ $s').toList(),
+      genericLikelySchools:
+          _schoolBucket(divisionFit, 'likely').map((s) => '  ◦ $s').toList(),
       timeProjections: _timeProjections(topPb, favorite, schoolMatches),
       eventRecommendations: _eventRecommendations(
         personalBests: personalBests,

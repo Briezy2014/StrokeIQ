@@ -121,6 +121,9 @@ void main() {
     expect(report.strengths, isNotEmpty);
     expect(report.milestones, isNotEmpty);
     expect(report.divisionFit, isNotEmpty);
+    expect(report.genericReachSchools, isNotEmpty);
+    expect(report.genericTargetSchools, isNotEmpty);
+    expect(report.genericLikelySchools, isNotEmpty);
     expect(report.timeProjections, isNotEmpty);
     expect(report.usedNamedSchoolMatching, isTrue);
   });
