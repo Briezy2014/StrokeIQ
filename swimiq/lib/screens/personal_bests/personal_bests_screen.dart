@@ -3,8 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/services/usa_motivational_standards_catalog.dart';
+import '../../data/models/personal_best_entry.dart';
+import '../../data/models/swimmer_profile.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/utils/motivational_cut.dart';
+import '../../core/utils/next_cut_progress.dart';
+import '../../core/utils/swimiq_standards_profile.dart';
+import '../../widgets/next_cut_progress_strip.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../providers/app_providers.dart';
@@ -52,6 +58,12 @@ class PersonalBestsScreen extends ConsumerWidget {
             );
           }
 
+          final closestNextCut = _closestNextCut(
+            officialBests: officialBests,
+            catalog: data.motivationalStandards,
+            profile: data.profile,
+          );
+
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
@@ -65,10 +77,28 @@ class PersonalBestsScreen extends ConsumerWidget {
                   SwimIqHeroStat(data.passportSnapshot(swimmer).highestCut),
                 ],
               ),
+              if (closestNextCut != null) ...[
+                const SizedBox(height: 12),
+                NextCutSummaryCard(
+                  eventTitle: closestNextCut.title,
+                  progress: closestNextCut.progress,
+                ),
+              ] else if (!SwimIqStandardsProfile.isReady(data.profile)) ...[
+                const SizedBox(height: 12),
+                const SwimIqStandardsSetupBanner(),
+              ],
               const SizedBox(height: 16),
               ...officialBests.map(
                 (pb) {
                   final cut = MotivationalCut.labelForSwim(
+                    catalog: data.motivationalStandards,
+                    profile: data.profile,
+                    stroke: pb.stroke,
+                    distance: pb.distance,
+                    course: pb.course,
+                    timeSeconds: pb.timeSeconds,
+                  );
+                  final nextCut = NextCutAnalytics.forSwim(
                     catalog: data.motivationalStandards,
                     profile: data.profile,
                     stroke: pb.stroke,
@@ -85,6 +115,12 @@ class PersonalBestsScreen extends ConsumerWidget {
                     trailing: pb.formattedTime,
                     highlight:
                         cut == data.passportSnapshot(swimmer).highestCut,
+                    footer: nextCut == null
+                        ? null
+                        : NextCutProgressStrip(
+                            progress: nextCut,
+                            compact: true,
+                          ),
                   );
                 },
               ),
@@ -144,6 +180,39 @@ class PersonalBestsScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+class _ClosestNextCut {
+  const _ClosestNextCut({required this.title, required this.progress});
+
+  final String title;
+  final NextCutProgress progress;
+}
+
+_ClosestNextCut? _closestNextCut({
+  required List<PersonalBestEntry> officialBests,
+  required UsaMotivationalStandardsCatalog catalog,
+  required SwimmerProfile? profile,
+}) {
+  _ClosestNextCut? closest;
+  for (final pb in officialBests) {
+    final progress = NextCutAnalytics.forSwim(
+      catalog: catalog,
+      profile: profile,
+      stroke: pb.stroke,
+      distance: pb.distance,
+      course: pb.course,
+      timeSeconds: pb.timeSeconds,
+    );
+    if (progress == null || !progress.hasNextCut) continue;
+    final gap = progress.gapSeconds;
+    if (gap == null || gap <= 0) continue;
+
+    if (closest == null || gap < (closest.progress.gapSeconds ?? double.infinity)) {
+      closest = _ClosestNextCut(title: pb.displayTitle, progress: progress);
+    }
+  }
+  return closest;
 }
 
 class _ProPbsUpsell extends StatelessWidget {

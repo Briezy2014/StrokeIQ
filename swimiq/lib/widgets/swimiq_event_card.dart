@@ -11,6 +11,7 @@ class SwimIqEventCard extends StatelessWidget {
     this.trailing,
     this.highlight = false,
     this.trailingActions,
+    this.footer,
   });
 
   final String title;
@@ -18,6 +19,7 @@ class SwimIqEventCard extends StatelessWidget {
   final String? trailing;
   final bool highlight;
   final Widget? trailingActions;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -50,29 +52,54 @@ class SwimIqEventCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        subtitle: Text(subtitle),
-        isThreeLine: subtitle.contains('\n'),
-        trailing: trailingActions ??
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                trailing ?? '',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(subtitle),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                trailingActions ??
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        trailing ?? '',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+              ],
             ),
+            if (footer != null) ...[
+              const SizedBox(height: 12),
+              footer!,
+            ],
+          ],
+        ),
       ),
     );
   }
