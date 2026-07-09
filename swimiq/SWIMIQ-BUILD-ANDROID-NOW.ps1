@@ -39,7 +39,7 @@ Write-Host 'Checking Android toolchain...' -ForegroundColor Cyan
 & $paths.FlutterBat doctor | Select-String -Pattern 'Android toolchain'
 
 Write-Host ''
-Write-Host 'Building release APK (5-10 minutes first time)...' -ForegroundColor Cyan
+Write-Host 'Building release APK (side-load only; Play Store uses SWIMIQ-BUILD-AAB-NOW.bat)...' -ForegroundColor Cyan
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 & $paths.FlutterBat pub get
 if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }

@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties (never commit key.properties).
+# Generate the keystore first: double-click GENERATE-ANDROID-KEYSTORE.bat
+#
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=swimiq
+storeFile=../keystore/swimiq-upload.jks

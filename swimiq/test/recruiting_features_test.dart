@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/recruiting/meet_history_analytics.dart';
 import 'package:swimiq/core/recruiting/recruiting_intelligence_engine.dart';
 import 'package:swimiq/core/recruiting/recruiting_resume_builder.dart';
+import 'package:swimiq/core/recruiting/recruiting_resume_pdf.dart';
 import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/personal_best_entry.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
@@ -85,6 +86,19 @@ void main() {
     expect(summary.meetNames, contains('State Championships'));
     expect(summary.progressionLines, isNotEmpty);
     expect(summary.championshipHighlights.first, contains('State Championships'));
+  });
+
+  test('recruiting resume PDF generates bytes', () async {
+    final bytes = await RecruitingResumePdf.buildBytes(
+      profile: profile,
+      displayName: 'Test',
+      personalBests: pbs,
+      swimIqScore: 620,
+      highestCut: 'AA',
+      championshipsQualified: const ['State Championships'],
+    );
+    expect(bytes.length, greaterThan(500));
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
 
   test('recruiting intelligence produces assistant report', () {

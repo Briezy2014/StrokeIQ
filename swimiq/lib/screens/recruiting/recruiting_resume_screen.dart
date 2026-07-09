@@ -1,18 +1,20 @@
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 
 import '../../core/models/subscription_plan.dart';
 import '../../core/recruiting/recruiting_resume_builder.dart';
-import 'recruiting_resume_io.dart'
-    if (dart.library.html) 'recruiting_resume_stub.dart';
+import '../../core/recruiting/recruiting_resume_pdf.dart';
+import '../../data/models/personal_best_entry.dart';
+import '../../data/models/swimmer_profile.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
 
-/// Pro-tier one-page recruiting résumé with export.
+/// Pro-tier one-page recruiting résumé with PDF export.
 class RecruitingResumeScreen extends ConsumerStatefulWidget {
   const RecruitingResumeScreen({super.key});
 
@@ -23,6 +25,12 @@ class RecruitingResumeScreen extends ConsumerStatefulWidget {
 
 class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen> {
   String? _resumeText;
+  SwimmerProfile? _profile;
+  String? _displayName;
+  List<PersonalBestEntry> _personalBests = const [];
+  int _swimIqScore = 0;
+  String _highestCut = '';
+  List<String> _championshipTags = const [];
 
   @override
   Widget build(BuildContext context) {
@@ -33,23 +41,31 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
       teaserFeatures: const [
         'Auto-generated recruiting résumé',
         'Top times, honors & academics',
-        'Export for college coaches',
+        'Export PDF for college coaches',
       ],
       child: SwimmerScreen(
         builder: (context, ref, data, swimmer) {
           final snapshot = data.passportSnapshot(swimmer);
+          final tags = RecruitingResumeBuilder.championshipTags(
+            highestCut: snapshot.highestCut,
+            personalBests: data.personalBests,
+          );
           final resume = RecruitingResumeBuilder.buildText(
             profile: data.profile,
             displayName: data.displayName(swimmer),
             personalBests: data.personalBests,
             swimIqScore: snapshot.swimIqScore,
             highestCut: snapshot.highestCut,
-            championshipsQualified: RecruitingResumeBuilder.championshipTags(
-              highestCut: snapshot.highestCut,
-              personalBests: data.personalBests,
-            ),
+            championshipsQualified: tags,
           );
+
           _resumeText = resume;
+          _profile = data.profile;
+          _displayName = data.displayName(swimmer);
+          _personalBests = data.personalBests;
+          _swimIqScore = snapshot.swimIqScore;
+          _highestCut = snapshot.highestCut;
+          _championshipTags = tags;
 
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -57,7 +73,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
             children: [
               const SwimIqPageHero(
                 title: 'Best Times Résumé',
-                subtitle: 'Clean one-page recruiting résumé — ready to share with coaches.',
+                subtitle: 'Clean one-page recruiting résumé — export as PDF for coaches.',
               ),
               const SizedBox(height: 16),
               Card(
@@ -85,17 +101,23 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
                   const SizedBox(width: 10),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () => _exportResume(context, swimmer),
-                      icon: const Icon(Icons.download_outlined),
+                      onPressed: () => _exportPdf(context, swimmer),
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
                       label: const Text('Export PDF'),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => _previewPdf(context),
+                icon: const Icon(Icons.print_outlined),
+                label: const Text('Print / preview PDF'),
+              ),
               const SizedBox(height: 12),
               Text(
-                'Power Index will appear here as an Elite feature. '
-                'Export saves a formatted text résumé coaches can open anywhere.',
+                'PDF includes top times, academics, honors, and performance snapshot. '
+                'Power Index joins here as an Elite feature.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade700,
                     ),
@@ -117,45 +139,50 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
     );
   }
 
-  Future<void> _exportResume(BuildContext context, String swimmer) async {
-    final text = _resumeText;
-    if (text == null) return;
+  Future<Uint8List?> _pdfBytes() async {
+    final bytes = await RecruitingResumePdf.buildBytes(
+      profile: _profile,
+      displayName: _displayName ?? 'Athlete',
+      personalBests: _personalBests,
+      swimIqScore: _swimIqScore,
+      highestCut: _highestCut,
+      championshipsQualified: _championshipTags,
+    );
+    return Uint8List.fromList(bytes);
+  }
 
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!context.mounted) return;
-
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Résumé copied — paste into Google Docs or Word and Save as PDF.',
-          ),
-        ),
-      );
-      return;
-    }
-
+  Future<void> _exportPdf(BuildContext context, String swimmer) async {
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      final bytes = await _pdfBytes();
+      if (bytes == null || !context.mounted) return;
       final safeName = swimmer.replaceAll(RegExp(r'[^\w\-]'), '_');
-      final fileName = 'SwimIQ_Resume_$safeName.txt';
-      // ignore: avoid_slow_async_io
-      await _writeResumeFile('${dir.path}/$fileName', text);
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'SwimIQ_Resume_$safeName.pdf',
+      );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Résumé saved to ${dir.path}/$fileName (also copied).'),
-        ),
+        const SnackBar(content: Text('PDF ready — choose Save or Share.')),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Résumé copied. Could not save file: $e')),
+        SnackBar(content: Text('Could not export PDF: $e')),
       );
     }
   }
 
-  Future<void> _writeResumeFile(String path, String text) async {
-    // Deferred to keep web builds free of dart:io.
-    return recruitingResumeFileWriter(path, text);
+  Future<void> _previewPdf(BuildContext context) async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (_) async => (await _pdfBytes()) ?? Uint8List(0),
+        name: 'SwimIQ_Recruiting_Resume',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open print preview: $e')),
+      );
+    }
   }
 }
