@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../core/gamification/swimiq_badges.dart';
 import '../core/gamification/swimiq_daily_progress.dart';
 import '../core/theme/app_theme.dart';
+import 'swimiq_branded_fallback.dart';
+import 'swimiq_branding.dart';
 
 class SwimIqRopeClimbCard extends StatelessWidget {
   const SwimIqRopeClimbCard({
@@ -272,6 +274,7 @@ class _AvatarBubble extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: Colors.white,
                 gradient: SweepGradient(
                   colors: [
                     HSLColor.fromAHSL(1, hue, 0.85, 0.6).toColor(),
@@ -289,8 +292,17 @@ class _AvatarBubble extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Center(
-                child: Text('🏊‍♂️', style: TextStyle(fontSize: 24)),
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: SwimIqBrandedImage(
+                    candidates: SwimIqBranding.markCandidates,
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.contain,
+                    fallback: const SwimIqPaintedMark(size: 38),
+                  ),
+                ),
               ),
             ),
           ],

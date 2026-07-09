@@ -71,8 +71,9 @@ class SwimIqBrandedFallback extends StatelessWidget {
 
 enum SwimIqBrandedVariant { icon, hero }
 
-class _Mark extends StatelessWidget {
-  const _Mark({required this.size});
+/// Vector swimmer mark — reliable on Windows Chrome where emoji often breaks.
+class SwimIqPaintedMark extends StatelessWidget {
+  const SwimIqPaintedMark({super.key, required this.size});
 
   final double size;
 
@@ -85,6 +86,17 @@ class _Mark extends StatelessWidget {
         painter: _SwimMarkPainter(),
       ),
     );
+  }
+}
+
+class _Mark extends StatelessWidget {
+  const _Mark({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwimIqPaintedMark(size: size);
   }
 }
 
