@@ -12,7 +12,9 @@ echo.
 echo --- logo (drag 512x512 PNG onto this) ---
 if exist "%~dp0DRAG-LOGO-HERE.bat" (echo [OK] DRAG-LOGO-HERE.bat) else (echo [MISSING] DRAG-LOGO-HERE.bat)
 if exist "%~dp0COPY-LOGO.bat" (echo [OK] COPY-LOGO.bat) else (echo [MISSING] COPY-LOGO.bat)
-if exist "%~dp0assets\branding\swimiq_icon.png" (echo [OK] assets\branding\swimiq_icon.png) else (echo [MISSING] assets\branding\swimiq_icon.png)
+if exist "%~dp0assets\branding\icon.png" (echo [OK] assets\branding\icon.png) else (echo [MISSING] assets\branding\icon.png)
+if exist "%~dp0assets\branding\banner.png" (echo [OK] assets\branding\banner.png) else (echo [OPTIONAL] assets\branding\banner.png)
+if exist "%~dp0assets\branding\mark.png" (echo [OK] assets\branding\mark.png) else (echo [OPTIONAL] assets\branding\mark.png)
 echo.
 echo --- one-click launchers (USE THESE) ---
 if exist "%~dp0SWIMIQ-CHROME-NOW.bat" (echo [OK] SWIMIQ-CHROME-NOW.bat) else (echo [MISSING] SWIMIQ-CHROME-NOW.bat)

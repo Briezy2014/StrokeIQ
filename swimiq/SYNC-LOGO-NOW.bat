@@ -27,6 +27,7 @@ if not exist "%SRC%" (
 if not exist "assets\branding" mkdir "assets\branding"
 if not exist "web\icons" mkdir "web\icons"
 
+copy /Y "%SRC%" "assets\branding\icon.png"
 copy /Y "%SRC%" "assets\branding\swimiq_logo.png"
 copy /Y "%SRC%" "assets\branding\swimiq_icon.png"
 copy /Y "%SRC%" "web\favicon.png"
@@ -38,7 +39,8 @@ echo ========================================
 echo  LOGO SYNCED
 echo ========================================
 echo.
-echo Your PNG is now in BOTH branding names:
+echo Your PNG is now saved as:
+echo   assets\branding\icon.png
 echo   assets\branding\swimiq_logo.png
 echo   assets\branding\swimiq_icon.png
 echo   web\favicon.png + web\icons\

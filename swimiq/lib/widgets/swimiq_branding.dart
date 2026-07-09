@@ -3,43 +3,57 @@ import 'package:flutter/services.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// Branding asset paths.
+/// Branding asset paths — three short names in [assets/branding/]:
+///
+/// * [iconAsset] — square app picture (login, splash, store icon source)
+/// * [bannerAsset] — wide strip on every tab except Dashboard
+/// * [markAsset] — optional tight swimmer mark for small slots (app bar, tab banner)
 abstract final class SwimIqBranding {
-  /// Tight crop: triangle/swimmer mark only (best for app bar & tab headers).
-  static const iconMarkCandidates = [
+  static const iconAsset = 'assets/branding/icon.png';
+  static const bannerAsset = 'assets/branding/banner.png';
+  static const markAsset = 'assets/branding/mark.png';
+
+  /// Tight swimmer mark only (app bar, tab banner beside wordmark).
+  static const markCandidates = [
+    markAsset,
     'assets/branding/swimiq_icon_mark.png',
     'assets/branding/icon_mark.png',
   ];
 
-  /// Horizontal promo banner for tab headers (Kara: SwimIQ_banner.PNG).
+  /// Wide tab-header banner.
   static const tabBannerCandidates = [
+    bannerAsset,
     'assets/branding/SwimIQ_banner.PNG',
     'assets/branding/SwimIQ_banner.png',
     'assets/branding/swimiq_banner.png',
     'assets/branding/swimiq_banner.PNG',
   ];
 
-  /// Full square lockup — swimiq_logo.png first (Kara's file; avoids stale swimiq_icon.png).
+  /// Square app icon / lockup (login, splash, membership).
   static const fullLockupCandidates = [
+    iconAsset,
     'assets/branding/swimiq_logo.png',
     'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_logo_square.png',
-    'assets/branding/icon.png',
   ];
 
-  /// Small slots: logo first, then mark-only crop, then legacy icon name.
+  /// Small slots: dedicated mark first, then zoomed icon lockup.
   static const compactCandidates = [
-    'assets/branding/swimiq_logo.png',
+    markAsset,
     'assets/branding/swimiq_icon_mark.png',
     'assets/branding/icon_mark.png',
+    iconAsset,
+    'assets/branding/swimiq_logo.png',
     'assets/branding/swimiq_icon.png',
     'assets/branding/swimiq_logo_square.png',
-    'assets/branding/icon.png',
   ];
 
   /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).
   static const compactZoomScale = 5.0;
   static const compactZoomAlignment = Alignment(0, -0.92);
+
+  @Deprecated('Use markCandidates')
+  static const iconMarkCandidates = markCandidates;
 }
 
 /// Loads the first existing asset from [candidates], then [fallback].
@@ -74,7 +88,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
 
   bool get _isMarkOnly =>
       _resolvedPath != null &&
-      SwimIqBranding.iconMarkCandidates.contains(_resolvedPath);
+      SwimIqBranding.markCandidates.contains(_resolvedPath);
 
   @override
   void initState() {

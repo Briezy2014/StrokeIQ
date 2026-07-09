@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/widgets/swimiq_branding.dart';
-import 'package:swimiq/widgets/swimiq_branding.dart';
 import 'package:swimiq/widgets/swimiq_logo.dart';
 import 'package:swimiq/core/constants/app_constants.dart';
 
@@ -49,23 +48,27 @@ void main() {
     expect(find.byType(SwimIqCompactMark), findsOneWidget);
   });
 
-  test('branding lists include lockup and mark paths', () {
+  test('branding uses short icon, banner, and mark names', () {
+    expect(SwimIqBranding.iconAsset, 'assets/branding/icon.png');
+    expect(SwimIqBranding.bannerAsset, 'assets/branding/banner.png');
+    expect(SwimIqBranding.markAsset, 'assets/branding/mark.png');
     expect(
       SwimIqBranding.fullLockupCandidates.first,
-      'assets/branding/swimiq_logo.png',
+      SwimIqBranding.iconAsset,
+    );
+    expect(
+      SwimIqBranding.tabBannerCandidates.first,
+      SwimIqBranding.bannerAsset,
     );
     expect(
       SwimIqBranding.compactCandidates.first,
-      'assets/branding/swimiq_logo.png',
+      SwimIqBranding.markAsset,
     );
     expect(
       SwimIqBranding.fullLockupCandidates,
       contains('assets/branding/swimiq_icon.png'),
     );
-    expect(
-      SwimIqBranding.iconMarkCandidates,
-      contains('assets/branding/swimiq_icon_mark.png'),
-    );
+    expect(AppConstants.brandIconAsset, SwimIqBranding.iconAsset);
     expect(AppConstants.brandIconSizePx, 512);
   });
 }

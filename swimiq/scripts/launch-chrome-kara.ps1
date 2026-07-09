@@ -63,16 +63,25 @@ try {
     Pop-Location
 }
 
-Write-Host 'Checking branding PNG...' -ForegroundColor Cyan
+Write-Host 'Checking branding PNGs...' -ForegroundColor Cyan
 $brandDir = Join-Path $paths.WorkDir 'assets\branding'
-$logo = Join-Path $brandDir 'swimiq_logo.png'
-$icon = Join-Path $brandDir 'swimiq_icon.png'
-if (Test-Path -LiteralPath $logo) {
-    Write-Host "OK  Using assets\branding\swimiq_logo.png" -ForegroundColor Green
-} elseif (Test-Path -LiteralPath $icon) {
-    Write-Host 'WARN Only swimiq_icon.png found — drag NEW logo onto SYNC-LOGO-NOW.bat' -ForegroundColor Yellow
+$icon = Join-Path $brandDir 'icon.png'
+$banner = Join-Path $brandDir 'banner.png'
+$mark = Join-Path $brandDir 'mark.png'
+if (Test-Path -LiteralPath $icon) {
+    Write-Host "OK  Using assets\branding\icon.png" -ForegroundColor Green
+} elseif (Test-Path -LiteralPath (Join-Path $brandDir 'swimiq_logo.png')) {
+    Write-Host 'WARN Using legacy swimiq_logo.png — rename to icon.png when ready' -ForegroundColor Yellow
 } else {
-    Write-Host 'WARN No logo PNG — drag 512x512 onto SYNC-LOGO-NOW.bat' -ForegroundColor Yellow
+    Write-Host 'WARN No icon.png — drag 512x512 PNG onto DRAG-LOGO-HERE.bat' -ForegroundColor Yellow
+}
+if (Test-Path -LiteralPath $banner) {
+    Write-Host "OK  Using assets\branding\banner.png" -ForegroundColor Green
+} else {
+    Write-Host 'INFO banner.png optional — tab strip uses gradient until added' -ForegroundColor DarkGray
+}
+if (Test-Path -LiteralPath $mark) {
+    Write-Host "OK  Using assets\branding\mark.png" -ForegroundColor Green
 }
 
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow

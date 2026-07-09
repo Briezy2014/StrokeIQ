@@ -40,7 +40,7 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / signup: show swimiq_logo.png from assets/branding exactly as saved.
+/// Login / signup: show icon.png from assets/branding exactly as saved.
 class SwimIqLoginBrand extends StatelessWidget {
   const SwimIqLoginBrand({
     super.key,
