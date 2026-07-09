@@ -173,8 +173,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Events & USA cuts'), findsOneWidget);
-      expect(find.text('Log tab'), findsOneWidget);
       expect(find.text('Log meets'), findsOneWidget);
+      expect(find.text('Log tab'), findsNothing);
+      expect(find.text('Cuts mix'), findsOneWidget);
       expect(find.text('Add meet'), findsNothing);
       expect(find.text('Recent Activity'), findsNothing);
       expect(find.textContaining('Dryland'), findsNothing);

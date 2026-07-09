@@ -14,6 +14,7 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../core/gamification/swimiq_badges.dart';
@@ -97,10 +98,6 @@ class DashboardScreen extends ConsumerWidget {
               profile: data.profile,
               showProFeatures: showProFeatures,
               highestCut: snapshot.highestCut,
-              onOpenLogTab: () {
-                ref.read(trainingLogSegmentProvider.notifier).state = 0;
-                ref.read(homeTabIndexProvider.notifier).state = HomeTab.trainingLog;
-              },
               onOpenMeetsTab: () {
                 ref.read(trainingLogSegmentProvider.notifier).state = 1;
                 ref.read(homeTabIndexProvider.notifier).state = HomeTab.trainingLog;
@@ -251,7 +248,6 @@ class _EventCutsProgressSection extends StatelessWidget {
     required this.profile,
     required this.showProFeatures,
     required this.highestCut,
-    required this.onOpenLogTab,
     required this.onOpenMeetsTab,
   });
 
@@ -261,7 +257,6 @@ class _EventCutsProgressSection extends StatelessWidget {
   final SwimmerProfile? profile;
   final bool showProFeatures;
   final String highestCut;
-  final VoidCallback onOpenLogTab;
   final VoidCallback onOpenMeetsTab;
 
   @override
@@ -316,25 +311,45 @@ class _EventCutsProgressSection extends StatelessWidget {
             else
               EmptyStateMessage(
                 message: showProFeatures
-                    ? 'No official meet times yet. Add results on the Meets tab.'
-                    : 'Log training on the Log tab. Upgrade to Pro for USA cuts per event.',
+                    ? 'No official meet times yet. Log meets to unlock your cuts chart.'
+                    : 'Log training sessions to see your stroke mix chart.',
               ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onOpenLogTab,
-                    icon: const Icon(Icons.list_alt_outlined, size: 18),
-                    label: const Text('Log tab'),
+                  flex: 3,
+                  child: DashboardCutsPieChart(
+                    personalBests: personalBests,
+                    raceLogs: raceLogs,
+                    catalog: catalog,
+                    profile: profile,
+                    showProFeatures: showProFeatures,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton.tonalIcon(
-                    onPressed: onOpenMeetsTab,
-                    icon: const Icon(Icons.stadium_outlined, size: 18),
-                    label: const Text('Log meets'),
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 28),
+                      FilledButton.tonalIcon(
+                        onPressed: onOpenMeetsTab,
+                        icon: const Icon(Icons.stadium_outlined, size: 20),
+                        label: const Text('Log meets'),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Add official meet times & heat sheets.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade700,
+                              height: 1.3,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
               ],
