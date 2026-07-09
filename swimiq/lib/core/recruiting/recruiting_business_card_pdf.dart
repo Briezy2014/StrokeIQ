@@ -5,10 +5,19 @@ import 'package:pdf/widgets.dart' as pw;
 class RecruitingBusinessCardPdf {
   RecruitingBusinessCardPdf._();
 
+  static const _cardNavy = PdfColor.fromInt(0xFF020812);
+  static const _cardBlue = PdfColor.fromInt(0xFF0B2D4D);
+  static const _cardBright = PdfColor.fromInt(0xFF0B5CAD);
+  static const _accent = PdfColor.fromInt(0xFF009CFF);
+  static const _statFill = PdfColor.fromInt(0xFF0C3D66);
+  static const _statFillHighlight = PdfColor.fromInt(0xFF145A8C);
+  static const _statBorder = PdfColor.fromInt(0xFF4DA3D9);
+  static const _statLabel = PdfColor.fromInt(0xFFB8D9F0);
+
   static PdfPageFormat get pageFormat => PdfPageFormat(
         3.5 * PdfPageFormat.inch,
         2 * PdfPageFormat.inch,
-        marginAll: 10,
+        marginAll: 8,
       );
 
   static Future<List<int>> buildBytes({
@@ -23,22 +32,37 @@ class RecruitingBusinessCardPdf {
     required String? usaSwimmingId,
   }) async {
     final doc = pw.Document();
-    final eventOne = topEvents.isNotEmpty
-        ? topEvents.first
-        : 'Top event — log a meet result';
-    final eventTwo = topEvents.length > 1
-        ? topEvents[1]
-        : 'Second event — add another PB';
-    final teamLine =
-        team?.trim().isNotEmpty == true ? team!.trim() : 'Add swim team in passport';
-    final gpaLine =
-        gpa?.trim().isNotEmpty == true ? gpa!.trim() : 'Add GPA in passport';
-    final siteLine = website?.trim().isNotEmpty == true
-        ? website!.trim()
-        : 'Add recruiting site in passport';
-    final idLine = usaSwimmingId?.trim().isNotEmpty == true
-        ? usaSwimmingId!.trim()
-        : 'Add ID in passport';
+    final eventOne = _pdfText(
+      topEvents.isNotEmpty
+          ? topEvents.first
+          : 'Top event - log a meet result',
+    );
+    final eventTwo = _pdfText(
+      topEvents.length > 1
+          ? topEvents[1]
+          : 'Second event - add another PB',
+    );
+    final teamLine = _pdfText(
+      team?.trim().isNotEmpty == true ? team!.trim() : 'Add swim team in passport',
+    );
+    final gpaLine = _pdfText(
+      gpa?.trim().isNotEmpty == true ? gpa!.trim() : 'Add GPA in passport',
+    );
+    final siteLine = _pdfText(
+      _compactWebsite(
+        website?.trim().isNotEmpty == true
+            ? website!.trim()
+            : 'Add recruiting site in passport',
+      ),
+    );
+    final idLine = _pdfText(
+      usaSwimmingId?.trim().isNotEmpty == true
+          ? usaSwimmingId!.trim()
+          : 'Add ID in passport',
+    );
+    final cutLine = _pdfText(
+      highestCut.trim().isNotEmpty ? highestCut.trim() : 'Log a meet result',
+    );
 
     doc.addPage(
       pw.Page(
@@ -49,11 +73,7 @@ class RecruitingBusinessCardPdf {
               gradient: const pw.LinearGradient(
                 begin: pw.Alignment.topLeft,
                 end: pw.Alignment.bottomRight,
-                colors: [
-                  PdfColor.fromInt(0xFF020812),
-                  PdfColor.fromInt(0xFF0B2D4D),
-                  PdfColor.fromInt(0xFF0B5CAD),
-                ],
+                colors: [_cardNavy, _cardBlue, _cardBright],
               ),
               borderRadius: pw.BorderRadius.circular(8),
               border: pw.Border.all(
@@ -61,7 +81,7 @@ class RecruitingBusinessCardPdf {
                 width: 0.5,
               ),
             ),
-            padding: const pw.EdgeInsets.all(10),
+            padding: const pw.EdgeInsets.all(8),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
@@ -73,30 +93,31 @@ class RecruitingBusinessCardPdf {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text(
-                            displayName,
+                            _pdfText(displayName),
                             maxLines: 1,
                             style: pw.TextStyle(
                               color: PdfColors.white,
-                              fontSize: 13,
-                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 12,
+                              font: pw.Font.helveticaBold(),
                             ),
                           ),
                           pw.SizedBox(height: 2),
                           pw.Text(
                             teamLine,
                             maxLines: 1,
-                            style: const pw.TextStyle(
+                            style: pw.TextStyle(
                               color: PdfColors.white,
                               fontSize: 8,
+                              font: pw.Font.helvetica(),
                             ),
                           ),
                           if (graduationYear != null)
                             pw.Text(
                               'Class of $graduationYear',
                               style: pw.TextStyle(
-                                color: PdfColor.fromInt(0xFF009CFF),
+                                color: _accent,
                                 fontSize: 7,
-                                fontWeight: pw.FontWeight.bold,
+                                font: pw.Font.helveticaBold(),
                               ),
                             ),
                         ],
@@ -110,50 +131,50 @@ class RecruitingBusinessCardPdf {
                           style: pw.TextStyle(
                             color: PdfColors.white,
                             fontSize: 7,
-                            fontWeight: pw.FontWeight.bold,
+                            font: pw.Font.helveticaBold(),
                           ),
                         ),
                         pw.Text(
                           idLine,
                           style: pw.TextStyle(
-                            color: PdfColor.fromInt(0xFF009CFF),
+                            color: _accent,
                             fontSize: 7,
-                            fontWeight: pw.FontWeight.bold,
+                            font: pw.Font.helveticaBold(),
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 6),
+                pw.SizedBox(height: 4),
                 pw.Row(
                   children: [
                     pw.Expanded(
                       child: _statBox(
                         'SwimIQ Score',
-                        swimIqScore > 0 ? '$swimIqScore' : '—',
+                        swimIqScore > 0 ? '$swimIqScore' : '-',
                         highlight: true,
                       ),
                     ),
-                    pw.SizedBox(width: 6),
+                    pw.SizedBox(width: 4),
                     pw.Expanded(
-                      child: _statBox('Highest Cut', highestCut),
+                      child: _statBox('Highest Cut', cutLine),
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 4),
+                pw.SizedBox(height: 3),
                 pw.Row(
                   children: [
                     pw.Expanded(child: _statBox('Top event', eventOne, compact: true)),
-                    pw.SizedBox(width: 6),
+                    pw.SizedBox(width: 4),
                     pw.Expanded(child: _statBox('2nd event', eventTwo, compact: true)),
                   ],
                 ),
-                pw.SizedBox(height: 4),
+                pw.SizedBox(height: 3),
                 pw.Row(
                   children: [
                     pw.Expanded(child: _statBox('GPA', gpaLine, compact: true)),
-                    pw.SizedBox(width: 6),
+                    pw.SizedBox(width: 4),
                     pw.Expanded(
                       child: _statBox('Recruiting site', siteLine, compact: true),
                     ),
@@ -169,6 +190,26 @@ class RecruitingBusinessCardPdf {
     return doc.save();
   }
 
+  /// PDF standard fonts do not support alpha fills or most Unicode punctuation.
+  static String _pdfText(String value) {
+    return value
+        .replaceAll('\u2014', '-')
+        .replaceAll('\u2013', '-')
+        .replaceAll('\u2018', "'")
+        .replaceAll('\u2019', "'")
+        .replaceAll('\u201C', '"')
+        .replaceAll('\u201D', '"')
+        .replaceAll('\u2033', ' in');
+  }
+
+  static String _compactWebsite(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final withoutScheme = trimmed.replaceFirst(RegExp(r'^https?://'), '');
+    if (withoutScheme.length <= 28) return withoutScheme;
+    return '${withoutScheme.substring(0, 25)}...';
+  }
+
   static pw.Widget _statBox(
     String label,
     String value, {
@@ -176,16 +217,12 @@ class RecruitingBusinessCardPdf {
     bool compact = false,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       decoration: pw.BoxDecoration(
-        color: highlight
-            ? PdfColor.fromInt(0x33FFFFFF)
-            : PdfColor.fromInt(0x1AFFFFFF),
+        color: highlight ? _statFillHighlight : _statFill,
         borderRadius: pw.BorderRadius.circular(4),
         border: pw.Border.all(
-          color: highlight
-              ? PdfColor.fromInt(0x88009CFF)
-              : PdfColor.fromInt(0x33FFFFFF),
+          color: highlight ? _accent : _statBorder,
           width: 0.5,
         ),
       ),
@@ -196,9 +233,9 @@ class RecruitingBusinessCardPdf {
             label.toUpperCase(),
             maxLines: 1,
             style: pw.TextStyle(
-              color: PdfColor.fromInt(0xBFFFFFFF),
+              color: _statLabel,
               fontSize: 5,
-              fontWeight: pw.FontWeight.bold,
+              font: pw.Font.helveticaBold(),
             ),
           ),
           pw.SizedBox(height: 1),
@@ -207,8 +244,8 @@ class RecruitingBusinessCardPdf {
             maxLines: compact ? 2 : 1,
             style: pw.TextStyle(
               color: PdfColors.white,
-              fontSize: compact ? 6 : 9,
-              fontWeight: pw.FontWeight.bold,
+              fontSize: compact ? 6 : 8.5,
+              font: pw.Font.helveticaBold(),
             ),
           ),
         ],
