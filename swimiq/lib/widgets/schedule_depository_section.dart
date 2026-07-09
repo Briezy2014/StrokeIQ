@@ -12,37 +12,57 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import 'swimiq_ui.dart';
 
+Future<void> showScheduleEntryFormSheet(
+  BuildContext context, {
+  required String initialType,
+  Set<String>? allowedTypes,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: _ScheduleEntryFormSheet(
+        initialType: initialType,
+        allowedTypes: allowedTypes,
+      ),
+    ),
+  );
+}
+
 /// Shared list + bottom actions for practice/meet/race schedule uploads.
 class ScheduleDepositorySection extends ConsumerWidget {
   const ScheduleDepositorySection({
     super.key,
+    required this.showTypes,
+    required this.addTypes,
+    this.headerTitle = 'Schedule & meet depot',
+    this.headerSubtitle =
+        'Saved entries appear here. Use the buttons below to add a new one.',
+    this.emptyMessage = 'Nothing saved yet. Tap a button below to add one.',
     this.compact = false,
     this.onOpenRaceIntelligence,
   });
 
+  final Set<String> showTypes;
+  final Set<String> addTypes;
+  final String headerTitle;
+  final String headerSubtitle;
+  final String emptyMessage;
   final bool compact;
   final VoidCallback? onOpenRaceIntelligence;
-
-  Future<void> _openFormSheet(BuildContext context, String type) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: _ScheduleEntryFormSheet(initialType: type),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(swimmerDataProvider).value;
-    final schedules = data?.schedules ?? const <SwimScheduleEntry>[];
+    final schedules = (data?.schedules ?? const <SwimScheduleEntry>[])
+        .where((entry) => showTypes.contains(entry.scheduleType))
+        .toList();
     final dateFormat = DateFormat.yMMMd();
 
     return Column(
@@ -73,9 +93,7 @@ class ScheduleDepositorySection extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            compact
-                                ? 'Schedule depot'
-                                : 'Schedule & meet depot',
+                            compact ? 'Schedule depot' : headerTitle,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -95,8 +113,7 @@ class ScheduleDepositorySection extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Saved meets, practices, and race results appear here. '
-                      'Use the buttons below to add a new entry.',
+                      headerSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textDark.withValues(alpha: 0.7),
                             height: 1.4,
@@ -110,8 +127,7 @@ class ScheduleDepositorySection extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    'No schedules saved yet. Tap a button below to add a meet, '
-                    'practice, or race result.',
+                    emptyMessage,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textDark.withValues(alpha: 0.65),
@@ -120,66 +136,24 @@ class ScheduleDepositorySection extends ConsumerWidget {
                 )
               else
                 ...schedules.map(
-                  (entry) => Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: Icon(_iconForType(entry.scheduleType)),
-                      title: Text(entry.title),
-                      subtitle: Text(
-                        '${entry.typeLabel} · ${dateFormat.format(entry.scheduleDate)}'
-                        '${entry.startTime != null ? ' · ${entry.startTime}' : ''}'
-                        '${entry.eventsLine != null ? '\n${entry.eventsLine}' : ''}'
-                        '${entry.notes != null ? '\n${entry.notes}' : ''}',
-                      ),
-                      isThreeLine:
-                          entry.eventsLine != null || entry.notes != null,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _deleteEntry(context, ref, entry),
-                      ),
-                    ),
+                  (entry) => ScheduleEntryTile(
+                    entry: entry,
+                    dateFormat: dateFormat,
+                    onDelete: () => _deleteEntry(context, ref, entry),
                   ),
                 ),
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade200),
-              ),
-            ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                FilledButton.icon(
-                  onPressed: () =>
-                      _openFormSheet(context, SwimScheduleEntry.typeMeet),
-                  icon: const Icon(Icons.emoji_events_outlined, size: 18),
-                  label: const Text('Add meet'),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: () =>
-                      _openFormSheet(context, SwimScheduleEntry.typePractice),
-                  icon: const Icon(Icons.pool_outlined, size: 18),
-                  label: const Text('Add practice'),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: () =>
-                      _openFormSheet(context, SwimScheduleEntry.typeRace),
-                  icon: const Icon(Icons.timer_outlined, size: 18),
-                  label: const Text('Add result'),
-                ),
-              ],
+        if (addTypes.isNotEmpty)
+          ScheduleDepositoryActionBar(
+            addTypes: addTypes,
+            onAdd: (type) => showScheduleEntryFormSheet(
+              context,
+              initialType: type,
+              allowedTypes: addTypes,
             ),
           ),
-        ),
       ],
     );
   }
@@ -217,7 +191,7 @@ class ScheduleDepositorySection extends ConsumerWidget {
     );
   }
 
-  static IconData _iconForType(String type) {
+  static IconData iconForScheduleType(String type) {
     switch (type) {
       case SwimScheduleEntry.typeMeet:
         return Icons.emoji_events_outlined;
@@ -229,10 +203,101 @@ class ScheduleDepositorySection extends ConsumerWidget {
   }
 }
 
+class ScheduleEntryTile extends StatelessWidget {
+  const ScheduleEntryTile({
+    super.key,
+    required this.entry,
+    required this.dateFormat,
+    required this.onDelete,
+  });
+
+  final SwimScheduleEntry entry;
+  final DateFormat dateFormat;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(ScheduleDepositorySection.iconForScheduleType(
+          entry.scheduleType,
+        )),
+        title: Text(entry.title),
+        subtitle: Text(
+          '${entry.typeLabel} · ${dateFormat.format(entry.scheduleDate)}'
+          '${entry.startTime != null ? ' · ${entry.startTime}' : ''}'
+          '${entry.eventsLine != null ? '\n${entry.eventsLine}' : ''}'
+          '${entry.notes != null ? '\n${entry.notes}' : ''}',
+        ),
+        isThreeLine: entry.eventsLine != null || entry.notes != null,
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: onDelete,
+        ),
+      ),
+    );
+  }
+}
+
+class ScheduleDepositoryActionBar extends StatelessWidget {
+  const ScheduleDepositoryActionBar({
+    super.key,
+    required this.addTypes,
+    required this.onAdd,
+  });
+
+  final Set<String> addTypes;
+  final ValueChanged<String> onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            if (addTypes.contains(SwimScheduleEntry.typeMeet))
+              FilledButton.icon(
+                onPressed: () => onAdd(SwimScheduleEntry.typeMeet),
+                icon: const Icon(Icons.emoji_events_outlined, size: 18),
+                label: const Text('Add meet'),
+              ),
+            if (addTypes.contains(SwimScheduleEntry.typePractice))
+              FilledButton.icon(
+                onPressed: () => onAdd(SwimScheduleEntry.typePractice),
+                icon: const Icon(Icons.pool_outlined, size: 18),
+                label: const Text('Add practice'),
+              ),
+            if (addTypes.contains(SwimScheduleEntry.typeRace))
+              FilledButton.tonalIcon(
+                onPressed: () => onAdd(SwimScheduleEntry.typeRace),
+                icon: const Icon(Icons.timer_outlined, size: 18),
+                label: const Text('Add result'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ScheduleEntryFormSheet extends ConsumerStatefulWidget {
-  const _ScheduleEntryFormSheet({required this.initialType});
+  const _ScheduleEntryFormSheet({
+    required this.initialType,
+    this.allowedTypes,
+  });
 
   final String initialType;
+  final Set<String>? allowedTypes;
 
   @override
   ConsumerState<_ScheduleEntryFormSheet> createState() =>
@@ -257,7 +322,14 @@ class _ScheduleEntryFormSheetState
   @override
   void initState() {
     super.initState();
-    _scheduleType = widget.initialType;
+    final allowed = widget.allowedTypes;
+    if (allowed != null &&
+        allowed.isNotEmpty &&
+        !allowed.contains(widget.initialType)) {
+      _scheduleType = allowed.first;
+    } else {
+      _scheduleType = widget.initialType;
+    }
   }
 
   @override
@@ -382,6 +454,13 @@ class _ScheduleEntryFormSheetState
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.yMMMd();
+    final allowed = widget.allowedTypes ??
+        {
+          SwimScheduleEntry.typeMeet,
+          SwimScheduleEntry.typePractice,
+          SwimScheduleEntry.typeRace,
+        };
+    final showTypePicker = allowed.length > 1;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -402,27 +481,32 @@ class _ScheduleEntryFormSheetState
                     color: AppColors.primaryDeep,
                   ),
             ),
-            const SizedBox(height: 12),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(
-                  value: SwimScheduleEntry.typeMeet,
-                  label: Text('Meet'),
-                ),
-                ButtonSegment(
-                  value: SwimScheduleEntry.typePractice,
-                  label: Text('Practice'),
-                ),
-                ButtonSegment(
-                  value: SwimScheduleEntry.typeRace,
-                  label: Text('Result'),
-                ),
-              ],
-              selected: {_scheduleType},
-              onSelectionChanged: (values) {
-                setState(() => _scheduleType = values.first);
-              },
-            ),
+            if (showTypePicker) ...[
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: [
+                  if (allowed.contains(SwimScheduleEntry.typeMeet))
+                    const ButtonSegment(
+                      value: SwimScheduleEntry.typeMeet,
+                      label: Text('Meet'),
+                    ),
+                  if (allowed.contains(SwimScheduleEntry.typePractice))
+                    const ButtonSegment(
+                      value: SwimScheduleEntry.typePractice,
+                      label: Text('Practice'),
+                    ),
+                  if (allowed.contains(SwimScheduleEntry.typeRace))
+                    const ButtonSegment(
+                      value: SwimScheduleEntry.typeRace,
+                      label: Text('Result'),
+                    ),
+                ],
+                selected: {allowed.contains(_scheduleType) ? _scheduleType : allowed.first},
+                onSelectionChanged: (values) {
+                  setState(() => _scheduleType = values.first);
+                },
+              ),
+            ],
             const SizedBox(height: 12),
             TextFormField(
               controller: _titleController,
