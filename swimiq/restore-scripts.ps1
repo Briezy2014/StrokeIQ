@@ -12,7 +12,7 @@ Write-Host 'Writing scripts from embedded backup...' -ForegroundColor Yellow
 $launchSrc = Join-Path $PSScriptRoot 'scripts\launch-chrome-tonight.ps1'
 if (-not (Test-Path $launchSrc) -or (Get-Item $launchSrc -ErrorAction SilentlyContinue).Length -lt 100) {
     Write-Host 'ERROR: Run RESTORE-SCRIPTS.bat with internet/git, or pull from GitHub:' -ForegroundColor Red
-    Write-Host '  git pull origin cursor/windows-chrome-spaces-fix-17e8' -ForegroundColor Yellow
+    Write-Host '  git pull origin cursor/dashboard-rope-schedule-fix-17e8' -ForegroundColor Yellow
     Read-Host 'Press Enter'
     exit 1
 }

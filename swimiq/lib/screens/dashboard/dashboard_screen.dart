@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/theme/app_theme.dart';
@@ -61,6 +62,24 @@ class DashboardScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+              ),
+              child: Text(
+                AppConstants.previewBuildLabel,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 12),
             _DashboardHero(
               displayName: data.displayName(swimmer),
               swimIqScore: data.swimIqScore,

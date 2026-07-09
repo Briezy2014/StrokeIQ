@@ -4,9 +4,9 @@ cd /d "%~dp0"
 echo.
 echo Restoring scripts folder from GitHub...
 echo.
-git fetch origin cursor/windows-chrome-spaces-fix-17e8
-git checkout origin/cursor/windows-chrome-spaces-fix-17e8 -- scripts/
-git checkout origin/cursor/windows-chrome-spaces-fix-17e8 -- SWIMIQ-CHROME-NOW.ps1 SWIMIQ-CHROME-NOW.bat SWIMIQ-BUILD-GODADDY-NOW.ps1 SWIMIQ-BUILD-GODADDY-NOW.bat SWIMIQ-BUILD-ANDROID-NOW.ps1 SWIMIQ-BUILD-ANDROID-NOW.bat START-HERE.bat KARA-CLICK-THIS.bat LAUNCH-CHROME.bat FIX-KARA-PATHS.bat FIX-GIT-PULL.bat DIAGNOSE.bat TEST-OWNER-LOGIN.bat SYNC-LOGO-NOW.bat restore-scripts.ps1 COPY-LOGO.bat DRAG-LOGO-HERE.bat ZIP-GODADDY-UPLOAD.bat
+git fetch origin cursor/dashboard-rope-schedule-fix-17e8
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- SWIMIQ-CHROME-NOW.ps1 SWIMIQ-CHROME-NOW.bat SWIMIQ-BUILD-GODADDY-NOW.ps1 SWIMIQ-BUILD-GODADDY-NOW.bat SWIMIQ-BUILD-ANDROID-NOW.ps1 SWIMIQ-BUILD-ANDROID-NOW.bat START-HERE.bat KARA-CLICK-THIS.bat KARA-SEE-UPDATES-NOW.bat LAUNCH-CHROME.bat FIX-KARA-PATHS.bat FIX-GIT-PULL.bat DIAGNOSE.bat TEST-OWNER-LOGIN.bat SYNC-LOGO-NOW.bat restore-scripts.ps1 COPY-LOGO.bat DRAG-LOGO-HERE.bat ZIP-GODADDY-UPLOAD.bat ACTIVE_BRANCH.txt
 
 call "%~dp0scripts\ensure-logo-bats.cmd" 2>nul
 if not exist "%~dp0COPY-LOGO.bat" (

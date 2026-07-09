@@ -39,14 +39,14 @@ echo Step 4: Pull latest code...
 git fetch origin cursor/android-aab-pdf-export-17e8
 git pull origin cursor/android-aab-pdf-export-17e8
 if errorlevel 1 (
-  git fetch origin cursor/windows-chrome-spaces-fix-17e8
-  git pull origin cursor/windows-chrome-spaces-fix-17e8
+  git fetch origin cursor/dashboard-rope-schedule-fix-17e8
+  git pull origin cursor/dashboard-rope-schedule-fix-17e8
 )
 if errorlevel 1 (
   echo.
   echo Pull still failed. Try in PowerShell:
   echo   git stash push -u -m "kara-backup"
-  echo   git pull origin cursor/windows-chrome-spaces-fix-17e8
+  echo   git pull origin cursor/dashboard-rope-schedule-fix-17e8
   echo.
   pause
   exit /b 1
