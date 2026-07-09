@@ -11,9 +11,9 @@ Put PNGs in this folder. The app tries the short names first.
    Wide landscape strip — ~1200 x 400 px (or similar).
    Runs across PBs, Log, Goals, Video, and Passport tabs.
 
-3) mark.png   (OPTIONAL)
+3) mark.png   (OPTIONAL — also accepts SwimIQ_Mark.PNG)
    Tight swimmer mark only — 512 x 512 px, mark fills ~80% of canvas.
-   App bar and tab banner beside the SWIMIQ wordmark (sharper than zooming icon.png).
+   No wordmark, no tagline. App bar and tab banner beside the SWIMIQ wordmark.
 
 After adding or replacing any PNG:
 1. Close Chrome completely

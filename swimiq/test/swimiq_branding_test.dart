@@ -68,6 +68,10 @@ void main() {
       SwimIqBranding.fullLockupCandidates,
       contains('assets/branding/swimiq_icon.png'),
     );
+    expect(
+      SwimIqBranding.markCandidates,
+      contains('assets/branding/SwimIQ_Mark.PNG'),
+    );
     expect(AppConstants.brandIconAsset, SwimIqBranding.iconAsset);
     expect(AppConstants.brandIconSizePx, 512);
   });

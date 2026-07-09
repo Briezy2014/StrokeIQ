@@ -16,6 +16,9 @@ abstract final class SwimIqBranding {
   /// Tight swimmer mark only (app bar, tab banner beside wordmark).
   static const markCandidates = [
     markAsset,
+    'assets/branding/SwimIQ_Mark.PNG',
+    'assets/branding/SwimIQ_Mark.png',
+    'assets/branding/swimiq_mark.png',
     'assets/branding/swimiq_icon_mark.png',
     'assets/branding/icon_mark.png',
   ];
