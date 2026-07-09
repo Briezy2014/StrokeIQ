@@ -55,21 +55,30 @@ class SwimVideoAnalysis {
 
   String? get analysisEngine => analysisJson?['engine']?.toString();
 
+  static const _modernEngines = {
+    'swimiq-v1-notes',
+    'swimiq-v1-notes-mediapipe',
+    'swimiq-v2-gemini',
+    'swimiq-v2-gemini-mediapipe',
+  };
+
   /// Old rule-based engine stored in Supabase before notes-driven V1.
   bool get isLegacyRulesEngine {
     final engine = analysisEngine;
     if (engine == 'swimiq-v1-rules') return true;
+    if (engine != null && _modernEngines.contains(engine)) return false;
+
     final summaryLower = summary.toLowerCase();
     if (summaryLower.contains('overall readiness score')) return true;
     if (summaryLower.contains('consistent training history')) return true;
+
+    // Pre-2026 notes format used a "Quick Summary" section; current V1 does not.
     if (engine == 'swimiq-v1-notes' &&
-        coachingSections.isNotEmpty &&
-        !coachingSections.containsKey('Quick Summary')) {
+        coachingSections.containsKey('Quick Summary')) {
       return true;
     }
-    if (engine != 'swimiq-v1-notes' && coachingSections.isEmpty) {
-      return true;
-    }
+
+    if (coachingSections.isEmpty) return true;
     return false;
   }
 

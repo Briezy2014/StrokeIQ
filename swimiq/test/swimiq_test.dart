@@ -13,6 +13,7 @@ import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/data/models/swim_video_analysis.dart';
 import 'package:swimiq/data/models/video_models.dart';
+import 'package:swimiq/providers/swimmer_data_provider.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 
@@ -299,6 +300,50 @@ void main() {
       );
       expect(legacy.isLegacyRulesEngine, isTrue);
       expect(legacy.isNotesDriven, isFalse);
+    });
+
+    test('current V1 notes analyses are not treated as legacy', () {
+      const modern = SwimVideoAnalysis(
+        swimVideoId: 'video-1',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM\n• Solid breakout\n• Head lift on breath',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 80,
+        paceScore: 78,
+        overallScore: 79,
+        analysisJson: {
+          'engine': 'swimiq-v1-notes',
+          'sections': {
+            'Quick pro from this video': '• Solid breakout timing',
+            'Quick con from this video': '• Head lift on breath',
+            'Top 3 priorities for your next race': '• Practice finishes',
+          },
+        },
+      );
+
+      expect(modern.isLegacyRulesEngine, isFalse);
+      expect(modern.isNotesDriven, isTrue);
+
+      final data = SwimmerData(
+        raceLogs: const [],
+        goals: const [],
+        meetResults: const [],
+        videos: const [
+          SwimVideo(
+            id: 'video-1',
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/real.mov',
+            title: 'Denison 50 Fly',
+          ),
+        ],
+        videoAnalyses: [modern],
+        usaStandards: testMotivationalCatalog.flatStandards,
+        schedules: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
+      expect(data.analysisForVideo('video-1'), same(modern));
     });
 
     test('hides integration test uploads from user-facing videos', () {
