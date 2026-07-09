@@ -72,7 +72,7 @@ abstract final class SubscriptionCatalog {
       isFeatured: false,
       features: [
         'Dashboard with performance overview',
-        'Training log & add session',
+        'Training log — swims, practices & photo upload',
         'Goal setting & goal tracking',
         'Weekly Progress Report',
         'In-app personal best tracking',
