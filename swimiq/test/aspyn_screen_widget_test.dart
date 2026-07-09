@@ -167,6 +167,13 @@ void main() {
       final data = _harnessData!;
       expect(find.text(data.displayName(_fixture['swimmer'] as String)), findsOneWidget);
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
+      expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Daily Rope Climb'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Events & USA cuts'),

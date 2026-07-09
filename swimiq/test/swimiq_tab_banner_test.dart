@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:swimiq/core/constants/swimiq_quotes.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/widgets/swimiq_tab_banner.dart';
 
