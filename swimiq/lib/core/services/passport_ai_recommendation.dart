@@ -3,6 +3,7 @@ import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 
 enum PassportHubDestination {
+  aiCoach,
   videoLab,
   usaStandards,
   raceIntelligence,
@@ -62,8 +63,8 @@ class PassportAiRecommendation {
         detail: priorities.isNotEmpty
             ? priorities.take(3).join('\n')
             : snapshot.nextFocus,
-        actionLabel: 'Open Video Lab',
-        destination: PassportHubDestination.videoLab,
+        actionLabel: 'View AI Coach feedback',
+        destination: PassportHubDestination.aiCoach,
         suggestedEvent: event,
         priorities: priorities,
       );

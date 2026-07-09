@@ -113,9 +113,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
-      expect(find.text('Open'), findsWidgets);
       expect(find.text('SwimDNA™'), findsOneWidget);
       expect(find.text('Race Intelligence™'), findsOneWidget);
+      expect(find.text('AI Coach'), findsWidgets);
       expect(find.text('Coming Soon to Athlete Passport™'), findsNothing);
       expect(find.text('Coming Soon'), findsNothing);
     });
