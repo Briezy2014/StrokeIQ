@@ -49,14 +49,28 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
   @override
   Widget build(BuildContext context) {
     final sections = VideoAnalysisPresenter.visibleSections(widget.analysis);
-    final pro = sections['Quick pro from this video'];
-    final con = sections['Quick con from this video'];
+    final pro = sections['Quick pro from this video'] ??
+        widget.analysis.analysisJson?['quick_pro']?.toString();
+    final con = sections['Quick con from this video'] ??
+        widget.analysis.analysisJson?['quick_con']?.toString();
+    final engineLabel = VideoAnalysisPresenter.analysisEngineLabel(widget.analysis);
+    final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _ScoreStrip(analysis: widget.analysis),
         const SizedBox(height: 12),
+        if (engineLabel != null) ...[
+          Text(
+            engineLabel,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryDeep,
+                ),
+          ),
+          const SizedBox(height: 8),
+        ],
         if (pro != null || con != null) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,9 +98,9 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           ),
           const SizedBox(height: 12),
         ],
-        if (widget.analysis.disclaimer != null)
+        if (disclaimer != null)
           Text(
-            '${widget.analysis.disclaimer!}\n${YouthFriendlyAnalysis.audienceNote}',
+            '$disclaimer\n${YouthFriendlyAnalysis.audienceNote}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                   color: Colors.grey.shade700,

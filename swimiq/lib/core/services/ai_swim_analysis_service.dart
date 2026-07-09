@@ -6,11 +6,10 @@ import '../../data/models/usa_time_standard.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 
-/// V1 notes-and-metadata report. Not frame-by-frame video analysis.
+/// Local fallback when Gemini edge analysis is unavailable.
 class AiSwimAnalysisService {
   static const disclaimer =
-      'V1 report from upload notes and video metadata only — '
-      'not automatic video measurement.';
+      'Notes-based coaching — Elite AI uses Gemini and MediaPipe for frame-by-frame video read.';
 
   SwimVideoAnalysis analyze({
     required SwimVideo video,
@@ -37,11 +36,10 @@ class AiSwimAnalysisService {
     final dryland = _drylandFocus(ctx);
 
     final sections = <String, String>{
-      'Quick Summary': _quickSummary(ctx, priorities),
       'Quick pro from this video': quickPro,
       'Quick con from this video': quickCon,
       'Goal for your next race': nextRaceGoal,
-      'Top 3 priorities for the next practice': _bulletBlock(priorities),
+      'Top 3 priorities for your next race': _bulletBlock(priorities),
       'Dryland focus (strength · mobility · stability)': dryland,
       'Estimated time savings': timeSavings,
       'Coach notes for next race': coachNotes,
@@ -52,9 +50,9 @@ class AiSwimAnalysisService {
     return SwimVideoAnalysis(
       swimVideoId: video.id,
       swimmer: video.swimmer,
-      summary: '${ctx.eventLabel}\n$disclaimer\n\n${sections['Quick Summary']}',
+      summary: '${ctx.eventLabel}\n$quickPro\n$quickCon',
       strengths: _formatSections(sections),
-      improvements: 'Top 3 priorities for the next practice\n'
+      improvements: 'Top 3 priorities for your next race\n'
           '${_bulletBlock(priorities)}',
       techniqueScore: overallScore,
       paceScore: overallScore,
@@ -80,37 +78,6 @@ class AiSwimAnalysisService {
     );
   }
 
-  String _quickSummary(_AnalysisContext ctx, List<String> priorities) {
-    final buffer = StringBuffer()
-      ..writeln(
-        'This is a ${ctx.eventLabel} upload review — not an auto-measured race breakdown.',
-      );
-
-    if (!ctx.noteSignals.hasContent) {
-      buffer.writeln(
-        'Add short race notes on upload (start, underwater, strokes, breathing, finish) '
-        'to get event-specific feedback.',
-      );
-      return buffer.toString().trim();
-    }
-
-    if (priorities.isNotEmpty) {
-      buffer.writeln('Main focus from your notes: ${priorities.first}');
-    }
-
-    if (ctx.personalBestSeconds != null) {
-      buffer.writeln(
-        'Logged PB for this event: ${SwimTime.fromSeconds(ctx.personalBestSeconds!)}.',
-      );
-    } else if (ctx.matchingGoal != null) {
-      buffer.writeln(
-        'Goal on file: ${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)} '
-        '(${ctx.matchingGoal!.event}).',
-      );
-    }
-
-    return buffer.toString().trim();
-  }
 
   List<String> _whatVideoSuggests(_AnalysisContext ctx) {
     final items = <String>[];
@@ -223,19 +190,39 @@ class AiSwimAnalysisService {
           'on your next meet.';
     }
     if (priorities.isNotEmpty) {
-      return 'Execute your top practice priority in the next ${ctx.eventLabel} race.';
+      return 'Carry “${priorities.first}” into your next ${ctx.eventLabel} race.';
     }
     return 'Set a goal time for ${ctx.eventLabel} in Goals, then race it.';
   }
 
   String _drylandFocus(_AnalysisContext ctx) {
     final stroke = ctx.stroke;
-    final lines = <String>[
-      'Dryland supports what you do in the water — your coach picks the exact exercises.',
-      'For $stroke, prioritize core stability, shoulder mobility, and hip activation '
-      'so your body line stays long under fatigue.',
-      '2–3 short sessions per week (10–15 min) can protect technique when yardage climbs.',
-    ];
+    final lines = switch (stroke) {
+      'Butterfly' => [
+        '3 x 20 sec dolphin kick on the floor — drive from hips, not knees.',
+        '2 x 10 supermans — long body line, thumbs up, squeeze glutes.',
+        '2 x 15 band pull-aparts — stable shoulders for a high-elbow catch.',
+        '3 x 30 sec hollow hold — core stays tight when breathing lifts the head.',
+      ],
+      'Backstroke' => [
+        '2 x 10 shoulder dislocates with band — smooth rotation without pinching.',
+        '3 x 30 sec side plank each side — hips stay level through rotation.',
+        '2 x 12 glute bridges — strong kick initiation off the wall.',
+        '10 arm circles + 10 cross-body swings — loose shoulders before racing.',
+      ],
+      'Breaststroke' => [
+        '2 x 10 wall angels — mobility for a clean narrow kick recovery.',
+        '3 x 12 squat-to-stand with pause — leg drive without losing posture.',
+        '2 x 30 sec forearm plank — stable chest through the pull phase.',
+        '10 hip openers each leg — keep knees tracking on the kick.',
+      ],
+      _ => [
+        '3 x 30 sec forearm plank — flat body line under fatigue.',
+        '2 x 12 single-leg glute bridges each side — hip drive for kick power.',
+        '2 x 15 band external rotations — protect shoulders on high-volume free.',
+        '10 cross-body arm swings + 10 leg swings — race-day mobility primer.',
+      ],
+    };
     return lines.map((line) => '• $line').join('\n');
   }
 
@@ -272,23 +259,29 @@ class AiSwimAnalysisService {
     if (s.breathesEveryStroke == true &&
         ctx.stroke == 'Butterfly' &&
         ctx.isSprint) {
-      add('Test one fewer breath on the second 25.');
+      add('Test one fewer breath on the second 25 in your next race.');
     }
     if (s.mentionsFinish || ctx.isSprint) {
-      add('Practice full-extension finishes at race tempo.');
+      add('Drive full extension on the last stroke at the wall.');
     }
     if (ctx.personalBestSeconds != null && ctx.matchingGoal != null) {
       final gap = ctx.personalBestSeconds! - ctx.matchingGoal!.goalTime;
       if (gap > 0) {
         add(
           'Close ${gap.toStringAsFixed(2)}s to goal '
-          '${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)}.',
+          '${SwimTime.fromSeconds(ctx.matchingGoal!.goalTime)} at the next meet.',
         );
       }
     }
-
-    add('Film side and head-on angles on the next $event upload.');
-    add('Log a fresh $event time to track progress.');
+    if (s.reactionSeconds != null && s.reactionSeconds! <= 0.68) {
+      add('Keep the same block routine — reaction is already a strength.');
+    }
+    if (items.length < 3) {
+      add('Hold tempo and body line through the last ${ctx.isSprint ? '15m' : 'length'}.');
+    }
+    if (items.length < 3) {
+      add('Race with a clear breakout kick count and first-stroke plan.');
+    }
 
     return items.take(3).toList();
   }
@@ -347,13 +340,11 @@ class AiSwimAnalysisService {
       );
     }
     if (priorities.isNotEmpty) {
-      lines.add('Practice focus carried into meet warm-up: ${priorities.first}');
+      lines.add('Race focus: ${priorities.first}');
     }
     if (ctx.personalBestSeconds != null) {
       lines.add('PB reference: ${SwimTime.fromSeconds(ctx.personalBestSeconds!)}');
     }
-
-    lines.add('Reminder: this plan is from upload notes — verify on deck with video review.');
 
     return _bulletBlock(lines);
   }

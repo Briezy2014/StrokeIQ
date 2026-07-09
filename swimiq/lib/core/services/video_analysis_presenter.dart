@@ -4,18 +4,23 @@ import '../utils/youth_friendly_analysis.dart';
 /// Normalizes analysis sections for display — hides legacy/unwanted blocks.
 abstract final class VideoAnalysisPresenter {
   static const hiddenSectionKeys = {
+    'quick summary',
     'what the video suggests',
     'what cannot be confirmed yet without frame-by-frame ai',
     'what cannot be confirmed from this angle',
     'specific drills',
   };
 
+  static const legacySectionRenames = {
+    'top 3 priorities for the next practice':
+        'Top 3 priorities for your next race',
+  };
+
   static const sectionOrder = [
-    'Quick Summary',
     'Quick pro from this video',
     'Quick con from this video',
     'Goal for your next race',
-    'Top 3 priorities for the next practice',
+    'Top 3 priorities for your next race',
     'Dryland focus (strength · mobility · stability)',
     'Estimated time savings',
     'Coach notes for next race',
@@ -26,11 +31,15 @@ abstract final class VideoAnalysisPresenter {
     final filtered = <String, String>{};
 
     for (final entry in raw.entries) {
-      if (hiddenSectionKeys.contains(entry.key.trim().toLowerCase())) {
+      final normalizedKey = entry.key.trim();
+      final lower = normalizedKey.toLowerCase();
+      if (hiddenSectionKeys.contains(lower)) {
         continue;
       }
       if (entry.value.trim().isEmpty) continue;
-      filtered[entry.key] = YouthFriendlyAnalysis.sanitize(entry.value);
+
+      final displayKey = legacySectionRenames[lower] ?? normalizedKey;
+      filtered[displayKey] = YouthFriendlyAnalysis.sanitize(entry.value);
     }
 
     final ordered = <String, String>{};
@@ -42,6 +51,29 @@ abstract final class VideoAnalysisPresenter {
     }
     ordered.addAll(filtered);
     return ordered;
+  }
+
+  static String? friendlyDisclaimer(SwimVideoAnalysis analysis) {
+    final raw = analysis.disclaimer?.trim();
+    if (raw == null || raw.isEmpty) return null;
+
+    final lower = raw.toLowerCase();
+    if (lower.contains('v1 report') ||
+        lower.contains('not automatic video measurement') ||
+        lower.contains('upload notes and video metadata only')) {
+      return null;
+    }
+    return YouthFriendlyAnalysis.sanitize(raw);
+  }
+
+  static String? analysisEngineLabel(SwimVideoAnalysis analysis) {
+    return switch (analysis.analysisEngine) {
+      'swimiq-v2-gemini-mediapipe' => 'Gemini + MediaPipe frame analysis',
+      'swimiq-v2-gemini' => 'Gemini video analysis',
+      'swimiq-v1-notes-mediapipe' => 'Notes + MediaPipe body mechanics',
+      'swimiq-v1-notes' => 'Notes-based coaching (re-run with Elite AI for Gemini)',
+      _ => null,
+    };
   }
 
   static String coachNotes(SwimVideoAnalysis analysis) {

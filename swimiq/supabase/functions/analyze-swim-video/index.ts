@@ -313,9 +313,11 @@ Use clear sentences a parent can read with their swimmer — include enough deta
 Scores are 0-100 integers.
 Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences with body-mechanics detail when relevant.
 Provide next_race_goal as one concrete race target sentence tied to technique.
-For dryland_focus: explain why strength/mobility/stability matter for this stroke — do NOT list pool drills (the coach handles those).
+For top_3_priorities: three race-day execution cues for the NEXT RACE (starts, underwater, tempo, breathing, finish) — NOT practice homework or filming reminders.
+For dryland_focus: list 3–4 specific dryland exercises with sets/reps (bands, planks, mobility) — NEVER pool sets or in-water drills.
 For estimated_time_savings: give a numeric range in seconds tied to the limiter you saw.
-Do not invent split times or stroke counts you cannot verify from the video.`;
+Do not invent split times or stroke counts you cannot verify from the video.
+Do not include disclaimers about missing AI or frame-by-frame analysis.`;
 }
 
 function normalizeAnalysis(
@@ -331,13 +333,12 @@ function normalizeAnalysis(
   const priorities = bullet(parsed.top_3_priorities);
 
   const sections: Record<string, string> = {
-    "Quick Summary": sanitizeCoachText(String(parsed.quick_summary ?? "")),
     "Quick pro from this video": sanitizeCoachText(String(
       parsed.quick_pro ?? whatShows.split("\n")[0] ?? "",
     )),
     "Quick con from this video": sanitizeCoachText(String(parsed.quick_con ?? "")),
     "Goal for your next race": sanitizeCoachText(String(parsed.next_race_goal ?? "")),
-    "Top 3 priorities for the next practice": sanitizeCoachText(priorities),
+    "Top 3 priorities for your next race": sanitizeCoachText(priorities),
     "Dryland focus (strength · mobility · stability)": sanitizeCoachText(String(
       parsed.dryland_focus ?? "",
     )),
@@ -361,9 +362,8 @@ function normalizeAnalysis(
 
   const summary = [
     body.event_label ?? "Swim video",
-    disclaimer,
-    "",
-    sections["Quick Summary"],
+    sections["Quick pro from this video"],
+    sections["Quick con from this video"],
   ].join("\n");
 
   const strengths = [
@@ -376,7 +376,7 @@ function normalizeAnalysis(
     swimmer: body.swimmer ?? "",
     summary,
     strengths,
-    improvements: `Top 3 priorities for the next practice\n${priorities}`,
+    improvements: `Top 3 priorities for your next race\n${priorities}`,
     technique_score: techniqueScore,
     pace_score: paceScore,
     overall_score: overallScore,

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
+import 'package:swimiq/core/services/video_analysis_presenter.dart';
 import 'package:swimiq/core/utils/motivational_cut.dart';
 import 'package:swimiq/core/utils/passport_metrics.dart';
 import 'package:swimiq/core/utils/swimiq_standards_profile.dart';
@@ -10,6 +11,7 @@ import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
+import 'package:swimiq/data/models/swim_video_analysis.dart';
 import 'package:swimiq/data/models/video_models.dart';
 
 import 'support/motivational_standards_test_helper.dart';
@@ -204,15 +206,17 @@ void main() {
       );
 
       expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
-      expect(analysis.disclaimer, contains('not automatic video measurement'));
+      expect(analysis.disclaimer, contains('Gemini and MediaPipe'));
       expect(analysis.summary, isNot(contains('Overall readiness score')));
+      expect(analysis.summary, isNot(contains('upload review')));
+      expect(analysis.summary, isNot(contains('auto-measured')));
 
       final sections = analysis.coachingSections;
-      expect(sections.keys, contains('Quick Summary'));
+      expect(sections.keys, isNot(contains('Quick Summary')));
       expect(sections.keys, contains('Quick pro from this video'));
       expect(sections.keys, contains('Quick con from this video'));
       expect(sections.keys, contains('Goal for your next race'));
-      expect(sections.keys, contains('Top 3 priorities for the next practice'));
+      expect(sections.keys, contains('Top 3 priorities for your next race'));
       expect(sections.keys, contains(
         'Dryland focus (strength · mobility · stability)',
       ));
@@ -224,14 +228,58 @@ void main() {
         isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
       );
 
-      expect(sections['Quick Summary'], contains('50 Butterfly LCM'));
       expect(sections['Quick pro from this video'], contains('0.71'));
       expect(sections['Quick con from this video'], isNotEmpty);
       expect(sections['Goal for your next race'], isNotEmpty);
+      expect(
+        sections['Dryland focus (strength · mobility · stability)'],
+        contains('dolphin kick on the floor'),
+      );
+      expect(
+        sections['Top 3 priorities for your next race'],
+        isNot(contains('next practice')),
+      );
 
       expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);
       expect(sections['Estimated time savings'], contains('estimate'));
+    });
+
+    test('presenter hides legacy sections and renames practice priorities', () {
+      const legacy = SwimVideoAnalysis(
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM\nOld disclaimer',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 80,
+        paceScore: 78,
+        overallScore: 79,
+        analysisJson: {
+          'disclaimer':
+              'V1 report from upload notes and video metadata only — not automatic video measurement.',
+          'sections': {
+            'Quick Summary': 'This is a 50 Butterfly LCM upload review',
+            'What the video suggests': 'Start phase is flagged',
+            'What cannot be confirmed yet without frame-by-frame AI':
+                'Exact reaction time',
+            'Specific drills': '4 x 25 holding stroke count',
+            'Top 3 priorities for the next practice': '• Practice finishes',
+            'Quick pro from this video': '• Solid breakout timing',
+            'Quick con from this video': '• Head lift on breath',
+          },
+        },
+      );
+
+      final visible = VideoAnalysisPresenter.visibleSections(legacy);
+      expect(visible.keys, isNot(contains('Quick Summary')));
+      expect(visible.keys, isNot(contains('What the video suggests')));
+      expect(
+        visible.keys,
+        isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
+      );
+      expect(visible.keys, isNot(contains('Specific drills')));
+      expect(visible.keys, contains('Top 3 priorities for your next race'));
+      expect(VideoAnalysisPresenter.friendlyDisclaimer(legacy), isNull);
     });
 
     test('detects legacy rules-engine analyses', () {

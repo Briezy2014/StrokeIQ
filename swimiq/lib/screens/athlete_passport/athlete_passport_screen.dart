@@ -197,14 +197,18 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
 
     final analysis = latest.first;
     final event = analysis.analysisJson?['event']?.toString();
-    final quickSummary = analysis.coachingSections['Quick Summary'];
+    final quickPro = analysis.analysisJson?['quick_pro']?.toString() ??
+        analysis.coachingSections['Quick pro from this video'];
+    final quickCon = analysis.analysisJson?['quick_con']?.toString() ??
+        analysis.coachingSections['Quick con from this video'];
 
     return [
       if (event != null) 'Event: $event',
       snapshot.latestAnalysisSummary,
-      if (quickSummary != null && quickSummary.isNotEmpty) quickSummary,
+      if (quickPro != null && quickPro.isNotEmpty) 'Pro: $quickPro',
+      if (quickCon != null && quickCon.isNotEmpty) 'Con: $quickCon',
       if (analysis.topPriorities.isNotEmpty)
-        'Top priority: ${analysis.topPriorities.first}',
+        'Next race priority: ${analysis.topPriorities.first}',
     ];
   }
 
