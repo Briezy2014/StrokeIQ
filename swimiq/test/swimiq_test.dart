@@ -229,8 +229,9 @@ void main() {
         isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
       );
 
-      expect(sections['Quick pro from this video'], contains('0.71'));
-      expect(sections['Quick con from this video'], isNotEmpty);
+      expect(sections['Quick pro from this video'], contains('finish'));
+      expect(sections['Quick pro from this video'], isNot(contains('flagged')));
+      expect(sections['Quick con from this video'], contains('0.71'));
       expect(sections['Goal for your next race'], isNotEmpty);
       expect(
         sections['Dryland focus (strength · mobility · stability)'],

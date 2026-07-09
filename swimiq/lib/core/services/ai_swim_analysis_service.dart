@@ -32,8 +32,8 @@ class AiSwimAnalysisService {
     final priorities = _topThreePriorities(ctx);
     final timeSavings = _estimatedTimeSavings(ctx, poseMetrics);
     final coachNotes = _coachNotesForNextRace(ctx, priorities, poseMetrics);
-    final quickPro = _quickPro(ctx, suggestions);
-    final quickCon = _quickCon(ctx, suggestions);
+    final quickPro = _quickPro(ctx, poseMetrics);
+    final quickCon = _quickCon(ctx, suggestions, poseMetrics);
     final nextRaceGoal = _nextRaceGoal(ctx, priorities);
     final dryland = _drylandFocus(ctx);
 
@@ -102,7 +102,7 @@ class AiSwimAnalysisService {
         'Notes cite ~${rt.toStringAsFixed(2)}s reaction — for $event that is $tag.',
       );
     } else if (s.mentionsStart) {
-      items.add('Start phase is flagged in your notes for $event.');
+      items.add('Start phase may need sharpening for $event — log a reaction time to track it.');
     }
 
     if (s.breakoutMeters != null) {
@@ -161,17 +161,114 @@ class AiSwimAnalysisService {
     return items.take(5).toList();
   }
 
-  String _quickPro(_AnalysisContext ctx, List<String> suggestions) {
-    if (suggestions.isEmpty) {
-      return '• Upload notes with start, stroke count, and finish details to unlock a specific pro.';
+  List<String> _positiveHighlights(
+    _AnalysisContext ctx,
+    SwimPoseMetrics? pose,
+  ) {
+    final items = <String>[];
+    final s = ctx.noteSignals;
+    final event = ctx.eventLabel;
+
+    if (pose?.bodyMechanicsPro != null &&
+        pose!.bodyMechanicsPro!.trim().isNotEmpty) {
+      items.add(pose.bodyMechanicsPro!.trim());
     }
-    return '• ${suggestions.first}';
+
+    if (s.finishExtensionMentioned == true) {
+      items.add(
+        'Strong finish — you drove full extension into the wall on $event.',
+      );
+    }
+
+    if (s.reactionSeconds != null && s.reactionSeconds! <= 0.68) {
+      items.add(
+        'Quick reaction off the blocks (~${s.reactionSeconds!.toStringAsFixed(2)}s) — early speed is a strength for $event.',
+      );
+    }
+
+    if (s.breakoutMeters != null && s.breakoutMeters! >= 10) {
+      items.add(
+        'Solid underwater breakout around ${s.breakoutMeters}m — you carried speed to the surface.',
+      );
+    } else if (s.breakoutMeters != null && s.dolphinKickCount != null) {
+      items.add(
+        'Committed underwater work (${s.dolphinKickCount} dolphin kicks, breakout at ${s.breakoutMeters}m).',
+      );
+    }
+
+    if (s.strokeCountPerLength != null) {
+      final range = ctx.expectedStrokeCountRange;
+      final spl = s.strokeCountPerLength!;
+      if (range != null && spl >= range.$1 && spl <= range.$2) {
+        items.add(
+          'Stroke count (~$spl per length) stayed in a strong range for $event.',
+        );
+      }
+    }
+
+    if (s.tempoRushedLate != true && s.mentionsTempo) {
+      items.add('Tempo held steady — rhythm stayed together through the race.');
+    }
+
+    if (pose != null && pose.hasUsableMetrics) {
+      if (pose.hipDropDegrees != null && pose.hipDropDegrees! < 5) {
+        items.add('Body line stayed flat — hips stayed near the surface on video.');
+      }
+      if (pose.kickSymmetryScore != null && pose.kickSymmetryScore! >= 78) {
+        items.add('Even kick rhythm from both legs — steady power through the legs.');
+      }
+      if (pose.headLiftScore != null && pose.headLiftScore! < 0.25) {
+        items.add('Head stayed low on breaths — cleaner body line through the stroke.');
+      }
+    }
+
+    if (ctx.personalBestSeconds != null) {
+      items.add(
+        'You have official speed on the clock for $event — build on what already works.',
+      );
+    }
+
+    if (items.isEmpty && s.mentionsBreakout) {
+      items.add(
+        'You are tracking breakout timing — good race awareness on $event.',
+      );
+    }
+    if (items.isEmpty && s.mentionsStart) {
+      items.add(
+        'You reviewed the start on video — keep the same explosive push into streamline.',
+      );
+    }
+    if (items.isEmpty && ctx.notes.isNotEmpty) {
+      items.add(
+        'You logged race details for $event — that focus helps coaches see what you did well.',
+      );
+    }
+    if (items.isEmpty) {
+      items.add(
+        'Video uploaded — add start, stroke count, and finish notes to highlight your next strength.',
+      );
+    }
+
+    return items;
   }
 
-  String _quickCon(_AnalysisContext ctx, List<String> suggestions) {
+  String _quickPro(_AnalysisContext ctx, SwimPoseMetrics? pose) {
+    return '• ${_positiveHighlights(ctx, pose).first}';
+  }
+
+  String _quickCon(
+    _AnalysisContext ctx,
+    List<String> suggestions,
+    SwimPoseMetrics? pose,
+  ) {
     final s = ctx.noteSignals;
+
+    if (pose?.bodyMechanicsCon != null &&
+        pose!.bodyMechanicsCon!.trim().isNotEmpty) {
+      return '• ${pose.bodyMechanicsCon!.trim()}';
+    }
     if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
-      return '• Reaction time looks slow — early speed is leaking off the blocks.';
+      return '• Reaction time (~${s.reactionSeconds!.toStringAsFixed(2)}s) looks slow — early speed is leaking off the blocks.';
     }
     if (s.tempoRushedLate == true) {
       return '• Late-race tempo fades — length and rhythm drop when it matters most.';
@@ -179,8 +276,23 @@ class AiSwimAnalysisService {
     if (s.breathesEveryStroke == true && ctx.isSprint) {
       return '• Breathing pattern may be costing rhythm on a sprint ${ctx.eventLabel}.';
     }
-    if (suggestions.length > 1) {
-      return '• ${suggestions[1]}';
+    if (s.mentionsStart && s.reactionSeconds == null) {
+      return '• Start phase needs sharpening — tighten block setup and the first underwater push.';
+    }
+    if (suggestions.isNotEmpty) {
+      final limiter = suggestions.firstWhere(
+        (line) =>
+            line.contains('costing') ||
+            line.contains('high side') ||
+            line.contains('low side') ||
+            line.contains('disrupt') ||
+            line.contains('fade') ||
+            line.contains('sharpen') ||
+            line.contains('flagged') ||
+            line.contains('may need'),
+        orElse: () => suggestions.length > 1 ? suggestions[1] : suggestions.first,
+      );
+      return '• $limiter';
     }
     return '• Add side + head-on video next time for sharper feedback on body line.';
   }
