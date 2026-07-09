@@ -61,6 +61,7 @@ class SwimIqBrandedImage extends StatefulWidget {
     this.width,
     this.height,
     this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.borderRadius = 0,
     this.fallback,
     this.zoomToMark = false,
@@ -70,6 +71,7 @@ class SwimIqBrandedImage extends StatefulWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final Alignment alignment;
   final double borderRadius;
   final Widget? fallback;
   /// When true, zooms into the top of a full lockup so the swimmer mark fills the slot.
@@ -152,6 +154,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
       width: w,
       height: h,
       fit: widget.fit,
+      alignment: widget.alignment,
       filterQuality: FilterQuality.high,
       gaplessPlayback: true,
       errorBuilder: (_, __, ___) =>

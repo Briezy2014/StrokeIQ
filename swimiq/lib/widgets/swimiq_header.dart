@@ -99,7 +99,7 @@ class SwimIqScreenAppBarTitle extends StatelessWidget {
   }
 }
 
-/// Compact app bar: icon + wordmark + swimmer (one line, never clipped).
+/// App bar: swimmer name only — full branding lives in the tab banner strip below.
 class SwimIqAppBarTitle extends StatelessWidget {
   const SwimIqAppBarTitle({super.key, this.subtitle});
 
@@ -107,31 +107,15 @@ class SwimIqAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const SwimIqCompactMark(size: 40, borderRadius: 10),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SwimIqWordmark(fontSize: 17),
-              if (subtitle != null && subtitle!.trim().isNotEmpty)
-                Text(
-                  subtitle!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.88),
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-            ],
+    final name = subtitle?.trim();
+    return Text(
+      name != null && name.isNotEmpty ? name : 'SwimIQ',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
           ),
-        ),
-      ],
     );
   }
 }

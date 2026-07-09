@@ -13,9 +13,8 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('BUILT IN THE WATER'), findsOneWidget);
+    expect(find.textContaining('BUILT IN THE WATER'), findsNothing);
     expect(find.text('Video Lab'), findsOneWidget);
-    expect(find.textContaining('BUILT IN THE WATER'), findsOneWidget);
   });
 
   test('moduleLabelForTab includes dashboard and other tabs', () {
