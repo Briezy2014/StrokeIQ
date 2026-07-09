@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/env.dart';
 import '../core/theme/app_theme.dart';
+import '../core/web/public_web_routes.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
@@ -29,6 +30,16 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
 
   @override
   Widget build(BuildContext context) {
+    final publicRoute =
+        kIsWeb ? PublicWebRoute.fromUri(Uri.base) : null;
+    if (publicRoute != null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: PublicWebRouteScreen(route: publicRoute),
+      );
+    }
+
     if (!Env.isConfigured) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,

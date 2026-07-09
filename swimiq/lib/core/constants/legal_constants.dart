@@ -20,9 +20,10 @@ abstract final class LegalConstants {
   static const mailingCountry = 'United States';
   static const lastUpdated = 'July 7, 2026';
 
-  static const privacyPolicyWebUrl = '$websiteUrl/privacy';
-  static const termsOfServiceWebUrl = '$websiteUrl/terms';
-  static const aiDisclosureWebUrl = '$websiteUrl/ai';
+  static const privacyPolicyWebUrl = '$websiteUrl/?page=privacy';
+  static const dataDeletionWebUrl = '$websiteUrl/?page=delete-account';
+  static const termsOfServiceWebUrl = '$websiteUrl/?page=terms';
+  static const aiDisclosureWebUrl = '$websiteUrl/?page=ai';
 
   /// Athlete age range SwimIQ is designed for (see Terms and Privacy Policy).
   static const athleteAgeMin = 8;

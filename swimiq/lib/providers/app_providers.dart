@@ -7,6 +7,7 @@ import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
 import '../core/services/stripe_checkout_service.dart';
+import '../core/subscription/subscription_billing_policy.dart';
 import '../core/services/subscription_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
@@ -105,6 +106,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     SubscriptionTier tier,
     BillingCycle cycle,
   ) async {
+    if (!SubscriptionBillingPolicy.supportsStripeCheckout) {
+      throw StateError(
+        'Stripe checkout is only available on swimiqapp.com (web).',
+      );
+    }
     final checkout = ref.read(stripeCheckoutServiceProvider);
     return checkout.startCheckout(
       tier: tier,
@@ -115,6 +121,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   Future<void> selectPlan(SubscriptionTier tier, BillingCycle cycle) async {
+    if (!SubscriptionBillingPolicy.supportsPaidPlanSelection) {
+      throw StateError(
+        'Paid plan selection is disabled on mobile until store billing ships.',
+      );
+    }
     final service = ref.read(subscriptionServiceProvider);
     final current = state.value ?? await service.load();
     state = AsyncData(

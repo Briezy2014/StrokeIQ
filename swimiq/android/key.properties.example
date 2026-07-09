@@ -1,0 +1,6 @@
+# Copy to android/key.properties (gitignored) before release builds.
+# Generate the keystore once — see docs/ANDROID_RELEASE.md
+storePassword=your-keystore-password
+keyPassword=your-key-password
+keyAlias=swimiq
+storeFile=../keystores/swimiq-upload-keystore.jks

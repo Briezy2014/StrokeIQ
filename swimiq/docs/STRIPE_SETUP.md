@@ -166,7 +166,9 @@ Change the password in Supabase after your first demo if you want.
 # Android note
 
 Google Play requires **Play Billing** for in-app subscriptions.  
-**Stripe on swimiqapp.com** works for browser users now. Android in-app billing is a separate step before Play Store launch.
+**Stripe on swimiqapp.com** works for browser users now.
+
+**v1 Android launch:** Elite trial + coach preview codes only — paid plan buttons are disabled in the app until Google Play Billing ships. See `docs/ANDROID_RELEASE.md` and `lib/core/subscription/subscription_billing_policy.dart`.
 
 ---
 
