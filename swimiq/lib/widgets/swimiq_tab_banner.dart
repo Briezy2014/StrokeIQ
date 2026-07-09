@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/constants/swimiq_quotes.dart';
 import '../providers/app_providers.dart';
 import 'swimiq_branding.dart';
 import 'swimiq_branded_fallback.dart';
@@ -10,9 +11,11 @@ class SwimIqTabBanner extends StatelessWidget {
   const SwimIqTabBanner({
     super.key,
     required this.tabIndex,
+    required this.swimmer,
   });
 
   final int tabIndex;
+  final String swimmer;
 
   static const tabModuleLabels = <int, String>{
     HomeTab.dashboard: 'Dashboard',
@@ -27,10 +30,28 @@ class SwimIqTabBanner extends StatelessWidget {
 
   static bool hasBannerForTab(int index) => tabModuleLabels.containsKey(index);
 
+  static List<String> quotePoolForTab(int tabIndex) => switch (tabIndex) {
+        HomeTab.dashboard => SwimIqQuotes.dashboard,
+        HomeTab.personalBests => SwimIqQuotes.personalBests,
+        HomeTab.trainingLog => SwimIqQuotes.trainingLog,
+        HomeTab.goals => SwimIqQuotes.goals,
+        HomeTab.videoLab => SwimIqQuotes.videoLab,
+        HomeTab.passport => SwimIqQuotes.recruiting,
+        _ => const [],
+      };
+
+  static String quoteForTab(String swimmer, int tabIndex) {
+    return SwimIqQuotes.pickFor(swimmer, quotePoolForTab(tabIndex));
+  }
+
   @override
   Widget build(BuildContext context) {
     final module = moduleLabelForTab(tabIndex);
     if (module == null) return const SizedBox.shrink();
+
+    final quote = quoteForTab(swimmer, tabIndex);
+    final bannerText =
+        quote.isNotEmpty ? quote : AppConstants.brandTagline;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -65,14 +86,16 @@ class SwimIqTabBanner extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 18, 12, 8),
                   child: Text(
-                    AppConstants.brandTagline,
+                    bannerText,
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.92),
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
+                          letterSpacing: 0.2,
+                          height: 1.25,
+                          fontSize: 11,
                         ),
                   ),
                 ),

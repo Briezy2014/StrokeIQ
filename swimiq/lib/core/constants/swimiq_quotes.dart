@@ -1,4 +1,10 @@
 abstract final class SwimIqQuotes {
+  static const dashboard = [
+    '"Built in the water. Driven by possibility — your next PB starts today."',
+    '"Every champion was once a swimmer who refused to give up."',
+    '"Show up, log the work, and let your times tell the story."',
+  ];
+
   static const personalBests = [
     '"The water doesn\'t know your age — it only knows your effort."',
     '"Every PB starts with showing up when it\'s hard."',

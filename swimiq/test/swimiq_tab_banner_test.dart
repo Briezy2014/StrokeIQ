@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:swimiq/core/constants/app_constants.dart';
+import 'package:swimiq/core/constants/swimiq_quotes.dart';
 import 'package:swimiq/providers/app_providers.dart';
 import 'package:swimiq/widgets/swimiq_tab_banner.dart';
 
 void main() {
-  testWidgets('SwimIqTabBanner shows tagline and module chip', (tester) async {
+  testWidgets('SwimIqTabBanner shows per-tab quote and module chip', (tester) async {
+    const swimmer = 'Aspyn';
+    final expectedQuote = SwimIqTabBanner.quoteForTab(swimmer, HomeTab.videoLab);
+
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
-          body: SwimIqTabBanner(tabIndex: HomeTab.videoLab),
+          body: SwimIqTabBanner(tabIndex: HomeTab.videoLab, swimmer: swimmer),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Video Lab'), findsOneWidget);
-    expect(
-      find.textContaining(AppConstants.brandTagline),
-      findsOneWidget,
-    );
+    expect(find.text(expectedQuote), findsOneWidget);
   });
 
   test('moduleLabelForTab covers all six bottom-nav tabs', () {

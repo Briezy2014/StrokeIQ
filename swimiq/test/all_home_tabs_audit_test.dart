@@ -102,10 +102,8 @@ void main() {
 
         expect(find.byType(SwimIqTabBanner), findsOneWidget);
         expect(find.text(entry.value), findsWidgets);
-        expect(
-          find.textContaining('Built in the Water'),
-          findsOneWidget,
-        );
+        final quote = SwimIqTabBanner.quoteForTab('Aspyn', entry.key);
+        expect(find.text(quote), findsOneWidget);
         expect(find.textContaining('Updates build'), findsNothing);
         expect(find.byType(SwimIqCompactMark), findsNothing);
       });
@@ -115,6 +113,16 @@ void main() {
       await tester.pumpWidget(_homeHarness(HomeTab.dashboard));
       await tester.pumpAndSettle();
 
+      expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
+      expect(find.text('SwimIQ Basic'), findsOneWidget);
+      expect(find.text('SwimIQ Pro'), findsOneWidget);
+      expect(find.text('SwimIQ Elite'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Daily Rope Climb'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Log meets'),

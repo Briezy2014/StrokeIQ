@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/subscription/subscription_capabilities.dart';
-import '../../core/models/subscription_plan.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_time.dart';
@@ -12,13 +11,13 @@ import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/dashboard_membership_plans_card.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../core/gamification/swimiq_badges.dart';
 import '../../core/gamification/swimiq_daily_progress.dart';
-import '../membership/membership_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -34,8 +33,6 @@ class DashboardScreen extends ConsumerWidget {
         final subscription = ref.watch(subscriptionStateProvider).value;
         final showProFeatures = subscription != null &&
             SubscriptionCapabilities.canUseProFeatures(subscription);
-        final showEliteFeatures = subscription != null &&
-            SubscriptionCapabilities.hasEliteAccess(subscription);
 
         final snapshot = data.passportSnapshot(swimmer);
         final daily = SwimIqDailyProgress.calculate(
@@ -70,6 +67,8 @@ class DashboardScreen extends ConsumerWidget {
               climbPercent: daily.ropeClimbPercent,
             ),
             const SizedBox(height: 16),
+            const DashboardMembershipPlansCard(),
+            const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
             const SizedBox(height: 16),
             _EventCutsProgressSection(
@@ -84,14 +83,6 @@ class DashboardScreen extends ConsumerWidget {
                 ref.read(homeTabIndexProvider.notifier).state = HomeTab.trainingLog;
               },
             ),
-            if (!showProFeatures) ...[
-              const SizedBox(height: 16),
-              const _DashboardProUpsell(),
-            ],
-            if (showProFeatures && !showEliteFeatures) ...[
-              const SizedBox(height: 16),
-              const _DashboardEliteUpsell(),
-            ],
             const SizedBox(height: 8),
           ],
         );
@@ -424,53 +415,6 @@ class _EventProgressTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DashboardProUpsell extends StatelessWidget {
-  const _DashboardProUpsell();
-
-  @override
-  Widget build(BuildContext context) {
-    final pro = SubscriptionCatalog.planFor(SubscriptionTier.pro);
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.workspace_premium, color: AppColors.primary),
-        title: Text('Unlock ${pro.name}', style: const TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: const Text('Official meet PBs, USA cuts, passport & video lab'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const MembershipScreen()),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardEliteUpsell extends StatelessWidget {
-  const _DashboardEliteUpsell();
-
-  @override
-  Widget build(BuildContext context) {
-    final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
-    return Card(
-      color: AppColors.textDark,
-      child: ListTile(
-        leading: const Icon(Icons.auto_awesome, color: Colors.white),
-        title: Text(
-          'Unlock ${elite.name}',
-          style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
-        ),
-        subtitle: Text(
-          'Gemini + MediaPipe video AI, Race Intelligence & recruiting insights',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
-        ),
-        trailing: Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.9)),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const MembershipScreen()),
-        ),
       ),
     );
   }

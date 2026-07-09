@@ -122,6 +122,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: SwimIqAppBarTitle(subtitle: swimmer),
         actions: [
           IconButton(
+            tooltip: 'Plans & billing',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MembershipScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.card_membership_outlined),
+          ),
+          IconButton(
             tooltip: 'Refresh',
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
@@ -136,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SwimIqTabBanner(tabIndex: selectedIndex),
+          SwimIqTabBanner(tabIndex: selectedIndex, swimmer: swimmer),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
