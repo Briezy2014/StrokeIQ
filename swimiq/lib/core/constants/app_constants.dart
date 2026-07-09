@@ -5,6 +5,8 @@ class AppConstants {
   static const brandIconAsset = 'assets/branding/swimiq_icon.png';
   static const brandIconSizePx = 512;
   static const tagline = '';
+  static const brandTagline = 'Built in the Water. Driven by Possibility.';
+  static const brandTaglineShort = 'Performance. Precision. Possibility.';
   static const founder = 'Kara Williams';
   static const copyright = '© 2026 SwimIQ™';
 

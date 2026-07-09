@@ -52,6 +52,7 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SwimIqPageHero(
+                    showMark: false,
                     title: 'Log',
                     subtitle: 'Training, practices, meets & results',
                     stats: [

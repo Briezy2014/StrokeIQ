@@ -7,6 +7,7 @@ import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../widgets/swimiq_tab_banner.dart';
 import '../widgets/swimiq_header.dart';
 import '../widgets/subscription_upgrade_panel.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
@@ -132,9 +133,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: _screenAt(selectedIndex),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (selectedIndex != HomeTab.dashboard)
+            SwimIqTabBanner(tabIndex: selectedIndex),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: _screenAt(selectedIndex),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,

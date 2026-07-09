@@ -183,6 +183,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqPageHero(
+              showMark: false,
               title: 'Video Lab',
               subtitle: canRunAi
                   ? 'AI coaching from your race footage'

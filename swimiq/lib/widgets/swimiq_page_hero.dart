@@ -10,11 +10,13 @@ class SwimIqPageHero extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.stats = const [],
+    this.showMark = true,
   });
 
   final String title;
   final String? subtitle;
   final List<SwimIqHeroStat> stats;
+  final bool showMark;
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +25,10 @@ class SwimIqPageHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SwimIqCompactMark(size: 56, borderRadius: 14),
-          const SizedBox(height: 12),
+          if (showMark) ...[
+            const SwimIqCompactMark(size: 56, borderRadius: 14),
+            const SizedBox(height: 12),
+          ],
           Text(
             title,
             textAlign: TextAlign.center,

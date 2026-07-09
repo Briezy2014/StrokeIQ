@@ -157,6 +157,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqPageHero(
+              showMark: false,
               title: 'Goals',
               subtitle: 'Targets, progress & USA cuts for ${data.displayName(swimmer)}',
               stats: [

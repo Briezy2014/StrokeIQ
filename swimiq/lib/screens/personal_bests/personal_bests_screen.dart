@@ -39,6 +39,7 @@ class PersonalBestsScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 SwimIqPageHero(
+                  showMark: false,
                   title: 'Personal Bests',
                   subtitle: 'Official meet times & USA standards',
                 ),
@@ -56,6 +57,7 @@ class PersonalBestsScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               SwimIqPageHero(
+                showMark: false,
                 title: 'Personal Bests',
                 subtitle: '${officialBests.length} official meet PBs',
                 stats: [
@@ -97,6 +99,7 @@ class PersonalBestsScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               SwimIqPageHero(
+                showMark: false,
                 title: 'Personal Bests',
                 subtitle: 'In-app tracking from your training log',
               ),
@@ -117,6 +120,7 @@ class PersonalBestsScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqPageHero(
+              showMark: false,
               title: 'Personal Bests',
               subtitle: '${trainingBests.length} in-app bests from training',
               stats: [
