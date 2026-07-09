@@ -40,7 +40,7 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / signup: square app icon PNG only (icon.png).
+/// Login / signup: full square app icon (icon.png) — contain, never zoom/crop.
 class SwimIqLoginBrand extends StatelessWidget {
   const SwimIqLoginBrand({
     super.key,
@@ -52,25 +52,29 @@ class SwimIqLoginBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: DecoratedBox(
+      child: Container(
+        width: size,
+        height: size,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
+        padding: const EdgeInsets.all(12),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           child: SwimIqBrandedImage(
             candidates: SwimIqBranding.loginIconCandidates,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            fallback: SwimIqPaintedMark(size: size),
+            width: size - 24,
+            height: size - 24,
+            fit: BoxFit.contain,
+            fallback: SwimIqPaintedMark(size: size - 24),
           ),
         ),
       ),
