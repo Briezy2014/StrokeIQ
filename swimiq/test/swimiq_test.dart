@@ -230,7 +230,20 @@ void main() {
       );
 
       expect(sections['Quick pro from this video'], contains('finish'));
+      expect(sections['Quick pro from this video'], contains('last stroke'));
       expect(sections['Quick pro from this video'], isNot(contains('flagged')));
+      expect(
+        sections['Quick pro from this video'],
+        isNot(contains('drove full extension')),
+      );
+      expect(
+        sections['Coach notes for next race'],
+        contains('long arm'),
+      );
+      expect(
+        sections['Estimated time savings'],
+        contains('complete last stroke'),
+      );
       expect(sections['Quick con from this video'], contains('0.71'));
       expect(sections['Goal for your next race'], isNotEmpty);
       expect(

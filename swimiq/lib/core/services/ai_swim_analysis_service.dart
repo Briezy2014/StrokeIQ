@@ -1,6 +1,8 @@
 import '../../data/models/swim_pose_metrics.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swim_time.dart';
+import '../../core/utils/youth_coaching_phrases.dart';
+import '../../core/utils/youth_friendly_analysis.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
 import '../../data/models/usa_time_standard.dart';
@@ -51,37 +53,39 @@ class AiSwimAnalysisService {
     final paceScore = _paceScore(ctx);
     final overallScore = _overallScore(ctx, techniqueScore, paceScore);
 
-    return SwimVideoAnalysis(
-      swimVideoId: video.id,
-      swimmer: video.swimmer,
-      summary: '${ctx.eventLabel}\n$quickPro\n$quickCon',
-      strengths: _formatSections(sections),
-      improvements: 'Top 3 priorities for your next race\n'
-          '${_bulletBlock(priorities)}',
-      techniqueScore: techniqueScore,
-      paceScore: paceScore,
-      overallScore: overallScore,
-      analysisJson: {
-        'event': ctx.eventLabel,
-        'stroke': ctx.stroke,
-        'distance': ctx.distance,
-        'course': ctx.course,
-        'user_notes': ctx.notes,
-        'disclaimer': disclaimer,
-        'sections': sections,
-        'top_3_priorities': priorities,
-        'estimated_time_savings': timeSavings,
-        'coach_notes_for_next_race': coachNotes,
-        'quick_pro': quickPro,
-        'quick_con': quickCon,
-        'next_race_goal': nextRaceGoal,
-        'dryland_focus': dryland,
-        'personal_best_seconds': ctx.personalBestSeconds,
-        if (poseMetrics != null) 'pose_metrics': poseMetrics.toJson(),
-        'engine': poseMetrics?.hasUsableMetrics == true
-            ? 'swimiq-v1-notes-mediapipe'
-            : 'swimiq-v1-notes',
-      },
+    return YouthFriendlyAnalysis.sanitizeAnalysis(
+      SwimVideoAnalysis(
+        swimVideoId: video.id,
+        swimmer: video.swimmer,
+        summary: '${ctx.eventLabel}\n$quickPro\n$quickCon',
+        strengths: _formatSections(sections),
+        improvements: 'Top 3 priorities for your next race\n'
+            '${_bulletBlock(priorities)}',
+        techniqueScore: techniqueScore,
+        paceScore: paceScore,
+        overallScore: overallScore,
+        analysisJson: {
+          'event': ctx.eventLabel,
+          'stroke': ctx.stroke,
+          'distance': ctx.distance,
+          'course': ctx.course,
+          'user_notes': ctx.notes,
+          'disclaimer': disclaimer,
+          'sections': sections,
+          'top_3_priorities': priorities,
+          'estimated_time_savings': timeSavings,
+          'coach_notes_for_next_race': coachNotes,
+          'quick_pro': quickPro,
+          'quick_con': quickCon,
+          'next_race_goal': nextRaceGoal,
+          'dryland_focus': dryland,
+          'personal_best_seconds': ctx.personalBestSeconds,
+          if (poseMetrics != null) 'pose_metrics': poseMetrics.toJson(),
+          'engine': poseMetrics?.hasUsableMetrics == true
+              ? 'swimiq-v1-notes-mediapipe'
+              : 'swimiq-v1-notes',
+        },
+      ),
     );
   }
 
@@ -175,9 +179,7 @@ class AiSwimAnalysisService {
     }
 
     if (s.finishExtensionMentioned == true) {
-      items.add(
-        'Strong finish — you drove full extension into the wall on $event.',
-      );
+      items.add(YouthCoachingPhrases.finishStrongProForEvent(event));
     }
 
     if (s.reactionSeconds != null && s.reactionSeconds! <= 0.68) {
@@ -188,11 +190,12 @@ class AiSwimAnalysisService {
 
     if (s.breakoutMeters != null && s.breakoutMeters! >= 10) {
       items.add(
-        'Solid underwater breakout around ${s.breakoutMeters}m — you carried speed to the surface.',
+        '${YouthCoachingPhrases.solidBreakoutPro} (around ${s.breakoutMeters}m).',
       );
     } else if (s.breakoutMeters != null && s.dolphinKickCount != null) {
       items.add(
-        'Committed underwater work (${s.dolphinKickCount} dolphin kicks, breakout at ${s.breakoutMeters}m).',
+        'Committed underwater work (${s.dolphinKickCount} dolphin kicks, '
+        'coming up for your first stroke at ${s.breakoutMeters}m).',
       );
     }
 
@@ -229,14 +232,10 @@ class AiSwimAnalysisService {
     }
 
     if (items.isEmpty && s.mentionsBreakout) {
-      items.add(
-        'You are tracking breakout timing — good race awareness on $event.',
-      );
+      items.add(YouthCoachingPhrases.breakoutAwarenessPro);
     }
     if (items.isEmpty && s.mentionsStart) {
-      items.add(
-        'You reviewed the start on video — keep the same explosive push into streamline.',
-      );
+      items.add(YouthCoachingPhrases.reviewedStartUnderwaterArrow);
     }
     if (items.isEmpty && ctx.notes.isNotEmpty) {
       items.add(
@@ -361,7 +360,7 @@ class AiSwimAnalysisService {
     if (s.breakoutMeters != null &&
         s.breakoutMeters! < 9 &&
         (ctx.stroke == 'Butterfly' || ctx.stroke == 'Freestyle')) {
-      add('Hold streamline longer before breakout.');
+      add(YouthCoachingPhrases.holdStreamlinePriority);
     }
     if (s.strokeCountPerLength != null) {
       final range = ctx.expectedStrokeCountRange;
@@ -369,7 +368,7 @@ class AiSwimAnalysisService {
       if (range != null && spl > range.$2) {
         add('Lower stroke count without losing tempo.');
       } else if (range != null && spl < range.$1) {
-        add('Add rhythm — avoid over-gliding between strokes.');
+        add(YouthCoachingPhrases.avoidOverGlidingBetweenStrokes);
       }
     }
     if (s.tempoRushedLate == true) {
@@ -381,7 +380,7 @@ class AiSwimAnalysisService {
       add('Test one fewer breath on the second 25 in your next race.');
     }
     if (s.mentionsFinish || ctx.isSprint) {
-      add('Drive full extension on the last stroke at the wall.');
+      add(YouthCoachingPhrases.finishFocusPriority);
     }
     if (ctx.personalBestSeconds != null && ctx.matchingGoal != null) {
       final gap = ctx.personalBestSeconds! - ctx.matchingGoal!.goalTime;
@@ -399,7 +398,10 @@ class AiSwimAnalysisService {
       add('Hold tempo and body line through the last ${ctx.isSprint ? '15m' : 'length'}.');
     }
     if (items.length < 3) {
-      add('Race with a clear breakout kick count and first-stroke plan.');
+      add(
+        'Race with a clear underwater kick count and a plan for your first stroke '
+        'after you come up from underwater.',
+      );
     }
 
     return items.take(3).toList();
@@ -425,7 +427,8 @@ class AiSwimAnalysisService {
     }
     if (s.breakoutMeters != null && s.breakoutMeters! < 10) {
       add(
-        'Longer underwater before breakout (${s.breakoutMeters}m noted)',
+        '${YouthCoachingPhrases.longerUnderwaterBeforeFirstStroke} '
+        '(${s.breakoutMeters}m noted)',
         0.10,
         0.20,
       );
@@ -446,7 +449,7 @@ class AiSwimAnalysisService {
       add('One fewer breath on a ${ctx.distance}m ${ctx.stroke}', 0.05, 0.15);
     }
     if (s.mentionsFinish || s.finishExtensionMentioned == true) {
-      add('Full extension into the wall on the last stroke', 0.05, 0.12);
+      add(YouthCoachingPhrases.completeLastStrokeReach, 0.05, 0.12);
     }
 
     if (pose != null && pose.hasUsableMetrics) {
@@ -486,9 +489,9 @@ class AiSwimAnalysisService {
     if (lines.isEmpty) {
       if (ctx.isSprint && ctx.stroke == 'Butterfly') {
         add('Cleaner breathing rhythm on the second 25', 0.08, 0.15);
-        add('Stronger finish drive into the wall', 0.05, 0.10);
+        add(YouthCoachingPhrases.strongerFinishReach, 0.05, 0.10);
       } else if (ctx.isSprint) {
-        add('Tighter streamline off the start and turns', 0.06, 0.14);
+        add(YouthCoachingPhrases.tighterUnderwaterArrowOffWalls, 0.06, 0.14);
         add('Hold tempo through the last 15 meters', 0.05, 0.12);
       } else {
         add('Steadier pacing on the middle ${ctx.distance ~/ 2}m', 0.15, 0.35);
@@ -524,13 +527,9 @@ class AiSwimAnalysisService {
 
     if (ctx.noteSignals.reactionSeconds != null &&
         ctx.noteSignals.reactionSeconds! > 0.70) {
-      lines.add(
-        'On the beep: explode fast — tight streamline underwater before your first stroke.',
-      );
+      lines.add(YouthCoachingPhrases.fastStartUnderwaterArrow);
     } else {
-      lines.add(
-        'On the beep: same start you practiced — streamline first, then build speed.',
-      );
+      lines.add(YouthCoachingPhrases.practicedStartCue);
     }
 
     switch (ctx.stroke) {
@@ -579,9 +578,7 @@ class AiSwimAnalysisService {
       );
     }
 
-    lines.add(
-      'Last ${ctx.isSprint ? '5 meters' : '10 meters'}: do not coast — one strong stroke and reach to the wall.',
-    );
+    lines.add(YouthCoachingPhrases.finishWallReminder);
 
     if (ctx.personalBestSeconds != null) {
       lines.add(

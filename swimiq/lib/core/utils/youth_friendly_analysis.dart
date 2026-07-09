@@ -1,9 +1,11 @@
 import '../../data/models/swim_video_analysis.dart';
+import 'youth_coaching_phrases.dart';
 
 /// Keeps AI swim analysis supportive and appropriate for youth + parents.
 abstract final class YouthFriendlyAnalysis {
   static const audienceNote =
-      'Kid- and parent-friendly coaching with precise swim technique (body line, hips up, head down, angles) — not medical advice.';
+      'Kid- and parent-friendly coaching — we explain swim words in plain language. '
+      'Not medical advice; confirm with your coach.';
 
   static final _blockedPattern = RegExp(
     r'\b(sexy|hot body|ugly|fat|obese|overweight|skinny|stupid|idiot|'
@@ -11,9 +13,76 @@ abstract final class YouthFriendlyAnalysis {
     caseSensitive: false,
   );
 
-  static String sanitize(String? text) {
+  static final _plainLanguageReplacements = <_PlainLanguageRule>[
+    _PlainLanguageRule(
+      RegExp(
+        r'drive full extension on the last stroke at the wall\.?',
+        caseSensitive: false,
+      ),
+      YouthCoachingPhrases.finishFocusPriority,
+    ),
+    _PlainLanguageRule(
+      RegExp(
+        r'full extension into the wall on the last stroke',
+        caseSensitive: false,
+      ),
+      'a complete last stroke with a long reach to the wall',
+    ),
+    _PlainLanguageRule(
+      RegExp(
+        r'drove full extension into the wall',
+        caseSensitive: false,
+      ),
+      'finished with a complete last stroke — long reach and a strong touch',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'\bfull extension\b', caseSensitive: false),
+      'a complete last stroke with your arm stretched out long',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'hold streamline longer before breakout\.?', caseSensitive: false),
+      YouthCoachingPhrases.holdStreamlinePriority,
+    ),
+    _PlainLanguageRule(
+      RegExp(r'\bbreakout\b', caseSensitive: false),
+      'coming up for your first stroke after underwater',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'\bstreamline\b', caseSensitive: false),
+      'underwater arrow position (arms tight behind your ears)',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'over-gliding', caseSensitive: false),
+      'pausing too long with your arms stretched out',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'body line', caseSensitive: false),
+      'flat body position on the water',
+    ),
+    _PlainLanguageRule(
+      RegExp(r'high-elbow catch', caseSensitive: false),
+      'pull with your elbow high, like scooping water with your forearm',
+    ),
+  ];
+
+  static String plainLanguage(String? text) {
     if (text == null) return '';
     var value = text.trim();
+    if (value.isEmpty) return '';
+
+    for (final rule in _plainLanguageReplacements) {
+      value = value.replaceAll(rule.pattern, rule.replacement);
+    }
+
+    return value
+        .replaceAll(RegExp(r'\s{2,}'), ' ')
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
+  }
+
+  static String sanitize(String? text) {
+    if (text == null) return '';
+    var value = plainLanguage(text);
     if (value.isEmpty) return '';
     if (_blockedPattern.hasMatch(value)) {
       value = value.replaceAll(_blockedPattern, '');
@@ -66,4 +135,11 @@ abstract final class YouthFriendlyAnalysis {
       analysisJson: json,
     );
   }
+}
+
+class _PlainLanguageRule {
+  const _PlainLanguageRule(this.pattern, this.replacement);
+
+  final RegExp pattern;
+  final String replacement;
 }

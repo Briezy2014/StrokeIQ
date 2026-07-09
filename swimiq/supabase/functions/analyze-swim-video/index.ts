@@ -295,6 +295,16 @@ BODY MECHANICS PRECISION (REQUIRED):
 - Be specific about body angles and positions swimmers and parents can act on:
   hips up / hips near the surface vs hips sinking, head down in streamline vs head lifting,
   flat body line (shoulder–hip–ankle), elbow angle at the catch, kick from the hips, kick symmetry.
+PLAIN LANGUAGE (REQUIRED for youth swimmers):
+- Never use swim jargon alone — always explain what it means in the same sentence.
+- BAD: "Drive full extension on the last stroke at the wall."
+- GOOD: "Finish your final stroke completely before touching the wall. Reach all the way forward, keep driving through the water, and touch with a fully extended arm instead of shortening or gliding into the wall."
+- Replace jargon with kid-friendly words when needed:
+  breakout → coming up for your first stroke after underwater
+  streamline → underwater arrow position (arms tight behind your ears)
+  over-gliding → pausing too long with arms stretched out
+  body line → flat body position on the water
+  high-elbow catch → pull with elbow high, like scooping water with your forearm
 - Use plain language after technical terms so a parent understands, e.g.
   "hips dropping below the body line — think hips up, chest slightly down."
 - When MediaPipe pose metrics are provided below, you MUST weave them into quick_pro, quick_con,
@@ -419,11 +429,49 @@ function clampScore(value: unknown): number {
 }
 
 function sanitizeCoachText(value: string): string {
-  return value
+  const plainLanguageRules: Array<[RegExp, string]> = [
+    [
+      /drive full extension on the last stroke at the wall\.?/gi,
+      "Finish your final stroke completely before touching the wall. Reach all the way forward, keep driving through the water, and touch with a fully extended arm instead of shortening or gliding into the wall.",
+    ],
+    [
+      /full extension into the wall on the last stroke/gi,
+      "a complete last stroke with a long reach to the wall",
+    ],
+    [
+      /drove full extension into the wall/gi,
+      "finished with a complete last stroke — long reach and a strong touch",
+    ],
+    [/\bfull extension\b/gi, "a complete last stroke with your arm stretched out long"],
+    [
+      /hold streamline longer before breakout\.?/gi,
+      "Stay in your tight underwater arrow position a little longer (arms squeezed behind your ears) before you take your first stroke.",
+    ],
+    [/\bbreakout\b/gi, "coming up for your first stroke after underwater"],
+    [
+      /\bstreamline\b/gi,
+      "underwater arrow position (arms tight behind your ears)",
+    ],
+    [/over-gliding/gi, "pausing too long with your arms stretched out"],
+    [/body line/gi, "flat body position on the water"],
+    [
+      /high-elbow catch/gi,
+      "pull with your elbow high, like scooping water with your forearm",
+    ],
+  ];
+
+  let cleaned = value
     .replace(
       /\b(sexy|hot body|ugly|fat|obese|overweight|skinny|stupid|idiot|damn|hell|shit|fuck|wtf)\b/gi,
       "",
     )
+    .trim();
+
+  for (const [pattern, replacement] of plainLanguageRules) {
+    cleaned = cleaned.replace(pattern, replacement);
+  }
+
+  return cleaned
     .replace(/\s{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
