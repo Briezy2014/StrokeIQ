@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
+import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import 'highlight_video_builder_screen.dart';
@@ -17,7 +18,9 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SubscriptionGatedScreen(
+    return SwimIqFeatureScaffold(
+      title: 'Recruiting Center',
+      body: SubscriptionGatedScreen(
       minimumTier: SubscriptionTier.pro,
       title: 'Unlock SwimIQ Pro',
       message: 'The College Recruiting Hub is included with Pro — athlete passport, '
@@ -123,6 +126,7 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
       ),
     );
   }

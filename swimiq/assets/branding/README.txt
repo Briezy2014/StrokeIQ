@@ -28,6 +28,11 @@ WHERE IT SHOWS IN THE APP
 OPTIONAL (sharper small slots, from designer later):
   swimiq_icon_mark.png (512x512, icon-only tight crop)
 
+TAB BANNER (wide horizontal promo — shows on every tab except Dashboard):
+  SwimIQ_banner.PNG   <-- Kara's file name (also accepts swimiq_banner.png)
+  Copy to: assets/branding/SwimIQ_banner.PNG
+  Recommended: wide landscape (~1200×400 or similar), swimmer + tagline artwork.
+
 After copying:
 1. Close Chrome completely
 2. Double-click LAUNCH-CHROME.bat

@@ -264,7 +264,7 @@ void main() {
       await tester.pumpWidget(_screenHarness(const UsaStandardsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('USA Standards'), findsOneWidget);
+      expect(find.text('USA Standards'), findsWidgets);
       expect(
         find.textContaining('2024-2028 USA Swimming Motivational Standards'),
         findsOneWidget,

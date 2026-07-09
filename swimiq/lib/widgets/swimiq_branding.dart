@@ -11,6 +11,14 @@ abstract final class SwimIqBranding {
     'assets/branding/icon_mark.png',
   ];
 
+  /// Horizontal promo banner for tab headers (Kara: SwimIQ_banner.PNG).
+  static const tabBannerCandidates = [
+    'assets/branding/SwimIQ_banner.PNG',
+    'assets/branding/SwimIQ_banner.png',
+    'assets/branding/swimiq_banner.png',
+    'assets/branding/swimiq_banner.PNG',
+  ];
+
   /// Full square lockup — swimiq_logo.png first (Kara's file; avoids stale swimiq_icon.png).
   static const fullLockupCandidates = [
     'assets/branding/swimiq_logo.png',

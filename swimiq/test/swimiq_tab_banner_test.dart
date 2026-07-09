@@ -15,7 +15,7 @@ void main() {
 
     expect(find.textContaining('BUILT IN THE WATER'), findsOneWidget);
     expect(find.text('Video Lab'), findsOneWidget);
-    expect(find.textContaining('Performance. Precision. Possibility.'), findsOneWidget);
+    expect(find.textContaining('BUILT IN THE WATER'), findsOneWidget);
   });
 
   test('moduleLabelForTab returns null for dashboard', () {

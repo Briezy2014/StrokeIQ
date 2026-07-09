@@ -1,10 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
+import 'swimiq_branding.dart';
 import 'swimiq_logo.dart';
 
 /// Full-width brand strip below the app bar on every tab except Dashboard.
@@ -34,50 +33,56 @@ class SwimIqTabBanner extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF020812),
-              Color(0xFF0B2D4D),
-              Color(0xFF0B5CAD),
-              Color(0xFF009CFF),
-            ],
-            stops: [0.0, 0.35, 0.72, 1.0],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryDeep.withValues(alpha: 0.35),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          height: 88,
           child: Stack(
+            fit: StackFit.expand,
             children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _SwimIqBannerSplashPainter(
-                    seed: tabIndex.toDouble(),
+              SwimIqBrandedImage(
+                candidates: SwimIqBranding.tabBannerCandidates,
+                fit: BoxFit.cover,
+                fallback: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF020812),
+                        Color(0xFF0B2D4D),
+                        Color(0xFF0B5CAD),
+                        Color(0xFF009CFF),
+                      ],
+                      stops: [0.0, 0.35, 0.72, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.72),
+                      Colors.black.withValues(alpha: 0.35),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SwimIqCompactMark(size: 54, borderRadius: 14),
+                    const SwimIqCompactMark(size: 52, borderRadius: 14),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
@@ -88,27 +93,15 @@ class SwimIqTabBanner extends StatelessWidget {
                               _ModuleChip(label: module),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             AppConstants.brandTagline.toUpperCase(),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: Colors.white.withValues(alpha: 0.92),
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.6,
-                                  height: 1.25,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            AppConstants.brandTaglineShort,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppColors.accent.withValues(alpha: 0.95),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.35,
+                                  letterSpacing: 0.5,
                                 ),
                           ),
                         ],
@@ -149,42 +142,4 @@ class _ModuleChip extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SwimIqBannerSplashPainter extends CustomPainter {
-  _SwimIqBannerSplashPainter({required this.seed});
-
-  final double seed;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final random = math.Random(seed.round());
-    for (var i = 0; i < 14; i++) {
-      final radius = 8.0 + random.nextDouble() * 28;
-      final center = Offset(
-        size.width * (0.45 + random.nextDouble() * 0.55),
-        size.height * random.nextDouble(),
-      );
-      final paint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.04 + random.nextDouble() * 0.08)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-      canvas.drawCircle(center, radius, paint);
-    }
-
-    final streak = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [
-          Colors.transparent,
-          Colors.white.withValues(alpha: 0.10),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(size.width * 0.55, 0, size.width * 0.4, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), streak);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SwimIqBannerSplashPainter oldDelegate) =>
-      oldDelegate.seed != seed;
 }

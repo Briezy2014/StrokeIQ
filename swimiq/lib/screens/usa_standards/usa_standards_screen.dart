@@ -8,6 +8,7 @@ import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
 import '../../core/utils/swim_time.dart';
+import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimiq_event_card.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -34,8 +35,10 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SwimmerScreen(
-      builder: (context, ref, data, swimmer) {
+    return SwimIqFeatureScaffold(
+      title: 'USA Standards',
+      body: SwimmerScreen(
+        builder: (context, ref, data, swimmer) {
         final catalog = data.motivationalStandards;
         final pbs = data.personalBests;
         final profileReady = SwimIqStandardsProfile.isReady(data.profile);
@@ -244,7 +247,8 @@ class _UsaStandardsScreenState extends ConsumerState<UsaStandardsScreen> {
               }),
           ],
         );
-      },
+        },
+      ),
     );
   }
 

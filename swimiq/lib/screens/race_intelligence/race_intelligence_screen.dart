@@ -6,6 +6,7 @@ import '../../core/services/race_intelligence_service.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/swimiq_page_hero.dart';
+import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimmer_screen.dart';
 
 class RaceIntelligenceScreen extends ConsumerStatefulWidget {
@@ -21,7 +22,9 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
 
   @override
   Widget build(BuildContext context) {
-    return SubscriptionGatedScreen(
+    return SwimIqFeatureScaffold(
+      title: 'Race Intelligence',
+      body: SubscriptionGatedScreen(
       minimumTier: SubscriptionTier.elite,
       title: 'Unlock SwimIQ Elite',
       message: 'Race Intelligence is included with Elite — race pacing, split analysis, '
@@ -188,8 +191,9 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
             ),
           ],
         );
-      },
-    ),
+        },
+      ),
+      ),
     );
   }
 }
