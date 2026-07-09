@@ -114,7 +114,6 @@ class SubscriptionCapabilities {
       case HomeTab.trainingLog:
       case HomeTab.goals:
         return SubscriptionTier.basic;
-      case HomeTab.meetResults:
       case HomeTab.videoLab:
       case HomeTab.passport:
         return SubscriptionTier.pro;

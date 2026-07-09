@@ -7,14 +7,12 @@ import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
-import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
 import '../widgets/subscription_upgrade_panel.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
 import 'membership/membership_screen.dart';
-import 'meet_results/meet_results_screen.dart';
 import 'personal_bests/personal_bests_screen.dart';
 import 'settings/settings_screen.dart';
 import 'training_log/training_log_screen.dart';
@@ -55,8 +53,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return const TrainingLogScreen();
       case HomeTab.goals:
         return const GoalsScreen();
-      case HomeTab.meetResults:
-        return _proGate(const MeetResultsScreen());
       case HomeTab.videoLab:
         return _proGate(const VideoLabScreen());
       case HomeTab.passport:
@@ -148,7 +144,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
           _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
           _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
-          _dest(Icons.stadium_outlined, Icons.stadium, 'Meets', HomeTab.meetResults, subscription),
           _dest(Icons.videocam_outlined, Icons.videocam, 'Video', HomeTab.videoLab, subscription),
           _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
         ],

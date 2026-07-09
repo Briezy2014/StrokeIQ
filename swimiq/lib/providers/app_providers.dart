@@ -29,9 +29,8 @@ abstract final class HomeTab {
   static const personalBests = 1;
   static const trainingLog = 2;
   static const goals = 3;
-  static const meetResults = 4;
-  static const videoLab = 5;
-  static const passport = 6;
+  static const videoLab = 4;
+  static const passport = 5;
 }
 
 final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);

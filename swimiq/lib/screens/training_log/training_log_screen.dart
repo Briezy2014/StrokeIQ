@@ -10,11 +10,12 @@ import '../../data/models/swim_schedule_entry.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../core/subscription/subscription_capabilities.dart';
+import '../../widgets/meets_and_results_panel.dart';
 import '../../widgets/schedule_depository_section.dart';
 import '../../widgets/swim_session_form_sheet.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
-import '../race_intelligence/race_intelligence_screen.dart';
 
 /// Training log with sessions plus schedule/meet depository.
 class TrainingLogScreen extends ConsumerStatefulWidget {
@@ -37,6 +38,10 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
         final dateFormat = DateFormat.yMMMd();
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final showProFeatures = subscription != null &&
+            SubscriptionCapabilities.canUseProFeatures(subscription);
+        final snapshot = data.passportSnapshot(swimmer);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,28 +102,13 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                     )
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ScheduleDepositorySection(
-                        showTypes: {
-                          SwimScheduleEntry.typeMeet,
-                          SwimScheduleEntry.typeRace,
-                        },
-                        addTypes: {
-                          SwimScheduleEntry.typeMeet,
-                          SwimScheduleEntry.typeRace,
-                        },
-                        headerTitle: 'Meets & results',
-                        headerSubtitle:
-                            'Saved meets and race results. Add manually or '
-                            'upload a heat sheet / results photo.',
-                        emptyMessage:
-                            'No meets or results yet. Tap a button below to add one.',
-                        onOpenRaceIntelligence: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const RaceIntelligenceScreen(),
-                            ),
-                          );
-                        },
+                      child: MeetsAndResultsPanel(
+                        meetResults: data.meetResults,
+                        schedules: data.schedules,
+                        showProFeatures: showProFeatures,
+                        highestCut: snapshot.highestCut,
+                        motivationalStandards: data.motivationalStandards,
+                        profile: data.profile,
                       ),
                     ),
             ),

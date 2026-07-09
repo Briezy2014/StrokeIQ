@@ -61,7 +61,6 @@ void main() {
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.personalBests, state), isTrue);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.trainingLog, state), isTrue);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.meetResults, state), isFalse);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, state), isFalse);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, state), isFalse);
     expect(SubscriptionCapabilities.canAccessGoals(state), isTrue);
@@ -76,7 +75,6 @@ void main() {
   test('subscription loading locks pro tabs until loaded', () {
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.dashboard, null), isTrue);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, null), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.meetResults, null), isFalse);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, null), isFalse);
     expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, null), isFalse);
   });
@@ -163,8 +161,6 @@ void main() {
         SubscriptionTier.basic);
     expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.personalBests),
         SubscriptionTier.basic);
-    expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.meetResults),
-        SubscriptionTier.pro);
     expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.videoLab),
         SubscriptionTier.pro);
   });
