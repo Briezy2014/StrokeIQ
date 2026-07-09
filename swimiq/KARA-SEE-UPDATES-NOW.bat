@@ -35,6 +35,11 @@ echo.
 echo [OK] You are on the updates branch.
 git log -1 --oneline
 echo.
+if not exist "assets\branding\icon.png" (
+  echo [WARN] assets\branding\icon.png is missing.
+  echo        Drag your brand icon onto COPY-LOGO.bat before testing login.
+  echo.
+)
 echo Close ALL Chrome windows, then wait for Flutter to start...
 echo Dashboard should show: "Updates build — dashboard, passport, video, banner"
 echo.

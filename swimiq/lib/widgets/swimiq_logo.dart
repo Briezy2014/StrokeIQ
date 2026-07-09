@@ -52,29 +52,25 @@ class SwimIqLoginBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        width: size,
-        height: size,
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(10),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           child: SwimIqBrandedImage(
             candidates: SwimIqBranding.loginIconCandidates,
-            width: size - 20,
-            height: size - 20,
-            fit: BoxFit.contain,
-            fallback: SwimIqPaintedMark(size: size - 20),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            fallback: SwimIqPaintedMark(size: size),
           ),
         ),
       ),

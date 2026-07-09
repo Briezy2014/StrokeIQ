@@ -5,13 +5,13 @@ cd /d "%~dp0"
 if "%~1"=="" (
   echo.
   echo ========================================
-  echo  SwimIQ - SYNC YOUR NEW LOGO
+  echo  SwimIQ - SYNC YOUR BRAND ICON
   echo ========================================
   echo.
-  echo Drag your NEW 512x512 PNG onto this file.
+  echo Drag your 512x512 app icon PNG onto this file.
   echo.
-  echo This overwrites ALL logo copies so the old
-  echo Aspyn icon cannot stick around.
+  echo Saves to assets\branding\icon.png
+  echo ^(login screen reads THIS file only^)
   echo.
   pause
   exit /b 1
@@ -27,8 +27,7 @@ if not exist "%SRC%" (
 if not exist "assets\branding" mkdir "assets\branding"
 if not exist "web\icons" mkdir "web\icons"
 
-copy /Y "%SRC%" "assets\branding\swimiq_logo.png"
-copy /Y "%SRC%" "assets\branding\swimiq_icon.png"
+copy /Y "%SRC%" "assets\branding\icon.png"
 copy /Y "%SRC%" "web\favicon.png"
 copy /Y "%SRC%" "web\icons\Icon-512.png"
 copy /Y "%SRC%" "web\icons\Icon-192.png"
@@ -38,16 +37,15 @@ echo ========================================
 echo  LOGO SYNCED
 echo ========================================
 echo.
-echo Your PNG is now in BOTH branding names:
-echo   assets\branding\swimiq_logo.png
-echo   assets\branding\swimiq_icon.png
-echo   web\favicon.png + web\icons\
+echo Your icon is now in:
+echo   assets\branding\icon.png   ^(login screen^)
+echo   web\favicon.png
+echo   web\icons\Icon-512.png
+echo   web\icons\Icon-192.png
 echo.
 echo NEXT:
 echo   1. Close Chrome completely
-echo   2. Double-click LAUNCH-CHROME.bat
+echo   2. Run KARA-SEE-UPDATES-NOW.bat
 echo   3. Ctrl+F5 on the login page
-echo.
-echo If swimiqapp.com still shows the old logo, rebuild GoDaddy later.
 echo.
 pause

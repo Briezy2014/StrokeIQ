@@ -40,12 +40,10 @@ abstract final class SwimIqBranding {
   static const compactCandidates = [
     markAsset,
     'assets/branding/SwimIQ_Mark.PNG',
+    'assets/branding/SwimIQ_Mark.png',
     'assets/branding/swimiq_icon_mark.png',
     'assets/branding/icon_mark.png',
     iconAsset,
-    'assets/branding/swimiq_icon.png',
-    'assets/branding/swimiq_logo.png',
-    'assets/branding/swimiq_logo_square.png',
   ];
 
   /// Crops swimmer mark from a full lockup PNG (hides wordmark/tagline text).

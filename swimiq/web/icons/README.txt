@@ -1,9 +1,11 @@
-Web tab / PWA icons are copied from your 512x512 brand PNG.
+Web tab / PWA icons
+===================
 
-Run COPY-LOGO.bat in the swimiq folder (drag your PNG onto it),
-or manually copy swimiq_icon.png to:
+Login and the app use assets/branding/icon.png.
+
+COPY-LOGO.bat and SYNC-LOGO-NOW.bat also copy your icon to:
   web/favicon.png
   web/icons/Icon-512.png
   web/icons/Icon-192.png
 
-Rebuild for GoDaddy: SWIMIQ-BUILD-GODADDY-NOW.bat
+After updating, hard-refresh Chrome (Ctrl+F5).
