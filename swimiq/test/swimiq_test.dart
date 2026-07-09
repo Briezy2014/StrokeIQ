@@ -243,6 +243,15 @@ void main() {
 
       expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);
+      expect(analysis.techniqueScore, greaterThan(0));
+      expect(analysis.paceScore, greaterThan(0));
+      expect(analysis.overallScore, greaterThan(0));
+      expect(
+        analysis.techniqueScore == analysis.paceScore &&
+            analysis.paceScore == analysis.overallScore,
+        isFalse,
+        reason: 'fallback scores should differ by category',
+      );
       expect(sections['Estimated time savings'], contains('Combined if you nail these'));
       expect(sections['Estimated time savings'], isNot(contains('Add detailed upload notes')));
       expect(sections['Coach notes for next race'], contains('race plan'));

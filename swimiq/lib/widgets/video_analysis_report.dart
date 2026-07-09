@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/services/video_analysis_presenter.dart';
+import '../core/services/video_analysis_scores.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/youth_friendly_analysis.dart';
 import '../data/models/swim_pose_metrics.dart';
@@ -55,12 +56,17 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         widget.analysis.analysisJson?['quick_con']?.toString();
     final engineLabel = VideoAnalysisPresenter.analysisEngineLabel(widget.analysis);
     final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
+    final fallbackReason = VideoAnalysisScores.fallbackReason(widget.analysis);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _ScoreStrip(analysis: widget.analysis),
         const SizedBox(height: 12),
+        if (fallbackReason != null) ...[
+          _FallbackBanner(message: fallbackReason),
+          const SizedBox(height: 12),
+        ],
         if (engineLabel != null) ...[
           Text(
             engineLabel,
@@ -230,50 +236,191 @@ class _ScoreStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _ScoreChip(label: 'Overall', value: analysis.overallScore),
-        _ScoreChip(label: 'Technique', value: analysis.techniqueScore),
-        _ScoreChip(label: 'Pace', value: analysis.paceScore),
-      ],
-    );
-  }
-}
-
-class _ScoreChip extends StatelessWidget {
-  const _ScoreChip({required this.label, required this.value});
-
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primaryDeep,
-            AppColors.primary,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 8,
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Text(
-        '$label $value',
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'AI coach ratings',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
+              const Spacer(),
+              Text(
+                'out of ${VideoAnalysisScores.maxScore}',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey.shade700,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            VideoAnalysisScores.legend(analysis),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  height: 1.35,
+                ),
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 520;
+              final children = [
+                _ScoreTile(
+                  title: VideoAnalysisScores.overallTitle,
+                  value: analysis.overallScore,
+                  hint: VideoAnalysisScores.overallHint,
+                ),
+                _ScoreTile(
+                  title: VideoAnalysisScores.techniqueTitle,
+                  value: analysis.techniqueScore,
+                  hint: VideoAnalysisScores.techniqueHint,
+                ),
+                _ScoreTile(
+                  title: VideoAnalysisScores.paceTitle,
+                  value: analysis.paceScore,
+                  hint: VideoAnalysisScores.paceHint,
+                ),
+              ];
+              if (wide) {
+                return Row(
+                  children: [
+                    for (var i = 0; i < children.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 10),
+                      Expanded(child: children[i]),
+                    ],
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    children[i],
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreTile extends StatelessWidget {
+  const _ScoreTile({
+    required this.title,
+    required this.value,
+    required this.hint,
+  });
+
+  final String title;
+  final int value;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = VideoAnalysisScores.scoreColor(value);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.14),
+            Colors.white,
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: color,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            VideoAnalysisScores.formatScore(value),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: AppColors.primaryDeep,
+              fontSize: 22,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hint,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade700,
+              height: 1.3,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FallbackBanner extends StatelessWidget {
+  const _FallbackBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFDBA74)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFEA580C), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.grey.shade800,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

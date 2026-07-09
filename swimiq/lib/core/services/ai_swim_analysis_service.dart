@@ -47,7 +47,9 @@ class AiSwimAnalysisService {
       'Coach notes for next race': coachNotes,
     };
 
-    final overallScore = _overallScore(ctx, suggestions.length);
+    final techniqueScore = _techniqueScore(ctx, suggestions, poseMetrics);
+    final paceScore = _paceScore(ctx);
+    final overallScore = _overallScore(ctx, techniqueScore, paceScore);
 
     return SwimVideoAnalysis(
       swimVideoId: video.id,
@@ -56,8 +58,8 @@ class AiSwimAnalysisService {
       strengths: _formatSections(sections),
       improvements: 'Top 3 priorities for your next race\n'
           '${_bulletBlock(priorities)}',
-      techniqueScore: overallScore,
-      paceScore: overallScore,
+      techniqueScore: techniqueScore,
+      paceScore: paceScore,
       overallScore: overallScore,
       analysisJson: {
         'event': ctx.eventLabel,
@@ -489,13 +491,70 @@ class AiSwimAnalysisService {
         .join('\n\n');
   }
 
-  int _overallScore(_AnalysisContext ctx, int suggestionCount) {
-    var score = 60;
-    if (ctx.noteSignals.hasContent) score += 10;
-    if (suggestionCount >= 3) score += 8;
-    if (ctx.personalBestSeconds != null) score += 6;
-    if (ctx.matchingGoal != null) score += 4;
-    return score.clamp(55, 88);
+  int _techniqueScore(
+    _AnalysisContext ctx,
+    List<String> suggestions,
+    SwimPoseMetrics? pose,
+  ) {
+    var score = 62;
+    if (ctx.noteSignals.finishExtensionMentioned == true) score += 6;
+    if (ctx.noteSignals.breakoutMeters != null &&
+        ctx.noteSignals.breakoutMeters! >= 10) {
+      score += 5;
+    }
+    if (suggestions.length >= 3) score += 4;
+    if (pose?.hasUsableMetrics == true) {
+      final metrics = pose!;
+      if (metrics.hipDropDegrees != null && metrics.hipDropDegrees! < 5) {
+        score += 7;
+      }
+      if (metrics.headLiftScore != null && metrics.headLiftScore! < 0.25) {
+        score += 6;
+      }
+      if (metrics.kickSymmetryScore != null && metrics.kickSymmetryScore! >= 78) {
+        score += 5;
+      }
+      if (metrics.hipDropDegrees != null && metrics.hipDropDegrees! >= 8) {
+        score -= 8;
+      }
+      if (metrics.headLiftScore != null && metrics.headLiftScore! >= 0.35) {
+        score -= 6;
+      }
+    }
+    if (ctx.noteSignals.reactionSeconds != null &&
+        ctx.noteSignals.reactionSeconds! > 0.70) {
+      score -= 5;
+    }
+    if (ctx.noteSignals.tempoRushedLate == true) score -= 4;
+    return score.clamp(52, 88);
+  }
+
+  int _paceScore(_AnalysisContext ctx) {
+    var score = 64;
+    if (ctx.noteSignals.reactionSeconds != null &&
+        ctx.noteSignals.reactionSeconds! <= 0.68) {
+      score += 8;
+    }
+    if (ctx.noteSignals.strokeCountPerLength != null) score += 4;
+    if (ctx.noteSignals.tempoRushedLate != true) score += 6;
+    if (ctx.noteSignals.tempoRushedLate == true) score -= 10;
+    if (ctx.noteSignals.breathesEveryStroke == true && ctx.isSprint) {
+      score -= 7;
+    }
+    if (ctx.personalBestSeconds != null) score += 4;
+    return score.clamp(52, 88);
+  }
+
+  int _overallScore(
+    _AnalysisContext ctx,
+    int techniqueScore,
+    int paceScore,
+  ) {
+    final blended = (techniqueScore * 0.55 + paceScore * 0.45).round();
+    if (ctx.noteSignals.hasContent) {
+      return (blended + 2).clamp(55, 90);
+    }
+    return blended.clamp(55, 88);
   }
 }
 

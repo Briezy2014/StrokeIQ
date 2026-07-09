@@ -213,17 +213,43 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     required SwimVideo video,
     required SwimmerData current,
     SwimPoseMetrics? poseMetrics,
+    String? geminiFallbackReason,
   }) {
+    final analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
+          video: video,
+          raceLogs: current.raceLogs,
+          goals: current.goals,
+          profile: current.profile,
+          standards: current.usaStandards,
+          poseMetrics: poseMetrics,
+        );
+    final json = Map<String, dynamic>.from(analysis.analysisJson ?? {});
+    if (geminiFallbackReason != null && geminiFallbackReason.trim().isNotEmpty) {
+      json['gemini_fallback_reason'] = geminiFallbackReason.trim();
+    }
     return YouthFriendlyAnalysis.sanitizeAnalysis(
-      ref.read(aiSwimAnalysisServiceProvider).analyze(
-            video: video,
-            raceLogs: current.raceLogs,
-            goals: current.goals,
-            profile: current.profile,
-            standards: current.usaStandards,
-            poseMetrics: poseMetrics,
-          ),
+      analysis.copyWith(analysisJson: json),
     );
+  }
+
+  String _friendlyGeminiFallbackMessage(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('gemini_api_key')) {
+      return 'Gemini is not configured yet — add GEMINI_API_KEY in Supabase '
+          '(see swimiq/docs/GEMINI_SETUP.md). Notes-based coaching saved for now.';
+    }
+    if (lower.contains('too large')) {
+      return 'Video is too large for Gemini (max ~18 MB). Trim the clip and re-run. '
+          'Notes-based coaching saved for now.';
+    }
+    if (lower.contains('unauthorized') || lower.contains('authorization')) {
+      return 'Sign in again, then re-run analysis. Notes-based coaching saved for now.';
+    }
+    if (lower.contains('could not download video')) {
+      return 'Could not load the video from storage for Gemini. Notes-based coaching saved for now.';
+    }
+    return 'Gemini video analysis was unavailable — notes-based coaching saved. '
+        'Check swimiq/docs/GEMINI_SETUP.md if this keeps happening.';
   }
 
   Future<void> _persistVideoAnalysis({
@@ -510,22 +536,22 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               profile: current.profile,
               poseMetrics: poseMetrics,
             );
-      } on GeminiAnalysisException catch (_) {
+      } on GeminiAnalysisException catch (error) {
         analysis = _fallbackVideoAnalysis(
           video: video,
           current: current,
           poseMetrics: poseMetrics,
+          geminiFallbackReason: error.message,
         );
-        fallbackNotice =
-            'Gemini was unavailable — showing notes-based coaching for this clip.';
-      } catch (_) {
+        fallbackNotice = _friendlyGeminiFallbackMessage(error.message);
+      } catch (error) {
         analysis = _fallbackVideoAnalysis(
           video: video,
           current: current,
           poseMetrics: poseMetrics,
+          geminiFallbackReason: error.toString(),
         );
-        fallbackNotice =
-            'Gemini was unavailable — showing notes-based coaching for this clip.';
+        fallbackNotice = _friendlyGeminiFallbackMessage(error.toString());
       }
 
       await _persistVideoAnalysis(

@@ -35,6 +35,16 @@ class GeminiSwimAnalysisService {
       ),
     );
 
+    if (response.status != 200) {
+      final data = response.data;
+      if (data is Map && data['error'] != null) {
+        throw GeminiAnalysisException(data['error'].toString());
+      }
+      throw GeminiAnalysisException(
+        'Video analysis service error (${response.status}).',
+      );
+    }
+
     final data = response.data;
     if (data is Map && data['error'] != null) {
       throw GeminiAnalysisException(data['error'].toString());
