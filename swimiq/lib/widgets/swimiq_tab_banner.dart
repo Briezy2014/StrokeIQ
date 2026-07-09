@@ -35,7 +35,7 @@ class SwimIqTabBanner extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: SizedBox(
-          height: 120,
+          height: 104,
           width: double.infinity,
           child: Stack(
             fit: StackFit.expand,
@@ -43,7 +43,7 @@ class SwimIqTabBanner extends StatelessWidget {
               const ColoredBox(color: Color(0xFF020812)),
               SwimIqBrandedImage(
                 candidates: SwimIqBranding.tabBannerCandidates,
-                fit: BoxFit.cover,
+                fit: BoxFit.fitWidth,
                 alignment: Alignment.center,
                 fallback: const _BannerMarkFallback(),
               ),
@@ -82,14 +82,10 @@ class _BannerMarkFallback extends StatelessWidget {
       ),
       child: Center(
         child: SwimIqBrandedImage(
-          candidates: [
-            SwimIqBranding.iconAsset,
-            ...SwimIqBranding.markCandidates,
-          ],
-          height: 96,
-          width: 96,
-          fit: BoxFit.contain,
-          fallback: const SwimIqPaintedMark(size: 96),
+          candidates: SwimIqBranding.tabBannerCandidates,
+          height: 88,
+          fit: BoxFit.fitHeight,
+          fallback: const SwimIqPaintedMark(size: 72),
         ),
       ),
     );

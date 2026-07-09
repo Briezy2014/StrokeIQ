@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../core/gamification/swimiq_badges.dart';
 import '../core/gamification/swimiq_daily_progress.dart';
 import '../core/theme/app_theme.dart';
-import 'swimiq_branding.dart';
 import 'rope_climbing_swimmer_painter.dart';
 
 class SwimIqRopeClimbCard extends StatelessWidget {
@@ -295,23 +294,11 @@ class _RopeClimberBadge extends StatelessWidget {
               color: Colors.white,
             ),
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               child: ClipOval(
-                child: ColoredBox(
-                  color: Colors.black,
-                  child: SwimIqBrandedImage(
-                    candidates: [
-                      SwimIqBranding.iconAsset,
-                      ...SwimIqBranding.markCandidates,
-                    ],
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                    fallback: CustomPaint(
-                      painter: const RopeClimbingSwimmerPainter(),
-                      child: SizedBox(width: size, height: size),
-                    ),
-                  ),
+                child: CustomPaint(
+                  painter: const RopeClimbingSwimmerPainter(),
+                  child: SizedBox(width: size, height: size),
                 ),
               ),
             ),

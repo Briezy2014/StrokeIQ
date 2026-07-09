@@ -41,7 +41,8 @@ if not exist "assets\branding\icon.png" (
   echo.
 )
 echo Close ALL Chrome windows, then wait for Flutter to start...
-echo Dashboard should show: "Updates build — dashboard, passport, video, banner"
+echo Dashboard banner should show full SWIMIQ lockup + tagline.
+echo Rope climb badge should show a drawn swimmer (not the app icon).
 echo.
 
 if exist "%~dp0scripts\launch-chrome-kara.ps1" (

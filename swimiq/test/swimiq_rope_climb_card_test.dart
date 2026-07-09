@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/gamification/swimiq_daily_progress.dart';
-import 'package:swimiq/widgets/swimiq_branding.dart';
 import 'package:swimiq/widgets/swimiq_rope_climb_card.dart';
 
 void main() {
@@ -27,7 +26,6 @@ void main() {
 
     expect(find.text('55% · Score 550'), findsOneWidget);
     expect(find.textContaining('SwimIQ Score 550 = 55% up the rope'), findsOneWidget);
-    expect(find.byType(SwimIqBrandedImage), findsOneWidget);
-    expect(find.text('🏊'), findsNothing);
+    expect(find.byType(CustomPaint), findsWidgets);
   });
 }
