@@ -168,8 +168,8 @@ class RaceIntelligenceService {
       RaceChecklistItem(
         title: 'Midday fuel checkpoint',
         detail:
-            'Eat familiar fuel only: oatmeal, banana, honey, organic berry chews, '
-            'rice/sushi bites, or half a protein bar. No new foods or heavy grease.',
+            'Eat familiar fuel only: oatmeal + banana, Kodiak waffles, honey, organic '
+            'berry chews, sushi rice bites, or a protein bar. No new foods or heavy grease.',
         timingHint: '2.5–3 hours before $focusEvent',
       ),
       RaceChecklistItem(
@@ -308,13 +308,13 @@ class RaceIntelligenceService {
     final caffeineOk = age != null && age >= 14;
 
     final breakfastSuggestions = <String>[
+      'Oatmeal with banana and honey (meet-day classic — steady carbs, easy on the stomach)',
+      'Kodiak protein waffles with banana or a drizzle of honey',
+      'Scrambled or hard-boiled egg + whole-grain toast with peanut butter',
       if (age != null && age <= 12)
-        'Oatmeal with banana slices and a little honey'
+        'Small glass of milk or water with breakfast if dairy sits well'
       else
-        'Oatmeal (plain or overnight oats) with banana and honey or nut butter',
-      'Whole-grain toast with banana and honey',
-      'Greek yogurt with organic berries (if dairy sits well)',
-      'Half a protein bar + banana if you need more staying power',
+        'Greek yogurt with organic berries (if dairy sits well)',
       'Water; add electrolytes if the meet starts late morning',
     ];
 
@@ -324,14 +324,15 @@ class RaceIntelligenceService {
       'Rice-based sushi bites / onigiri (plain, cucumber, or cooked filling — skip raw fish on meet day)',
       'Honey packet or honey on rice cakes / half bagel',
       if (caffeineOk)
-        'Honey + electrolyte + caffeine bite (e.g. Honey Stinger waffle or similar) — only if you have tested it in practice'
+        'Sushi bites or honey waffle with electrolytes + caffeine (e.g. Honey Stinger, Kodiak caffeinated waffle) — only if tested in practice'
       else
         'Honey + electrolyte bite or chew (caffeine-free) — test in practice first',
       'Organic berry energy chews or gummies (low fiber, familiar brand)',
+      'Protein bar (half for sprints, light full bar for distance days)',
       if (isSprint)
-        'Half a protein bar or fig bar between prelims and finals'
+        'Fig bar or pretzels between prelims and finals'
       else
-        'Light protein bar (half to full) + pretzels or dry cereal for distance schedules',
+        'Pretzels or dry cereal alongside fuel for long sessions',
       'Electrolyte drink sip (not chug) if racing in heat or long session',
     ];
 
@@ -366,7 +367,7 @@ class RaceIntelligenceService {
         timing: breakfastTiming,
         suggestions: breakfastSuggestions,
         avoid:
-            'Skip sugary cereal alone, heavy bacon, energy drinks, or anything you have not eaten before practice.',
+            'Skip sugary cereal alone, heavy bacon, greasy breakfast sandwiches, energy drinks, or anything you have not eaten before practice.',
       ),
       NutritionBlock(
         mealLabel: 'Midday meet fuel',

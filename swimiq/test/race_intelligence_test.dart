@@ -54,6 +54,10 @@ void main() {
       expect(plan.warmUpPlan.any((line) => line.contains('400 easy')), isFalse);
       expect(plan.nutritionPlan.length, 4);
       expect(plan.nutritionPlan.first.mealLabel, contains('Breakfast'));
+      final breakfast = plan.nutritionPlan.first;
+      expect(breakfast.suggestions.any((s) => s.toLowerCase().contains('oatmeal')), isTrue);
+      expect(breakfast.suggestions.any((s) => s.toLowerCase().contains('kodiak')), isTrue);
+      expect(breakfast.suggestions.any((s) => s.toLowerCase().contains('peanut butter')), isTrue);
       final middayFuel = plan.nutritionPlan
           .firstWhere((block) => block.mealLabel.contains('Midday'));
       expect(middayFuel.suggestions.any((s) => s.toLowerCase().contains('honey')), isTrue);
