@@ -99,9 +99,7 @@ class GeminiSwimAnalysisService {
   }
 
   static SwimVideoAnalysis parseAnalysisResponse(Map<String, dynamic> json) {
-    final analysisJson = json['analysis_json'] is Map
-        ? Map<String, dynamic>.from(json['analysis_json'] as Map)
-        : null;
+    final analysisJson = SwimVideoAnalysis.parseAnalysisJson(json['analysis_json']);
 
     return SwimVideoAnalysis(
       swimVideoId: json['swim_video_id']?.toString(),

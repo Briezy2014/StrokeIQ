@@ -346,6 +346,104 @@ void main() {
       expect(data.analysisForVideo('video-1'), same(modern));
     });
 
+    test('modern sections without engine are not treated as legacy', () {
+      const fromSupabase = SwimVideoAnalysis(
+        swimVideoId: 'video-2',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM',
+        strengths: 'Strong breakout',
+        improvements: 'Head position',
+        techniqueScore: 82,
+        paceScore: 80,
+        overallScore: 81,
+        analysisJson: {
+          'sections': {
+            'Quick pro from this video': 'Strong breakout timing',
+            'Quick con from this video': 'Head lifts on breath',
+          },
+        },
+      );
+
+      expect(fromSupabase.isLegacyRulesEngine, isFalse);
+    });
+
+    test('analysisForVideo returns newest non-legacy analysis', () {
+      final legacy = SwimVideoAnalysis(
+        id: 'legacy-1',
+        swimVideoId: 'video-3',
+        swimmer: 'Aspyn',
+        summary: 'Overall readiness score 72/100',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 72,
+        paceScore: 72,
+        overallScore: 72,
+        createdAt: DateTime(2025, 1, 1),
+        analysisJson: {'engine': 'swimiq-v1-rules'},
+      );
+      final modern = SwimVideoAnalysis(
+        id: 'modern-1',
+        swimVideoId: 'video-3',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM',
+        strengths: 'Strong breakout',
+        improvements: 'Head position',
+        techniqueScore: 82,
+        paceScore: 80,
+        overallScore: 81,
+        createdAt: DateTime(2026, 7, 1),
+        analysisJson: {
+          'engine': 'swimiq-v2-gemini',
+          'sections': {
+            'Quick pro from this video': 'Strong breakout timing',
+            'Quick con from this video': 'Head lifts on breath',
+          },
+        },
+      );
+
+      final data = SwimmerData(
+        raceLogs: const [],
+        goals: const [],
+        meetResults: const [],
+        videos: const [
+          SwimVideo(
+            id: 'video-3',
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/real.mov',
+            title: 'Denison 50 Fly',
+          ),
+        ],
+        videoAnalyses: [legacy, modern],
+        usaStandards: testMotivationalCatalog.flatStandards,
+        schedules: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
+      expect(data.analysisForVideo('video-3'), same(modern));
+    });
+
+    test('parseAnalysisJson accepts json string payloads', () {
+      final parsed = SwimVideoAnalysis.fromJson({
+        'id': 'analysis-1',
+        'swim_video_id': 'video-4',
+        'swimmer': 'Aspyn',
+        'summary': '50 Butterfly LCM',
+        'strengths': 'Strong breakout',
+        'improvements': 'Head position',
+        'technique_score': 82,
+        'pace_score': 80,
+        'overall_score': 81,
+        'analysis_json':
+            '{"engine":"swimiq-v2-gemini","sections":{"Quick pro from this video":"Strong breakout"}}',
+      });
+
+      expect(parsed.isLegacyRulesEngine, isFalse);
+      expect(
+        parsed.coachingSections['Quick pro from this video'],
+        'Strong breakout',
+      );
+    });
+
     test('hides integration test uploads from user-facing videos', () {
       const visible = SwimVideo(
         swimmer: 'Aspyn',

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../core/utils/supabase_parsers.dart';
 import 'swim_pose_metrics.dart';
 
@@ -55,6 +57,28 @@ class SwimVideoAnalysis {
 
   String? get analysisEngine => analysisJson?['engine']?.toString();
 
+  static const _modernSectionKeys = {
+    'quick pro from this video',
+    'quick con from this video',
+    'top 3 priorities for your next race',
+  };
+
+  /// Current parent-friendly report sections (2026+).
+  bool get hasModernCoachingFormat => coachingSections.keys.any(
+        (key) => _modernSectionKeys.contains(key.toLowerCase().trim()),
+      );
+
+  static Map<String, dynamic>? parseAnalysisJson(dynamic raw) {
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return null;
+  }
+
   static const _modernEngines = {
     'swimiq-v1-notes',
     'swimiq-v1-notes-mediapipe',
@@ -64,6 +88,7 @@ class SwimVideoAnalysis {
 
   /// Old rule-based engine stored in Supabase before notes-driven V1.
   bool get isLegacyRulesEngine {
+    if (hasModernCoachingFormat) return false;
     final engine = analysisEngine;
     if (engine == 'swimiq-v1-rules') return true;
     if (engine != null && _modernEngines.contains(engine)) return false;
@@ -106,9 +131,7 @@ class SwimVideoAnalysis {
       techniqueScore: parseOptionalInt(json['technique_score']) ?? 0,
       paceScore: parseOptionalInt(json['pace_score']) ?? 0,
       overallScore: parseOptionalInt(json['overall_score']) ?? 0,
-      analysisJson: json['analysis_json'] is Map
-          ? Map<String, dynamic>.from(json['analysis_json'] as Map)
-          : null,
+      analysisJson: parseAnalysisJson(json['analysis_json']),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
   }

@@ -135,7 +135,9 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (!mounted) return;
     setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? 'AI analysis saved.')),
+      SnackBar(
+        content: Text(error ?? 'AI analysis saved.'),
+      ),
     );
   }
 

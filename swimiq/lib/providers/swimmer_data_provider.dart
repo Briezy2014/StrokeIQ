@@ -45,13 +45,19 @@ class SwimmerData {
 
   SwimVideoAnalysis? analysisForVideo(String? videoId) {
     if (videoId == null || videoId.isEmpty) return null;
-    for (final analysis in videoAnalyses) {
-      if (analysis.swimVideoId == videoId) {
-        if (analysis.isLegacyRulesEngine) return null;
-        return analysis;
-      }
-    }
-    return null;
+    final matches = videoAnalyses
+        .where(
+          (analysis) =>
+              analysis.swimVideoId == videoId && !analysis.isLegacyRulesEngine,
+        )
+        .toList();
+    if (matches.isEmpty) return null;
+    matches.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bDate.compareTo(aDate);
+    });
+    return matches.first;
   }
 
   List<SwimVideo> get userFacingVideos =>
@@ -190,6 +196,65 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       schedules: schedules,
       motivationalStandards: motivationalStandards,
     );
+  }
+
+  Future<void> _reloadPreservingUi() async {
+    final swimmer = ref.read(activeSwimmerProvider);
+    if (swimmer == null || swimmer.isEmpty) return;
+    try {
+      final data = await _load(swimmer);
+      state = AsyncData(data);
+    } catch (_) {
+      // Optimistic local state remains visible.
+    }
+  }
+
+  SwimVideoAnalysis _fallbackVideoAnalysis({
+    required SwimVideo video,
+    required SwimmerData current,
+    SwimPoseMetrics? poseMetrics,
+  }) {
+    return YouthFriendlyAnalysis.sanitizeAnalysis(
+      ref.read(aiSwimAnalysisServiceProvider).analyze(
+            video: video,
+            raceLogs: current.raceLogs,
+            goals: current.goals,
+            profile: current.profile,
+            standards: current.usaStandards,
+            poseMetrics: poseMetrics,
+          ),
+    );
+  }
+
+  Future<void> _persistVideoAnalysis({
+    required String videoId,
+    required SwimVideo video,
+    required SwimVideoAnalysis analysis,
+  }) async {
+    final analysisWithIds = analysis.copyWith(
+      swimVideoId: videoId,
+      swimmer: video.swimmer,
+    );
+
+    try {
+      final saved = await ref
+          .read(swimIqRepositoryProvider)
+          .insertVideoAnalysis(analysisWithIds);
+      _localAnalysesByVideoId[videoId] = saved;
+    } catch (_) {
+      _localAnalysesByVideoId[videoId] = analysisWithIds.copyWith(
+        id: 'local-$videoId',
+      );
+    }
+
+    final refreshed = state.value;
+    if (refreshed != null) {
+      state = AsyncData(
+        refreshed.copyWith(
+          videoAnalyses: _mergeAnalyses(refreshed.videoAnalyses),
+        ),
+      );
+    }
   }
 
   Future<void> refresh() async {
@@ -435,6 +500,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       }
 
       SwimVideoAnalysis analysis;
+      String? fallbackNotice;
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
@@ -444,52 +510,34 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               profile: current.profile,
               poseMetrics: poseMetrics,
             );
-      } on GeminiAnalysisException catch (error) {
-        return error.message;
-      } catch (_) {
-        analysis = YouthFriendlyAnalysis.sanitizeAnalysis(
-          ref.read(aiSwimAnalysisServiceProvider).analyze(
-                video: video,
-                raceLogs: current.raceLogs,
-                goals: current.goals,
-                profile: current.profile,
-                standards: current.usaStandards,
-                poseMetrics: poseMetrics,
-              ),
+      } on GeminiAnalysisException catch (_) {
+        analysis = _fallbackVideoAnalysis(
+          video: video,
+          current: current,
+          poseMetrics: poseMetrics,
         );
+        fallbackNotice =
+            'Gemini was unavailable — showing notes-based coaching for this clip.';
+      } catch (_) {
+        analysis = _fallbackVideoAnalysis(
+          video: video,
+          current: current,
+          poseMetrics: poseMetrics,
+        );
+        fallbackNotice =
+            'Gemini was unavailable — showing notes-based coaching for this clip.';
       }
 
-      final analysisWithIds = analysis.copyWith(
-        swimVideoId: videoId,
-        swimmer: video.swimmer,
+      await _persistVideoAnalysis(
+        videoId: videoId,
+        video: video,
+        analysis: analysis,
       );
 
-      try {
-        final saved = await ref
-            .read(swimIqRepositoryProvider)
-            .insertVideoAnalysis(analysisWithIds);
-        _localAnalysesByVideoId[videoId] = saved;
-      } catch (_) {
-        _localAnalysesByVideoId[videoId] = analysisWithIds.copyWith(
-          id: 'local-$videoId',
-        );
-      }
-
-      final refreshed = state.value ?? current;
-      state = AsyncData(
-        refreshed.copyWith(
-          videoAnalyses: _mergeAnalyses(refreshed.videoAnalyses),
-        ),
-      );
-
-      try {
-        await refresh();
-      } catch (_) {
-        // Local analysis remains available even if remote refresh fails.
-      }
+      await _reloadPreservingUi();
 
       await ref.read(subscriptionStateProvider.notifier).recordCoachAiAnalysis();
-      return null;
+      return fallbackNotice;
     } catch (error) {
       return error.toString();
     }
