@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../core/utils/swimiq_camera_capture.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/swim_schedule_entry.dart';
 import '../providers/app_providers.dart';
@@ -393,18 +393,11 @@ class _ScheduleEntryFormSheetState
   }
 
   Future<void> _takeSchedulePhoto() async {
-    final picker = ImagePicker();
-    final photo = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-      maxWidth: 2400,
-    );
-    if (photo == null) return;
-    final bytes = await photo.readAsBytes();
-    if (!mounted) return;
+    final photo = await captureSwimIqPhoto(context);
+    if (photo == null || !mounted) return;
     setState(() {
-      _schedulePhotoBytes = bytes;
-      _schedulePhotoName = photo.name;
+      _schedulePhotoBytes = photo.bytes;
+      _schedulePhotoName = photo.fileName;
     });
   }
 
