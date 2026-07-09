@@ -200,8 +200,8 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const markerWidth = 40.0;
-        const markerHeight = 48.0;
+        const markerWidth = 54.0;
+        const markerHeight = 54.0;
         const labelHeight = 24.0;
         const labelGap = 4.0;
         final markerHeightTotal = markerHeight + labelGap + labelHeight;

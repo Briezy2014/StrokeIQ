@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// Compact side-view swimmer gripping the rope — no background bubble.
+/// Side-view freestyle swimmer — clear at small sizes on the rope marker.
 class RopeClimbingSwimmerPainter extends CustomPainter {
   const RopeClimbingSwimmerPainter();
 
@@ -12,39 +12,38 @@ class RopeClimbingSwimmerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final ropeX = w * 0.58;
+    final cx = w * 0.5;
+    final cy = h * 0.5;
 
-    final shadow = Paint()
-      ..color = Colors.black.withValues(alpha: 0.14)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(ropeX - w * 0.08, h * 0.72),
-        width: w * 0.55,
-        height: h * 0.1,
-      ),
-      shadow,
+    canvas.drawCircle(
+      Offset(cx, cy),
+      w * 0.47,
+      Paint()..color = AppColors.primary.withValues(alpha: 0.1),
+    );
+    canvas.drawCircle(
+      Offset(cx, cy),
+      w * 0.47,
+      Paint()
+        ..color = AppColors.primary.withValues(alpha: 0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
 
-    _drawRope(canvas, ropeX, h, w);
-
-    final skin = const Color(0xFFFFE4C9);
+    final skin = const Color(0xFFFFE0C2);
     final suit = AppColors.primaryDeep;
     final cap = AppColors.primary;
     final limb = Paint()
-      ..color = Colors.white
+      ..color = AppColors.primaryDark
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.09
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+      ..strokeWidth = w * 0.055
+      ..strokeCap = StrokeCap.round;
 
-    final head = Offset(ropeX - w * 0.22, h * 0.2);
-
-    canvas.drawCircle(head, w * 0.13, Paint()..color = skin);
+    final head = Offset(w * 0.2, h * 0.4);
+    canvas.drawCircle(head, w * 0.12, Paint()..color = skin);
     canvas.drawArc(
-      Rect.fromCircle(center: head, radius: w * 0.13),
-      math.pi * 0.85,
-      math.pi * 1.1,
+      Rect.fromCircle(center: head, radius: w * 0.12),
+      -math.pi * 0.3,
+      math.pi * 1.15,
       false,
       Paint()
         ..color = cap
@@ -52,102 +51,56 @@ class RopeClimbingSwimmerPainter extends CustomPainter {
         ..strokeWidth = w * 0.07,
     );
     canvas.drawCircle(
-      head.translate(0, w * 0.015),
-      w * 0.135,
-      Paint()
-        ..color = cap.withValues(alpha: 0.95)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.035,
+      Offset(head.dx + w * 0.05, head.dy + w * 0.01),
+      w * 0.024,
+      Paint()..color = const Color(0xFF0EA5E9),
     );
-    canvas.drawCircle(
-      head.translate(w * 0.04, w * 0.02),
-      w * 0.018,
-      Paint()..color = const Color(0xFF1E293B),
-    );
-
-    final torso = Path()
-      ..moveTo(head.dx, head.dy + w * 0.12)
-      ..quadraticBezierTo(
-        ropeX - w * 0.42,
-        h * 0.4,
-        ropeX - w * 0.18,
-        h * 0.52,
-      )
-      ..quadraticBezierTo(
-        ropeX - w * 0.1,
-        h * 0.66,
-        ropeX - w * 0.22,
-        h * 0.78,
-      );
-    canvas.drawPath(
-      torso,
-      Paint()
-        ..color = suit
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.16
-        ..strokeCap = StrokeCap.round,
-    );
-
-    final reachArm = Path()
-      ..moveTo(ropeX - w * 0.18, h * 0.34)
-      ..quadraticBezierTo(ropeX + w * 0.02, h * 0.26, ropeX + w * 0.06, h * 0.12);
-    final gripArm = Path()
-      ..moveTo(ropeX - w * 0.14, h * 0.46)
-      ..quadraticBezierTo(ropeX + w * 0.12, h * 0.46, ropeX + w * 0.14, h * 0.58);
-    canvas.drawPath(reachArm, limb);
-    canvas.drawPath(gripArm, limb);
-
-    canvas.drawCircle(
-      Offset(ropeX + w * 0.06, h * 0.12),
-      w * 0.04,
-      Paint()..color = skin,
-    );
-    canvas.drawCircle(
-      Offset(ropeX + w * 0.14, h * 0.58),
-      w * 0.04,
-      Paint()..color = skin,
-    );
-
-    final upperLeg = Path()
-      ..moveTo(ropeX - w * 0.22, h * 0.78)
-      ..quadraticBezierTo(ropeX - w * 0.38, h * 0.84, ropeX - w * 0.34, h * 0.93);
-    final lowerLeg = Path()
-      ..moveTo(ropeX - w * 0.34, h * 0.93)
-      ..quadraticBezierTo(ropeX - w * 0.24, h * 0.88, ropeX - w * 0.14, h * 0.86);
-    canvas.drawPath(upperLeg, limb);
-    canvas.drawPath(lowerLeg, limb);
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(ropeX - w * 0.34, h * 0.945),
-        width: w * 0.14,
-        height: w * 0.06,
+        center: Offset(w * 0.5, h * 0.5),
+        width: w * 0.44,
+        height: w * 0.19,
       ),
-      Paint()..color = AppColors.primary.withValues(alpha: 0.75),
+      Paint()..color = suit,
     );
+
+    final leadArm = Path()
+      ..moveTo(w * 0.6, h * 0.45)
+      ..quadraticBezierTo(w * 0.8, h * 0.3, w * 0.9, h * 0.36);
+    canvas.drawPath(leadArm, limb);
     canvas.drawCircle(
-      Offset(ropeX - w * 0.14, h * 0.86),
-      w * 0.035,
+      Offset(w * 0.9, h * 0.36),
+      w * 0.038,
       Paint()..color = skin,
     );
-  }
 
-  void _drawRope(Canvas canvas, double ropeX, double h, double w) {
-    canvas.drawLine(
-      Offset(ropeX, h * 0.04),
-      Offset(ropeX, h * 0.96),
-      Paint()
-        ..color = const Color(0xFF92400E)
-        ..strokeWidth = w * 0.1
-        ..strokeCap = StrokeCap.round,
+    final trailArm = Path()
+      ..moveTo(w * 0.4, h * 0.52)
+      ..quadraticBezierTo(w * 0.28, h * 0.64, w * 0.2, h * 0.56);
+    canvas.drawPath(trailArm, limb..strokeWidth = w * 0.048);
+    canvas.drawCircle(
+      Offset(w * 0.2, h * 0.56),
+      w * 0.032,
+      Paint()..color = skin,
     );
-    canvas.drawLine(
-      Offset(ropeX - w * 0.025, h * 0.04),
-      Offset(ropeX - w * 0.025, h * 0.96),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.3)
-        ..strokeWidth = w * 0.03
-        ..strokeCap = StrokeCap.round,
+
+    final kick = Path()
+      ..moveTo(w * 0.64, h * 0.54)
+      ..quadraticBezierTo(w * 0.82, h * 0.44, w * 0.9, h * 0.5)
+      ..moveTo(w * 0.64, h * 0.56)
+      ..quadraticBezierTo(w * 0.84, h * 0.6, w * 0.92, h * 0.54);
+    canvas.drawPath(kick, limb..strokeWidth = w * 0.042);
+
+    canvas.drawCircle(
+      Offset(w * 0.1, h * 0.26),
+      2.2,
+      Paint()..color = Colors.white.withValues(alpha: 0.7),
+    );
+    canvas.drawCircle(
+      Offset(w * 0.06, h * 0.34),
+      1.6,
+      Paint()..color = Colors.white.withValues(alpha: 0.55),
     );
   }
 
