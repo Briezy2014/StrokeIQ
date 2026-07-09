@@ -7,7 +7,13 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
-# Always patch Gradle/AGP versions before building (works even if git pull failed)
+# Pub cache MUST be on same drive as project (S:) — C:\SwimIQPub + S:\swimiq breaks Kotlin
+$pubCache = "S:\pub-cache"
+New-Item -ItemType Directory -Force -Path $pubCache | Out-Null
+$env:PUB_CACHE = $pubCache
+[Environment]::SetEnvironmentVariable("PUB_CACHE", $pubCache, "Process")
+Write-Host "PUB_CACHE=$pubCache (same drive as project)" -ForegroundColor Cyan
+
 & (Join-Path $PSScriptRoot "fix-android-gradle.ps1")
 
 $keyProps = Join-Path $repoRoot "android\key.properties"
@@ -30,6 +36,19 @@ if (-not $SupabaseUrl -and (Test-Path $envFile)) {
 
 if (-not $SupabaseUrl -or -not $SupabaseAnonKey) {
     throw "SUPABASE_URL and SUPABASE_ANON_KEY are required. Pass -SupabaseUrl / -SupabaseAnonKey or set them in .env"
+}
+
+Write-Host "Cleaning old build cache..." -ForegroundColor Yellow
+$buildDir = Join-Path $repoRoot "build"
+if (Test-Path $buildDir) {
+    Remove-Item -LiteralPath $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+$gradlew = Join-Path $repoRoot "android\gradlew.bat"
+if (Test-Path $gradlew) {
+    Push-Location (Join-Path $repoRoot "android")
+    try { & .\gradlew.bat --stop 2>$null } catch { }
+    Pop-Location
 }
 
 Write-Host "Building SwimIQ Android App Bundle (release)..." -ForegroundColor Cyan
