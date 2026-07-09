@@ -8,6 +8,7 @@ import '../../core/models/subscription_plan.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/legal_footer.dart';
 import '../../widgets/subscription_feature_matrix.dart';
 import '../../widgets/swimiq_header.dart';
