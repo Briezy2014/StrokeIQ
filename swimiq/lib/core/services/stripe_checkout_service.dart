@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/subscription_plan.dart';
+import 'stripe_checkout_support.dart';
 
 /// Starts a Stripe Checkout session via Supabase Edge Function.
 class StripeCheckoutService {
@@ -29,7 +30,10 @@ class StripeCheckoutService {
       if (data is Map && data['error'] != null) {
         throw Exception(data['error'].toString());
       }
-      throw Exception('Checkout failed (${response.status}).');
+      throw Exception(
+        'Checkout failed (${response.status}). '
+        'Confirm create-stripe-checkout is deployed on Supabase.',
+      );
     }
 
     final data = response.data;

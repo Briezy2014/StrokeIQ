@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/founder_account_constants.dart';
 import '../../core/models/subscription_plan.dart';
+import '../../core/services/stripe_checkout_support.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
@@ -33,6 +34,20 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
   }
 
   Future<void> _selectPlan(SubscriptionTier tier) async {
+    final subscription = ref.read(subscriptionStateProvider).value;
+    final userEmail = ref.read(currentUserProvider)?.email;
+    if (subscription == null) return;
+
+    final blocked = SubscriptionCheckoutGuard.blockReason(
+      subscription: subscription,
+      userEmail: userEmail,
+      tier: tier,
+    );
+    if (blocked != null) {
+      setState(() => _message = blocked);
+      return;
+    }
+
     if (kIsWeb) {
       setState(() {
         _message = 'Opening secure Stripe checkout…';
@@ -55,7 +70,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
       } catch (error) {
         if (!mounted) return;
         setState(() {
-          _message = 'Checkout error: $error';
+          _message = StripeCheckoutErrors.message(error);
         });
       }
       return;
@@ -183,7 +198,16 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                 (plan) => _PlanCard(
                   plan: plan,
                   billingCycle: _billingCycle,
-                  isCurrent: subscription.effectiveTier == plan.tier,
+                  buttonLabel: SubscriptionCheckoutGuard.buttonLabel(
+                    subscription: subscription,
+                    userEmail: user?.email,
+                    tier: plan.tier,
+                  ),
+                  canCheckout: SubscriptionCheckoutGuard.canStartCheckout(
+                    subscription: subscription,
+                    userEmail: user?.email,
+                    tier: plan.tier,
+                  ),
                   onSelect: () => _selectPlan(plan.tier),
                 ),
               ),
@@ -242,13 +266,15 @@ class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.plan,
     required this.billingCycle,
-    required this.isCurrent,
+    required this.buttonLabel,
+    required this.canCheckout,
     required this.onSelect,
   });
 
   final SubscriptionPlan plan;
   final BillingCycle billingCycle;
-  final bool isCurrent;
+  final String buttonLabel;
+  final bool canCheckout;
   final VoidCallback onSelect;
 
   @override
@@ -352,8 +378,10 @@ class _PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: onSelect,
-              child: Text(isCurrent ? 'Current plan' : 'Choose ${plan.name}'),
+              onPressed: canCheckout ? onSelect : null,
+              child: Text(
+                canCheckout ? 'Choose ${plan.name}' : buttonLabel,
+              ),
             ),
           ],
         ),

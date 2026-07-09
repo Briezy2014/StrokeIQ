@@ -78,6 +78,16 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
               ref.read(subscriptionStateProvider.notifier).refreshFromServer();
             });
           }
+          if (kIsWeb && Uri.base.queryParameters['checkout'] == 'cancel') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Checkout canceled — no charge was made.'),
+                ),
+              );
+            });
+          }
 
           return const HomeScreen();
         },

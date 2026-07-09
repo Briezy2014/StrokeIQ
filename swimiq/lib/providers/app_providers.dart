@@ -7,6 +7,7 @@ import '../core/services/gemini_college_match_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
+import '../core/services/stripe_checkout_support.dart';
 import '../core/services/stripe_checkout_service.dart';
 import '../core/services/subscription_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
@@ -115,8 +116,8 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     return checkout.startCheckout(
       tier: tier,
       billingCycle: cycle,
-      successUrl: 'https://swimiqapp.com/?checkout=success',
-      cancelUrl: 'https://swimiqapp.com/?checkout=cancel',
+      successUrl: StripeCheckoutUrls.successUrl(),
+      cancelUrl: StripeCheckoutUrls.cancelUrl(),
     );
   }
 

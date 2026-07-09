@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/models/subscription_plan.dart';
+import '../core/services/stripe_checkout_support.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
 import '../screens/membership/membership_screen.dart';
+import '../services/auth_service.dart';
 
 /// Basic / Pro / Elite signup — shown on the dashboard right after sign-in.
 class DashboardMembershipPlansCard extends ConsumerStatefulWidget {
@@ -23,6 +25,20 @@ class _DashboardMembershipPlansCardState
   String? _message;
 
   Future<void> _selectPlan(SubscriptionTier tier) async {
+    final subscription = ref.read(subscriptionStateProvider).value;
+    final userEmail = ref.read(currentUserProvider)?.email;
+    if (subscription == null) return;
+
+    final blocked = SubscriptionCheckoutGuard.blockReason(
+      subscription: subscription,
+      userEmail: userEmail,
+      tier: tier,
+    );
+    if (blocked != null) {
+      setState(() => _message = blocked);
+      return;
+    }
+
     if (kIsWeb) {
       setState(() => _message = 'Opening secure Stripe checkout…');
       try {
@@ -42,7 +58,7 @@ class _DashboardMembershipPlansCardState
         });
       } catch (error) {
         if (!mounted) return;
-        setState(() => _message = 'Checkout error: $error');
+        setState(() => _message = StripeCheckoutErrors.message(error));
       }
       return;
     }
@@ -61,9 +77,9 @@ class _DashboardMembershipPlansCardState
   @override
   Widget build(BuildContext context) {
     final subscription = ref.watch(subscriptionStateProvider).value;
+    final userEmail = ref.watch(currentUserProvider)?.email;
     if (subscription == null) return const SizedBox.shrink();
 
-    final effective = subscription.effectiveTier;
     final trialDays = subscription.isTrialActive && subscription.trialEndsAt != null
         ? subscription.trialEndsAt!.difference(DateTime.now()).inDays.clamp(0, 99)
         : null;
@@ -131,10 +147,16 @@ class _DashboardMembershipPlansCardState
               (plan) => _DashboardPlanTile(
                 plan: plan,
                 billingCycle: _billingCycle,
-                isCurrent: effective == plan.tier &&
-                    (subscription.hasActiveServerPlan || !subscription.isTrialActive),
-                isTrialActive: subscription.isTrialActive &&
-                    plan.tier == SubscriptionTier.elite,
+                buttonLabel: SubscriptionCheckoutGuard.buttonLabel(
+                  subscription: subscription,
+                  userEmail: userEmail,
+                  tier: plan.tier,
+                ),
+                canCheckout: SubscriptionCheckoutGuard.canStartCheckout(
+                  subscription: subscription,
+                  userEmail: userEmail,
+                  tier: plan.tier,
+                ),
                 onSelect: () => _selectPlan(plan.tier),
               ),
             ),
@@ -160,15 +182,15 @@ class _DashboardPlanTile extends StatelessWidget {
   const _DashboardPlanTile({
     required this.plan,
     required this.billingCycle,
-    required this.isCurrent,
-    required this.isTrialActive,
+    required this.buttonLabel,
+    required this.canCheckout,
     required this.onSelect,
   });
 
   final SubscriptionPlan plan;
   final BillingCycle billingCycle;
-  final bool isCurrent;
-  final bool isTrialActive;
+  final String buttonLabel;
+  final bool canCheckout;
   final VoidCallback onSelect;
 
   @override
@@ -262,17 +284,13 @@ class _DashboardPlanTile extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           FilledButton(
-            onPressed: isCurrent ? null : onSelect,
+            onPressed: canCheckout ? onSelect : null,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               minimumSize: const Size(0, 40),
             ),
             child: Text(
-              isCurrent
-                  ? 'Current'
-                  : isTrialActive
-                      ? 'Trial'
-                      : 'Choose',
+              buttonLabel,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
           ),
