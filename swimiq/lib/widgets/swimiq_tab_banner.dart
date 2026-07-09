@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
 import 'swimiq_branding.dart';
-import 'swimiq_logo.dart';
+import 'swimiq_branded_fallback.dart';
 
-/// Full-width brand strip below the app bar on every tab except Dashboard.
+/// Full-width brand strip below the app bar on every tab (including Dashboard).
 class SwimIqTabBanner extends StatelessWidget {
   const SwimIqTabBanner({
     super.key,
@@ -17,6 +16,7 @@ class SwimIqTabBanner extends StatelessWidget {
 
   static String? moduleLabelForTab(int index) {
     return switch (index) {
+      HomeTab.dashboard => 'Dashboard',
       HomeTab.personalBests => 'Personal Bests',
       HomeTab.trainingLog => 'Training Log',
       HomeTab.goals => 'Goals',
@@ -36,82 +36,88 @@ class SwimIqTabBanner extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: SizedBox(
-          height: 88,
+          height: 104,
           child: Stack(
             fit: StackFit.expand,
             children: [
               SwimIqBrandedImage(
                 candidates: SwimIqBranding.tabBannerCandidates,
                 fit: BoxFit.cover,
-                fallback: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF020812),
-                        Color(0xFF0B2D4D),
-                        Color(0xFF0B5CAD),
-                        Color(0xFF009CFF),
-                      ],
-                      stops: [0.0, 0.35, 0.72, 1.0],
-                    ),
-                  ),
-                ),
+                fallback: const _BannerMarkFallback(),
               ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.72),
-                      Colors.black.withValues(alpha: 0.35),
+                      Colors.black.withValues(alpha: 0.55),
                       Colors.transparent,
                     ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 10,
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SwimIqCompactMark(size: 52, borderRadius: 14),
-                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              const SwimIqWordmark(fontSize: 20),
-                              _ModuleChip(label: module),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            AppConstants.brandTagline.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.92),
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                        ],
+                      child: Text(
+                        AppConstants.brandTagline.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    _ModuleChip(label: module),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// When banner.png is missing — centered mark/icon, not a tiny corner glyph.
+class _BannerMarkFallback extends StatelessWidget {
+  const _BannerMarkFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF020812),
+            Color(0xFF0B2D4D),
+            Color(0xFF0B5CAD),
+            Color(0xFF009CFF),
+          ],
+          stops: [0.0, 0.35, 0.72, 1.0],
+        ),
+      ),
+      child: Center(
+        child: SwimIqBrandedImage(
+          candidates: [
+            ...SwimIqBranding.markCandidates,
+            SwimIqBranding.iconAsset,
+          ],
+          height: 88,
+          width: 88,
+          fit: BoxFit.contain,
+          fallback: const SwimIqPaintedMark(size: 88),
         ),
       ),
     );

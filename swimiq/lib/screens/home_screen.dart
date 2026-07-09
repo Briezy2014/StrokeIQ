@@ -136,8 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (selectedIndex != HomeTab.dashboard)
-            SwimIqTabBanner(tabIndex: selectedIndex),
+          SwimIqTabBanner(tabIndex: selectedIndex),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,

@@ -18,8 +18,8 @@ void main() {
     expect(find.textContaining('BUILT IN THE WATER'), findsOneWidget);
   });
 
-  test('moduleLabelForTab returns null for dashboard', () {
-    expect(SwimIqTabBanner.moduleLabelForTab(HomeTab.dashboard), isNull);
+  test('moduleLabelForTab includes dashboard and other tabs', () {
+    expect(SwimIqTabBanner.moduleLabelForTab(HomeTab.dashboard), 'Dashboard');
     expect(SwimIqTabBanner.moduleLabelForTab(HomeTab.goals), 'Goals');
   });
 }

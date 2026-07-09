@@ -16,7 +16,6 @@ import '../../providers/app_providers.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_logo.dart';
 import '../../core/gamification/swimiq_badges.dart';
 import '../../core/gamification/swimiq_daily_progress.dart';
 import '../membership/membership_screen.dart';
@@ -175,7 +174,6 @@ class _DashboardHero extends StatelessWidget {
                   ),
                 ),
               ),
-              const SwimIqCompactMark(size: 40, borderRadius: 10),
             ],
           ),
           const SizedBox(height: 12),
