@@ -23,15 +23,25 @@ echo Step 1: Drop local edits to DIAGNOSE.bat (use GitHub version)...
 git checkout -- swimiq/DIAGNOSE.bat 2>nul
 git checkout -- DIAGNOSE.bat 2>nul
 
-echo Step 2: Remove duplicate logo bats so pull can replace them...
+echo Step 2: Drop local Android Gradle edits (common pull blocker)...
+git checkout -- swimiq/android/gradle.properties 2>nul
+git checkout -- swimiq/android/settings.gradle 2>nul
+git checkout -- swimiq/android/build.gradle 2>nul
+git checkout -- swimiq/android/app/build.gradle 2>nul
+
+echo Step 3: Remove duplicate logo bats so pull can replace them...
 del /f /q swimiq\COPY-LOGO.bat 2>nul
 del /f /q swimiq\DRAG-LOGO-HERE.bat 2>nul
 del /f /q COPY-LOGO.bat 2>nul
 del /f /q DRAG-LOGO-HERE.bat 2>nul
 
-echo Step 3: Pull latest code...
-git fetch origin cursor/windows-chrome-spaces-fix-17e8
-git pull origin cursor/windows-chrome-spaces-fix-17e8
+echo Step 4: Pull latest code...
+git fetch origin cursor/android-aab-pdf-export-17e8
+git pull origin cursor/android-aab-pdf-export-17e8
+if errorlevel 1 (
+  git fetch origin cursor/windows-chrome-spaces-fix-17e8
+  git pull origin cursor/windows-chrome-spaces-fix-17e8
+)
 if errorlevel 1 (
   echo.
   echo Pull still failed. Try in PowerShell:
