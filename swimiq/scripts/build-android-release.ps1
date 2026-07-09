@@ -30,6 +30,7 @@ if (-not $SupabaseUrl -or -not $SupabaseAnonKey) {
 }
 
 Write-Host "Building SwimIQ Android App Bundle (release)..." -ForegroundColor Cyan
+flutter clean
 flutter pub get
 flutter build appbundle --release `
     "--dart-define=SUPABASE_URL=$SupabaseUrl" `
