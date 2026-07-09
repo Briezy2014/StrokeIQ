@@ -1,9 +1,9 @@
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/swimmer_profile.dart';
+import '../services/college_recruiting_benchmark_catalog.dart';
 import '../utils/swim_time.dart';
 
-/// Rule-based recruiting intelligence scaffolding (Elite tier).
-/// Future: replace projections with live AI models.
+/// Recruiting intelligence with benchmark-matched named schools + optional Gemini summary.
 class RecruitingIntelligenceReport {
   const RecruitingIntelligenceReport({
     required this.recruitingLevel,
@@ -17,6 +17,10 @@ class RecruitingIntelligenceReport {
     required this.timeProjections,
     required this.eventRecommendations,
     required this.improvementCurve,
+    this.schoolMatches = const [],
+    this.geminiCoachSummary,
+    this.benchmarkDisclaimer = '',
+    this.usedNamedSchoolMatching = false,
   });
 
   final String recruitingLevel;
@@ -30,6 +34,10 @@ class RecruitingIntelligenceReport {
   final List<TimeProjection> timeProjections;
   final List<String> eventRecommendations;
   final List<String> improvementCurve;
+  final List<CollegeSchoolMatch> schoolMatches;
+  final String? geminiCoachSummary;
+  final String benchmarkDisclaimer;
+  final bool usedNamedSchoolMatching;
 }
 
 class TimeProjection {
@@ -39,6 +47,7 @@ class TimeProjection {
     required this.projectedTime,
     required this.targetSchoolTime,
     required this.gapSeconds,
+    this.targetSchoolName,
   });
 
   final String eventLabel;
@@ -46,6 +55,7 @@ class TimeProjection {
   final String projectedTime;
   final String targetSchoolTime;
   final double gapSeconds;
+  final String? targetSchoolName;
 }
 
 class RecruitingIntelligenceEngine {
@@ -58,6 +68,8 @@ class RecruitingIntelligenceEngine {
     required int meetCount,
     required int videoCount,
     required bool passportComplete,
+    CollegeRecruitingBenchmarkCatalog? benchmarkCatalog,
+    String? geminiCoachSummary,
   }) {
     final topPb = personalBests.isNotEmpty ? personalBests.first : null;
     final favorite = profile?.favoriteEvent?.trim();
@@ -65,6 +77,13 @@ class RecruitingIntelligenceEngine {
 
     final level = _recruitingLevel(swimIqScore, personalBests.length, meetCount);
     final divisionFit = _divisionFit(swimIqScore, personalBests.length);
+
+    final schoolMatches = benchmarkCatalog?.matchSchools(
+          personalBests: personalBests,
+          profile: profile,
+        ) ??
+        const <CollegeSchoolMatch>[];
+    final usedNamed = schoolMatches.isNotEmpty;
 
     return RecruitingIntelligenceReport(
       recruitingLevel: level,
@@ -86,16 +105,26 @@ class RecruitingIntelligenceEngine {
         videoCount: videoCount,
       ),
       divisionFit: divisionFit,
-      reachSchools: _schoolBucket(divisionFit, 'reach'),
-      targetSchools: _schoolBucket(divisionFit, 'target'),
-      likelySchools: _schoolBucket(divisionFit, 'likely'),
-      timeProjections: _timeProjections(topPb, favorite),
+      reachSchools: usedNamed
+          ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.reach)
+          : _schoolBucket(divisionFit, 'reach'),
+      targetSchools: usedNamed
+          ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.target)
+          : _schoolBucket(divisionFit, 'target'),
+      likelySchools: usedNamed
+          ? _tierLines(benchmarkCatalog!, schoolMatches, CollegeMatchTier.likely)
+          : _schoolBucket(divisionFit, 'likely'),
+      timeProjections: _timeProjections(topPb, favorite, schoolMatches),
       eventRecommendations: _eventRecommendations(
         personalBests: personalBests,
         favorite: favorite,
         primaryStroke: primaryStroke,
       ),
       improvementCurve: _improvementCurve(swimIqScore, meetCount),
+      schoolMatches: schoolMatches,
+      geminiCoachSummary: geminiCoachSummary,
+      benchmarkDisclaimer: benchmarkCatalog?.disclaimer ?? '',
+      usedNamedSchoolMatching: usedNamed,
     );
   }
 
@@ -229,23 +258,51 @@ class RecruitingIntelligenceEngine {
   static List<TimeProjection> _timeProjections(
     PersonalBestEntry? topPb,
     String? favorite,
+    List<CollegeSchoolMatch> schoolMatches,
   ) {
     if (topPb == null) return [];
 
     final eventLabel = favorite ?? topPb.displayTitle;
     final current = topPb.timeSeconds;
     final projected = current * 0.975;
-    final schoolTarget = current * 0.96;
-    final gap = projected - schoolTarget;
+
+    final schoolTarget = () {
+      CollegeSchoolMatch? bestTarget;
+      for (final match in schoolMatches) {
+        if (!match.eventLabel.startsWith(topPb.displayTitle)) continue;
+        if (match.tier == CollegeMatchTier.target) {
+          bestTarget = match;
+          break;
+        }
+        bestTarget ??= match;
+      }
+      return bestTarget;
+    }();
+
+    final targetSeconds = schoolTarget?.targetSeconds ?? current * 0.96;
+    final gap = projected - targetSeconds;
 
     return [
       TimeProjection(
         eventLabel: eventLabel,
         currentTime: SwimTime.fromSeconds(current),
         projectedTime: SwimTime.fromSeconds(projected),
-        targetSchoolTime: SwimTime.fromSeconds(schoolTarget),
+        targetSchoolTime: SwimTime.fromSeconds(targetSeconds),
         gapSeconds: gap.abs(),
+        targetSchoolName: schoolTarget?.school,
       ),
+    ];
+  }
+
+  static List<String> _tierLines(
+    CollegeRecruitingBenchmarkCatalog catalog,
+    List<CollegeSchoolMatch> matches,
+    CollegeMatchTier tier,
+  ) {
+    final lines = catalog.linesForTier(matches, tier);
+    if (lines.isNotEmpty) return lines;
+    return [
+      '  ◦ No named match in this tier yet — add official times or College Interests in passport',
     ];
   }
 

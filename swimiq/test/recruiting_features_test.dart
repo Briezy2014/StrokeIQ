@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/services/college_recruiting_benchmark_catalog.dart';
 import 'package:swimiq/core/recruiting/meet_history_analytics.dart';
 import 'package:swimiq/core/recruiting/recruiting_intelligence_engine.dart';
 import 'package:swimiq/core/recruiting/recruiting_resume_builder.dart';
@@ -8,6 +9,8 @@ import 'package:swimiq/data/models/personal_best_entry.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   final profile = SwimmerProfile(
     swimmerName: 'Test Swimmer',
     firstName: 'Test',
@@ -22,6 +25,7 @@ void main() {
       gpa: '3.9',
       satScore: '1300',
       recruitingStatus: 'Junior',
+      gender: 'Female',
     ),
   );
 
@@ -101,7 +105,8 @@ void main() {
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
 
-  test('recruiting intelligence produces assistant report', () {
+  test('recruiting intelligence produces assistant report', () async {
+    final catalog = await CollegeRecruitingBenchmarkCatalog.loadFromAssets();
     final report = RecruitingIntelligenceEngine.build(
       profile: profile,
       personalBests: pbs,
@@ -109,6 +114,7 @@ void main() {
       meetCount: 2,
       videoCount: 1,
       passportComplete: true,
+      benchmarkCatalog: catalog,
     );
 
     expect(report.recruitingLevel, isNotEmpty);
@@ -116,5 +122,6 @@ void main() {
     expect(report.milestones, isNotEmpty);
     expect(report.divisionFit, isNotEmpty);
     expect(report.timeProjections, isNotEmpty);
+    expect(report.usedNamedSchoolMatching, isTrue);
   });
 }

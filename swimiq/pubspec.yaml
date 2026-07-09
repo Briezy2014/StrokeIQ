@@ -40,3 +40,4 @@ flutter:
     - assets/legal/
     - assets/data/usa_time_standards_seed.json
     - assets/data/usa_motivational_standards_2024_2028.json
+    - assets/data/college_recruiting_benchmarks_seed.json

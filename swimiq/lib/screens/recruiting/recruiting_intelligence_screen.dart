@@ -3,18 +3,104 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/subscription_plan.dart';
 import '../../core/recruiting/recruiting_intelligence_engine.dart';
+import '../../core/services/college_recruiting_benchmark_catalog.dart';
+import '../../core/services/gemini_college_match_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swim_time.dart';
+import '../../providers/app_providers.dart';
+import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
 
-/// Elite-tier AI recruiting intelligence scaffolding.
-class RecruitingIntelligenceScreen extends ConsumerWidget {
+/// Elite-tier AI recruiting intelligence with benchmark-matched schools.
+class RecruitingIntelligenceScreen extends ConsumerStatefulWidget {
   const RecruitingIntelligenceScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecruitingIntelligenceScreen> createState() =>
+      _RecruitingIntelligenceScreenState();
+}
+
+class _RecruitingIntelligenceScreenState
+    extends ConsumerState<RecruitingIntelligenceScreen> {
+  RecruitingIntelligenceReport? _report;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadReport());
+  }
+
+  Future<void> _loadReport() async {
+    final data = ref.read(swimmerDataProvider).value;
+    if (data == null || !mounted) {
+      setState(() => _loading = false);
+      return;
+    }
+
+    final profile = data.profile;
+    final passportComplete = profile != null &&
+        (profile.graduationYear != null ||
+            profile.team != null ||
+            profile.gpa != null);
+
+    try {
+      final catalog = await CollegeRecruitingBenchmarkCatalog.loadFromAssets();
+      final matches = catalog.matchSchools(
+        personalBests: data.personalBests,
+        profile: profile,
+      );
+
+      String? geminiSummary;
+      if (matches.isNotEmpty) {
+        try {
+          geminiSummary = await ref
+              .read(geminiCollegeMatchServiceProvider)
+              .summarizeMatches(
+                profile: profile,
+                personalBests: data.personalBests,
+                matches: matches,
+                benchmarkDisclaimer: catalog.disclaimer,
+              );
+        } catch (_) {
+          geminiSummary = null;
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _report = RecruitingIntelligenceEngine.build(
+          profile: profile,
+          personalBests: data.personalBests,
+          swimIqScore: data.swimIqScore,
+          meetCount: data.meetResults.map((m) => m.meetName).toSet().length,
+          videoCount: data.userFacingVideos.length,
+          passportComplete: passportComplete,
+          benchmarkCatalog: catalog,
+          geminiCoachSummary: geminiSummary,
+        );
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _report = RecruitingIntelligenceEngine.build(
+          profile: profile,
+          personalBests: data.personalBests,
+          swimIqScore: data.swimIqScore,
+          meetCount: data.meetResults.map((m) => m.meetName).toSet().length,
+          videoCount: data.userFacingVideos.length,
+          passportComplete: passportComplete,
+        );
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SubscriptionGatedScreen(
       minimumTier: SubscriptionTier.elite,
       title: 'Unlock SwimIQ Elite',
@@ -28,20 +114,14 @@ class RecruitingIntelligenceScreen extends ConsumerWidget {
       ],
       child: SwimmerScreen(
         builder: (context, ref, data, swimmer) {
-          final profile = data.profile;
-          final passportComplete = profile != null &&
-              (profile.graduationYear != null ||
-                  profile.team != null ||
-                  profile.gpa != null);
+          if (_loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          final report = RecruitingIntelligenceEngine.build(
-            profile: profile,
-            personalBests: data.personalBests,
-            swimIqScore: data.swimIqScore,
-            meetCount: data.meetResults.map((m) => m.meetName).toSet().length,
-            videoCount: data.userFacingVideos.length,
-            passportComplete: passportComplete,
-          );
+          final report = _report;
+          if (report == null) {
+            return const Center(child: Text('Load swimmer data to see recruiting AI.'));
+          }
 
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -49,26 +129,45 @@ class RecruitingIntelligenceScreen extends ConsumerWidget {
             children: [
               const SwimIqPageHero(
                 title: 'AI Recruiting Intelligence',
-                subtitle: 'Projections — not guarantees. SwimIQ estimates where '
-                    'you stand and what moves you closer to college goals.',
+                subtitle: 'Named schools matched to your official times — verify '
+                    'every list with coaches before contacting programs.',
               ),
               const SizedBox(height: 16),
               _AssistantCard(report: report),
+              if (report.geminiCoachSummary != null) ...[
+                const SizedBox(height: 12),
+                _GeminiSummaryCard(summary: report.geminiCoachSummary!),
+              ],
               const SizedBox(height: 12),
               _IntelSection(
                 emoji: '🎯',
                 title: 'College Match AI',
                 lines: [
-                  'Based on your times and improvement rate, you are currently '
-                  'competitive for:',
-                  ...report.divisionFit.map((d) => '• $d'),
-                  '',
-                  'Reach schools:',
-                  ...report.reachSchools.map((s) => '  ◦ $s'),
-                  'Target schools:',
-                  ...report.targetSchools.map((s) => '  ◦ $s'),
-                  'Likely schools:',
-                  ...report.likelySchools.map((s) => '  ◦ $s'),
+                  if (report.usedNamedSchoolMatching)
+                    'Named schools matched to your official times and illustrative '
+                    'recruiting benchmarks (Ohio & Midwest seed data):'
+                  else
+                    'Based on your times and improvement rate, you are currently '
+                    'competitive for:',
+                  if (!report.usedNamedSchoolMatching)
+                    ...report.divisionFit.map((d) => '• $d'),
+                  if (report.usedNamedSchoolMatching) ...[
+                    '',
+                    'Reach schools (need faster times):',
+                    ...report.reachSchools,
+                    'Target schools (close to recruit range):',
+                    ...report.targetSchools,
+                    'Likely schools (times already in range):',
+                    ...report.likelySchools,
+                  ] else ...[
+                    '',
+                    'Reach schools:',
+                    ...report.reachSchools.map((s) => '  ◦ $s'),
+                    'Target schools:',
+                    ...report.targetSchools.map((s) => '  ◦ $s'),
+                    'Likely schools:',
+                    ...report.likelySchools.map((s) => '  ◦ $s'),
+                  ],
                 ],
               ),
               _IntelSection(
@@ -81,7 +180,7 @@ class RecruitingIntelligenceScreen extends ConsumerWidget {
                           (p) =>
                               'Current ${p.eventLabel}: ${p.currentTime}\n'
                               'AI projection next championship season: ${p.projectedTime}\n'
-                              'Needed for target school: ${p.targetSchoolTime}\n'
+                              'Needed for ${p.targetSchoolName ?? 'target school'}: ${p.targetSchoolTime}\n'
                               'Gap: ${SwimTime.fromSeconds(p.gapSeconds)}',
                         )
                         .toList(),
@@ -98,16 +197,63 @@ class RecruitingIntelligenceScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Elite AI models will refine these projections with more meet '
-                'data, video analysis, and regional recruiting benchmarks.',
+                report.benchmarkDisclaimer.isNotEmpty
+                    ? report.benchmarkDisclaimer
+                    : 'Elite AI refines projections with more meet data, video analysis, '
+                        'and regional recruiting benchmarks.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade700,
                       fontStyle: FontStyle.italic,
                     ),
               ),
+              if (report.usedNamedSchoolMatching && report.geminiCoachSummary == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Gemini coach summary unavailable — school names still come from '
+                    'SwimIQ benchmark matching. Deploy match-college-recruiting after '
+                    'setting GEMINI_API_KEY.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                  ),
+                ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _GeminiSummaryCard extends StatelessWidget {
+  const _GeminiSummaryCard({required this.summary});
+
+  final String summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Gemini recruiting read',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDeep,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(summary, style: const TextStyle(height: 1.45)),
+          ],
+        ),
       ),
     );
   }

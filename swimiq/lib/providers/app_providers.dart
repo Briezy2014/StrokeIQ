@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models/subscription_plan.dart';
 import '../core/services/ai_swim_analysis_service.dart';
+import '../core/services/gemini_college_match_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
@@ -40,6 +41,10 @@ final trainingLogSegmentProvider = StateProvider<int>((ref) => 0);
 
 final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
   (ref) => AiSwimAnalysisService(),
+);
+
+final geminiCollegeMatchServiceProvider = Provider<GeminiCollegeMatchService>(
+  (ref) => GeminiCollegeMatchService(ref.watch(supabaseClientProvider)),
 );
 
 final geminiSwimAnalysisServiceProvider = Provider<GeminiSwimAnalysisService>(

@@ -14,7 +14,7 @@ SwimIQ Video Lab sends uploaded swim clips to **Google Gemini 2.0 Flash** throug
 
 Do **not** commit the key to git or paste it in chat.
 
-## 2. Deploy the Edge Function
+## 2. Deploy the Edge Functions
 
 Install the [Supabase CLI](https://supabase.com/docs/guides/cli) on a computer, then:
 
@@ -23,6 +23,7 @@ cd swimiq
 supabase login
 supabase link --project-ref YOUR_PROJECT_REF
 supabase functions deploy analyze-swim-video
+supabase functions deploy match-college-recruiting
 ```
 
 `YOUR_PROJECT_REF` is in Supabase → Project Settings → General → Reference ID.
