@@ -32,7 +32,7 @@ class SubscriptionPlan {
     final price = priceFor(cycle);
     return cycle == BillingCycle.monthly
         ? '\$${price.toStringAsFixed(2)}/mo'
-        : '\$${price.toStringAsFixed(0)}/yr';
+        : '\$${price.toStringAsFixed(2)}/yr';
   }
 
   String? savingsLabel(BillingCycle cycle) {

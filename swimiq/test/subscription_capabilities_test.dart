@@ -156,6 +156,9 @@ void main() {
     expect(elite.badgeLabel, 'Advanced AI Performance');
     expect(elite.features.any((f) => f.contains('Gemini + MediaPipe')), isTrue);
     expect(elite.features.any((f) => f.contains('AI Recruiting Intelligence')), isTrue);
+    expect(basic.priceLabel(BillingCycle.annual), '\$39.99/yr');
+    expect(pro.priceLabel(BillingCycle.annual), '\$89.99/yr');
+    expect(elite.priceLabel(BillingCycle.annual), '\$149.99/yr');
   });
 
   test('home tab indices match expected pro gates', () {
