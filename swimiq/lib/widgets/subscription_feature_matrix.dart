@@ -16,9 +16,10 @@ class SubscriptionFeatureMatrix extends StatelessWidget {
     _MatrixRow('Athlete Passport / Recruiting Snapshot', pro: true, elite: true),
     _MatrixRow('AI Dryland Coach', pro: true, elite: true),
     _MatrixRow('Video Lab (upload & organize videos)', pro: true, elite: true),
-    _MatrixRow('Video Lab AI Stroke Analysis', elite: true),
+    _MatrixRow('Video Lab AI Stroke Analysis (Gemini + MediaPipe)', elite: true),
     _MatrixRow('Race Intelligence', elite: true),
     _MatrixRow('AI Performance Reports & race strategy', elite: true),
+    _MatrixRow('AI Recruiting Intelligence', elite: true),
   ];
 
   @override
@@ -79,7 +80,7 @@ class SubscriptionFeatureMatrix extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               '${SubscriptionCatalog.planFor(SubscriptionTier.pro).name} is Most Popular — '
-              'the sweet spot between logging and competitive tools.',
+              'official times, recruiting tools & dryland coaching in one plan.',
               style: TextStyle(
                 color: Colors.grey.shade700,
                 height: 1.35,

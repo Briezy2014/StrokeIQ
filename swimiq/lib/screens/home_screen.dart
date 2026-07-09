@@ -28,10 +28,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const _proTeaser = [
-    'Official PBs, meet results & USA Swimming standards',
-    'Athlete Passport & Recruiting Snapshot',
-    'Video Lab (upload & organize videos)',
-    'AI Dryland Coach — strength, core & mobility',
+    'Official PBs, meet results & USA Swimming motivational cuts',
+    'Athlete Passport & College Recruiting Hub — your digital swim résumé',
+    'Video Lab — upload, tag & organize race & technique videos',
+    'AI Dryland Coach — 5–15 min strength, core & mobility sessions',
   ];
 
   Widget _proGate(Widget child) {

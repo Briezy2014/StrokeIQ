@@ -470,7 +470,7 @@ class _DashboardEliteUpsell extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
         ),
         subtitle: Text(
-          'AI stroke analysis & Race Intelligence',
+          'Gemini + MediaPipe video AI, Race Intelligence & recruiting insights',
           style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
         ),
         trailing: Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.9)),

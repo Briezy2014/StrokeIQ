@@ -148,12 +148,14 @@ void main() {
     final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
 
     expect(basic.name, 'SwimIQ Basic');
-    expect(basic.tagline, contains('foundation'));
+    expect(basic.tagline, contains('progress'));
     expect(pro.name, 'SwimIQ Pro');
+    expect(pro.tagline, contains('competitive'));
     expect(pro.badgeLabel, 'Most Popular');
     expect(elite.name, 'SwimIQ Elite');
     expect(elite.badgeLabel, 'Advanced AI Performance');
-    expect(elite.features.any((f) => f.contains('AI Stroke Analysis')), isTrue);
+    expect(elite.features.any((f) => f.contains('Gemini + MediaPipe')), isTrue);
+    expect(elite.features.any((f) => f.contains('AI Recruiting Intelligence')), isTrue);
   });
 
   test('home tab indices match expected pro gates', () {

@@ -130,9 +130,9 @@ class SubscriptionCapabilities {
   }
 
   static String proGateMessage({String feature = 'This feature'}) =>
-      '$feature is included with SwimIQ Pro — official PBs, meet results, USA '
-      'standards, Athlete Passport, Video Lab, and AI Dryland Coach. Most '
-      'competitive families start here.';
+      '$feature is included with SwimIQ Pro — official PBs, meet results, '
+      'motivational cuts, Athlete Passport, College Recruiting Hub, Video Lab, '
+      'and AI Dryland Coach. The plan most competitive families choose.';
 
   static String eliteGateMessage(SubscriptionState state) {
     if (state.isCoachTrialActive && !state.hasCoachElitePeek) {
@@ -144,8 +144,9 @@ class SubscriptionCapabilities {
       return 'Coach Elite sneak peek ended. Upgrade to Elite for AI Stroke Analysis, '
           'Race Intelligence, and AI performance reports.';
     }
-    return 'SwimIQ Elite unlocks AI Stroke Analysis, Race Intelligence, AI performance '
-        'reports, and personalized race strategy.';
+    return 'SwimIQ Elite unlocks AI Video Stroke Analysis (Gemini + MediaPipe), '
+        'Race Intelligence, AI Performance Reports, race strategy, season insights, '
+        'and AI Recruiting Intelligence.';
   }
 
   static String coachPreviewSummary(SubscriptionState state) {
