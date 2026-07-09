@@ -355,7 +355,7 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                       );
                     }
                   },
-                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
                   label: const Text('Upload photo'),
                 ),
               ],

@@ -489,7 +489,7 @@ class _TrainingTabPanel extends StatelessWidget {
                 ),
                 OutlinedButton.icon(
                   onPressed: onUploadSwimPhoto,
-                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
                   label: const Text('Upload photo'),
                 ),
               ],

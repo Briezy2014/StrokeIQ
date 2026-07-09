@@ -301,7 +301,7 @@ class ScheduleDepositoryActionBar extends StatelessWidget {
             if (showUploadPhoto)
               OutlinedButton.icon(
                 onPressed: () => onAdd(_defaultType, photoFirst: true),
-                icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                icon: const Icon(Icons.upload_file_outlined, size: 18),
                 label: const Text('Upload photo'),
               ),
           ],

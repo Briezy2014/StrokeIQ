@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../core/utils/swimiq_camera_capture.dart';
+import '../core/utils/swimiq_video_camera_capture.dart';
 
 enum SwimIqMediaKind { image, video }
 
@@ -65,12 +66,11 @@ Future<SwimIqPickedMedia?> pickSwimIqMedia(
   switch (choice) {
     case 'camera':
       if (kind == SwimIqMediaKind.video) {
-        final video = await picker.pickVideo(source: ImageSource.camera);
+        final video = await captureSwimIqVideo(context);
         if (video == null) return null;
-        final bytes = await video.readAsBytes();
         return SwimIqPickedMedia(
-          fileName: video.name,
-          bytes: bytes,
+          fileName: video.fileName,
+          bytes: video.bytes,
         );
       }
       final photo = await captureSwimIqPhoto(context);
