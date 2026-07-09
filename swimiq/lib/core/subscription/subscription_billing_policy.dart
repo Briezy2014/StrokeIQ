@@ -35,11 +35,12 @@ abstract final class SubscriptionBillingPolicy {
   static String paidPlanButtonLabel({
     required SubscriptionPlan plan,
     required bool isCurrent,
-    TargetPlatform platform = defaultTargetPlatform,
+    TargetPlatform? platform,
   }) {
+    final resolvedPlatform = platform ?? defaultTargetPlatform;
     if (isCurrent) return 'Current plan';
     if (supportsPaidPlanSelection) return 'Choose ${plan.name}';
-    return switch (platform) {
+    return switch (resolvedPlatform) {
       TargetPlatform.android => 'Google Play billing soon',
       TargetPlatform.iOS => 'App Store billing soon',
       _ => 'Subscribe on swimiqapp.com',
