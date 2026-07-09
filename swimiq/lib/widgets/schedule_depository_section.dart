@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/utils/image_pick_utils.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/swim_schedule_entry.dart';
 import '../providers/app_providers.dart';
@@ -37,6 +40,8 @@ class _ScheduleDepositorySectionState
   DateTime _scheduleDate = DateTime.now();
   bool _isSaving = false;
   bool _showForm = false;
+  Uint8List? _schedulePhotoBytes;
+  String? _schedulePhotoName;
   final _saveSectionKey = GlobalKey();
 
   @override
@@ -77,12 +82,40 @@ class _ScheduleDepositorySectionState
     });
   }
 
+  Future<void> _pickSchedulePhoto() async {
+    final picked = await pickImageFromUserChoice(context);
+    if (picked == null) return;
+    setState(() {
+      _schedulePhotoBytes = picked.bytes;
+      _schedulePhotoName = picked.name;
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return;
 
     setState(() => _isSaving = true);
+
+    var notes = _optional(_notesController.text) ?? '';
+    if (_schedulePhotoBytes != null) {
+      try {
+        final url = await ref.read(profilePhotoServiceProvider).uploadSchedulePhoto(
+              swimmer: swimmer,
+              fileName: _schedulePhotoName ?? 'schedule.jpg',
+              bytes: _schedulePhotoBytes!,
+            );
+        notes = notes.isEmpty ? 'Schedule photo: $url' : '$notes\nSchedule photo: $url';
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not upload schedule photo.')),
+          );
+        }
+      }
+    }
+
     final entry = SwimScheduleEntry(
       swimmerName: swimmer,
       scheduleType: _scheduleType,
@@ -91,7 +124,7 @@ class _ScheduleDepositorySectionState
       startTime: _optional(_startTimeController.text),
       location: _optional(_locationController.text),
       eventsLine: _optional(_eventsController.text),
-      notes: _optional(_notesController.text),
+      notes: notes.isEmpty ? null : notes,
     );
 
     final error =
@@ -106,6 +139,8 @@ class _ScheduleDepositorySectionState
         _locationController.clear();
         _eventsController.clear();
         _notesController.clear();
+        _schedulePhotoBytes = null;
+        _schedulePhotoName = null;
       }
     });
 
@@ -165,32 +200,53 @@ class _ScheduleDepositorySectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.compact ? 'Quick schedule upload' : 'Schedule & meet depot',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryDeep.withValues(alpha: 0.08),
+                AppColors.surfaceLight,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.compact
+                          ? 'Quick schedule upload'
+                          : 'Schedule & meet depot',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryDeep,
+                          ),
+                    ),
+                  ),
+                  if (widget.onOpenRaceIntelligence != null)
+                    FilledButton.tonalIcon(
+                      onPressed: widget.onOpenRaceIntelligence,
+                      icon: const Icon(Icons.flag_outlined, size: 18),
+                      label: const Text('Race plan'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Add meets, practices, race results, and schedule photos. '
+                'Tap a button below, fill the form, then tap Save.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textDark.withValues(alpha: 0.7),
+                      height: 1.4,
                     ),
               ),
-            ),
-            if (widget.onOpenRaceIntelligence != null)
-              TextButton.icon(
-                onPressed: widget.onOpenRaceIntelligence,
-                icon: const Icon(Icons.flag_outlined, size: 18),
-                label: const Text('Race plan'),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Add meets, practices, and race results (what she swam and her times). '
-          'Tap a button below, fill the form, then tap Save.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textDark.withValues(alpha: 0.7),
-                height: 1.4,
-              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -309,6 +365,40 @@ class _ScheduleDepositorySectionState
                       ),
                       maxLines: 3,
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isSaving ? null : _pickSchedulePhoto,
+                      icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                      label: Text(
+                        _schedulePhotoName == null
+                            ? 'Attach schedule photo'
+                            : 'Change photo (${_schedulePhotoName!})',
+                      ),
+                    ),
+                    if (_schedulePhotoBytes != null) ...[
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          _schedulePhotoBytes!,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isSaving
+                              ? null
+                              : () => setState(() {
+                                    _schedulePhotoBytes = null;
+                                    _schedulePhotoName = null;
+                                  }),
+                          child: const Text('Remove photo'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     KeyedSubtree(
                       key: _saveSectionKey,

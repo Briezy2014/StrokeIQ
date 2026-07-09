@@ -1,5 +1,4 @@
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import '../../core/utils/image_pick_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -233,24 +232,13 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   }
 
   Future<void> _uploadProfilePhoto() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty) return;
-    final file = result.files.first;
-    if (file.bytes == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not read the selected image.')),
-      );
-      return;
-    }
+    final picked = await pickImageFromUserChoice(context);
+    if (picked == null) return;
 
     setState(() => _isUploadingPhoto = true);
     final error = await ref.read(swimmerDataProvider.notifier).uploadProfilePhoto(
-          fileName: file.name,
-          bytes: file.bytes!,
+          fileName: picked.name,
+          bytes: picked.bytes,
         );
     if (!mounted) return;
     setState(() {

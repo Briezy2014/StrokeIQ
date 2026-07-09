@@ -82,24 +82,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SwimIqHeroBanner(height: 160, borderRadius: 16),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Create your account',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+              child: Column(
+                children: [
+                  const SwimIqAuthHeader(height: 180),
+                  const SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Center(
+                              child: SwimIqWordmark(
+                                fontSize: 28,
+                                onLightBackground: true,
                               ),
-                          textAlign: TextAlign.center,
-                        ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Create your account',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
                         const SizedBox(height: 8),
                         const Text(
                           'Built in the Water. Driven by Possibility.',
@@ -204,10 +216,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           onPressed: widget.onSwitchToLogin,
                           child: const Text('Already have an account? Sign in'),
                         ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
