@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|Athlete Website|Other Interests|Academic Honors|Athletic Honors|College Interests|Leadership & Service|Recruiting Email):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|SAT Score|ACT Score|Intended Major|Recruiting Status|Coach Email|Coach Phone|Athlete Website|Other Interests|Academic Honors|Athletic Honors|College Interests|Leadership & Service|Recruiting Email):\s*(.+)$',
   );
 
   final int? id;
@@ -66,6 +66,12 @@ class SwimmerProfile {
 
   /// Recruiting profile fields stored in structured notes.
   String? get gpa => _structuredNotesValue('GPA');
+  String? get satScore => _structuredNotesValue('SAT Score');
+  String? get actScore => _structuredNotesValue('ACT Score');
+  String? get intendedMajor => _structuredNotesValue('Intended Major');
+  String? get recruitingStatus => _structuredNotesValue('Recruiting Status');
+  String? get coachEmail => _structuredNotesValue('Coach Email');
+  String? get coachPhone => _structuredNotesValue('Coach Phone');
   String? get athleteWebsite => _structuredNotesValue('Athlete Website');
   String? get otherInterests => _structuredNotesValue('Other Interests');
   String? get academicHonors => _structuredNotesValue('Academic Honors');
@@ -179,6 +185,12 @@ class SwimmerProfile {
     String? trainingGroup,
     String? profilePhotoUrl,
     String? gpa,
+    String? satScore,
+    String? actScore,
+    String? intendedMajor,
+    String? recruitingStatus,
+    String? coachEmail,
+    String? coachPhone,
     String? athleteWebsite,
     String? otherInterests,
     String? academicHonors,
@@ -203,6 +215,12 @@ class SwimmerProfile {
     addLine('Training Group', trainingGroup);
     addLine('Profile Photo', profilePhotoUrl);
     addLine('GPA', gpa);
+    addLine('SAT Score', satScore);
+    addLine('ACT Score', actScore);
+    addLine('Intended Major', intendedMajor);
+    addLine('Recruiting Status', recruitingStatus);
+    addLine('Coach Email', coachEmail);
+    addLine('Coach Phone', coachPhone);
     addLine('Athlete Website', athleteWebsite);
     addLine('Other Interests', otherInterests);
     addLine('Academic Honors', academicHonors);

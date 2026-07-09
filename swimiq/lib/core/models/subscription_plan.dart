@@ -92,7 +92,8 @@ abstract final class SubscriptionCatalog {
       features: [
         'Everything in Basic',
         'Official PBs, meet results & USA Swimming standards',
-        'Athlete Passport & Recruiting Snapshot',
+        'Athlete Passport & College Recruiting Hub',
+        'Best Times Résumé & Meet History',
         'Video Lab (upload & organize videos)',
         'AI Dryland Coach — strength, core, mobility, injury prevention & stability',
         'Event-specific improvement recommendations',
@@ -115,7 +116,7 @@ abstract final class SubscriptionCatalog {
         'AI Performance Reports & improvement priorities',
         'AI-generated race strategy recommendations',
         'AI-powered season performance insights',
-        'Perfect for recruits, elite athletes & coaches',
+        'AI Recruiting Intelligence — college match & projections',
       ],
     ),
   ];

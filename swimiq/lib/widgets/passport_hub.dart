@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../core/utils/passport_metrics.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../screens/race_intelligence/race_intelligence_screen.dart';
 import '../screens/usa_standards/usa_standards_screen.dart';
 
@@ -85,15 +86,9 @@ class PassportHub extends ConsumerWidget {
           MaterialPageRoute(builder: (_) => const RaceIntelligenceScreen()),
         );
       case PassportHubDestination.recruitingCenter:
-        if (onOpenRecruitingCenter != null) {
-          onOpenRecruitingCenter!();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Scroll to Recruiting snapshot on your Athlete Passport™'),
-            ),
-          );
-        }
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CollegeRecruitingHubScreen()),
+        );
     }
   }
 }

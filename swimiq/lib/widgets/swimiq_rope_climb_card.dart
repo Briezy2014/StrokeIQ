@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/gamification/swimiq_badges.dart';
@@ -47,7 +49,12 @@ class SwimIqRopeClimbCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accent.withValues(alpha: 0.35),
+                        AppColors.primary.withValues(alpha: 0.2),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -72,7 +79,7 @@ class SwimIqRopeClimbCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 220,
+              height: 240,
               child: _RopeClimbScene(
                 climbFraction: daily.ropeClimbFraction,
                 swimIqScore: daily.overallSwimIqScore,
@@ -187,16 +194,17 @@ class _RopeClimbScene extends StatelessWidget {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final poolTop = height * 0.72;
-        final ropeTop = height * 0.08;
+        final ropeTop = height * 0.06;
         final ropeBottom = poolTop + 8;
-        final ropeX = width * 0.18;
+        final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const avatarSize = 46.0;
+        const avatarSize = 52.0;
         const labelHeight = 22.0;
         const bubbleGap = 4.0;
         final bubbleHeight = avatarSize + bubbleGap + labelHeight;
-        final top = (progressY - avatarSize / 2).clamp(0.0, height - bubbleHeight);
+        final top =
+            (progressY - avatarSize / 2).clamp(0.0, height - bubbleHeight);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -234,41 +242,78 @@ class _AvatarBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hue = (120 * climbFraction).clamp(0, 120).toDouble();
+    final hue = (200 * climbFraction).clamp(0, 200).toDouble();
+    final glow = 0.25 + (climbFraction * 0.45);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                HSLColor.fromAHSL(1, hue, 0.75, 0.55).toColor(),
-                AppColors.primary,
-              ],
-            ),
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: HSLColor.fromAHSL(1, hue, 0.9, 0.55)
+                        .toColor()
+                        .withValues(alpha: glow),
+                    blurRadius: 18,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Center(
-            child: Text('🏊', style: TextStyle(fontSize: 22)),
-          ),
+            ),
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    HSLColor.fromAHSL(1, hue, 0.85, 0.6).toColor(),
+                    AppColors.accent,
+                    AppColors.primary,
+                    HSLColor.fromAHSL(1, hue + 40, 0.85, 0.55).toColor(),
+                  ],
+                ),
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.45),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🏊‍♂️', style: TextStyle(fontSize: 24)),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            gradient: LinearGradient(
+              colors: [
+                Colors.white,
+                AppColors.surfaceLight,
+              ],
+            ),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Text(
             swimIqScore > 0
@@ -291,16 +336,44 @@ class _RopeClimbPainter extends CustomPainter {
 
   final double climbFraction;
 
+  static const _ropeColors = [
+    Color(0xFFEF4444),
+    Color(0xFFF97316),
+    Color(0xFFEAB308),
+    Color(0xFF22C55E),
+    Color(0xFF06B6D4),
+    Color(0xFF3B82F6),
+    Color(0xFF8B5CF6),
+    Color(0xFFEC4899),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    final poolRect = Rect.fromLTWH(0, size.height * 0.72, size.width, size.height * 0.28);
+    final skyRect = Rect.fromLTWH(0, 0, size.width, size.height * 0.72);
+    canvas.drawRect(
+      skyRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFFBAE6FD),
+            const Color(0xFFE0F2FE),
+            Colors.white.withValues(alpha: 0.4),
+          ],
+        ).createShader(skyRect),
+    );
+
+    final poolRect =
+        Rect.fromLTWH(0, size.height * 0.72, size.width, size.height * 0.28);
     final poolPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          AppColors.primary.withValues(alpha: 0.55),
+          AppColors.primary.withValues(alpha: 0.65),
           AppColors.primaryDeep,
+          const Color(0xFF0C4A6E),
         ],
       ).createShader(poolRect);
     canvas.drawRRect(
@@ -308,49 +381,138 @@ class _RopeClimbPainter extends CustomPainter {
       poolPaint,
     );
 
-    for (var i = 0; i < 6; i++) {
-      final y = poolRect.top + 8 + (i * 7);
+    for (var i = 0; i < 7; i++) {
+      final y = poolRect.top + 6 + (i * 8);
       canvas.drawLine(
         Offset(12, y),
-        Offset(size.width - 12, y + 3),
+        Offset(size.width - 12, y + 4),
         Paint()
-          ..color = Colors.white.withValues(alpha: 0.12)
+          ..color = Colors.white.withValues(alpha: 0.14)
           ..strokeWidth = 2,
       );
     }
 
-    final ropeX = size.width * 0.18;
-    final ropeTop = size.height * 0.08;
+    final ropeX = size.width * 0.2;
+    final ropeTop = size.height * 0.06;
     final ropeBottom = poolRect.top + 8;
 
-    final ropeColors = [
-      const Color(0xFFEF4444),
-      const Color(0xFFF97316),
-      const Color(0xFFEAB308),
-      const Color(0xFF22C55E),
-      const Color(0xFF06B6D4),
-      const Color(0xFF3B82F6),
-      const Color(0xFF8B5CF6),
-    ];
+    _drawPulley(canvas, Offset(ropeX, ropeTop - 4));
 
-    final segmentHeight = (ropeBottom - ropeTop) / ropeColors.length;
-    for (var i = 0; i < ropeColors.length; i++) {
+    final ropeHeight = ropeBottom - ropeTop;
+    final segmentHeight = ropeHeight / _ropeColors.length;
+
+    for (var i = 0; i < _ropeColors.length; i++) {
+      final segTop = ropeTop + segmentHeight * i;
+      final segBottom = ropeTop + segmentHeight * (i + 1);
+      final paint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            _ropeColors[i].withValues(alpha: 0.85),
+            _ropeColors[i],
+            _ropeColors[i].withValues(alpha: 0.75),
+          ],
+        ).createShader(Rect.fromLTWH(ropeX - 8, segTop, 16, segmentHeight))
+        ..strokeWidth = 12
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawLine(Offset(ropeX, segTop), Offset(ropeX, segBottom), paint);
+
+      for (var knot = 0; knot < 3; knot++) {
+        final ky = segTop + (segmentHeight * (knot + 1) / 4);
+        canvas.drawCircle(
+          Offset(ropeX, ky),
+          2.5,
+          Paint()..color = Colors.white.withValues(alpha: 0.35),
+        );
+      }
+    }
+
+    canvas.drawLine(
+      Offset(ropeX - 5, ropeTop),
+      Offset(ropeX - 5, ropeBottom),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.12)
+        ..strokeWidth = 14
+        ..strokeCap = StrokeCap.round,
+    );
+
+    final progressY = ropeBottom - (ropeHeight * climbFraction);
+    _drawSparkles(canvas, Offset(ropeX, progressY));
+
+    canvas.drawCircle(
+      Offset(ropeX, progressY),
+      10,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.white,
+            AppColors.accent.withValues(alpha: 0.8),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset(ropeX, progressY), radius: 10)),
+    );
+    canvas.drawCircle(
+      Offset(ropeX, progressY),
+      10,
+      Paint()
+        ..color = AppColors.primary.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+
+    final climbedHeight = ropeBottom - progressY;
+    if (climbedHeight > 4) {
       canvas.drawLine(
-        Offset(ropeX, ropeTop + segmentHeight * i),
-        Offset(ropeX, ropeTop + segmentHeight * (i + 1)),
+        Offset(ropeX + 6, progressY),
+        Offset(ropeX + 6, ropeBottom),
         Paint()
-          ..color = ropeColors[i]
-          ..strokeWidth = 10
+          ..color = Colors.white.withValues(alpha: 0.18)
+          ..strokeWidth = 3
           ..strokeCap = StrokeCap.round,
       );
     }
+  }
 
-    final progressY = ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
+  void _drawPulley(Canvas canvas, Offset center) {
     canvas.drawCircle(
-      Offset(ropeX, progressY),
-      8,
-      Paint()..color = Colors.white,
+      center,
+      14,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            const Color(0xFFFFE08A),
+            const Color(0xFFD97706),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: 14)),
     );
+    canvas.drawCircle(
+      center,
+      6,
+      Paint()..color = const Color(0xFF78350F),
+    );
+    canvas.drawCircle(
+      center,
+      14,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  void _drawSparkles(Canvas canvas, Offset center) {
+    for (var i = 0; i < 5; i++) {
+      final angle = i * 1.2;
+      final radius = 16 + (i * 3);
+      final x = center.dx + math.cos(angle) * radius;
+      final y = center.dy + math.sin(angle) * radius * 0.6;
+      canvas.drawCircle(
+        Offset(x, y),
+        2 + (i % 2),
+        Paint()..color = Colors.white.withValues(alpha: 0.65),
+      );
+    }
   }
 
   @override

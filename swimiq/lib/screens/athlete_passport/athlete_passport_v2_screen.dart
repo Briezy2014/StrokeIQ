@@ -8,6 +8,7 @@ import '../../data/models/personal_best_entry.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../core/utils/passport_metrics.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -26,7 +27,6 @@ class AthletePassportV2Screen extends ConsumerStatefulWidget {
 class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Screen> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
-  final _recruitingSnapshotKey = GlobalKey();
 
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
@@ -48,6 +48,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _athleticHonorsController;
   late final TextEditingController _collegeInterestsController;
   late final TextEditingController _leadershipController;
+  late final TextEditingController _satController;
+  late final TextEditingController _actController;
+  late final TextEditingController _intendedMajorController;
+  late final TextEditingController _recruitingStatusController;
+  late final TextEditingController _coachEmailController;
+  late final TextEditingController _coachPhoneController;
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
@@ -55,7 +61,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   DateTime? _birthday;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
-  int? _syncedProfileId;
+  Object? _syncedProfileKey;
 
   @override
   void initState() {
@@ -80,9 +86,19 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _athleticHonorsController = TextEditingController();
     _collegeInterestsController = TextEditingController();
     _leadershipController = TextEditingController();
+    _satController = TextEditingController();
+    _actController = TextEditingController();
+    _intendedMajorController = TextEditingController();
+    _recruitingStatusController = TextEditingController();
+    _coachEmailController = TextEditingController();
+    _coachPhoneController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _maybeSyncForm(ref.read(swimmerDataProvider).value?.profile);
+    });
   }
 
   @override
@@ -107,22 +123,17 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _athleticHonorsController.dispose();
     _collegeInterestsController.dispose();
     _leadershipController.dispose();
+    _satController.dispose();
+    _actController.dispose();
+    _intendedMajorController.dispose();
+    _recruitingStatusController.dispose();
+    _coachEmailController.dispose();
+    _coachPhoneController.dispose();
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _scrollToRecruitingSnapshot() {
-    final target = _recruitingSnapshotKey.currentContext;
-    if (target == null) return;
-    Scrollable.ensureVisible(
-      target,
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOut,
-      alignment: 0.08,
-    );
   }
 
   String? _optionalText(String value) {
@@ -136,10 +147,20 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     return int.tryParse(text);
   }
 
-  void _syncForm(SwimmerProfile? profile) {
-    if (_syncedProfileId == profile?.id && profile?.id != null) return;
-    _syncedProfileId = profile?.id;
+  void _maybeSyncForm(SwimmerProfile? profile) {
+    final key = Object.hash(
+      profile?.id,
+      profile?.swimmerName,
+      profile?.athleteNotes,
+      profile?.graduationYear,
+      profile?.coachName,
+    );
+    if (_syncedProfileKey == key) return;
+    _syncedProfileKey = key;
+    _syncForm(profile);
+  }
 
+  void _syncForm(SwimmerProfile? profile) {
     _firstNameController.text = profile?.firstName ?? '';
     _lastNameController.text = profile?.lastName ?? '';
     if (_firstNameController.text.isEmpty && _lastNameController.text.isEmpty) {
@@ -167,6 +188,13 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _athleticHonorsController.text = profile?.athleticHonors ?? '';
     _collegeInterestsController.text = profile?.collegeInterests ?? '';
     _leadershipController.text = profile?.leadershipService ?? '';
+    _satController.text = profile?.satScore ?? '';
+    _actController.text = profile?.actScore ?? '';
+    _intendedMajorController.text = profile?.intendedMajor ?? '';
+    _recruitingStatusController.text = profile?.recruitingStatus ?? '';
+    _coachEmailController.text =
+        profile?.coachEmail ?? profile?.recruitingEmail ?? '';
+    _coachPhoneController.text = profile?.coachPhone ?? '';
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
@@ -228,6 +256,12 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         athleticHonors: _athleticHonorsController.text,
         collegeInterests: _collegeInterestsController.text,
         leadershipService: _leadershipController.text,
+        satScore: _satController.text,
+        actScore: _actController.text,
+        intendedMajor: _intendedMajorController.text,
+        recruitingStatus: _recruitingStatusController.text,
+        coachEmail: _coachEmailController.text,
+        coachPhone: _coachPhoneController.text,
         notes: _notesController.text,
       ),
     );
@@ -239,7 +273,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     setState(() {
       _isSaving = false;
       if (error == null) {
-        _syncedProfileId = null;
+        _syncedProfileKey = null;
       }
     });
 
@@ -269,7 +303,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     if (!mounted) return;
     setState(() {
       _isUploadingPhoto = false;
-      if (error == null) _syncedProfileId = null;
+      if (error == null) _syncedProfileKey = null;
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -284,10 +318,13 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(swimmerDataProvider, (previous, next) {
+      _maybeSyncForm(next.value?.profile);
+    });
+
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final profile = data.profile;
-        _syncForm(profile);
         final displayName = profile?.displayName ?? swimmer;
         final dateFormat = DateFormat('MM/dd/yyyy');
 
@@ -317,11 +354,16 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               data: data,
               swimmer: swimmer,
               snapshot: snapshot,
-              onOpenRecruitingCenter: _scrollToRecruitingSnapshot,
+              onOpenRecruitingCenter: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CollegeRecruitingHubScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             _RecruitingSnapshotCard(
-              key: _recruitingSnapshotKey,
               profile: profile,
               snapshot: snapshot,
               personalBests: data.personalBests.take(4).toList(),
@@ -368,7 +410,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 Align(
                   alignment: Alignment.topCenter,
                   child: SwimIqMetricCard(
-                    label: 'Next Meet',
+                    label: 'Latest Meet',
                     value: snapshot.nextMeet,
                   ),
                 ),
@@ -548,12 +590,46 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                       ),
                       const SizedBox(height: 12),
                       _field(
+                        controller: _recruitingStatusController,
+                        label: 'Recruiting status',
+                        hint: 'Freshman, Sophomore, Junior, or Senior',
+                      ),
+                      _field(
+                        controller: _coachEmailController,
+                        label: 'Coach email',
+                        hint: 'coach@clubteam.com',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      _field(
+                        controller: _coachPhoneController,
+                        label: 'Coach phone',
+                        hint: 'Example: (555) 123-4567',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      _field(
                         controller: _gpaController,
                         label: 'Grade point average (GPA)',
                         hint: 'Example: 3.85',
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                      ),
+                      _field(
+                        controller: _satController,
+                        label: 'SAT score (optional)',
+                        hint: 'Example: 1280',
+                        keyboardType: TextInputType.number,
+                      ),
+                      _field(
+                        controller: _actController,
+                        label: 'ACT score (optional)',
+                        hint: 'Example: 28',
+                        keyboardType: TextInputType.number,
+                      ),
+                      _field(
+                        controller: _intendedMajorController,
+                        label: 'Intended major',
+                        hint: 'Example: Biology, Engineering, Business…',
                       ),
                       _field(
                         controller: _academicHonorsController,
@@ -971,9 +1047,36 @@ class _RecruitingSnapshotCard extends StatelessWidget {
     );
     addRow(
       icon: Icons.school_outlined,
+      label: 'Recruiting status',
+      value: profile?.recruitingStatus,
+    );
+    addRow(
+      icon: Icons.email_outlined,
+      label: 'Coach contact',
+      value: profile?.coachEmail ?? profile?.recruitingEmail,
+    );
+    addRow(
+      icon: Icons.phone_outlined,
+      label: 'Coach phone',
+      value: profile?.coachPhone,
+    );
+    addRow(
+      icon: Icons.school_outlined,
       label: 'GPA',
       value: profile?.gpa,
       highlight: true,
+    );
+    addRow(
+      icon: Icons.edit_note_outlined,
+      label: 'SAT / ACT',
+      value: profile?.satScore != null || profile?.actScore != null
+          ? 'SAT ${profile?.satScore ?? '—'} · ACT ${profile?.actScore ?? '—'}'
+          : null,
+    );
+    addRow(
+      icon: Icons.menu_book_outlined,
+      label: 'Intended major',
+      value: profile?.intendedMajor,
     );
     addRow(
       icon: Icons.military_tech_outlined,

@@ -218,12 +218,15 @@ class PassportMetrics {
     return bestLevel ?? 'No motivational cut matched yet';
   }
 
-  static String nextMeet(List<MeetResult> meetResults) {
+  static String latestMeet(List<MeetResult> meetResults) {
     if (meetResults.isEmpty) return 'No meet results logged yet';
     final sorted = [...meetResults]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
     return sorted.first.meetName;
   }
+
+  /// Most recent meet attended (displayed as "Latest Meet" in the passport).
+  static String nextMeet(List<MeetResult> meetResults) => latestMeet(meetResults);
 
   static String readiness({
     required List<RaceLog> raceLogs,

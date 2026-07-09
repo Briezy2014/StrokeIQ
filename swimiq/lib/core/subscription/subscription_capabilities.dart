@@ -95,6 +95,11 @@ class SubscriptionCapabilities {
     return true;
   }
 
+  static bool canAccessRecruitingHub(SubscriptionState state) => hasProAccess(state);
+
+  static bool canAccessRecruitingIntelligence(SubscriptionState state) =>
+      hasEliteAccess(state);
+
   static bool canUseRaceIntelligence(SubscriptionState state) =>
       hasEliteAccess(state);
 
