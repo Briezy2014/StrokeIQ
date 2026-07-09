@@ -362,6 +362,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   website: profile?.athleteWebsite,
                   graduationYear: profile?.graduationYear,
                   profilePhotoUrl: profile?.profilePhotoUrl,
+                  usaSwimmingId: profile?.usaSwimmingId,
                   topEvents: AthleteRecruitingBusinessCard.topEventLines(
                     data.personalBests,
                   ).isNotEmpty

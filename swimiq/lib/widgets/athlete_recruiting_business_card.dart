@@ -18,6 +18,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     required this.topEvents,
     this.graduationYear,
     this.profilePhotoUrl,
+    this.usaSwimmingId,
   });
 
   final String displayName;
@@ -29,6 +30,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   final List<String> topEvents;
   final int? graduationYear;
   final String? profilePhotoUrl;
+  final String? usaSwimmingId;
 
   static List<String> topEventLines(List<PersonalBestEntry> personalBests) {
     if (personalBests.isEmpty) return const [];
@@ -142,11 +144,23 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             const SwimIqWordmark(fontSize: 14),
                             const SizedBox(height: 4),
                             Text(
-                              'Recruiting Card',
+                              'USA Swimming',
                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.4,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.3,
+                                  ),
+                            ),
+                            Text(
+                              usaSwimmingId?.trim().isNotEmpty == true
+                                  ? usaSwimmingId!.trim()
+                                  : 'Add ID in passport',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: usaSwimmingId?.trim().isNotEmpty == true
+                                        ? AppColors.accent
+                                        : Colors.white.withValues(alpha: 0.65),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.2,
                                   ),
                             ),
                           ],

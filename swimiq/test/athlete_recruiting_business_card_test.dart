@@ -19,12 +19,15 @@ void main() {
               '100 Butterfly 1:02.3 (SCY)',
             ],
             graduationYear: 2032,
+            usaSwimmingId: 'AB1234E5F',
           ),
         ),
       ),
     );
 
     expect(find.text('Aspyn Briezy'), findsOneWidget);
+    expect(find.text('USA Swimming'), findsOneWidget);
+    expect(find.text('AB1234E5F'), findsOneWidget);
     expect(find.text('Central Ohio Aquatics'), findsWidgets);
     expect(find.text('550'), findsOneWidget);
     expect(find.text('BB'), findsOneWidget);

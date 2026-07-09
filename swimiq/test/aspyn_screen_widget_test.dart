@@ -189,7 +189,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
-      expect(find.text('Recruiting Card'), findsOneWidget);
+      expect(find.text('USA Swimming'), findsOneWidget);
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
 
       await tester.scrollUntilVisible(
