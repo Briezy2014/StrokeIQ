@@ -454,17 +454,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
                 goals: current.goals,
                 profile: current.profile,
                 standards: current.usaStandards,
+                poseMetrics: poseMetrics,
               ),
         );
-        if (poseMetrics != null) {
-          analysis = analysis.copyWith(
-            analysisJson: {
-              ...?analysis.analysisJson,
-              'pose_metrics': poseMetrics.toJson(),
-              'engine': 'swimiq-v1-notes-mediapipe',
-            },
-          );
-        }
       }
 
       final analysisWithIds = analysis.copyWith(

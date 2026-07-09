@@ -242,7 +242,11 @@ void main() {
 
       expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);
-      expect(sections['Estimated time savings'], contains('estimate'));
+      expect(sections['Estimated time savings'], contains('Combined if you nail these'));
+      expect(sections['Estimated time savings'], isNot(contains('Add detailed upload notes')));
+      expect(sections['Coach notes for next race'], contains('race plan'));
+      expect(sections['Coach notes for next race'], isNot(contains('Event:')));
+      expect(sections['Coach notes for next race'], isNot(contains('PB reference')));
     });
 
     test('presenter hides legacy sections and renames practice priorities', () {

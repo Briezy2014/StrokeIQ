@@ -213,6 +213,7 @@ const analysisResponseSchema = {
     "top_3_priorities",
     "dryland_focus",
     "estimated_time_savings",
+    "coach_notes_for_next_race",
     "technique_score",
     "pace_score",
     "overall_score",
@@ -315,7 +316,12 @@ Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-r
 Provide next_race_goal as one concrete race target sentence tied to technique.
 For top_3_priorities: three race-day execution cues for the NEXT RACE (starts, underwater, tempo, breathing, finish) — NOT practice homework or filming reminders.
 For dryland_focus: list 3–4 specific dryland exercises with sets/reps (bands, planks, mobility) — NEVER pool sets or in-water drills.
-For estimated_time_savings: give a numeric range in seconds tied to the limiter you saw.
+For estimated_time_savings: REQUIRED. List 2–4 specific limiters you saw in the video and/or MediaPipe pose data.
+Format each line as: "• [what you saw]: 0.XX–0.XXs" then end with "Combined if you nail these on [event]: X.XX–X.XXs".
+Every number must tie to a visible limiter (start, hips, head, kick, tempo, finish). Never say "add upload notes" or generic placeholders.
+For coach_notes_for_next_race: REQUIRED. Write 5–7 short bullets speaking directly to the swimmer (use "you" or their name).
+Race-day steps a 10-year-old can follow but still useful for an 18-year-old: behind the blocks, start, mid-race cue from quick_con, last meters, finish.
+No admin labels like "Event:" or "PB reference" — sound like a supportive pool-deck coach.
 Do not invent split times or stroke counts you cannot verify from the video.
 Do not include disclaimers about missing AI or frame-by-frame analysis.`;
 }

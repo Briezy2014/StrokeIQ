@@ -408,7 +408,7 @@ class _CoachNotesEditor extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Editable — add race-day cues your coach wants on deck.',
+            'Your AI coach — clear race-day steps for swimmers ages 10–18. Tweak if your deck coach adds cues.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,
                 ),
@@ -418,7 +418,7 @@ class _CoachNotesEditor extends StatelessWidget {
             controller: controller,
             maxLines: 5,
             decoration: const InputDecoration(
-              hintText: 'Coach: add race-day cues, warm-up plan, mindset…',
+              hintText: 'AI coach notes appear here — edit to personalize…',
               filled: true,
             ),
           ),

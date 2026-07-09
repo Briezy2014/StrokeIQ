@@ -1,3 +1,4 @@
+import '../../data/models/swim_pose_metrics.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
@@ -17,6 +18,7 @@ class AiSwimAnalysisService {
     required List<SwimGoal> goals,
     SwimmerProfile? profile,
     List<UsaTimeStandard> standards = const [],
+    SwimPoseMetrics? poseMetrics,
   }) {
     final ctx = _AnalysisContext.build(
       video: video,
@@ -28,8 +30,8 @@ class AiSwimAnalysisService {
 
     final suggestions = _whatVideoSuggests(ctx);
     final priorities = _topThreePriorities(ctx);
-    final timeSavings = _estimatedTimeSavings(ctx);
-    final coachNotes = _coachNotesForNextRace(ctx, priorities);
+    final timeSavings = _estimatedTimeSavings(ctx, poseMetrics);
+    final coachNotes = _coachNotesForNextRace(ctx, priorities, poseMetrics);
     final quickPro = _quickPro(ctx, suggestions);
     final quickCon = _quickCon(ctx, suggestions);
     final nextRaceGoal = _nextRaceGoal(ctx, priorities);
@@ -73,7 +75,10 @@ class AiSwimAnalysisService {
         'next_race_goal': nextRaceGoal,
         'dryland_focus': dryland,
         'personal_best_seconds': ctx.personalBestSeconds,
-        'engine': 'swimiq-v1-notes',
+        if (poseMetrics != null) 'pose_metrics': poseMetrics.toJson(),
+        'engine': poseMetrics?.hasUsableMetrics == true
+            ? 'swimiq-v1-notes-mediapipe'
+            : 'swimiq-v1-notes',
       },
     );
   }
@@ -286,64 +291,190 @@ class AiSwimAnalysisService {
     return items.take(3).toList();
   }
 
-  String _estimatedTimeSavings(_AnalysisContext ctx) {
+  String _estimatedTimeSavings(
+    _AnalysisContext ctx,
+    SwimPoseMetrics? pose,
+  ) {
     final s = ctx.noteSignals;
-    final lines = <String>[];
+    final lines = <_TimeSavingLine>[];
+
+    void add(String limiter, double low, double high) {
+      lines.add(_TimeSavingLine(limiter: limiter, low: low, high: high));
+    }
 
     if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
-      lines.add('Sharper start: often 0.05–0.15s on a ${ctx.distance}m race');
+      add(
+        'Sharper block reaction (notes: ${s.reactionSeconds!.toStringAsFixed(2)}s)',
+        0.05,
+        0.15,
+      );
     }
     if (s.breakoutMeters != null && s.breakoutMeters! < 10) {
-      lines.add('Better underwater phase: ~0.1–0.2s per length (estimate)');
+      add(
+        'Longer underwater before breakout (${s.breakoutMeters}m noted)',
+        0.10,
+        0.20,
+      );
     }
     if (s.strokeCountPerLength != null) {
       final range = ctx.expectedStrokeCountRange;
       final spl = s.strokeCountPerLength!;
       if (range != null && spl > range.$2) {
-        lines.add('One fewer stroke per length: ~0.1–0.3s per 25 (estimate)');
+        add('One fewer stroke per length (~$spl now)', 0.10, 0.30);
+      } else if (range != null && spl < range.$1) {
+        add('Add rhythm without over-gliding (~$spl now)', 0.05, 0.15);
       }
     }
     if (s.tempoRushedLate == true) {
-      lines.add('Stable late-race tempo: ~0.1–0.2s on a sprint (estimate)');
+      add('Hold stroke length in the last ${ctx.isSprint ? '15m' : 'length'}', 0.10, 0.20);
     }
     if (s.breathesEveryStroke == true && ctx.isSprint) {
-      lines.add('One fewer breath on a 50: ~0.05–0.15s (estimate)');
+      add('One fewer breath on a ${ctx.distance}m ${ctx.stroke}', 0.05, 0.15);
+    }
+    if (s.mentionsFinish || s.finishExtensionMentioned == true) {
+      add('Full extension into the wall on the last stroke', 0.05, 0.12);
+    }
+
+    if (pose != null && pose.hasUsableMetrics) {
+      if (pose.hipDropDegrees != null && pose.hipDropDegrees! >= 6) {
+        add(
+          'Keep hips nearer the surface (MediaPipe hip drop ${pose.hipDropDegrees!.toStringAsFixed(0)}°)',
+          0.08,
+          0.22,
+        );
+      }
+      if (pose.headLiftScore != null && pose.headLiftScore! >= 0.30) {
+        add(
+          'Lower head on breaths — head lift score ${pose.headLiftScore!.toStringAsFixed(2)}',
+          0.05,
+          0.14,
+        );
+      }
+      if (pose.kickSymmetryScore != null && pose.kickSymmetryScore! < 72) {
+        add(
+          'Even kick rhythm both legs (symmetry ${pose.kickSymmetryScore!.toStringAsFixed(0)}/100)',
+          0.04,
+          0.12,
+        );
+      }
+      if (pose.avgBodyLineAngleDeg != null && pose.avgBodyLineAngleDeg! > 14) {
+        add(
+          'Flatter body line through the stroke (${pose.avgBodyLineAngleDeg!.toStringAsFixed(0)}° avg)',
+          0.06,
+          0.18,
+        );
+      }
+      if (lines.isEmpty && pose.bodyMechanicsCon != null) {
+        add('Fix ${pose.bodyMechanicsCon!.toLowerCase()}', 0.08, 0.20);
+      }
     }
 
     if (lines.isEmpty) {
-      return 'Add detailed upload notes to estimate where time is most likely hiding. '
-          'These ranges are coaching estimates, not measured from video.';
+      if (ctx.isSprint && ctx.stroke == 'Butterfly') {
+        add('Cleaner breathing rhythm on the second 25', 0.08, 0.15);
+        add('Stronger finish drive into the wall', 0.05, 0.10);
+      } else if (ctx.isSprint) {
+        add('Tighter streamline off the start and turns', 0.06, 0.14);
+        add('Hold tempo through the last 15 meters', 0.05, 0.12);
+      } else {
+        add('Steadier pacing on the middle ${ctx.distance ~/ 2}m', 0.15, 0.35);
+        add('Cleaner turns without losing momentum', 0.10, 0.25);
+      }
     }
 
-    final totalLow = lines.length * 0.05;
-    final totalHigh = lines.length * 0.15;
-    return '${_bulletBlock(lines)}\n\n'
-        'Rough combined range if priorities improve: '
-        '${totalLow.toStringAsFixed(2)}–${totalHigh.toStringAsFixed(2)}s '
-        '(estimates only — not measured from this upload).';
+    final bullets = lines
+        .map(
+          (line) =>
+              '• ${line.limiter}: ${line.low.toStringAsFixed(2)}–${line.high.toStringAsFixed(2)}s',
+        )
+        .join('\n');
+    final totalLow = lines.fold<double>(0, (sum, line) => sum + line.low);
+    final totalHigh = lines.fold<double>(0, (sum, line) => sum + line.high);
+
+    return '$bullets\n\n'
+        'Combined if you nail these on ${ctx.eventLabel}: '
+        '${totalLow.toStringAsFixed(2)}–${totalHigh.toStringAsFixed(2)}s';
   }
 
-  String _coachNotesForNextRace(_AnalysisContext ctx, List<String> priorities) {
+  String _coachNotesForNextRace(
+    _AnalysisContext ctx,
+    List<String> priorities,
+    SwimPoseMetrics? pose,
+  ) {
+    final name =
+        ctx.profile?.preferredName ?? ctx.profile?.swimmerName ?? 'You';
     final lines = <String>[
-      'Event: ${ctx.eventLabel}',
-      'Pre-race: confirm block settings and breakout kick count plan',
+      '$name — your race plan for ${ctx.eventLabel}:',
+      'Behind the blocks: two calm breaths, loose shoulders, eyes on the starter.',
     ];
 
-    if (ctx.noteSignals.reactionSeconds != null) {
+    if (ctx.noteSignals.reactionSeconds != null &&
+        ctx.noteSignals.reactionSeconds! > 0.70) {
       lines.add(
-        'Target reaction: low-${(ctx.noteSignals.reactionSeconds! - 0.03).clamp(0.55, 0.99).toStringAsFixed(2)}s range',
+        'On the beep: explode fast — tight streamline underwater before your first stroke.',
+      );
+    } else {
+      lines.add(
+        'On the beep: same start you practiced — streamline first, then build speed.',
       );
     }
+
+    switch (ctx.stroke) {
+      case 'Butterfly':
+        if (ctx.isSprint) {
+          lines.add(
+            'First 25: long strokes with hips up — breathe forward, not straight up.',
+          );
+          lines.add(
+            'Second 25: keep your rhythm snapping; try one fewer breath if you feel strong.',
+          );
+        } else {
+          lines.add(
+            'Every length: stay long in front — breathe before you feel desperate.',
+          );
+        }
+      case 'Backstroke':
+        lines.add(
+          'Stay patient on your start — hips high, steady kick, do not rush the catch.',
+        );
+      case 'Breaststroke':
+        lines.add(
+          'Long glide, quick pull — snap your kick and keep your head still on the surface.',
+        );
+      case 'Freestyle':
+        lines.add(
+          'Breathe to the side with one goggle in the water — hips rotate, do not lift your head.',
+        );
+      case 'IM':
+        lines.add(
+          'Race each stroke with a clear plan — transitions are free speed if you stay smooth.',
+        );
+      default:
+        break;
+    }
+
+    if (pose?.bodyMechanicsCon != null && pose!.bodyMechanicsCon!.isNotEmpty) {
+      lines.add('Video cue: ${pose.bodyMechanicsCon} — fix that every length.');
+    } else if (priorities.isNotEmpty) {
+      lines.add('Your #1 focus today: ${priorities.first}');
+    }
+
     if (ctx.noteSignals.strokeCountPerLength != null) {
       lines.add(
-        'Stroke-count target: ~${ctx.noteSignals.strokeCountPerLength} per length',
+        'Stroke-count check: aim for ~${ctx.noteSignals.strokeCountPerLength} per length without slowing down.',
       );
     }
-    if (priorities.isNotEmpty) {
-      lines.add('Race focus: ${priorities.first}');
-    }
+
+    lines.add(
+      'Last ${ctx.isSprint ? '5 meters' : '10 meters'}: do not coast — one strong stroke and reach to the wall.',
+    );
+
     if (ctx.personalBestSeconds != null) {
-      lines.add('PB reference: ${SwimTime.fromSeconds(ctx.personalBestSeconds!)}');
+      lines.add(
+        'You have gone ${SwimTime.fromSeconds(ctx.personalBestSeconds!)} — race smart and see if you can beat it.',
+      );
+    } else {
+      lines.add('After the race: name one thing you nailed and one thing to try again.');
     }
 
     return _bulletBlock(lines);
@@ -366,6 +497,18 @@ class AiSwimAnalysisService {
     if (ctx.matchingGoal != null) score += 4;
     return score.clamp(55, 88);
   }
+}
+
+class _TimeSavingLine {
+  const _TimeSavingLine({
+    required this.limiter,
+    required this.low,
+    required this.high,
+  });
+
+  final String limiter;
+  final double low;
+  final double high;
 }
 
 class _NoteSignals {
