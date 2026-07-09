@@ -28,11 +28,10 @@ abstract final class HomeTab {
   static const dashboard = 0;
   static const personalBests = 1;
   static const trainingLog = 2;
-  static const addSession = 3;
-  static const goals = 4;
-  static const meetResults = 5;
-  static const videoLab = 6;
-  static const passport = 7;
+  static const goals = 3;
+  static const meetResults = 4;
+  static const videoLab = 5;
+  static const passport = 6;
 }
 
 final homeTabIndexProvider = StateProvider<int>((ref) => HomeTab.dashboard);

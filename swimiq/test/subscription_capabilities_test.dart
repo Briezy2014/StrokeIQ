@@ -57,14 +57,13 @@ void main() {
       hasUsedTrial: true,
     );
 
-    expect(SubscriptionCapabilities.canAccessHomeTab(0, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(1, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(2, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(3, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(4, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(5, state), isFalse);
-    expect(SubscriptionCapabilities.canAccessHomeTab(6, state), isFalse);
-    expect(SubscriptionCapabilities.canAccessHomeTab(7, state), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.dashboard, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.personalBests, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.trainingLog, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.meetResults, state), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, state), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, state), isFalse);
     expect(SubscriptionCapabilities.canAccessGoals(state), isTrue);
     expect(SubscriptionCapabilities.canAccessBasicPersonalBests(state), isTrue);
     expect(SubscriptionCapabilities.canAccessWeeklyProgressReport(state), isTrue);
@@ -75,11 +74,11 @@ void main() {
   });
 
   test('subscription loading locks pro tabs until loaded', () {
-    expect(SubscriptionCapabilities.canAccessHomeTab(0, null), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(4, null), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(5, null), isFalse);
-    expect(SubscriptionCapabilities.canAccessHomeTab(6, null), isFalse);
-    expect(SubscriptionCapabilities.canAccessHomeTab(7, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.dashboard, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.meetResults, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, null), isFalse);
   });
 
   test('pro tier unlocks competitive tools but not elite ai', () {
@@ -141,8 +140,8 @@ void main() {
 
     expect(SubscriptionCapabilities.canUseProFeatures(state), isTrue);
     expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(6, state), isTrue);
-    expect(SubscriptionCapabilities.canAccessHomeTab(7, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, state), isTrue);
   });
 
   test('plan catalog uses updated tier names and badges', () {

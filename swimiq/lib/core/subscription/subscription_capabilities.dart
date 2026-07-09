@@ -1,5 +1,6 @@
 import '../models/subscription_plan.dart';
 import '../services/subscription_service.dart';
+import '../../providers/app_providers.dart';
 
 /// Feature access derived from subscription state.
 class SubscriptionCapabilities {
@@ -108,15 +109,14 @@ class SubscriptionCapabilities {
 
   static SubscriptionTier minimumTierForHomeTab(int tabIndex) {
     switch (tabIndex) {
-      case 0: // dashboard
-      case 1: // PBs (in-app tracking on Basic; official on Pro)
-      case 2: // log
-      case 3: // add
-      case 4: // goals
+      case HomeTab.dashboard:
+      case HomeTab.personalBests:
+      case HomeTab.trainingLog:
+      case HomeTab.goals:
         return SubscriptionTier.basic;
-      case 5: // meets
-      case 6: // video
-      case 7: // passport
+      case HomeTab.meetResults:
+      case HomeTab.videoLab:
+      case HomeTab.passport:
         return SubscriptionTier.pro;
       default:
         return SubscriptionTier.basic;

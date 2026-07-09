@@ -16,6 +16,7 @@ Future<void> showScheduleEntryFormSheet(
   BuildContext context, {
   required String initialType,
   Set<String>? allowedTypes,
+  bool startWithPhotoPicker = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -30,6 +31,7 @@ Future<void> showScheduleEntryFormSheet(
       child: _ScheduleEntryFormSheet(
         initialType: initialType,
         allowedTypes: allowedTypes,
+        startWithPhotoPicker: startWithPhotoPicker,
       ),
     ),
   );
@@ -148,10 +150,11 @@ class ScheduleDepositorySection extends ConsumerWidget {
         if (addTypes.isNotEmpty)
           ScheduleDepositoryActionBar(
             addTypes: addTypes,
-            onAdd: (type) => showScheduleEntryFormSheet(
+            onAdd: (type, {photoFirst = false}) => showScheduleEntryFormSheet(
               context,
               initialType: type,
               allowedTypes: addTypes,
+              startWithPhotoPicker: photoFirst,
             ),
           ),
       ],
@@ -245,10 +248,22 @@ class ScheduleDepositoryActionBar extends StatelessWidget {
     super.key,
     required this.addTypes,
     required this.onAdd,
+    this.showUploadPhoto = true,
   });
 
   final Set<String> addTypes;
-  final ValueChanged<String> onAdd;
+  final void Function(String type, {bool photoFirst}) onAdd;
+  final bool showUploadPhoto;
+
+  String get _defaultType {
+    if (addTypes.contains(SwimScheduleEntry.typeMeet)) {
+      return SwimScheduleEntry.typeMeet;
+    }
+    if (addTypes.contains(SwimScheduleEntry.typePractice)) {
+      return SwimScheduleEntry.typePractice;
+    }
+    return addTypes.first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -283,6 +298,12 @@ class ScheduleDepositoryActionBar extends StatelessWidget {
                 icon: const Icon(Icons.timer_outlined, size: 18),
                 label: const Text('Add result'),
               ),
+            if (showUploadPhoto)
+              OutlinedButton.icon(
+                onPressed: () => onAdd(_defaultType, photoFirst: true),
+                icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                label: const Text('Upload photo'),
+              ),
           ],
         ),
       ),
@@ -294,10 +315,12 @@ class _ScheduleEntryFormSheet extends ConsumerStatefulWidget {
   const _ScheduleEntryFormSheet({
     required this.initialType,
     this.allowedTypes,
+    this.startWithPhotoPicker = false,
   });
 
   final String initialType;
   final Set<String>? allowedTypes;
+  final bool startWithPhotoPicker;
 
   @override
   ConsumerState<_ScheduleEntryFormSheet> createState() =>
@@ -329,6 +352,9 @@ class _ScheduleEntryFormSheetState
       _scheduleType = allowed.first;
     } else {
       _scheduleType = widget.initialType;
+    }
+    if (widget.startWithPhotoPicker) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pickSchedulePhotoFromFiles());
     }
   }
 

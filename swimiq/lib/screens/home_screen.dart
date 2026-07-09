@@ -10,7 +10,6 @@ import '../providers/swimmer_data_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/swimiq_header.dart';
 import '../widgets/subscription_upgrade_panel.dart';
-import 'add_session/add_session_screen.dart';
 import 'athlete_passport/athlete_passport_v2_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
@@ -54,8 +53,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return const PersonalBestsScreen();
       case HomeTab.trainingLog:
         return const TrainingLogScreen();
-      case HomeTab.addSession:
-        return const AddSessionScreen();
       case HomeTab.goals:
         return const GoalsScreen();
       case HomeTab.meetResults:
@@ -147,14 +144,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         selectedIndex: selectedIndex,
         onDestinationSelected: _onTabSelected,
         destinations: [
-          _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 0, subscription),
-          _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', 1, subscription),
-          _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', 2, subscription),
-          _dest(Icons.add_circle_outline, Icons.add_circle, 'Add', 3, subscription),
-          _dest(Icons.flag_outlined, Icons.flag, 'Goals', 4, subscription),
-          _dest(Icons.stadium_outlined, Icons.stadium, 'Meets', 5, subscription),
-          _dest(Icons.videocam_outlined, Icons.videocam, 'Video', 6, subscription),
-          _dest(Icons.badge_outlined, Icons.badge, 'Passport', 7, subscription),
+          _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', HomeTab.dashboard, subscription),
+          _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
+          _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
+          _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
+          _dest(Icons.stadium_outlined, Icons.stadium, 'Meets', HomeTab.meetResults, subscription),
+          _dest(Icons.videocam_outlined, Icons.videocam, 'Video', HomeTab.videoLab, subscription),
+          _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
         ],
       ),
     );

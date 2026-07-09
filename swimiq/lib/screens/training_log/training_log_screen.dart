@@ -11,6 +11,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/schedule_depository_section.dart';
+import '../../widgets/swim_session_form_sheet.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../race_intelligence/race_intelligence_screen.dart';
@@ -46,8 +47,8 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SwimIqPageHero(
-                    title: 'Log & Schedule',
-                    subtitle: 'Training sessions · meets · practice schedules',
+                    title: 'Log',
+                    subtitle: 'Training, practices, meets & results',
                     stats: [
                       SwimIqHeroStat('${logs.length} sessions'),
                       SwimIqHeroStat('${data.schedules.length} schedule items'),
@@ -56,7 +57,10 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                   const SizedBox(height: 12),
                   SegmentedButton<int>(
                     segments: const [
-                      ButtonSegment(value: 0, label: Text('Training')),
+                      ButtonSegment(
+                        value: 0,
+                        label: Text('Training & practices'),
+                      ),
                       ButtonSegment(value: 1, label: Text('Meets & results')),
                     ],
                     selected: {_tabIndex},
@@ -86,10 +90,9 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                         onDeleteLog: (log) => _deleteLog(context, ref, log),
                         onDeletePractice: (entry) =>
                             _deletePractice(context, ref, entry),
-                        onLogSwim: () {
-                          ref.read(homeTabIndexProvider.notifier).state =
-                              HomeTab.addSession;
-                        },
+                        onLogSwim: () => showSwimSessionFormSheet(context),
+                        onUploadSwimPhoto: () =>
+                            showSwimSessionFormSheet(context, startWithPhotoPicker: true),
                       ),
                     )
                   : Padding(
@@ -105,8 +108,8 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
                         },
                         headerTitle: 'Meets & results',
                         headerSubtitle:
-                            'Saved meets and race results. Use the buttons '
-                            'below to add a new meet or official result.',
+                            'Saved meets and race results. Add manually or '
+                            'upload a heat sheet / results photo.',
                         emptyMessage:
                             'No meets or results yet. Tap a button below to add one.',
                         onOpenRaceIntelligence: () {
@@ -360,6 +363,7 @@ class _TrainingTabPanel extends StatelessWidget {
     required this.onDeleteLog,
     required this.onDeletePractice,
     required this.onLogSwim,
+    required this.onUploadSwimPhoto,
   });
 
   final List<RaceLog> logs;
@@ -369,6 +373,7 @@ class _TrainingTabPanel extends StatelessWidget {
   final void Function(RaceLog log) onDeleteLog;
   final void Function(SwimScheduleEntry entry) onDeletePractice;
   final VoidCallback onLogSwim;
+  final VoidCallback onUploadSwimPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -400,7 +405,7 @@ class _TrainingTabPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Training log',
+                      'Training & practices',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: AppColors.primaryDeep,
@@ -408,7 +413,7 @@ class _TrainingTabPanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Log swim sessions and schedule practices here.',
+                      'Log swims manually or upload a workout photo. Schedule practices here.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textDark.withValues(alpha: 0.7),
                             height: 1.4,
@@ -423,8 +428,8 @@ class _TrainingTabPanel extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 24),
                   child: EmptyStateMessage(
                     message:
-                        'No training logged yet. Tap Log swim below to record a session, '
-                        'or Add practice to schedule a workout.',
+                        'No training logged yet. Tap Log swim to enter a time, '
+                        'Upload photo for a workout snapshot, or Add practice to schedule.',
                   ),
                 ),
               if (logs.isNotEmpty) ...[
@@ -490,6 +495,11 @@ class _TrainingTabPanel extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.pool_outlined, size: 18),
                   label: const Text('Add practice'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onUploadSwimPhoto,
+                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  label: const Text('Upload photo'),
                 ),
               ],
             ),
