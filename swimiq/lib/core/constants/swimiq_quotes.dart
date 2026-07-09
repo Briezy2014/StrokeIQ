@@ -6,7 +6,7 @@ abstract final class SwimIqQuotes {
   ];
 
   static const personalBests = [
-    '"The water doesn\'t know your age — it only knows your effort."',
+    '"Speed is built in practice — race day just reveals the work."',
     '"Every PB starts with showing up when it\'s hard."',
     '"Champions are built one rep, one race, one brave moment at a time."',
     '"Your fastest self is waiting on the other side of consistent work."',
@@ -37,7 +37,7 @@ abstract final class SwimIqQuotes {
   ];
 
   static const usaStandards = [
-    '"Know your cuts. Chase your next letter. Earn your place on the wall."',
+    '"Know your times. Chase your next cut. Put in the work that gets you there."',
   ];
 
   static const recruiting = [
