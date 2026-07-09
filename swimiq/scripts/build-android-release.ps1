@@ -7,6 +7,9 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
+# Always patch Gradle/AGP versions before building (works even if git pull failed)
+& (Join-Path $PSScriptRoot "fix-android-gradle.ps1")
+
 $keyProps = Join-Path $repoRoot "android\key.properties"
 if (-not (Test-Path $keyProps)) {
     Write-Host ""
