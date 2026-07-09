@@ -28,6 +28,7 @@ void main() {
     expect(find.text('Aspyn Briezy'), findsOneWidget);
     expect(find.text('USA Swimming'), findsOneWidget);
     expect(find.text('AB1234E5F'), findsOneWidget);
+    expect(find.text('Swim'), findsNothing);
     expect(find.text('Central Ohio Aquatics'), findsWidgets);
     expect(find.text('550'), findsOneWidget);
     expect(find.text('BB'), findsOneWidget);

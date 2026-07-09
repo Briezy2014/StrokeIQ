@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 import '../data/models/personal_best_entry.dart';
-import '../data/models/swimmer_profile.dart';
-import 'swimiq_logo.dart';
 
 /// Wallet-sized recruiting card — always shows key fields with sensible fallbacks.
 class AthleteRecruitingBusinessCard extends StatelessWidget {
@@ -141,8 +139,6 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const SwimIqWordmark(fontSize: 14),
-                            const SizedBox(height: 4),
                             Text(
                               'USA Swimming',
                               style: Theme.of(context).textTheme.labelSmall?.copyWith(

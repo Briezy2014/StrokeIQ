@@ -9,6 +9,7 @@ import '../../core/utils/passport_metrics.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
+import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -353,23 +354,44 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   isUploadingPhoto: _isUploadingPhoto,
                   onUploadPhoto: _uploadProfilePhoto,
                 );
-                final recruitingCard = AthleteRecruitingBusinessCard(
-                  displayName: displayName,
-                  swimIqScore: snapshot.swimIqScore,
-                  highestCut: snapshot.highestCut,
-                  team: profile?.team,
-                  gpa: profile?.gpa,
-                  website: profile?.athleteWebsite,
-                  graduationYear: profile?.graduationYear,
-                  profilePhotoUrl: profile?.profilePhotoUrl,
-                  usaSwimmingId: profile?.usaSwimmingId,
-                  topEvents: AthleteRecruitingBusinessCard.topEventLines(
-                    data.personalBests,
-                  ).isNotEmpty
-                      ? AthleteRecruitingBusinessCard.topEventLines(
-                          data.personalBests,
-                        )
-                      : snapshot.personalBests.take(2).toList(),
+                final topEvents = AthleteRecruitingBusinessCard.topEventLines(
+                  data.personalBests,
+                ).isNotEmpty
+                    ? AthleteRecruitingBusinessCard.topEventLines(
+                        data.personalBests,
+                      )
+                    : snapshot.personalBests.take(2).toList();
+                final recruitingPanel = Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    RecruitingCardExportBar(
+                      snapshot: RecruitingCardSnapshot(
+                        displayName: displayName,
+                        swimIqScore: snapshot.swimIqScore,
+                        highestCut: snapshot.highestCut,
+                        team: profile?.team,
+                        gpa: profile?.gpa,
+                        website: profile?.athleteWebsite,
+                        topEvents: topEvents,
+                        graduationYear: profile?.graduationYear,
+                        usaSwimmingId: profile?.usaSwimmingId,
+                        fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AthleteRecruitingBusinessCard(
+                      displayName: displayName,
+                      swimIqScore: snapshot.swimIqScore,
+                      highestCut: snapshot.highestCut,
+                      team: profile?.team,
+                      gpa: profile?.gpa,
+                      website: profile?.athleteWebsite,
+                      graduationYear: profile?.graduationYear,
+                      profilePhotoUrl: profile?.profilePhotoUrl,
+                      usaSwimmingId: profile?.usaSwimmingId,
+                      topEvents: topEvents,
+                    ),
+                  ],
                 );
 
                 if (wide) {
@@ -378,7 +400,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                     children: [
                       Expanded(flex: 5, child: identity),
                       const SizedBox(width: 12),
-                      Expanded(flex: 4, child: recruitingCard),
+                      Expanded(flex: 4, child: recruitingPanel),
                     ],
                   );
                 }
@@ -388,7 +410,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                   children: [
                     identity,
                     const SizedBox(height: 12),
-                    recruitingCard,
+                    recruitingPanel,
                   ],
                 );
               },
