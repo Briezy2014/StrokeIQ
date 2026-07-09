@@ -4,8 +4,16 @@ SwimIQ on S: drive — GET YOUR UPDATES
 If KARA-SEE-UPDATES-NOW.bat is missing, your folder is on OLD main branch.
 All new features are on branch: cursor/dashboard-rope-schedule-fix-17e8
 
-OPTION A — paste in Command Prompt (works even with no .bat files)
------------------------------------------------------------------
+FASTEST FIX — make the file yourself (2 minutes):
+-------------------------------------------------
+1. Open Notepad
+2. Copy everything from GET-UPDATES-NOW.bat OR KARA-SEE-UPDATES-NOW.bat on GitHub
+3. Save As -> S:\swimiq\KARA-SEE-UPDATES-NOW.bat
+   (Save as type: All Files)
+4. Double-click KARA-SEE-UPDATES-NOW.bat
+
+OPTION A — paste in Command Prompt (no .bat needed)
+-------------------------------------------------
 cd /d S:\swimiq
 git fetch origin cursor/dashboard-rope-schedule-fix-17e8
 git checkout cursor/dashboard-rope-schedule-fix-17e8
