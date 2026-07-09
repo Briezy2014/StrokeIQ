@@ -1,7 +1,7 @@
 SwimIQ branding — three short file names
 ========================================
 
-*** LOGIN PAGE USES icon.png — put your square app picture here ***
+*** LOGIN PAGE USES icon.png — bundled in repo; replace with your 512x512 app icon if needed ***
 
 1) icon.png   (REQUIRED)
    Square app picture — 512 x 512 px.

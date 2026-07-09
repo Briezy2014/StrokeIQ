@@ -74,12 +74,7 @@ class SwimIqLoginBrand extends StatelessWidget {
             width: size - 20,
             height: size - 20,
             fit: BoxFit.contain,
-            fallback: SwimIqBrandedFallback(
-              variant: SwimIqBrandedVariant.icon,
-              width: size - 20,
-              height: size - 20,
-              borderRadius: 0,
-            ),
+            fallback: SwimIqPaintedMark(size: size - 20),
           ),
         ),
       ),

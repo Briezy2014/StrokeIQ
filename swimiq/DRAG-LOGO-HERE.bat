@@ -8,11 +8,11 @@ if "%~1"=="" (
   echo  SwimIQ - DRAG YOUR LOGO HERE
   echo ========================================
   echo.
-  echo Drag your 512x512 swimiq_icon.png ONTO this file.
+  echo Drag your 512x512 app icon ONTO this file.
   echo.
-  echo Or run: DRAG-LOGO-HERE.bat "C:\path\to\your\logo.png"
+  echo Or run: DRAG-LOGO-HERE.bat "C:\path\to\your\icon.png"
   echo.
-  echo Same as COPY-LOGO.bat - either file works.
+  echo Saves as assets\branding\icon.png (login screen uses this file).
   echo.
   pause
   exit /b 1
@@ -28,19 +28,17 @@ if not exist "%SRC%" (
 if not exist "assets\branding" mkdir "assets\branding"
 if not exist "web\icons" mkdir "web\icons"
 
-copy /Y "%SRC%" "assets\branding\swimiq_logo.png"
-copy /Y "%SRC%" "assets\branding\swimiq_icon.png"
+copy /Y "%SRC%" "assets\branding\icon.png"
 copy /Y "%SRC%" "web\favicon.png"
 copy /Y "%SRC%" "web\icons\Icon-512.png"
 copy /Y "%SRC%" "web\icons\Icon-192.png"
 
 echo.
 echo Done! Logo copied to:
-echo   assets\branding\swimiq_logo.png
-echo   assets\branding\swimiq_icon.png
+echo   assets\branding\icon.png   ^(login screen^)
 echo   web\favicon.png
 echo   web\icons\Icon-512.png
 echo   web\icons\Icon-192.png
 echo.
-echo Close Chrome, then run LAUNCH-CHROME.bat
+echo Close Chrome, then run KARA-SEE-UPDATES-NOW.bat
 pause

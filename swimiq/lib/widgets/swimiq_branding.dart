@@ -9,13 +9,8 @@ abstract final class SwimIqBranding {
   static const bannerAsset = 'assets/branding/banner.png';
   static const markAsset = 'assets/branding/mark.png';
 
-  /// Login, splash, signup — square app icon only (not banner, not generated text).
-  static const loginIconCandidates = [
-    iconAsset,
-    'assets/branding/swimiq_icon.png',
-    'assets/branding/swimiq_logo.png',
-    'assets/branding/swimiq_logo_square.png',
-  ];
+  /// Login, splash, signup — square app icon only ([iconAsset]).
+  static const loginIconCandidates = [iconAsset];
 
   /// Tight swimmer mark only (app bar, tab banner beside wordmark).
   static const markCandidates = [
