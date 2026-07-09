@@ -103,6 +103,8 @@ void main() {
       expect(find.byType(DropdownButtonFormField<dynamic>), findsNothing);
       expect(find.byType(DropdownButton<dynamic>), findsNothing);
 
+      expect(find.text('Recruiting Card'), findsOneWidget);
+
       await tester.scrollUntilVisible(
         find.text('Athlete Passport™ Command Center'),
         200,
