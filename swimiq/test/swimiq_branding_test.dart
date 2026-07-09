@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/widgets/swimiq_branding.dart';
@@ -58,6 +60,19 @@ void main() {
       SwimIqBranding.markAsset,
     );
     expect(AppConstants.brandIconAsset, SwimIqBranding.iconAsset);
+    expect(AppConstants.brandLogoAsset, 'assets/branding/logo.png');
     expect(AppConstants.brandIconSizePx, 512);
+  });
+
+  test('logo.png mirrors icon.png for brand folder naming', () {
+    final icon = File('assets/branding/icon.png');
+    final logo = File('assets/branding/logo.png');
+    expect(icon.existsSync(), isTrue, reason: 'login asset missing');
+    expect(logo.existsSync(), isTrue, reason: 'brand kit mirror missing');
+    expect(
+      icon.readAsBytesSync(),
+      logo.readAsBytesSync(),
+      reason: 'icon.png and logo.png must be identical — login reads icon.png only',
+    );
   });
 }

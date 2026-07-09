@@ -28,6 +28,7 @@ if not exist "assets\branding" mkdir "assets\branding"
 if not exist "web\icons" mkdir "web\icons"
 
 copy /Y "%SRC%" "assets\branding\icon.png"
+copy /Y "%SRC%" "assets\branding\logo.png"
 copy /Y "%SRC%" "web\favicon.png"
 copy /Y "%SRC%" "web\icons\Icon-512.png"
 copy /Y "%SRC%" "web\icons\Icon-192.png"
@@ -38,7 +39,8 @@ echo  LOGO SYNCED
 echo ========================================
 echo.
 echo Your icon is now in:
-echo   assets\branding\icon.png   ^(login screen^)
+echo   assets\branding\icon.png   ^(login — app reads this^)
+echo   assets\branding\logo.png   ^(mirror for your brand kit^)
 echo   web\favicon.png
 echo   web\icons\Icon-512.png
 echo   web\icons\Icon-192.png

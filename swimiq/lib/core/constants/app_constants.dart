@@ -1,8 +1,10 @@
 class AppConstants {
   static const appName = 'SwimIQ';
   static const trademark = 'SwimIQ™';
-  /// Primary brand asset — square PNG lockup (512×512).
+  /// Primary brand asset — square PNG lockup (512×512). Login/signup read this file.
   static const brandIconAsset = 'assets/branding/icon.png';
+  /// Mirror of [brandIconAsset] for brand-kit folder naming (`logo.png`).
+  static const brandLogoAsset = 'assets/branding/logo.png';
   static const brandIconSizePx = 512;
   static const tagline = '';
   static const brandTagline = 'Built in the Water. Driven by Possibility.';
