@@ -261,13 +261,11 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const markerWidth = 62.0;
-        const markerHeight = 62.0;
-        const labelHeight = 24.0;
-        const labelGap = 4.0;
-        final markerHeightTotal = markerHeight + labelGap + labelHeight;
-        final top =
-            (progressY - markerHeight / 2).clamp(0.0, height - markerHeightTotal);
+        const figureWidth = 38.0;
+        const figureHeight = 36.0;
+        const labelHeight = 22.0;
+        final markerTop =
+            (progressY - figureHeight / 2).clamp(0.0, height - figureHeight - labelHeight - 8);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -277,11 +275,11 @@ class _RopeClimbScene extends StatelessWidget {
               painter: _RopeClimbPainter(climbFraction: climbFraction),
             ),
             Positioned(
-              left: ropeX - (markerWidth / 2),
-              top: top,
+              left: ropeX + 10,
+              top: markerTop,
               child: _RopeSwimmerMarker(
-                width: markerWidth,
-                height: markerHeight,
+                figureWidth: figureWidth,
+                figureHeight: figureHeight,
                 swimIqScore: swimIqScore,
                 climbPercent: climbPercent,
               ),
@@ -295,38 +293,39 @@ class _RopeClimbScene extends StatelessWidget {
 
 class _RopeSwimmerMarker extends StatelessWidget {
   const _RopeSwimmerMarker({
-    required this.width,
-    required this.height,
+    required this.figureWidth,
+    required this.figureHeight,
     required this.swimIqScore,
     required this.climbPercent,
   });
 
-  final double width;
-  final double height;
+  final double figureWidth;
+  final double figureHeight;
   final int swimIqScore;
   final int climbPercent;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CustomPaint(
           painter: const RopeClimbingSwimmerPainter(),
-          size: Size(width, height),
+          size: Size(figureWidth, figureHeight),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(width: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                color: AppColors.primary.withValues(alpha: 0.12),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
@@ -475,6 +474,15 @@ class _RopeClimbPainter extends CustomPainter {
         ..color = AppColors.primary.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
+    );
+
+    canvas.drawLine(
+      Offset(ropeX + 11, progressY),
+      Offset(ropeX + 48, progressY),
+      Paint()
+        ..color = AppColors.primaryDeep.withValues(alpha: 0.35)
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
     );
 
     final climbedHeight = ropeBottom - progressY;
