@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// Small marker: swimmer climbing up the rope (vertical pose reads at a glance).
+/// Waist-up climber on the scene rope — no extra rope or splayed legs (reads as a person, not a squid).
 class RopeClimbingSwimmerPainter extends CustomPainter {
   const RopeClimbingSwimmerPainter();
 
@@ -12,116 +12,96 @@ class RopeClimbingSwimmerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final cx = w * 0.5;
-    final ropeX = cx;
+    final ropeX = w * 0.38;
 
-    canvas.drawCircle(
-      Offset(cx, h * 0.5),
-      w * 0.46,
-      Paint()..color = Colors.white.withValues(alpha: 0.96),
+    final pin = RRect.fromRectAndRadius(
+      Rect.fromLTWH(w * 0.06, h * 0.04, w * 0.88, h * 0.88),
+      Radius.circular(w * 0.18),
     );
-    canvas.drawCircle(
-      Offset(cx, h * 0.5),
-      w * 0.46,
+    canvas.drawRRect(
+      pin,
+      Paint()..color = Colors.white.withValues(alpha: 0.94),
+    );
+    canvas.drawRRect(
+      pin,
       Paint()
-        ..color = AppColors.primary.withValues(alpha: 0.35)
+        ..color = AppColors.primary.withValues(alpha: 0.45)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
     );
 
-    final ropePaint = Paint()
-      ..color = const Color(0xFF92400E)
-      ..strokeWidth = w * 0.07
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(ropeX, h * 0.1),
-      Offset(ropeX, h * 0.9),
-      ropePaint,
-    );
-    for (var i = 0; i < 4; i++) {
-      final ky = h * (0.24 + i * 0.16);
-      canvas.drawCircle(
-        Offset(ropeX, ky),
-        w * 0.028,
-        Paint()..color = const Color(0xFFD97706).withValues(alpha: 0.8),
-      );
-    }
-
     final skin = const Color(0xFFFFE0C2);
     final suit = AppColors.primaryDeep;
     final cap = AppColors.primary;
-    final limb = Paint()
-      ..color = AppColors.primaryDark
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.052
-      ..strokeCap = StrokeCap.round;
 
-    final head = Offset(cx, h * 0.24);
-    canvas.drawCircle(head, w * 0.11, Paint()..color = skin);
+    final headCenter = Offset(w * 0.56, h * 0.28);
+    final headR = w * 0.13;
+    canvas.drawCircle(headCenter, headR, Paint()..color = skin);
     canvas.drawArc(
-      Rect.fromCircle(center: head, radius: w * 0.11),
+      Rect.fromCircle(center: headCenter, radius: headR),
       math.pi * 1.05,
-      math.pi * 1.35,
-      false,
-      Paint()
-        ..color = cap
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.075,
+      math.pi * 1.1,
+      true,
+      Paint()..color = cap,
     );
     canvas.drawCircle(
-      Offset(head.dx - w * 0.04, head.dy + w * 0.01),
-      w * 0.02,
+      Offset(headCenter.dx - headR * 0.35, headCenter.dy + headR * 0.05),
+      w * 0.022,
       Paint()..color = const Color(0xFF0EA5E9),
     );
 
     final torso = RRect.fromRectAndRadius(
       Rect.fromCenter(
-        center: Offset(cx, h * 0.46),
-        width: w * 0.24,
+        center: Offset(w * 0.54, h * 0.52),
+        width: w * 0.3,
         height: h * 0.28,
       ),
-      Radius.circular(w * 0.08),
+      Radius.circular(w * 0.1),
     );
     canvas.drawRRect(torso, Paint()..color = suit);
 
-    final reachArm = Path()
-      ..moveTo(cx + w * 0.04, h * 0.34)
-      ..quadraticBezierTo(cx + w * 0.14, h * 0.16, ropeX, h * 0.14);
-    canvas.drawPath(reachArm, limb);
-    canvas.drawCircle(
-      Offset(ropeX, h * 0.14),
-      w * 0.034,
-      Paint()..color = skin,
+    final armStroke = Paint()
+      ..color = suit
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.075
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(
+      Offset(w * 0.48, h * 0.4),
+      Offset(ropeX, h * 0.18),
+      armStroke,
+    );
+    canvas.drawLine(
+      Offset(w * 0.46, h * 0.46),
+      Offset(ropeX, h * 0.34),
+      armStroke,
     );
 
-    final gripArm = Path()
-      ..moveTo(cx - w * 0.04, h * 0.38)
-      ..quadraticBezierTo(cx - w * 0.1, h * 0.28, ropeX, h * 0.3);
-    canvas.drawPath(gripArm, limb..strokeWidth = w * 0.046);
     canvas.drawCircle(
-      Offset(ropeX, h * 0.3),
-      w * 0.03,
-      Paint()..color = skin,
-    );
-
-    final leftLeg = Path()
-      ..moveTo(cx - w * 0.03, h * 0.58)
-      ..quadraticBezierTo(cx - w * 0.16, h * 0.72, cx - w * 0.08, h * 0.82);
-    final rightLeg = Path()
-      ..moveTo(cx + w * 0.03, h * 0.58)
-      ..quadraticBezierTo(cx + w * 0.14, h * 0.7, cx + w * 0.1, h * 0.84);
-    canvas.drawPath(leftLeg, limb..strokeWidth = w * 0.044);
-    canvas.drawPath(rightLeg, limb);
-
-    canvas.drawCircle(
-      Offset(cx - w * 0.08, h * 0.82),
-      w * 0.028,
+      Offset(ropeX, h * 0.18),
+      w * 0.045,
       Paint()..color = skin,
     );
     canvas.drawCircle(
-      Offset(cx + w * 0.1, h * 0.84),
-      w * 0.028,
+      Offset(ropeX, h * 0.34),
+      w * 0.04,
       Paint()..color = skin,
+    );
+
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(w * 0.54, h * 0.66),
+        width: w * 0.22,
+        height: h * 0.12,
+      ),
+      math.pi * 0.15,
+      math.pi * 0.7,
+      false,
+      Paint()
+        ..color = suit
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.07
+        ..strokeCap = StrokeCap.round,
     );
   }
 

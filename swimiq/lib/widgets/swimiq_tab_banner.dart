@@ -85,7 +85,7 @@ class _QuoteStrip extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Text(
           text,
           textAlign: TextAlign.center,
@@ -93,10 +93,10 @@ class _QuoteStrip extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.15,
-                height: 1.2,
-                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+                height: 1.25,
+                fontSize: 13.5,
               ),
         ),
       ),
@@ -112,18 +112,18 @@ class _CompactBannerStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 58,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
           const ColoredBox(color: Color(0xFF020812)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Center(
               child: SwimIqBrandedImage(
                 candidates: SwimIqBranding.tabBannerCandidates,
-                height: 36,
+                height: 44,
                 fit: BoxFit.contain,
                 alignment: Alignment.center,
                 fallback: const _BannerMarkFallback(),
@@ -131,7 +131,7 @@ class _CompactBannerStrip extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 6,
+            top: 8,
             right: 10,
             child: _ModuleChip(label: module),
           ),
@@ -152,9 +152,9 @@ class _BannerMarkFallback extends StatelessWidget {
         SwimIqBranding.markAsset,
         ...SwimIqBranding.markCandidates,
       ],
-      height: 34,
+      height: 40,
       fit: BoxFit.contain,
-      fallback: const SwimIqPaintedMark(size: 30),
+      fallback: const SwimIqPaintedMark(size: 36),
     );
   }
 }
@@ -167,7 +167,7 @@ class _ModuleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(999),
@@ -179,7 +179,7 @@ class _ModuleChip extends StatelessWidget {
               color: Colors.white,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
-              fontSize: 10,
+              fontSize: 11.5,
             ),
       ),
     );

@@ -90,34 +90,40 @@ class _DashboardMembershipPlansCardState
         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.35), width: 2),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                const Icon(Icons.card_membership, color: AppColors.primary),
-                const SizedBox(width: 8),
+                const Icon(Icons.card_membership, color: AppColors.primary, size: 22),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'Choose your SwimIQ plan',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: AppColors.primaryDeep,
+                          fontSize: 16,
                         ),
                   ),
                 ),
                 TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const MembershipScreen(),
                     ),
                   ),
-                  child: const Text('Compare all'),
+                  child: const Text('Compare all', style: TextStyle(fontSize: 12)),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               subscription.hasActiveServerPlan
                   ? 'You are on ${subscription.statusLabel}. Upgrade or change anytime.'
@@ -128,11 +134,16 @@ class _DashboardMembershipPlansCardState
                           'Pick the plan that fits your season.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey.shade700,
-                    height: 1.35,
+                    height: 1.25,
+                    fontSize: 11.5,
                   ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SegmentedButton<BillingCycle>(
+              style: SegmentedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
               segments: const [
                 ButtonSegment(value: BillingCycle.monthly, label: Text('Monthly')),
                 ButtonSegment(value: BillingCycle.annual, label: Text('Annual')),
@@ -142,7 +153,7 @@ class _DashboardMembershipPlansCardState
                 setState(() => _billingCycle = value.first);
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             ...SubscriptionCatalog.plans.map(
               (plan) => _DashboardPlanTile(
                 plan: plan,
@@ -197,8 +208,8 @@ class _DashboardPlanTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final featured = plan.isFeatured;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: featured
             ? AppColors.primary.withValues(alpha: 0.06)
@@ -224,7 +235,7 @@ class _DashboardPlanTile extends StatelessWidget {
                       plan.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
-                        fontSize: 15,
+                        fontSize: 14,
                       ),
                     ),
                     if (plan.badgeLabel != null) ...[
@@ -250,24 +261,24 @@ class _DashboardPlanTile extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   plan.tagline,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.grey.shade700,
-                    fontSize: 12,
-                    height: 1.3,
+                    fontSize: 11,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 Text(
                   plan.priceLabel(billingCycle),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     color: AppColors.primaryDeep,
-                    fontSize: 18,
+                    fontSize: 16,
                   ),
                 ),
                 if (plan.savingsLabel(billingCycle) != null)
@@ -286,12 +297,13 @@ class _DashboardPlanTile extends StatelessWidget {
           FilledButton(
             onPressed: canCheckout ? onSelect : null,
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              minimumSize: const Size(0, 34),
+              visualDensity: VisualDensity.compact,
             ),
             child: Text(
               buttonLabel,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
             ),
           ),
         ],

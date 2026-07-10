@@ -67,9 +67,9 @@ class DashboardScreen extends ConsumerWidget {
               climbPercent: daily.ropeClimbPercent,
             ),
             const SizedBox(height: 16),
-            const DashboardMembershipPlansCard(),
-            const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
+            const SizedBox(height: 12),
+            const DashboardMembershipPlansCard(),
             const SizedBox(height: 16),
             _EventCutsProgressSection(
               personalBests: personalBests,

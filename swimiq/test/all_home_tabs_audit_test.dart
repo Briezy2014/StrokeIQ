@@ -113,17 +113,17 @@ void main() {
       await tester.pumpWidget(_homeHarness(HomeTab.dashboard));
       await tester.pumpAndSettle();
 
-      expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
-      expect(find.text('SwimIQ Basic'), findsOneWidget);
-      expect(find.text('SwimIQ Pro'), findsOneWidget);
-      expect(find.text('SwimIQ Elite'), findsOneWidget);
+      expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('Daily Rope Climb'),
+        find.text('Choose your SwimIQ plan'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('Daily Rope Climb'), findsOneWidget);
+      expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
+      expect(find.text('SwimIQ Basic'), findsOneWidget);
+      expect(find.text('SwimIQ Pro'), findsOneWidget);
+      expect(find.text('SwimIQ Elite'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Log meets'),
         200,

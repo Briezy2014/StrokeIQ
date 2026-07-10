@@ -90,26 +90,27 @@ class SwimIqRopeClimbCard extends StatelessWidget {
               )
             else
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 5,
+                runSpacing: 5,
                 children: [
                   for (final badge in earned)
                     _BadgeChip(badge: badge, earned: true),
                 ],
               ),
             if (locked.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
               Text(
                 'Next badges to unlock',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: Colors.grey.shade700,
+                      fontSize: 12,
                     ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 5,
+                runSpacing: 5,
                 children: [
                   for (final badge in locked)
                     _BadgeChip(badge: badge, earned: false),
@@ -206,7 +207,7 @@ class _BadgeChip extends StatelessWidget {
     return Tooltip(
       message: badge.description,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: earned
               ? AppColors.primary.withValues(alpha: 0.12)
@@ -260,8 +261,8 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const markerWidth = 54.0;
-        const markerHeight = 54.0;
+        const markerWidth = 62.0;
+        const markerHeight = 62.0;
         const labelHeight = 24.0;
         const labelGap = 4.0;
         final markerHeightTotal = markerHeight + labelGap + labelHeight;
