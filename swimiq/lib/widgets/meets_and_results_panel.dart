@@ -14,6 +14,7 @@ import '../providers/swimmer_data_provider.dart';
 import '../screens/membership/membership_screen.dart';
 import '../screens/race_intelligence/race_intelligence_screen.dart';
 import 'meet_result_form_sheet.dart';
+import 'personal_best_upload_sheet.dart';
 import 'schedule_depository_section.dart';
 import 'swimiq_event_card.dart';
 
@@ -318,13 +319,18 @@ class MeetsAndResultsPanel extends ConsumerWidget {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                if (showProFeatures)
+                if (showProFeatures) ...[
                   FilledButton.icon(
                     onPressed: () => showMeetResultFormSheet(context),
                     icon: const Icon(Icons.emoji_events_outlined, size: 18),
                     label: const Text('Log meet result'),
-                  )
-                else
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => showPersonalBestUploadSheet(context),
+                    icon: const Icon(Icons.upload_outlined, size: 18),
+                    label: const Text('Upload best times'),
+                  ),
+                ] else ...[
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -334,6 +340,7 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                     icon: const Icon(Icons.emoji_events_outlined, size: 18),
                     label: const Text('Log meet result'),
                   ),
+                ],
                 OutlinedButton.icon(
                   onPressed: () {
                     if (showProFeatures) {
