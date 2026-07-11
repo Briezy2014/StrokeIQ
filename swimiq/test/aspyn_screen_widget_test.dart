@@ -257,6 +257,7 @@ void main() {
         find.textContaining('$pbCount official meet PBs'),
         findsOneWidget,
       );
+      expect(find.text('Upload best times'), findsOneWidget);
       expect(find.byType(SwimIqCompactMark), findsNothing);
     });
 

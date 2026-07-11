@@ -15,6 +15,7 @@ import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../providers/app_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/personal_bests_action_bar.dart';
 import '../../widgets/swimiq_event_card.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -40,9 +41,8 @@ class PersonalBestsScreen extends ConsumerWidget {
 
         if (showOfficial) {
           if (officialBests.isEmpty) {
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+            return _PersonalBestsLayout(
+              showOfficial: showOfficial,
               children: [
                 SwimIqPageHero(
                   showMark: false,
@@ -52,7 +52,8 @@ class PersonalBestsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const EmptyStateMessage(
                   message:
-                      'No official meet PBs yet. Add meet results on the Meets tab.',
+                      'No official PBs yet. Tap Upload best times to add your '
+                      'fastest events — they sync to your dashboard and passport.',
                 ),
               ],
             );
@@ -64,9 +65,8 @@ class PersonalBestsScreen extends ConsumerWidget {
             profile: data.profile,
           );
 
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+          return _PersonalBestsLayout(
+            showOfficial: showOfficial,
             children: [
               SwimIqPageHero(
                 showMark: false,
@@ -130,9 +130,8 @@ class PersonalBestsScreen extends ConsumerWidget {
 
         // Basic: in-app PB tracking from training log.
         if (trainingBests.isEmpty) {
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+          return _PersonalBestsLayout(
+            showOfficial: showOfficial,
             children: [
               SwimIqPageHero(
                 showMark: false,
@@ -143,7 +142,7 @@ class PersonalBestsScreen extends ConsumerWidget {
               const EmptyStateMessage(
                 message:
                     'Log training sessions to track your fastest in-app times. '
-                    'Upgrade to Pro for official meet PBs & USA standards.',
+                    'Upgrade to Pro to upload official best times with USA standards.',
               ),
               const SizedBox(height: 16),
               _ProPbsUpsell(),
@@ -151,9 +150,8 @@ class PersonalBestsScreen extends ConsumerWidget {
           );
         }
 
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        return _PersonalBestsLayout(
+          showOfficial: showOfficial,
           children: [
             SwimIqPageHero(
               showMark: false,
@@ -178,6 +176,33 @@ class PersonalBestsScreen extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _PersonalBestsLayout extends StatelessWidget {
+  const _PersonalBestsLayout({
+    required this.showOfficial,
+    required this.children,
+  });
+
+  final bool showOfficial;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: children,
+          ),
+        ),
+        PersonalBestsActionBar(showOfficial: showOfficial),
+      ],
     );
   }
 }
