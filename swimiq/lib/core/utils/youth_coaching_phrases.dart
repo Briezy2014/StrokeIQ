@@ -58,16 +58,28 @@ abstract final class YouthCoachingPhrases {
       'You reviewed the start on video — keep the same hard push into your '
       'streamline (arms tight behind your ears).';
 
+  static const blockReadyCue =
+      'Behind the blocks: eyes slightly down or out, loose shoulders, ready to go.';
+
+  static const takeYourMarksCue =
+      'On "take your marks": tighten your body — stay coiled and still.';
+
+  static const explodeOnBeepCue =
+      'On the beep: explode off the blocks into your streamline '
+      '(arms tight behind your ears).';
+
   static const startSharpeningCon =
-      'Work on your start — eyes on the starter, explode off the blocks on the beep, '
-      'and push into a tight streamline underwater (arms behind your ears).';
+      'Work on your start — eyes slightly down or out before the call, '
+      'tighten on "take your marks," then explode on the beep into your '
+      'streamline underwater.';
 
   static const startSharpeningNotesHint =
       'You noted your start — log a reaction time on your next upload so we can '
       'track block speed.';
 
   static const tightenBlockSetupPriority =
-      'On the blocks: eyes on the starter, stay still, and push off fast into your streamline.';
+      'Block routine: eyes slightly down or out, tighten on "take your marks," '
+      'explode on the beep into your streamline.';
 
   static String finishStrongProForEvent(String event) =>
       'Strong finish on $event — you completed your last stroke before touching the wall: '

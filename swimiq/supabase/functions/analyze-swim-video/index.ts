@@ -308,10 +308,11 @@ BODY MECHANICS PRECISION (REQUIRED):
   hips up / hips near the surface vs hips sinking, head down in streamline vs head lifting,
   flat body line (shoulder–hip–ankle), elbow angle at the catch, kick from the hips, kick symmetry.
 PLAIN LANGUAGE (REQUIRED for youth swimmers):
-- Use real swim words swimmers hear on deck: streamline, starter, breakout, body line, catch, kick.
-- NEVER replace streamline with "arrow position" or "underwater arrow" — always say streamline.
+- Use real swim words swimmers hear on deck: streamline, take your marks, breakout, body line, catch, kick.
+- NEVER tell swimmers to stare at the starter. Before the call: eyes slightly down or out, ready to go.
+- On "take your marks": tighten the body and stay coiled. On the beep: explode into streamline.
 - After a swim term, add a short plain-language hint in parentheses when it helps parents, e.g.
-  "tight streamline (arms squeezed behind your ears)" or "eyes on the starter."
+  "tight streamline (arms squeezed behind your ears)."
 - BAD: "Drive full extension on the last stroke at the wall."
 - GOOD: "Finish your final stroke completely before touching the wall. Reach all the way forward, keep driving through the water, and touch with a fully extended arm instead of shortening or gliding into the wall."
 - Explain less common terms when needed:
@@ -323,7 +324,7 @@ PLAIN LANGUAGE (REQUIRED for youth swimmers):
   and at least one top_3_priorities item. Do not ignore automated body-line data.
 - quick_pro should name a body-mechanics strength when pose data supports it.
 - quick_con should name the main body-mechanics limiter (hips, head, body line, elbow, or kick) when visible.
-- For start feedback use plain deck language, e.g. "Work on your start — eyes on the starter, explode off the blocks on the beep, and push into a tight streamline underwater." Never say "start phase needs sharpening" or "block snap" without explaining what to do.
+- For start feedback use plain deck language, e.g. "Work on your start — eyes slightly down or out before the call, tighten on take your marks, explode on the beep into your streamline underwater." Never say "start phase needs sharpening" or "block snap" without explaining what to do.
 
 Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context and on-device pose metrics below.
 
@@ -356,9 +357,9 @@ Format each line as: "• [what you saw]: 0.XX–0.XXs" then end with "Combined 
 Every number must tie to a visible limiter (start, hips, head, kick, tempo, finish). Never say "add upload notes" or generic placeholders.
 For coach_notes_for_next_race: REQUIRED. Write 5–7 short bullets speaking directly to the swimmer (use "you" or their name).
 Race-day steps a 10-year-old can follow but still useful for an 18-year-old:
-behind the blocks (eyes on the starter), start reaction, tight streamline underwater off the start and walls,
+behind the blocks (eyes slightly down or out), take your marks (tighten body), explode on the beep, tight streamline underwater off the start and walls,
 mid-race cue from quick_con, last meters, finish.
-Use proper swim words: streamline (not "arrow position"), starter, breakout. Add brief parent-friendly hints in parentheses only when helpful.
+Use proper swim words: streamline (not "arrow position"), take your marks, breakout. Add brief parent-friendly hints in parentheses only when helpful.
 No admin labels like "Event:" or "PB reference" — sound like a supportive pool-deck coach.
 Do not invent split times or stroke counts you cannot verify from the video.
 Do not include disclaimers about missing AI or frame-by-frame analysis.`;

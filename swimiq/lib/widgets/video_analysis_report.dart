@@ -567,7 +567,7 @@ class _CoachNotesEditor extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Your AI coach — race-day steps with real swim words (streamline, starter, breakout). '
+            'Your AI coach — race-day steps with real swim words (streamline, take your marks, breakout). '
             'Tweak if your deck coach adds cues.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,

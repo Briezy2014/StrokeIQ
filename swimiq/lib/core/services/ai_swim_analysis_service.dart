@@ -540,7 +540,8 @@ class AiSwimAnalysisService {
         ctx.profile?.preferredName ?? ctx.profile?.swimmerName ?? 'You';
     final lines = <String>[
       '$name — your race plan for ${ctx.eventLabel}:',
-      'Behind the blocks: two calm breaths, loose shoulders, eyes on the starter.',
+      YouthCoachingPhrases.blockReadyCue,
+      YouthCoachingPhrases.takeYourMarksCue,
       'Off the start and every wall: push into a tight streamline underwater '
       '(arms squeezed behind your ears) before your first stroke.',
     ];
