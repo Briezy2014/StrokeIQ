@@ -234,10 +234,18 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }
 
   String _friendlyGeminiFallbackMessage(String raw) {
-    final lower = raw.toLowerCase();
+    final extracted = _extractGeminiErrorDetail(raw);
+    final lower = extracted.toLowerCase();
     if (lower.contains('gemini_api_key')) {
       return 'Gemini is not configured yet — add GEMINI_API_KEY in Supabase '
           '(see swimiq/docs/GEMINI_SETUP.md). Notes-based coaching saved for now.';
+    }
+    if (lower.contains('inline analysis') ||
+        lower.contains('max ~18') ||
+        lower.contains('max ~15')) {
+      return 'Video analysis server needs an update — redeploy the analyze-swim-video '
+          'edge function (see swimiq/docs/GEMINI_SETUP.md). After deploy, clips up to '
+          '~100 MB work automatically. Notes-based coaching saved for now.';
     }
     if (lower.contains('too large')) {
       return 'Video is too large for analysis (max ~100 MB). Trim the clip and re-run. '
@@ -255,6 +263,15 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
     return 'Gemini video analysis was unavailable — notes-based coaching saved. '
         'Check swimiq/docs/GEMINI_SETUP.md if this keeps happening.';
+  }
+
+  /// Pulls the nested `error:` text from Supabase FunctionException strings.
+  String _extractGeminiErrorDetail(String raw) {
+    final match = RegExp(
+      r'error:\s*([^},]+)',
+      caseSensitive: false,
+    ).firstMatch(raw);
+    return match?.group(1)?.trim() ?? raw;
   }
 
   Future<void> _persistVideoAnalysis({
@@ -545,21 +562,23 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               poseMetrics: poseMetrics,
             );
       } on GeminiAnalysisException catch (error) {
+        final friendly = _friendlyGeminiFallbackMessage(error.message);
         analysis = _fallbackVideoAnalysis(
           video: video,
           current: current,
           poseMetrics: poseMetrics,
-          geminiFallbackReason: error.message,
+          geminiFallbackReason: friendly,
         );
-        fallbackNotice = _friendlyGeminiFallbackMessage(error.message);
+        fallbackNotice = friendly;
       } catch (error) {
+        final friendly = _friendlyGeminiFallbackMessage(error.toString());
         analysis = _fallbackVideoAnalysis(
           video: video,
           current: current,
           poseMetrics: poseMetrics,
-          geminiFallbackReason: error.toString(),
+          geminiFallbackReason: friendly,
         );
-        fallbackNotice = _friendlyGeminiFallbackMessage(error.toString());
+        fallbackNotice = friendly;
       }
 
       await _persistVideoAnalysis(

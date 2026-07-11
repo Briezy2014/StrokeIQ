@@ -323,6 +323,7 @@ PLAIN LANGUAGE (REQUIRED for youth swimmers):
   and at least one top_3_priorities item. Do not ignore automated body-line data.
 - quick_pro should name a body-mechanics strength when pose data supports it.
 - quick_con should name the main body-mechanics limiter (hips, head, body line, elbow, or kick) when visible.
+- For start feedback use plain deck language, e.g. "Work on your start — eyes on the starter, explode off the blocks on the beep, and push into a tight streamline underwater." Never say "start phase needs sharpening" or "block snap" without explaining what to do.
 
 Watch the attached swim video carefully. Combine what you SEE in the footage with the athlete context and on-device pose metrics below.
 

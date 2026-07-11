@@ -57,6 +57,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
     final engineLabel = VideoAnalysisPresenter.analysisEngineLabel(widget.analysis);
     final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
     final fallbackReason = VideoAnalysisScores.fallbackReason(widget.analysis);
+    final pipelineNote = VideoAnalysisScores.pipelineNote(widget.analysis);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,8 +66,18 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         const SizedBox(height: 12),
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ],
+        if (pipelineNote != null) ...[
+          Text(
+            pipelineNote,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                ),
+          ),
+          const SizedBox(height: 12),
+        ] else if (fallbackReason != null)
+          const SizedBox(height: 4),
         if (engineLabel != null) ...[
           Text(
             engineLabel,

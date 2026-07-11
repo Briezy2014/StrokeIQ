@@ -35,7 +35,19 @@ abstract final class VideoAnalysisScores {
       return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
     }
     return 'Estimated ratings from your upload notes — not frame-by-frame video. '
-        'Re-run after Gemini is configured for true video scores.';
+        'Gemini watches the clip; MediaPipe adds body-line numbers when enabled. '
+        'Re-run after the video server is updated for true video scores.';
+  }
+
+  /// Short explainer shown when Gemini failed and notes-based ratings are shown.
+  static String? pipelineNote(SwimVideoAnalysis analysis) {
+    if (analysis.isGeminiEngine) return null;
+    if (analysis.hasPoseMetrics) {
+      return 'MediaPipe body-line data was captured, but Gemini could not watch the '
+          'full video — ratings below are from your notes plus pose estimates.';
+    }
+    return 'MediaPipe measures body line on-device before analysis; Gemini watches the '
+        'video for coaching. Both need Gemini running — see the message above.';
   }
 
   static String? fallbackReason(SwimVideoAnalysis analysis) {

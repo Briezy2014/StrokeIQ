@@ -16,7 +16,7 @@ void main() {
         'quick_pro':
             '• Good breakout focus — you know when to take your first stroke after your underwater.',
         'quick_con':
-            '• Start phase needs sharpening — tighten block setup and the first underwater push.',
+            '• Work on your start — eyes on the starter, explode off the blocks on the beep, and push into a tight streamline underwater (arms behind your ears).',
       },
     );
 
@@ -25,7 +25,7 @@ void main() {
     expect(summary, contains('Going well:'));
     expect(summary, contains('Work on:'));
     expect(summary, contains('breakout'));
-    expect(summary, contains('Start phase'));
+    expect(summary, contains('starter'));
   });
 
   test('uses stored Gemini summaries when present', () {

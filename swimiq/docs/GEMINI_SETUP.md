@@ -14,7 +14,9 @@ SwimIQ Video Lab sends uploaded swim clips to **Google Gemini 2.0 Flash** throug
 
 Do **not** commit the key to git or paste it in chat.
 
-## 2. Deploy the Edge Functions
+## 2. Deploy the Edge Functions (required for large videos)
+
+**If you see "Video is too large for Gemini inline analysis (max ~18 MB)"**, your server is running an old build. Redeploy `analyze-swim-video` — the current version supports clips up to **~100 MB** via the Gemini File API.
 
 Install the [Supabase CLI](https://supabase.com/docs/guides/cli) on a computer, then:
 

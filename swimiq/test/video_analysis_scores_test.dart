@@ -32,6 +32,7 @@ void main() {
 
     expect(VideoAnalysisScores.legend(gemini), contains('video'));
     expect(VideoAnalysisScores.legend(notes), contains('upload notes'));
+    expect(VideoAnalysisScores.legend(notes), contains('MediaPipe'));
     expect(VideoAnalysisScores.fallbackReason(notes), isNull);
     expect(
       VideoAnalysisScores.fallbackReason(

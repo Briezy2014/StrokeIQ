@@ -124,7 +124,7 @@ class AiSwimAnalysisService {
         'Notes cite ~${rt.toStringAsFixed(2)}s reaction — for $event that is $tag.',
       );
     } else if (s.mentionsStart) {
-      items.add('Start phase may need sharpening for $event — log a reaction time to track it.');
+      items.add(YouthCoachingPhrases.startSharpeningNotesHint);
     }
 
     if (s.breakoutMeters != null) {
@@ -294,7 +294,7 @@ class AiSwimAnalysisService {
       return '• Breathing pattern may be costing rhythm on a sprint ${ctx.eventLabel}.';
     }
     if (s.mentionsStart && s.reactionSeconds == null) {
-      return '• Start phase needs sharpening — tighten block setup and the first underwater push.';
+      return '• ${YouthCoachingPhrases.startSharpeningCon}';
     }
     if (suggestions.isNotEmpty) {
       final limiter = suggestions.firstWhere(
@@ -373,7 +373,7 @@ class AiSwimAnalysisService {
     final event = ctx.eventLabel;
 
     if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
-      add('Tighten block setup and reaction for $event.');
+      add(YouthCoachingPhrases.tightenBlockSetupPriority);
     }
     if (s.breakoutMeters != null &&
         s.breakoutMeters! < 9 &&
@@ -775,7 +775,8 @@ class AiSwimAnalysisService {
       workOn = 'tempo rushed late in the race — keep the same rhythm on the last length.';
     } else if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
       workOn =
-          'start reaction (~${s.reactionSeconds!.toStringAsFixed(2)}s) — tighten block setup.';
+          'start reaction (~${s.reactionSeconds!.toStringAsFixed(2)}s) — '
+          '${YouthCoachingPhrases.tightenBlockSetupPriority.toLowerCase()}';
     } else {
       workOn = _summarySnippet(quickCon);
     }
