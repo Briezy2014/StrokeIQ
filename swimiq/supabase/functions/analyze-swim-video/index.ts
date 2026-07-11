@@ -608,7 +608,6 @@ function sanitizeCoachText(value: string): string {
       /hold streamline longer before breakout\.?/gi,
       "Stay in your tight streamline a little longer (arms squeezed behind your ears) before you take your first stroke.",
     ],
-    [/\bbreakout\b/gi, "coming up for your first stroke after underwater"],
     [/over-gliding/gi, "pausing too long with your arms stretched out"],
     [/body line/gi, "flat body position on the water"],
     [

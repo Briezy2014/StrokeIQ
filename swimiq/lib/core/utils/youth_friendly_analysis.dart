@@ -44,10 +44,6 @@ abstract final class YouthFriendlyAnalysis {
       YouthCoachingPhrases.holdStreamlinePriority,
     ),
     _PlainLanguageRule(
-      RegExp(r'\bbreakout\b', caseSensitive: false),
-      'coming up for your first stroke after underwater',
-    ),
-    _PlainLanguageRule(
       RegExp(r'over-gliding', caseSensitive: false),
       'pausing too long with your arms stretched out',
     ),

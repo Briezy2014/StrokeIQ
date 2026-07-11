@@ -213,7 +213,7 @@ class AiSwimAnalysisService {
     } else if (s.breakoutMeters != null && s.dolphinKickCount != null) {
       items.add(
         'Committed underwater work (${s.dolphinKickCount} dolphin kicks, '
-        'coming up for your first stroke at ${s.breakoutMeters}m).',
+        'breakout at ${s.breakoutMeters}m).',
       );
     }
 

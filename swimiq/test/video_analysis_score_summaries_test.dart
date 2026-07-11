@@ -14,7 +14,7 @@ void main() {
       overallScore: 68,
       analysisJson: {
         'quick_pro':
-            '• You are tracking when you come up for your first stroke after underwater.',
+            '• Good breakout focus — you know when to take your first stroke after your underwater.',
         'quick_con':
             '• Start phase needs sharpening — tighten block setup and the first underwater push.',
       },
@@ -24,7 +24,7 @@ void main() {
     expect(summary, contains('Race readiness'));
     expect(summary, contains('Going well:'));
     expect(summary, contains('Work on:'));
-    expect(summary, contains('first stroke'));
+    expect(summary, contains('breakout'));
     expect(summary, contains('Start phase'));
   });
 

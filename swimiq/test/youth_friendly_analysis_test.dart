@@ -34,7 +34,7 @@ void main() {
     );
     expect(
       YouthFriendlyAnalysis.plainLanguage('Solid breakout at 11m'),
-      contains('coming up for your first stroke after underwater'),
+      'Solid breakout at 11m',
     );
   });
 

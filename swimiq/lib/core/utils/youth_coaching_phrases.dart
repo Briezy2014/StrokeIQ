@@ -15,8 +15,8 @@ abstract final class YouthCoachingPhrases {
       'with a long arm before you touch.';
 
   static const breakoutAwarenessPro =
-      'You are tracking when you come up for your first stroke after underwater — '
-      'that race awareness helps you swim smarter.';
+      'Good breakout focus — you know when to take your first stroke after your '
+      'underwater. That race awareness helps you swim smarter.';
 
   static const solidBreakoutPro =
       'Solid underwater work — you stayed under long enough and carried your speed '
