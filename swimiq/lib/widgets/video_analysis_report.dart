@@ -84,7 +84,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
               if (pro != null)
                 Expanded(
                   child: _InsightCard(
-                    title: 'Quick pro',
+                    title: VideoAnalysisPresenter.strengthInsightTitle,
                     body: pro,
                     icon: Icons.thumb_up_alt_outlined,
                     accent: const Color(0xFF16A34A),
@@ -94,7 +94,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
               if (con != null)
                 Expanded(
                   child: _InsightCard(
-                    title: 'Quick con',
+                    title: VideoAnalysisPresenter.workOnInsightTitle,
                     body: con,
                     icon: Icons.trending_down,
                     accent: const Color(0xFFEA580C),
@@ -175,7 +175,7 @@ class _MediaPipeBodyMechanicsCard extends StatelessWidget {
                 if (pro != null)
                   Expanded(
                     child: _InsightCard(
-                      title: 'Body mechanics pro',
+                      title: VideoAnalysisPresenter.bodyStrengthInsightTitle,
                       body: pro,
                       icon: Icons.check_circle_outline,
                       accent: const Color(0xFF16A34A),
@@ -185,7 +185,7 @@ class _MediaPipeBodyMechanicsCard extends StatelessWidget {
                 if (con != null)
                   Expanded(
                     child: _InsightCard(
-                      title: 'Body mechanics con',
+                      title: VideoAnalysisPresenter.bodyWorkOnInsightTitle,
                       body: con,
                       icon: Icons.build_outlined,
                       accent: const Color(0xFFEA580C),
@@ -288,17 +288,17 @@ class _ScoreStrip extends StatelessWidget {
                 _ScoreTile(
                   title: VideoAnalysisScores.overallTitle,
                   value: analysis.overallScore,
-                  hint: VideoAnalysisScores.overallHint,
+                  hint: VideoAnalysisScores.overallSummary(analysis),
                 ),
                 _ScoreTile(
                   title: VideoAnalysisScores.techniqueTitle,
                   value: analysis.techniqueScore,
-                  hint: VideoAnalysisScores.techniqueHint,
+                  hint: VideoAnalysisScores.techniqueSummary(analysis),
                 ),
                 _ScoreTile(
                   title: VideoAnalysisScores.paceTitle,
                   value: analysis.paceScore,
-                  hint: VideoAnalysisScores.paceHint,
+                  hint: VideoAnalysisScores.paceSummary(analysis),
                 ),
               ];
               if (wide) {
@@ -377,10 +377,11 @@ class _ScoreTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             hint,
+            softWrap: true,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               color: Colors.grey.shade700,
-              height: 1.3,
+              height: 1.35,
               fontWeight: FontWeight.w600,
             ),
           ),

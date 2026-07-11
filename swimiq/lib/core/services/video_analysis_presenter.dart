@@ -16,6 +16,12 @@ abstract final class VideoAnalysisPresenter {
         'Top 3 priorities for your next race',
   };
 
+  /// Kid-friendly labels for strength / limiter insight cards.
+  static const strengthInsightTitle = 'What went well';
+  static const workOnInsightTitle = 'What to work on';
+  static const bodyStrengthInsightTitle = 'Body line — going well';
+  static const bodyWorkOnInsightTitle = 'Body line — work on next';
+
   static const sectionOrder = [
     'Quick pro from this video',
     'Quick con from this video',

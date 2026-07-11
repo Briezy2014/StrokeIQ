@@ -204,6 +204,9 @@ const analysisResponseSchema = {
     technique_score: { type: "INTEGER" },
     pace_score: { type: "INTEGER" },
     overall_score: { type: "INTEGER" },
+    overall_summary: { type: "STRING" },
+    technique_summary: { type: "STRING" },
+    pace_summary: { type: "STRING" },
   },
   required: [
     "quick_summary",
@@ -217,6 +220,9 @@ const analysisResponseSchema = {
     "technique_score",
     "pace_score",
     "overall_score",
+    "overall_summary",
+    "technique_summary",
+    "pace_summary",
   ],
 };
 
@@ -327,7 +333,14 @@ Scores are 0-100 integers where 50 = developing, 70 = strong club, 85+ = elite /
 technique_score = stroke mechanics (body line, catch, kick, breathing, turns).
 pace_score = tempo, rhythm, and race management (start speed, middle hold, back-half fade or build).
 overall_score = holistic race readiness combining both.
+Provide overall_summary, technique_summary, and pace_summary — each ONE or TWO short sentences in plain language for swimmers ages 10–18.
+Each summary MUST start with its topic label and include both a strength and a work-on cue:
+- overall_summary: race readiness (how complete and competitive the swim looked).
+- technique_summary: stroke mechanics (body line, catch, kick, breathing, turns).
+- pace_summary: tempo and rhythm (start speed, middle hold, back-half fade or build).
+Format example: "Race readiness — Going well: [strength]. Work on: [limiter]."
 Provide a quick_pro (one strength) and quick_con (one limiter) as short bullet-ready sentences with body-mechanics detail when relevant.
+quick_pro and quick_con are shown to youth swimmers — use clear words, not jargon like "pro" or "con".
 Provide next_race_goal as one concrete race target sentence tied to technique.
 For top_3_priorities: three race-day execution cues for the NEXT RACE (starts, underwater, tempo, breathing, finish) — NOT practice homework or filming reminders.
 For dryland_focus: list 3–4 specific dryland exercises with sets/reps (bands, planks, mobility) — NEVER pool sets or in-water drills.
@@ -417,6 +430,9 @@ function normalizeAnalysis(
       quick_con: sanitizeCoachText(String(parsed.quick_con)),
       next_race_goal: sanitizeCoachText(String(parsed.next_race_goal)),
       dryland_focus: sanitizeCoachText(String(parsed.dryland_focus)),
+      overall_summary: sanitizeCoachText(String(parsed.overall_summary ?? "")),
+      technique_summary: sanitizeCoachText(String(parsed.technique_summary ?? "")),
+      pace_summary: sanitizeCoachText(String(parsed.pace_summary ?? "")),
       youth_friendly: true,
     },
   };

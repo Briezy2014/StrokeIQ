@@ -52,6 +52,21 @@ class AiSwimAnalysisService {
     final techniqueScore = _techniqueScore(ctx, suggestions, poseMetrics);
     final paceScore = _paceScore(ctx);
     final overallScore = _overallScore(ctx, techniqueScore, paceScore);
+    final overallSummary = _overallSummary(
+      ctx,
+      overallScore,
+      quickPro,
+      quickCon,
+    );
+    final techniqueSummary = _techniqueSummary(
+      ctx,
+      techniqueScore,
+      suggestions,
+      poseMetrics,
+      quickPro,
+      quickCon,
+    );
+    final paceSummary = _paceSummary(ctx, paceScore, quickPro, quickCon);
 
     return YouthFriendlyAnalysis.sanitizeAnalysis(
       SwimVideoAnalysis(
@@ -79,6 +94,9 @@ class AiSwimAnalysisService {
           'quick_con': quickCon,
           'next_race_goal': nextRaceGoal,
           'dryland_focus': dryland,
+          'overall_summary': overallSummary,
+          'technique_summary': techniqueSummary,
+          'pace_summary': paceSummary,
           'personal_best_seconds': ctx.personalBestSeconds,
           if (poseMetrics != null) 'pose_metrics': poseMetrics.toJson(),
           'engine': poseMetrics?.hasUsableMetrics == true
@@ -664,6 +682,139 @@ class AiSwimAnalysisService {
       return (blended + 2).clamp(55, 90);
     }
     return blended.clamp(55, 88);
+  }
+
+  String _overallSummary(
+    _AnalysisContext ctx,
+    int score,
+    String quickPro,
+    String quickCon,
+  ) {
+    final good = _summarySnippet(quickPro);
+    final work = _summarySnippet(quickCon);
+    return _scoreSummaryLine(
+      category: 'Race readiness',
+      score: score,
+      goingWell: good.isNotEmpty
+          ? good
+          : (ctx.noteSignals.hasContent
+              ? 'you logged race details and stayed engaged through the swim.'
+              : 'getting this race on video so you can learn from it.'),
+      workOn: work.isNotEmpty
+          ? work
+          : 'start setup, underwater, and a complete finish at the wall.',
+    );
+  }
+
+  String _techniqueSummary(
+    _AnalysisContext ctx,
+    int score,
+    List<String> suggestions,
+    SwimPoseMetrics? pose,
+    String quickPro,
+    String quickCon,
+  ) {
+    final s = ctx.noteSignals;
+    String? goingWell;
+    String? workOn;
+
+    if (pose?.bodyMechanicsPro != null &&
+        pose!.bodyMechanicsPro!.trim().isNotEmpty) {
+      goingWell = pose.bodyMechanicsPro!.trim();
+    } else if (s.finishExtensionMentioned == true) {
+      goingWell =
+          'you finished with a complete last stroke and a strong touch.';
+    } else if (pose?.hipDropDegrees != null && pose!.hipDropDegrees! < 5) {
+      goingWell = 'your body line stayed flat with hips near the surface.';
+    } else {
+      goingWell = _summarySnippet(quickPro);
+    }
+
+    if (pose?.bodyMechanicsCon != null &&
+        pose!.bodyMechanicsCon!.trim().isNotEmpty) {
+      workOn = pose.bodyMechanicsCon!.trim();
+    } else if (s.breathesEveryStroke == true && ctx.isSprint) {
+      workOn =
+          'breathing every stroke on a sprint — try holding your breath a little longer.';
+    } else if (suggestions.isNotEmpty) {
+      workOn = _summarySnippet(suggestions.first);
+    } else {
+      workOn = _summarySnippet(quickCon);
+    }
+
+    return _scoreSummaryLine(
+      category: 'Stroke mechanics',
+      score: score,
+      goingWell: goingWell ?? 'parts of your pull, kick, and body line are building.',
+      workOn: workOn ?? 'hips up, head down, and a steady kick while you pull.',
+    );
+  }
+
+  String _paceSummary(
+    _AnalysisContext ctx,
+    int score,
+    String quickPro,
+    String quickCon,
+  ) {
+    final s = ctx.noteSignals;
+    String? goingWell;
+    String? workOn;
+
+    if (s.reactionSeconds != null && s.reactionSeconds! <= 0.68) {
+      goingWell =
+          'quick reaction off the blocks (~${s.reactionSeconds!.toStringAsFixed(2)}s).';
+    } else if (s.tempoRushedLate != true && s.mentionsTempo) {
+      goingWell = 'tempo stayed steady through the middle of the race.';
+    } else {
+      goingWell = _summarySnippet(quickPro);
+    }
+
+    if (s.tempoRushedLate == true) {
+      workOn = 'tempo rushed late in the race — keep the same rhythm on the last length.';
+    } else if (s.reactionSeconds != null && s.reactionSeconds! > 0.70) {
+      workOn =
+          'start reaction (~${s.reactionSeconds!.toStringAsFixed(2)}s) — tighten block setup.';
+    } else {
+      workOn = _summarySnippet(quickCon);
+    }
+
+    return _scoreSummaryLine(
+      category: 'Tempo and rhythm',
+      score: score,
+      goingWell: goingWell ?? 'you are learning how your race speed feels.',
+      workOn: workOn ?? 'even tempo from start through finish.',
+    );
+  }
+
+  String _summarySnippet(String text) {
+    final cleaned = text
+        .replaceFirst(RegExp(r'^[•\-\*]\s*'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (cleaned.isEmpty) return '';
+    final period = cleaned.indexOf('. ');
+    if (period > 0 && period < 140) {
+      return cleaned.substring(0, period + 1);
+    }
+    if (cleaned.length > 140) {
+      return '${cleaned.substring(0, 137).trim()}…';
+    }
+    return cleaned;
+  }
+
+  String _scoreSummaryLine({
+    required String category,
+    required int score,
+    required String goingWell,
+    required String workOn,
+  }) {
+    final good = goingWell.trim().isEmpty
+        ? 'keep building on what already feels strong.'
+        : goingWell.trim();
+    final work = workOn.trim().isEmpty
+        ? 'one clear focus for your next race.'
+        : workOn.trim();
+    return '$category — Going well: $good Work on: $work';
   }
 }
 

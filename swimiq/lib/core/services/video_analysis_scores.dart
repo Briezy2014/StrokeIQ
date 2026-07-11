@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../../data/models/swim_video_analysis.dart';
 import 'video_analysis_presenter.dart';
+import 'video_analysis_score_summaries.dart';
 
 /// Labels and copy for Video Lab AI score chips.
 abstract final class VideoAnalysisScores {
@@ -12,6 +13,16 @@ abstract final class VideoAnalysisScores {
   static const techniqueTitle = 'Technique';
   static const paceTitle = 'Pace';
 
+  static String overallSummary(SwimVideoAnalysis analysis) =>
+      VideoAnalysisScoreSummaries.overall(analysis);
+
+  static String techniqueSummary(SwimVideoAnalysis analysis) =>
+      VideoAnalysisScoreSummaries.technique(analysis);
+
+  static String paceSummary(SwimVideoAnalysis analysis) =>
+      VideoAnalysisScoreSummaries.pace(analysis);
+
+  /// Legacy static hints — prefer [overallSummary] and siblings per analysis.
   static const overallHint =
       'Race readiness — how complete and competitive this swim looked.';
   static const techniqueHint =
