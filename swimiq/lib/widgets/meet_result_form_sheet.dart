@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/utils/swim_event_options.dart';
 import '../core/utils/swimiq_camera_capture.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/swim_time.dart';
 import '../data/models/meet_result.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import 'swim_time_entry_fields.dart';
 import 'swimiq_ui.dart';
 
 Future<void> showMeetResultFormSheet(
@@ -45,14 +47,14 @@ class MeetResultFormSheet extends ConsumerStatefulWidget {
 
 class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
   final _formKey = GlobalKey<FormState>();
+  final _timeFieldsKey = GlobalKey<SwimTimeEntryFieldsState>();
   final _meetNameController = TextEditingController();
-  final _eventController = TextEditingController();
-  final _timeController = TextEditingController();
+  final _locationController = TextEditingController();
   final _notesController = TextEditingController();
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
 
   DateTime _meetDate = DateTime.now();
+  String _course = AppConstants.courses.first;
+  SwimEventOption? _selectedEvent;
   bool _isSaving = false;
   Uint8List? _photoBytes;
   String? _photoName;
@@ -68,11 +70,33 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
   @override
   void dispose() {
     _meetNameController.dispose();
-    _eventController.dispose();
-    _timeController.dispose();
+    _locationController.dispose();
     _notesController.dispose();
-    _courseController.dispose();
     super.dispose();
+  }
+
+  List<SwimEventOption> _eventOptions() {
+    final data = ref.read(swimmerDataProvider).value;
+    if (data == null) return const [];
+    return SwimEventOptions.forProfile(
+      catalog: data.motivationalStandards,
+      profile: data.profile,
+      course: _course,
+    );
+  }
+
+  SwimEventOption? _matchingSelection(List<SwimEventOption> options) {
+    if (options.isEmpty) return null;
+    final selected = _selectedEvent;
+    if (selected == null) return options.first;
+    for (final option in options) {
+      if (option.distance == selected.distance &&
+          option.stroke == selected.stroke &&
+          option.course == selected.course) {
+        return option;
+      }
+    }
+    return options.first;
   }
 
   Future<void> _pickDate() async {
@@ -80,7 +104,7 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
       context: context,
       initialDate: _meetDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
     );
     if (picked != null) setState(() => _meetDate = picked);
   }
@@ -111,18 +135,30 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final timeError = _timeFieldsKey.currentState?.validate();
+    if (timeError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(timeError)),
+      );
+      return;
+    }
+
+    final swimTime = _timeFieldsKey.currentState!.tryParseSeconds();
+    if (swimTime == null) return;
+
     final swimmer = ref.read(activeSwimmerProvider);
-    if (swimmer == null) return;
+    final selectedEvent = _matchingSelection(_eventOptions());
+    if (swimmer == null || selectedEvent == null) return;
 
     setState(() => _isSaving = true);
 
     try {
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
-      final swimTime = SwimTime.toSeconds(_timeController.text);
-
       var notes = _notesController.text.trim();
+      final location = _locationController.text.trim();
+      if (location.isNotEmpty) {
+        notes = notes.isEmpty ? 'Pool: $location' : 'Pool: $location\n$notes';
+      }
+
       if (_photoBytes != null) {
         try {
           final url =
@@ -131,7 +167,9 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
                     fileName: _photoName ?? 'meet-result.jpg',
                     bytes: _photoBytes!,
                   );
-          notes = notes.isEmpty ? 'Results photo: $url' : '$notes\nResults photo: $url';
+          notes = notes.isEmpty
+              ? 'Results photo: $url'
+              : '$notes\nResults photo: $url';
         } catch (_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -144,9 +182,9 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
       final result = MeetResult(
         swimmerName: swimmer,
         meetName: _meetNameController.text.trim(),
-        event: _eventController.text.trim(),
+        event: selectedEvent.meetResultEvent,
         swimTime: swimTime,
-        course: course,
+        course: selectedEvent.course,
         meetDate: _meetDate,
         notes: notes.isEmpty ? null : notes,
       );
@@ -158,7 +196,10 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
 
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save meet result: $error')),
+          SnackBar(
+            content: Text('Could not save meet result: $error'),
+            backgroundColor: Colors.red.shade700,
+          ),
         );
         return;
       }
@@ -166,17 +207,13 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
       final messenger = ScaffoldMessenger.of(context);
       if (mounted) Navigator.of(context).pop();
       messenger.showSnackBar(
-        const SnackBar(content: Text('Official meet result saved.')),
+        const SnackBar(content: Text('Meet result saved.')),
       );
-    } on FormatException {
+    } on FormatException catch (error) {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please enter result time like 35.43, 1:24.32, or 5:31.43.',
-            ),
-          ),
+          SnackBar(content: Text(error.message)),
         );
       }
     }
@@ -185,6 +222,8 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.yMMMd();
+    final eventOptions = _eventOptions();
+    final currentSelection = _matchingSelection(eventOptions);
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -199,7 +238,7 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Log official meet result',
+              'New meet result',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: AppColors.primaryDeep,
@@ -207,7 +246,7 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Enter times manually or attach a results / heat sheet photo.',
+              'Log the meet, pick your event, and enter your official time.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.7),
                   ),
@@ -215,62 +254,84 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _meetNameController,
-              decoration: const InputDecoration(labelText: 'Meet name'),
+              decoration: const InputDecoration(
+                labelText: 'Meet or session name',
+                hintText: '2026 OH LC Central Regional Championships',
+              ),
               validator: (value) =>
                   value == null || value.trim().isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 12),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Meet date'),
+              title: const Text('Date'),
               subtitle: Text(dateFormat.format(_meetDate)),
               trailing: const Icon(Icons.calendar_today),
               onTap: _pickDate,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _eventController,
+              controller: _locationController,
               decoration: const InputDecoration(
-                labelText: 'Event',
-                hintText: 'Example: 100 Butterfly',
+                labelText: 'Pool / location (optional)',
               ),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _timeController,
-              decoration: const InputDecoration(
-                labelText: 'Result time',
-                hintText: 'Example: 35.43 or 1:24.32',
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Result time is required';
-                }
-                try {
-                  SwimTime.toSeconds(value);
-                } on FormatException {
-                  return 'Use 35.43 or M:SS.hh format';
-                }
-                return null;
-              },
+            DropdownButtonFormField<String>(
+              value: _course,
+              decoration: const InputDecoration(labelText: 'Course'),
+              items: AppConstants.courses
+                  .map(
+                    (course) => DropdownMenuItem(
+                      value: course,
+                      child: Text(course),
+                    ),
+                  )
+                  .toList(),
+              onChanged: _isSaving
+                  ? null
+                  : (value) {
+                      if (value == null) return;
+                      setState(() {
+                        _course = value;
+                        _selectedEvent = null;
+                      });
+                    },
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _courseController,
-              decoration: const InputDecoration(
-                labelText: 'Course',
-                hintText: 'SCY, SCM, or LCM',
+            if (eventOptions.isEmpty)
+              const Text(
+                'Add birthday and gender in the Athlete Passport to load '
+                'official USA Swimming events.',
+              )
+            else
+              DropdownButtonFormField<SwimEventOption>(
+                value: currentSelection,
+                decoration: const InputDecoration(labelText: 'Event'),
+                isExpanded: true,
+                items: eventOptions
+                    .map(
+                      (option) => DropdownMenuItem(
+                        value: option,
+                        child: Text(option.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: _isSaving
+                    ? null
+                    : (value) => setState(() => _selectedEvent = value),
+                validator: (value) => value == null ? 'Pick an event' : null,
               ),
-            ),
+            const SizedBox(height: 12),
+            SwimTimeEntryFields(key: _timeFieldsKey),
             const SizedBox(height: 12),
             TextFormField(
               controller: _notesController,
               decoration: const InputDecoration(
                 labelText: 'Notes (optional)',
+                hintText: 'Finals notes, splits, or coach feedback',
               ),
-              maxLines: 2,
+              maxLines: 3,
             ),
             const SizedBox(height: 12),
             Row(
@@ -287,7 +348,7 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
                   child: OutlinedButton.icon(
                     onPressed: _isSaving ? null : _pickPhotoFromFiles,
                     icon: const Icon(Icons.upload_file_outlined, size: 18),
-                    label: const Text('Upload photo'),
+                    label: const Text('Upload'),
                   ),
                 ),
               ],
@@ -314,7 +375,7 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
             ],
             const SizedBox(height: 20),
             SwimIqSaveButton(
-              label: 'Save official result',
+              label: 'Save',
               isSaving: _isSaving,
               onPressed: _save,
             ),

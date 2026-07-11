@@ -182,8 +182,8 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(
-                    'Nothing logged yet. Use the buttons below to add a meet, '
-                    'log an official time, or upload a photo.',
+                    'Nothing logged yet. Tap Log meet result to add your first '
+                    'official time, or upload a heat sheet photo.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textDark.withValues(alpha: 0.65),
@@ -321,37 +321,28 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                 if (showProFeatures)
                   FilledButton.icon(
                     onPressed: () => showMeetResultFormSheet(context),
-                    icon: const Icon(Icons.timer_outlined, size: 18),
-                    label: const Text('Log official time'),
+                    icon: const Icon(Icons.emoji_events_outlined, size: 18),
+                    label: const Text('Log meet result'),
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const MembershipScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.emoji_events_outlined, size: 18),
+                    label: const Text('Log meet result'),
                   ),
-                FilledButton.tonalIcon(
-                  onPressed: () => showScheduleEntryFormSheet(
-                    context,
-                    initialType: SwimScheduleEntry.typeMeet,
-                    allowedTypes: scheduleTypes,
-                  ),
-                  icon: const Icon(Icons.emoji_events_outlined, size: 18),
-                  label: const Text('Add meet'),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: () => showScheduleEntryFormSheet(
-                    context,
-                    initialType: SwimScheduleEntry.typeRace,
-                    allowedTypes: scheduleTypes,
-                  ),
-                  icon: const Icon(Icons.list_alt_outlined, size: 18),
-                  label: const Text('Add result'),
-                ),
                 OutlinedButton.icon(
                   onPressed: () {
                     if (showProFeatures) {
                       showMeetResultFormSheet(context, startWithPhotoPicker: true);
                     } else {
-                      showScheduleEntryFormSheet(
-                        context,
-                        initialType: SwimScheduleEntry.typeMeet,
-                        allowedTypes: scheduleTypes,
-                        startWithPhotoPicker: true,
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const MembershipScreen(),
+                        ),
                       );
                     }
                   },
