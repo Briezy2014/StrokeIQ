@@ -48,10 +48,6 @@ abstract final class YouthFriendlyAnalysis {
       'coming up for your first stroke after underwater',
     ),
     _PlainLanguageRule(
-      RegExp(r'\bstreamline\b', caseSensitive: false),
-      'underwater arrow position (arms tight behind your ears)',
-    ),
-    _PlainLanguageRule(
       RegExp(r'over-gliding', caseSensitive: false),
       'pausing too long with your arms stretched out',
     ),

@@ -302,17 +302,17 @@ BODY MECHANICS PRECISION (REQUIRED):
   hips up / hips near the surface vs hips sinking, head down in streamline vs head lifting,
   flat body line (shoulder–hip–ankle), elbow angle at the catch, kick from the hips, kick symmetry.
 PLAIN LANGUAGE (REQUIRED for youth swimmers):
-- Never use swim jargon alone — always explain what it means in the same sentence.
+- Use real swim words swimmers hear on deck: streamline, starter, breakout, body line, catch, kick.
+- NEVER replace streamline with "arrow position" or "underwater arrow" — always say streamline.
+- After a swim term, add a short plain-language hint in parentheses when it helps parents, e.g.
+  "tight streamline (arms squeezed behind your ears)" or "eyes on the starter."
 - BAD: "Drive full extension on the last stroke at the wall."
 - GOOD: "Finish your final stroke completely before touching the wall. Reach all the way forward, keep driving through the water, and touch with a fully extended arm instead of shortening or gliding into the wall."
-- Replace jargon with kid-friendly words when needed:
-  breakout → coming up for your first stroke after underwater
-  streamline → underwater arrow position (arms tight behind your ears)
+- Explain less common terms when needed:
+  breakout → coming up for your first stroke after underwater (keep "breakout" if the sentence already explains it)
   over-gliding → pausing too long with arms stretched out
-  body line → flat body position on the water
-  high-elbow catch → pull with elbow high, like scooping water with your forearm
-- Use plain language after technical terms so a parent understands, e.g.
-  "hips dropping below the body line — think hips up, chest slightly down."
+  body line → flat body position on the water (shoulder–hip–ankle in a line)
+  high-elbow catch → pull with your elbow high, like scooping water with your forearm
 - When MediaPipe pose metrics are provided below, you MUST weave them into quick_pro, quick_con,
   and at least one top_3_priorities item. Do not ignore automated body-line data.
 - quick_pro should name a body-mechanics strength when pose data supports it.
@@ -348,7 +348,10 @@ For estimated_time_savings: REQUIRED. List 2–4 specific limiters you saw in th
 Format each line as: "• [what you saw]: 0.XX–0.XXs" then end with "Combined if you nail these on [event]: X.XX–X.XXs".
 Every number must tie to a visible limiter (start, hips, head, kick, tempo, finish). Never say "add upload notes" or generic placeholders.
 For coach_notes_for_next_race: REQUIRED. Write 5–7 short bullets speaking directly to the swimmer (use "you" or their name).
-Race-day steps a 10-year-old can follow but still useful for an 18-year-old: behind the blocks, start, mid-race cue from quick_con, last meters, finish.
+Race-day steps a 10-year-old can follow but still useful for an 18-year-old:
+behind the blocks (eyes on the starter), start reaction, tight streamline underwater off the start and walls,
+mid-race cue from quick_con, last meters, finish.
+Use proper swim words: streamline (not "arrow position"), starter, breakout. Add brief parent-friendly hints in parentheses only when helpful.
 No admin labels like "Event:" or "PB reference" — sound like a supportive pool-deck coach.
 Do not invent split times or stroke counts you cannot verify from the video.
 Do not include disclaimers about missing AI or frame-by-frame analysis.`;
@@ -461,13 +464,9 @@ function sanitizeCoachText(value: string): string {
     [/\bfull extension\b/gi, "a complete last stroke with your arm stretched out long"],
     [
       /hold streamline longer before breakout\.?/gi,
-      "Stay in your tight underwater arrow position a little longer (arms squeezed behind your ears) before you take your first stroke.",
+      "Stay in your tight streamline a little longer (arms squeezed behind your ears) before you take your first stroke.",
     ],
     [/\bbreakout\b/gi, "coming up for your first stroke after underwater"],
-    [
-      /\bstreamline\b/gi,
-      "underwater arrow position (arms tight behind your ears)",
-    ],
     [/over-gliding/gi, "pausing too long with your arms stretched out"],
     [/body line/gi, "flat body position on the water"],
     [

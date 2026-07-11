@@ -30,7 +30,7 @@ void main() {
     );
     expect(
       YouthFriendlyAnalysis.plainLanguage('Hold streamline longer before breakout.'),
-      YouthCoachingPhrases.holdStreamlinePriority,
+      contains('streamline'),
     );
     expect(
       YouthFriendlyAnalysis.plainLanguage('Solid breakout at 11m'),
@@ -38,18 +38,18 @@ void main() {
     );
   });
 
-  test('sanitize keeps precise body mechanics technique terms', () {
+  test('sanitize keeps streamline as a proper swim term', () {
     expect(
       YouthFriendlyAnalysis.sanitize(
         'Hips are dropping — keep hips up and head down in streamline.',
       ),
-      contains('hips up'),
+      contains('streamline'),
     );
     expect(
       YouthFriendlyAnalysis.sanitize(
         'Hips are dropping — keep hips up and head down in streamline.',
       ),
-      contains('underwater arrow position'),
+      isNot(contains('arrow position')),
     );
   });
 

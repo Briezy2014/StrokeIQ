@@ -253,7 +253,7 @@ class AiSwimAnalysisService {
       items.add(YouthCoachingPhrases.breakoutAwarenessPro);
     }
     if (items.isEmpty && s.mentionsStart) {
-      items.add(YouthCoachingPhrases.reviewedStartUnderwaterArrow);
+      items.add(YouthCoachingPhrases.reviewedStartStreamline);
     }
     if (items.isEmpty && ctx.notes.isNotEmpty) {
       items.add(
@@ -509,7 +509,7 @@ class AiSwimAnalysisService {
         add('Cleaner breathing rhythm on the second 25', 0.08, 0.15);
         add(YouthCoachingPhrases.strongerFinishReach, 0.05, 0.10);
       } else if (ctx.isSprint) {
-        add(YouthCoachingPhrases.tighterUnderwaterArrowOffWalls, 0.06, 0.14);
+        add(YouthCoachingPhrases.tighterStreamlineOffWalls, 0.06, 0.14);
         add('Hold tempo through the last 15 meters', 0.05, 0.12);
       } else {
         add('Steadier pacing on the middle ${ctx.distance ~/ 2}m', 0.15, 0.35);
@@ -541,11 +541,13 @@ class AiSwimAnalysisService {
     final lines = <String>[
       '$name — your race plan for ${ctx.eventLabel}:',
       'Behind the blocks: two calm breaths, loose shoulders, eyes on the starter.',
+      'Off the start and every wall: push into a tight streamline underwater '
+      '(arms squeezed behind your ears) before your first stroke.',
     ];
 
     if (ctx.noteSignals.reactionSeconds != null &&
         ctx.noteSignals.reactionSeconds! > 0.70) {
-      lines.add(YouthCoachingPhrases.fastStartUnderwaterArrow);
+      lines.add(YouthCoachingPhrases.fastStartStreamlineCue);
     } else {
       lines.add(YouthCoachingPhrases.practicedStartCue);
     }

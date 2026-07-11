@@ -23,19 +23,19 @@ abstract final class YouthCoachingPhrases {
       'when you came up for your first stroke.';
 
   static const holdStreamlinePriority =
-      'Stay in your tight underwater arrow position a little longer (arms squeezed '
-      'behind your ears) before you take your first stroke.';
+      'Stay in your tight streamline a little longer (arms squeezed behind your '
+      'ears) before you take your first stroke.';
 
   static const startStreamlineCue =
-      'On the beep: push off hard and go into your underwater arrow position first, '
+      'On the beep: push off hard and go into your streamline first, '
       'then build speed on your first stroke.';
 
   static const practicedStartCue =
-      'On the beep: use the same start you practiced — underwater arrow position first, '
+      'On the beep: use the same start you practiced — streamline first, '
       'then build speed.';
 
-  static const fastStartUnderwaterArrow =
-      'On the beep: push off hard and go into your underwater arrow position '
+  static const fastStartStreamlineCue =
+      'On the beep: push off hard and go into your streamline '
       '(arms tight behind your ears) before your first stroke.';
 
   static const avoidOverGlidingBetweenStrokes =
@@ -47,16 +47,16 @@ abstract final class YouthCoachingPhrases {
   static const strongerFinishReach =
       'One more strong stroke and a long reach to the wall before you touch';
 
-  static const tighterUnderwaterArrowOffWalls =
-      'Push off into your underwater arrow position (arms tight behind your ears) '
+  static const tighterStreamlineOffWalls =
+      'Push off into your streamline (arms tight behind your ears) '
       'off the start and every turn';
 
   static const longerUnderwaterBeforeFirstStroke =
       'Stay underwater a little longer before you come up for your first stroke';
 
-  static const reviewedStartUnderwaterArrow =
+  static const reviewedStartStreamline =
       'You reviewed the start on video — keep the same hard push into your '
-      'underwater arrow position (arms tight behind your ears).';
+      'streamline (arms tight behind your ears).';
 
   static String finishStrongProForEvent(String event) =>
       'Strong finish on $event — you completed your last stroke before touching the wall: '

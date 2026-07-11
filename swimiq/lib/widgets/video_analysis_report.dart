@@ -556,7 +556,8 @@ class _CoachNotesEditor extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Your AI coach — clear race-day steps for swimmers ages 10–18. Tweak if your deck coach adds cues.',
+            'Your AI coach — race-day steps with real swim words (streamline, starter, breakout). '
+            'Tweak if your deck coach adds cues.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,
                 ),
