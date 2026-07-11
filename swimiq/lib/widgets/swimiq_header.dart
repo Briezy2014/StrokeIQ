@@ -45,6 +45,26 @@ class SwimIqHeader extends StatelessWidget {
   }
 }
 
+class SwimIqCopyrightLine extends StatelessWidget {
+  const SwimIqCopyrightLine({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      AppConstants.copyright,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+            fontSize: compact ? 11 : 12,
+          ),
+    );
+  }
+}
+
 class SwimIqFooter extends StatelessWidget {
   const SwimIqFooter({super.key});
 
@@ -52,13 +72,7 @@ class SwimIqFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Text(
-        AppConstants.copyright,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey.shade600,
-            ),
-      ),
+      child: SwimIqCopyrightLine(),
     );
   }
 }

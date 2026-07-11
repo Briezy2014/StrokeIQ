@@ -39,6 +39,8 @@ class LegalDocumentScreen extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 24),
+              const SwimIqCopyrightLine(),
+              const SizedBox(height: 8),
               Text(
                 LegalConstants.settingsFooter,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(

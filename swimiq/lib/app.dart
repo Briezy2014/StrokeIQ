@@ -12,6 +12,7 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/swimiq_logo.dart';
+import 'widgets/swimiq_header.dart';
 
 /// Routes between splash, auth, and the main app based on session state.
 class SwimIqApp extends ConsumerStatefulWidget {
@@ -131,6 +132,8 @@ class _ConfigErrorScreen extends StatelessWidget {
                           'support@swimiqapp.com.'),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 24),
+              const SwimIqCopyrightLine(),
             ],
           ),
         ),

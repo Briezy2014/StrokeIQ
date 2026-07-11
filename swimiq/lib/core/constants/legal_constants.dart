@@ -1,3 +1,5 @@
+import 'app_constants.dart';
+
 /// Legal document metadata — update when forming LLC or when Aspyn Briez Williams
 /// assumes ownership at age 18 (see docs/legal/README.md).
 abstract final class LegalConstants {
@@ -36,8 +38,9 @@ abstract final class LegalConstants {
   static const aiConsentStorageKey = 'swimiq_ai_data_consent_v1';
 
   static const settingsFooter =
-      'SwimIQ provides coaching estimates only — not official meet timing or '
-      'medical advice. Confirm with your coach. © $lastUpdated $operatorName.';
+      '${AppConstants.copyright} · SwimIQ provides coaching estimates only — not '
+      'official meet timing or medical advice. Confirm with your coach. '
+      '$operatorName · $mailingCityStateZip';
 }
 
 enum LegalDocumentType {

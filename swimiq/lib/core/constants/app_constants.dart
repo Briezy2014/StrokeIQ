@@ -10,7 +10,7 @@ class AppConstants {
   static const brandTagline = 'Built in the Water. Driven by Possibility.';
   static const brandTaglineShort = 'Performance. Precision. Possibility.';
   static const founder = 'Kara Williams';
-  static const copyright = '© 2026 SwimIQ™';
+  static const copyright = '© 2026 SwimIQ';
 
   /// Set false to enforce Basic / Pro / Elite tab gates (before public launch).
   static const unlockAllTabsForPreview = false;

@@ -6,6 +6,7 @@ import '../../core/utils/auth_validators.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
 import '../../widgets/loading_button.dart';
+import '../../widgets/swimiq_header.dart';
 import '../../widgets/swimiq_logo.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -82,15 +83,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         const Center(
                           child: SwimIqLoginBrand(),
                         ),
@@ -201,10 +205,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           onPressed: widget.onSwitchToLogin,
                           child: const Text('Already have an account? Sign in'),
                         ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  const SwimIqCopyrightLine(),
+                ],
               ),
             ),
           ),

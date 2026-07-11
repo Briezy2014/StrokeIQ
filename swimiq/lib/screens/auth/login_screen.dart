@@ -10,6 +10,7 @@ import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
 import '../../widgets/loading_button.dart';
+import '../../widgets/swimiq_header.dart';
 import '../../widgets/swimiq_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -105,15 +106,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         const Center(
                           child: SwimIqLoginBrand(),
                         ),
@@ -200,10 +204,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: const Text('Owner test login (Elite AI)'),
                           ),
                         ],
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  const SwimIqCopyrightLine(),
+                ],
               ),
             ),
           ),

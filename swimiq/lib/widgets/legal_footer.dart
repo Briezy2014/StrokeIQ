@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_constants.dart';
 import '../core/constants/legal_constants.dart';
 import '../screens/legal/legal_document_screen.dart';
+import 'swimiq_header.dart';
 
 class LegalFooter extends StatelessWidget {
   const LegalFooter({super.key, this.compact = false});
@@ -46,6 +48,8 @@ class LegalFooter extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
+        SwimIqCopyrightLine(compact: compact),
+        const SizedBox(height: 6),
         Text(LegalConstants.settingsFooter, style: style),
       ],
     );

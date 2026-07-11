@@ -156,16 +156,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: _onTabSelected,
-        destinations: [
-          _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', HomeTab.dashboard, subscription),
-          _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
-          _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
-          _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
-          _dest(Icons.videocam_outlined, Icons.videocam, 'Video', HomeTab.videoLab, subscription),
-          _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 6, 16, 4),
+            child: SwimIqCopyrightLine(compact: true),
+          ),
+          NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: _onTabSelected,
+            destinations: [
+              _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', HomeTab.dashboard, subscription),
+              _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
+              _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
+              _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
+              _dest(Icons.videocam_outlined, Icons.videocam, 'Video', HomeTab.videoLab, subscription),
+              _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
+            ],
+          ),
         ],
       ),
     );

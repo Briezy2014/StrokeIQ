@@ -223,8 +223,8 @@ class SettingsScreen extends ConsumerWidget {
                 const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.waves),
-                  title: Text('Tagline'),
-                  subtitle: Text(AppConstants.tagline),
+                  title: Text('Copyright'),
+                  subtitle: Text(AppConstants.copyright),
                 ),
               ],
             ),
