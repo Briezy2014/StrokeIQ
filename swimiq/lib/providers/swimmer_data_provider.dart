@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/constants/app_constants.dart';
 import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/utils/youth_friendly_analysis.dart';
@@ -239,7 +240,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           '(see swimiq/docs/GEMINI_SETUP.md). Notes-based coaching saved for now.';
     }
     if (lower.contains('too large')) {
-      return 'Video is too large for Gemini (max ~18 MB). Trim the clip and re-run. '
+      return 'Video is too large for analysis (max ~100 MB). Trim the clip and re-run. '
+          'Notes-based coaching saved for now.';
+    }
+    if (lower.contains('timed out')) {
+      return 'Gemini took too long to process this clip — try a shorter video. '
           'Notes-based coaching saved for now.';
     }
     if (lower.contains('unauthorized') || lower.contains('authorization')) {
@@ -457,6 +462,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
+    if (bytes.length > AppConstants.maxGeminiVideoBytes) {
+      return 'Video is too large (max ~100 MB). Trim the clip and try again.';
+    }
 
     try {
       final inserted = await ref.read(videoStorageServiceProvider).uploadSwimVideo(

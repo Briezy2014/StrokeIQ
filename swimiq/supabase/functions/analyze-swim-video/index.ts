@@ -2,8 +2,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const BUCKET = "swim-videos";
-const MAX_VIDEO_BYTES = 18 * 1024 * 1024;
+/** Inline base64 limit for generateContent (Gemini request size cap). */
+const MAX_INLINE_BYTES = 18 * 1024 * 1024;
+/** Upper cap via Gemini File API (resumable upload). */
+const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
 const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_FILE_POLL_MS = 2000;
+const GEMINI_FILE_MAX_WAIT_MS = 120_000;
 
 const GEMINI_SAFETY_SETTINGS = [
   {
@@ -117,48 +122,49 @@ Deno.serve(async (req) => {
     }
 
     const videoBytes = new Uint8Array(await fileBlob.arrayBuffer());
-    if (videoBytes.length > MAX_VIDEO_BYTES) {
+    if (videoBytes.length > MAX_FILE_API_BYTES) {
       return jsonError(
-        "Video is too large for Gemini inline analysis (max ~18 MB). Trim the clip and try again.",
+        "Video is too large for analysis (max ~100 MB). Trim the clip and try again.",
         413,
       );
     }
 
     const mimeType = mimeTypeForPath(storagePath);
-    const base64Video = encodeBase64(videoBytes);
     const prompt = buildPrompt(body);
+    const useFileApi = videoBytes.length > MAX_INLINE_BYTES;
+    let geminiFileName: string | null = null;
 
-    const geminiPayload = {
-      contents: [
-        {
-          parts: [
-            { inline_data: { mime_type: mimeType, data: base64Video } },
-            { text: prompt },
-          ],
-        },
-      ],
-      safetySettings: GEMINI_SAFETY_SETTINGS,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: analysisResponseSchema,
-      },
-    };
-
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(geminiPayload),
-      },
-    );
-
-    if (!geminiResponse.ok) {
-      const errText = await geminiResponse.text();
-      return jsonError(`Gemini API error: ${errText}`, 502);
+    let geminiJson: Record<string, unknown>;
+    try {
+      if (useFileApi) {
+        const uploaded = await uploadVideoToGeminiFile(
+          geminiApiKey,
+          videoBytes,
+          mimeType,
+          body.title?.trim() || storagePath.split("/").pop() || "swim-video",
+        );
+        geminiFileName = uploaded.name;
+        await waitForGeminiFileActive(geminiApiKey, uploaded.name);
+        geminiJson = await callGeminiGenerateContent(geminiApiKey, {
+          file_data: { mime_type: mimeType, file_uri: uploaded.uri },
+        }, prompt);
+      } else {
+        const base64Video = encodeBase64(videoBytes);
+        geminiJson = await callGeminiGenerateContent(geminiApiKey, {
+          inline_data: { mime_type: mimeType, data: base64Video },
+        }, prompt);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.toLowerCase().includes("timed out")) {
+        return jsonError(message, 504);
+      }
+      return jsonError(message, 502);
+    } finally {
+      if (geminiFileName) {
+        await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
+      }
     }
-
-    const geminiJson = await geminiResponse.json();
     const candidate = geminiJson?.candidates?.[0];
     const finishReason = candidate?.finishReason;
     if (finishReason === "SAFETY" || finishReason === "BLOCKLIST") {
@@ -177,7 +183,7 @@ Deno.serve(async (req) => {
     }
 
     const parsed = JSON.parse(textPart) as Record<string, unknown>;
-    const analysis = normalizeAnalysis(parsed, body);
+    const analysis = normalizeAnalysis(parsed, body, useFileApi ? "file_api" : "inline");
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -357,9 +363,144 @@ Do not invent split times or stroke counts you cannot verify from the video.
 Do not include disclaimers about missing AI or frame-by-frame analysis.`;
 }
 
+type GeminiVideoPart =
+  | { inline_data: { mime_type: string; data: string } }
+  | { file_data: { mime_type: string; file_uri: string } };
+
+type GeminiUploadMethod = "inline" | "file_api";
+
+async function uploadVideoToGeminiFile(
+  apiKey: string,
+  videoBytes: Uint8Array,
+  mimeType: string,
+  displayName: string,
+): Promise<{ name: string; uri: string }> {
+  const startResponse = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Upload-Protocol": "resumable",
+        "X-Goog-Upload-Command": "start",
+        "X-Goog-Upload-Header-Content-Length": String(videoBytes.length),
+        "X-Goog-Upload-Header-Content-Type": mimeType,
+      },
+      body: JSON.stringify({ file: { display_name: displayName } }),
+    },
+  );
+
+  if (!startResponse.ok) {
+    const errText = await startResponse.text();
+    throw new Error(`Gemini file upload start failed: ${errText}`);
+  }
+
+  const uploadUrl = startResponse.headers.get("x-goog-upload-url");
+  if (!uploadUrl) {
+    throw new Error("Gemini file upload missing x-goog-upload-url header.");
+  }
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "Content-Length": String(videoBytes.length),
+      "X-Goog-Upload-Offset": "0",
+      "X-Goog-Upload-Command": "upload, finalize",
+    },
+    body: videoBytes,
+  });
+
+  if (!uploadResponse.ok) {
+    const errText = await uploadResponse.text();
+    throw new Error(`Gemini file upload failed: ${errText}`);
+  }
+
+  const uploadJson = await uploadResponse.json();
+  const file = uploadJson?.file as { name?: string; uri?: string } | undefined;
+  if (!file?.uri || !file?.name) {
+    throw new Error("Gemini file upload returned invalid file metadata.");
+  }
+
+  return { name: file.name, uri: file.uri };
+}
+
+async function waitForGeminiFileActive(
+  apiKey: string,
+  fileName: string,
+): Promise<void> {
+  const started = Date.now();
+  while (Date.now() - started < GEMINI_FILE_MAX_WAIT_MS) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`,
+    );
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini file status check failed: ${errText}`);
+    }
+    const fileJson = await response.json();
+    const state = (fileJson?.state ?? fileJson?.file?.state) as
+      | string
+      | undefined;
+    if (state === "ACTIVE") return;
+    if (state === "FAILED") {
+      throw new Error("Gemini could not process this video file.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, GEMINI_FILE_POLL_MS));
+  }
+  throw new Error(
+    "Gemini video processing timed out — try a shorter clip.",
+  );
+}
+
+async function deleteGeminiFile(apiKey: string, fileName: string): Promise<void> {
+  await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`,
+    { method: "DELETE" },
+  );
+}
+
+async function callGeminiGenerateContent(
+  apiKey: string,
+  videoPart: GeminiVideoPart,
+  prompt: string,
+): Promise<Record<string, unknown>> {
+  const geminiPayload = {
+    contents: [
+      {
+        parts: [
+          videoPart,
+          { text: prompt },
+        ],
+      },
+    ],
+    safetySettings: GEMINI_SAFETY_SETTINGS,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: analysisResponseSchema,
+    },
+  };
+
+  const geminiResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(geminiPayload),
+    },
+  );
+
+  if (!geminiResponse.ok) {
+    const errText = await geminiResponse.text();
+    throw new Error(`Gemini API error: ${errText}`);
+  }
+
+  return await geminiResponse.json() as Record<string, unknown>;
+}
+
 function normalizeAnalysis(
   parsed: Record<string, unknown>,
   body: AnalyzeRequest,
+  uploadMethod: GeminiUploadMethod = "inline",
 ) {
   const bullet = (items: unknown) =>
     Array.isArray(items)
@@ -420,6 +561,7 @@ function normalizeAnalysis(
     analysis_json: {
       engine,
       model: GEMINI_MODEL,
+      upload_method: uploadMethod,
       event: body.event_label,
       disclaimer,
       pose_metrics: body.pose_metrics ?? null,

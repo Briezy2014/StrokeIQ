@@ -30,7 +30,7 @@ See [GEMINI_SETUP.md](GEMINI_SETUP.md) for API key + deploy steps.
 
 - Side-on or 45° camera angle works best
 - Keep the full body in frame when possible
-- Clips under ~18 MB work best for Gemini
+- Clips up to ~100 MB are supported (larger files use Gemini File API automatically)
 - Add upload notes (start, underwater, strokes, breathing, finish)
 - Pool lighting and clear water help landmark detection
 

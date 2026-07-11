@@ -32,8 +32,10 @@ supabase functions deploy match-college-recruiting
 
 1. Run the Flutter app (`flutter run`)  
 2. Open the **Video** tab  
-3. Upload a swim clip (**keep under ~18 MB** for now)  
+3. Upload a swim clip (up to **~100 MB**)  
 4. Tap **Analyze** — Gemini watches the video and saves the report  
+
+Clips under ~18 MB use fast inline upload. Larger clips (18–100 MB) are sent through the **Gemini File API** automatically — no trimming required unless the file exceeds 100 MB.
 
 If the function is not deployed yet, the app falls back to the V1 notes-based report.
 
@@ -42,7 +44,8 @@ If the function is not deployed yet, the app falls back to the V1 notes-based re
 | Issue | Fix |
 |-------|-----|
 | `GEMINI_API_KEY is not configured` | Add the secret in Supabase and redeploy the function |
-| `Video is too large` | Trim the clip to under ~18 MB |
+| `Video is too large` | Trim the clip to under ~100 MB |
+| `timed out` | Use a shorter clip (under ~60 seconds works best) |
 | `Unauthorized` | Sign in with email/password first |
 | Analysis uses notes only | Edge function not deployed — follow step 2 |
 
