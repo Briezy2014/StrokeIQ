@@ -24,12 +24,12 @@ void main() {
       ),
     );
 
-    expect(find.text('550/1000 · 55%'), findsOneWidget);
-    expect(find.text('550/1000'), findsWidgets);
+    expect(find.text('550/1000'), findsOneWidget);
+    expect(find.text('550/1000 · 55%'), findsNothing);
     expect(find.text("Today's log"), findsOneWidget);
     expect(find.text('0/100'), findsOneWidget);
     expect(find.textContaining('550 out of 1000'), findsOneWidget);
     expect(find.textContaining('55%'), findsWidgets);
-    expect(find.byType(CustomPaint), findsWidgets);
+    expect(find.byIcon(Icons.star_rounded), findsOneWidget);
   });
 }

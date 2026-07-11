@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../core/gamification/swimiq_badges.dart';
 import '../core/gamification/swimiq_daily_progress.dart';
 import '../core/theme/app_theme.dart';
-import 'rope_climbing_swimmer_painter.dart';
 
 class SwimIqRopeClimbCard extends StatelessWidget {
   const SwimIqRopeClimbCard({
@@ -71,8 +70,6 @@ class SwimIqRopeClimbCard extends StatelessWidget {
               height: 240,
               child: _RopeClimbScene(
                 climbFraction: daily.ropeClimbFraction,
-                swimIqScore: daily.overallSwimIqScore,
-                climbPercent: daily.ropeClimbPercent,
               ),
             ),
             const SizedBox(height: 16),
@@ -241,13 +238,11 @@ class _BadgeChip extends StatelessWidget {
 class _RopeClimbScene extends StatelessWidget {
   const _RopeClimbScene({
     required this.climbFraction,
-    required this.swimIqScore,
-    required this.climbPercent,
   });
 
   final double climbFraction;
-  final int swimIqScore;
-  final int climbPercent;
+
+  static const _markerSize = 28.0;
 
   @override
   Widget build(BuildContext context) {
@@ -261,11 +256,8 @@ class _RopeClimbScene extends StatelessWidget {
         final ropeX = width * 0.2;
         final progressY =
             ropeBottom - ((ropeBottom - ropeTop) * climbFraction);
-        const figureWidth = 38.0;
-        const figureHeight = 36.0;
-        const labelHeight = 22.0;
         final markerTop =
-            (progressY - figureHeight / 2).clamp(0.0, height - figureHeight - labelHeight - 8);
+            (progressY - _markerSize / 2).clamp(0.0, height - _markerSize);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -275,14 +267,9 @@ class _RopeClimbScene extends StatelessWidget {
               painter: _RopeClimbPainter(climbFraction: climbFraction),
             ),
             Positioned(
-              left: ropeX + 10,
+              left: ropeX - (_markerSize / 2),
               top: markerTop,
-              child: _RopeSwimmerMarker(
-                figureWidth: figureWidth,
-                figureHeight: figureHeight,
-                swimIqScore: swimIqScore,
-                climbPercent: climbPercent,
-              ),
+              child: const _RopeProgressMarker(),
             ),
           ],
         );
@@ -291,57 +278,32 @@ class _RopeClimbScene extends StatelessWidget {
   }
 }
 
-class _RopeSwimmerMarker extends StatelessWidget {
-  const _RopeSwimmerMarker({
-    required this.figureWidth,
-    required this.figureHeight,
-    required this.swimIqScore,
-    required this.climbPercent,
-  });
-
-  final double figureWidth;
-  final double figureHeight;
-  final int swimIqScore;
-  final int climbPercent;
+/// Simple blue star on the rope — no custom swimmer art, no score pill overlay.
+class _RopeProgressMarker extends StatelessWidget {
+  const _RopeProgressMarker();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CustomPaint(
-          painter: const RopeClimbingSwimmerPainter(),
-          size: Size(figureWidth, figureHeight),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
+    return Container(
+      width: _RopeClimbScene._markerSize,
+      height: _RopeClimbScene._markerSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: AppColors.accent, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
-          child: Text(
-            swimIqScore > 0
-                ? '$swimIqScore/${SwimIqDailyProgress.ropeScoreMax} · $climbPercent%'
-                : '$climbPercent% up',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryDeep,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
+      child: const Icon(
+        Icons.star_rounded,
+        color: AppColors.primary,
+        size: 18,
+      ),
     );
   }
 }
@@ -474,15 +436,6 @@ class _RopeClimbPainter extends CustomPainter {
         ..color = AppColors.primary.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
-    );
-
-    canvas.drawLine(
-      Offset(ropeX + 11, progressY),
-      Offset(ropeX + 48, progressY),
-      Paint()
-        ..color = AppColors.primaryDeep.withValues(alpha: 0.35)
-        ..strokeWidth = 1.5
-        ..strokeCap = StrokeCap.round,
     );
 
     final climbedHeight = ropeBottom - progressY;
