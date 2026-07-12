@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
 import 'package:swimiq/core/services/video_analysis_score_summaries.dart';
 import 'package:swimiq/data/models/swim_video_analysis.dart';
+import 'package:swimiq/data/models/video_models.dart';
 
 void main() {
   test('builds race readiness summary from quick pro and con', () {
@@ -47,5 +49,30 @@ void main() {
       VideoAnalysisScoreSummaries.technique(analysis),
       contains('flat body position on the water'),
     );
+  });
+
+  test('empty notes use event coaching not upload placeholders', () {
+    const video = SwimVideo(
+      swimmer: 'Aspyn',
+      storagePath: 'Aspyn/video.mov',
+      title: '50 Fly',
+      stroke: 'Butterfly',
+      distance: '50',
+      course: 'LCM',
+    );
+    final analysis = AiSwimAnalysisService().analyze(
+      video: video,
+      raceLogs: const [],
+      goals: const [],
+    );
+
+    final overall = VideoAnalysisScoreSummaries.overall(analysis);
+    final technique = VideoAnalysisScoreSummaries.technique(analysis);
+
+    expect(overall, isNot(contains('Video uploaded')));
+    expect(overall, isNot(contains('No upload notes')));
+    expect(overall, contains('50 Butterfly LCM'));
+    expect(technique, contains('hips up'));
+    expect(analysis.analysisJson?['quick_con'], isNot(contains('cannot infer')));
   });
 }

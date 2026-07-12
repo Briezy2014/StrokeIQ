@@ -25,7 +25,9 @@ abstract final class VideoAnalysisScoreSummaries {
     int score,
   ) {
     final stored = analysis.analysisJson?[jsonKey]?.toString().trim();
-    if (stored != null && stored.isNotEmpty) {
+    if (stored != null &&
+        stored.isNotEmpty &&
+        !_isPlaceholderCoaching(stored)) {
       final plain = YouthFriendlyAnalysis.plainLanguage(stored);
       if (plain.toLowerCase().startsWith(categoryLabel.toLowerCase())) {
         return plain;
@@ -38,6 +40,16 @@ abstract final class VideoAnalysisScoreSummaries {
     return _compose(categoryLabel, score, pro, con);
   }
 
+  static bool _isPlaceholderCoaching(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('video uploaded') ||
+        lower.contains('no upload notes') ||
+        lower.contains('cannot infer technique') ||
+        lower.contains('add start, stroke count') ||
+        lower.contains('re-run after adding') ||
+        lower.contains('add side + head-on');
+  }
+
   static String _insightText(
     SwimVideoAnalysis analysis, {
     required bool isStrength,
@@ -47,13 +59,15 @@ abstract final class VideoAnalysisScoreSummaries {
         ? 'Quick pro from this video'
         : 'Quick con from this video';
     final fromSection = sections[key]?.trim();
-    if (fromSection != null && fromSection.isNotEmpty) {
+    if (fromSection != null &&
+        fromSection.isNotEmpty &&
+        !_isPlaceholderCoaching(fromSection)) {
       return YouthFriendlyAnalysis.plainLanguage(_stripBullet(fromSection));
     }
 
     final jsonKey = isStrength ? 'quick_pro' : 'quick_con';
     final raw = analysis.analysisJson?[jsonKey]?.toString().trim();
-    if (raw != null && raw.isNotEmpty) {
+    if (raw != null && raw.isNotEmpty && !_isPlaceholderCoaching(raw)) {
       return YouthFriendlyAnalysis.plainLanguage(_stripBullet(raw));
     }
     return '';

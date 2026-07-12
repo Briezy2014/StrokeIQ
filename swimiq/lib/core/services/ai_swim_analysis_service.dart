@@ -172,12 +172,14 @@ class AiSwimAnalysisService {
 
     if (items.isEmpty && ctx.notes.isNotEmpty) {
       items.add(
-        'Your notes mention race details for $event — re-run after adding start, stroke count, or finish specifics.',
+        'Your notes mention race details for $event — add reaction time, stroke count, or finish specifics for sharper feedback.',
       );
     }
 
     if (items.isEmpty) {
-      items.add('No upload notes yet — the app cannot infer technique from the file alone.');
+      items.add(
+        YouthCoachingPhrases.strokeTechniqueWorkOn(ctx.stroke),
+      );
     }
 
     return items.take(5).toList();
@@ -262,7 +264,11 @@ class AiSwimAnalysisService {
     }
     if (items.isEmpty) {
       items.add(
-        'Video uploaded — add start, stroke count, and finish notes to highlight your next strength.',
+        YouthCoachingPhrases.eventGoingWell(
+          event,
+          ctx.stroke,
+          ctx.isSprint,
+        ),
       );
     }
 
@@ -311,7 +317,10 @@ class AiSwimAnalysisService {
       );
       return '• $limiter';
     }
-    return '• Add side + head-on video next time for sharper feedback on body line.';
+    if (!s.hasContent) {
+      return '• ${YouthCoachingPhrases.startSharpeningCon}';
+    }
+    return '• ${YouthCoachingPhrases.strokeTechniqueWorkOn(ctx.stroke)}';
   }
 
   String _nextRaceGoal(_AnalysisContext ctx, List<String> priorities) {
@@ -693,8 +702,8 @@ class AiSwimAnalysisService {
     String quickPro,
     String quickCon,
   ) {
-    final good = _summarySnippet(quickPro);
-    final work = _summarySnippet(quickCon);
+    final good = _coachingSnippet(quickPro);
+    final work = _coachingSnippet(quickCon);
     return _scoreSummaryLine(
       category: 'Race readiness',
       score: score,
@@ -702,10 +711,14 @@ class AiSwimAnalysisService {
           ? good
           : (ctx.noteSignals.hasContent
               ? 'you logged race details and stayed engaged through the swim.'
-              : 'getting this race on video so you can learn from it.'),
+              : YouthCoachingPhrases.eventGoingWell(
+                  ctx.eventLabel,
+                  ctx.stroke,
+                  ctx.isSprint,
+                )),
       workOn: work.isNotEmpty
           ? work
-          : 'start setup, underwater, and a complete finish at the wall.',
+          : YouthCoachingPhrases.raceReadinessWorkOn(isSprint: ctx.isSprint),
     );
   }
 
@@ -730,7 +743,7 @@ class AiSwimAnalysisService {
     } else if (pose?.hipDropDegrees != null && pose!.hipDropDegrees! < 5) {
       goingWell = 'your body line stayed flat with hips near the surface.';
     } else {
-      goingWell = _summarySnippet(quickPro);
+      goingWell = _coachingSnippet(quickPro);
     }
 
     if (pose?.bodyMechanicsCon != null &&
@@ -740,16 +753,24 @@ class AiSwimAnalysisService {
       workOn =
           'breathing every stroke on a sprint — try holding your breath a little longer.';
     } else if (suggestions.isNotEmpty) {
-      workOn = _summarySnippet(suggestions.first);
+      workOn = _coachingSnippet(suggestions.first);
     } else {
-      workOn = _summarySnippet(quickCon);
+      workOn = _coachingSnippet(quickCon);
     }
 
     return _scoreSummaryLine(
       category: 'Stroke mechanics',
       score: score,
-      goingWell: goingWell ?? 'parts of your pull, kick, and body line are building.',
-      workOn: workOn ?? 'hips up, head down, and a steady kick while you pull.',
+      goingWell: goingWell?.isNotEmpty == true
+          ? goingWell!
+          : YouthCoachingPhrases.eventGoingWell(
+              ctx.eventLabel,
+              ctx.stroke,
+              ctx.isSprint,
+            ),
+      workOn: workOn?.isNotEmpty == true
+          ? workOn!
+          : YouthCoachingPhrases.strokeTechniqueWorkOn(ctx.stroke),
     );
   }
 
@@ -769,7 +790,7 @@ class AiSwimAnalysisService {
     } else if (s.tempoRushedLate != true && s.mentionsTempo) {
       goingWell = 'tempo stayed steady through the middle of the race.';
     } else {
-      goingWell = _summarySnippet(quickPro);
+      goingWell = _coachingSnippet(quickPro);
     }
 
     if (s.tempoRushedLate == true) {
@@ -779,15 +800,36 @@ class AiSwimAnalysisService {
           'start reaction (~${s.reactionSeconds!.toStringAsFixed(2)}s) — '
           '${YouthCoachingPhrases.tightenBlockSetupPriority.toLowerCase()}';
     } else {
-      workOn = _summarySnippet(quickCon);
+      workOn = _coachingSnippet(quickCon);
     }
 
     return _scoreSummaryLine(
       category: 'Tempo and rhythm',
       score: score,
-      goingWell: goingWell ?? 'you are learning how your race speed feels.',
-      workOn: workOn ?? 'even tempo from start through finish.',
+      goingWell: goingWell?.isNotEmpty == true
+          ? goingWell!
+          : (ctx.noteSignals.hasContent
+              ? 'you logged tempo and race details to build on.'
+              : 'steady rhythm on ${ctx.eventLabel} starts with an explosive push-off and even strokes.'),
+      workOn: workOn?.isNotEmpty == true
+          ? workOn!
+          : YouthCoachingPhrases.paceRhythmWorkOn,
     );
+  }
+
+  String _coachingSnippet(String text) {
+    final snippet = _summarySnippet(text);
+    return _isPlaceholderCoaching(snippet) ? '' : snippet;
+  }
+
+  bool _isPlaceholderCoaching(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('video uploaded') ||
+        lower.contains('no upload notes') ||
+        lower.contains('cannot infer technique') ||
+        lower.contains('add start, stroke count') ||
+        lower.contains('re-run after adding') ||
+        lower.contains('add side + head-on');
   }
 
   String _summarySnippet(String text) {

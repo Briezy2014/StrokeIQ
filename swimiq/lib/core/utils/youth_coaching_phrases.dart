@@ -81,6 +81,44 @@ abstract final class YouthCoachingPhrases {
       'Block routine: eyes slightly down or out, tighten on "take your marks," '
       'explode on the beep into your streamline.';
 
+  /// Race-day strength cue when upload notes are empty (notes-only fallback).
+  static String eventGoingWell(String eventLabel, String stroke, bool isSprint) {
+    return switch (stroke) {
+      'Butterfly' => isSprint
+          ? 'on $eventLabel, fly sprinters build speed with a fast start and steady rhythm on the second 25.'
+          : 'on $eventLabel, strong fly means hips up, a clean catch, and breathing without lifting your head.',
+      'Freestyle' => isSprint
+          ? 'on $eventLabel, sprint free rewards a sharp start, tight streamline, and tempo that does not fade.'
+          : 'on $eventLabel, check body line, breathing pattern, and whether tempo holds on each length.',
+      'Backstroke' => 'on $eventLabel, keep a straight body line, steady kick, and strong push-offs.',
+      'Breaststroke' => 'on $eventLabel, pull-out, glide timing, and a quick kick drive each length.',
+      'IM' => 'on $eventLabel, transitions and carrying speed off each wall matter as much as each stroke.',
+      _ => 'on $eventLabel, race footage helps you spot start, turns, and finish before the next meet.',
+    };
+  }
+
+  static String strokeTechniqueWorkOn(String stroke) {
+    return switch (stroke) {
+      'Butterfly' =>
+          'hips up, head down on breaths, and a steady kick off the start and walls.',
+      'Freestyle' =>
+          'hips near the surface, head down, and a high-elbow catch on every pull.',
+      'Backstroke' =>
+          'hips up, steady kick, and a flat body line from shoulders to ankles.',
+      'Breaststroke' =>
+          'a long glide, quick kick, and driving your hips forward on each pull.',
+      'IM' => 'clean turns, tight streamlines, and carrying speed stroke to stroke.',
+      _ => 'flat body line, steady kick, and a connected pull.',
+    };
+  }
+
+  static String raceReadinessWorkOn({required bool isSprint}) => isSprint
+      ? 'eyes slightly down before the call, tighten on "take your marks," explode on the beep into streamline.'
+      : 'strong push-offs, steady middle tempo, and a complete last stroke at the wall.';
+
+  static const paceRhythmWorkOn =
+      'hold the same stroke rhythm from the start through the middle and finish.';
+
   static String finishStrongProForEvent(String event) =>
       'Strong finish on $event — you completed your last stroke before touching the wall: '
       'you reached forward, kept pushing through the water, and touched with a long arm '

@@ -66,6 +66,15 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         const SizedBox(height: 12),
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
+          const SizedBox(height: 6),
+          Text(
+            'Tap Analyze again after deploying the video server — scores below are '
+            'event-based coaching until Gemini runs.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade800,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
           const SizedBox(height: 8),
         ],
         if (pipelineNote != null) ...[
