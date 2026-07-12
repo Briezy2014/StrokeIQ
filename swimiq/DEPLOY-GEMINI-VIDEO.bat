@@ -1,6 +1,8 @@
 @echo off
 title SwimIQ - Deploy Gemini Video Analysis
 cd /d "%~dp0"
+set "SUPABASE_CMD=supabase"
+
 echo.
 echo ========================================
 echo  Fix Video Lab AI (Gemini + large clips)
@@ -10,11 +12,10 @@ echo This updates YOUR Supabase server so Gemini can watch uploaded videos.
 echo Adding the API key in the browser is NOT enough - you must run this once.
 echo.
 echo BEFORE running:
-echo   1. Google AI Studio - you created a Gemini API key (AIza...)
+echo   1. Google AI Studio - Gemini API key (AIza...)
 echo   2. Supabase Dashboard - Edge Functions - Secrets:
-echo        Name: GEMINI_API_KEY
-echo        Value: paste your AIza key
-echo   3. Supabase CLI installed - see https://supabase.com/docs/guides/cli
+echo        Name: GEMINI_API_KEY  Value: your AIza key
+echo   3. Supabase CLI - if deploy failed before, run INSTALL-SUPABASE-CLI.bat first
 echo.
 echo Project ref: bryurwyeosbffvfpdpbv
 echo.
@@ -22,29 +23,38 @@ pause
 
 where supabase >nul 2>&1
 if errorlevel 1 (
+  where npx >nul 2>&1
+  if errorlevel 1 goto :no_cli
+  call npx supabase --version >nul 2>&1
+  if errorlevel 1 goto :no_cli
+  set "SUPABASE_CMD=npx supabase"
   echo.
-  echo [ERROR] Supabase CLI not found.
-  echo Install from: https://supabase.com/docs/guides/cli
-  echo Then run: supabase login
-  pause
-  exit /b 1
+  echo Using local CLI via npx supabase
 )
 
 echo.
-echo Logging in / linking project (skip if already linked)...
-supabase link --project-ref bryurwyeosbffvfpdpbv
+echo Step 1 - Log in to Supabase (browser may open)...
+%SUPABASE_CMD% login
 if errorlevel 1 (
   echo.
-  echo If link failed, run manually:
-  echo   supabase login
-  echo   supabase link --project-ref bryurwyeosbffvfpdpbv
+  echo Login failed. Run INSTALL-SUPABASE-CLI.bat then try again.
   pause
   exit /b 1
 )
 
 echo.
-echo Deploying analyze-swim-video...
-supabase functions deploy analyze-swim-video
+echo Step 2 - Link your SwimIQ project...
+%SUPABASE_CMD% link --project-ref bryurwyeosbffvfpdpbv
+if errorlevel 1 (
+  echo.
+  echo Link failed. Check you are logged into the correct Supabase account.
+  pause
+  exit /b 1
+)
+
+echo.
+echo Step 3 - Deploying analyze-swim-video...
+%SUPABASE_CMD% functions deploy analyze-swim-video
 if errorlevel 1 goto :fail
 
 echo.
@@ -53,20 +63,31 @@ echo  SUCCESS
 echo ========================================
 echo.
 echo Next in SwimIQ:
-echo   1. Video tab - open the same clip
-echo   2. Tap ANALYZE again (old results stay broken until you re-run)
-echo   3. Wait up to 90 seconds for large videos
+echo   1. Video tab - open your clip
+echo   2. Tap ANALYZE again (wait up to 90 seconds)
 echo.
-echo You should see: "Gemini - frame-by-frame video analysis"
-echo NOT: "Notes-based estimate (Gemini unavailable)"
+echo You should see: Gemini - frame-by-frame video analysis
+echo NOT: Notes-based estimate (Gemini unavailable)
 echo.
 pause
 exit /b 0
 
+:no_cli
+echo.
+echo [ERROR] Supabase CLI not found.
+echo.
+echo FIX: Double-click INSTALL-SUPABASE-CLI.bat in this folder first.
+echo      Then run this file again.
+echo.
+pause
+exit /b 1
+
 :fail
 echo.
 echo [ERROR] Deploy failed.
-echo Try: supabase login
-echo Then double-click this file again.
+echo   - Run INSTALL-SUPABASE-CLI.bat if you have not yet
+echo   - Run supabase login
+echo   - Confirm GEMINI_API_KEY is in Supabase Secrets
+echo.
 pause
 exit /b 1

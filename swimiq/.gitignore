@@ -43,3 +43,6 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+
+# Supabase CLI (local npm install for Windows deploy scripts)
+node_modules/
