@@ -58,6 +58,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
     final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
     final fallbackReason = VideoAnalysisScores.fallbackReason(widget.analysis);
     final pipelineNote = VideoAnalysisScores.pipelineNote(widget.analysis);
+    final awaitingGemini = VideoAnalysisScores.awaitingGeminiVideoRead(widget.analysis);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,15 +67,6 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         const SizedBox(height: 12),
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
-          const SizedBox(height: 6),
-          Text(
-            'Tap Analyze again after deploying the video server — scores below are '
-            'event-based coaching until Gemini runs.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade800,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
           const SizedBox(height: 8),
         ],
         if (pipelineNote != null) ...[
@@ -87,7 +79,10 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           const SizedBox(height: 12),
         ] else if (fallbackReason != null)
           const SizedBox(height: 4),
-        if (engineLabel != null) ...[
+        if (awaitingGemini) ...[
+          _DeployStepsCard(body: VideoAnalysisScores.deployStepsBody),
+          const SizedBox(height: 12),
+        ] else if (engineLabel != null) ...[
           Text(
             engineLabel,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -97,7 +92,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           ),
           const SizedBox(height: 8),
         ],
-        if (pro != null || con != null) ...[
+        if (!awaitingGemini && (pro != null || con != null)) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -137,11 +132,12 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           _MediaPipeBodyMechanicsCard(metrics: widget.analysis.poseMetrics!),
         ],
         const SizedBox(height: 12),
-        for (final entry in sections.entries)
-          if (entry.key != 'Coach notes for next race' &&
-              entry.key != 'Quick pro from this video' &&
-              entry.key != 'Quick con from this video')
-            _SectionCard(title: entry.key, body: entry.value),
+        if (!awaitingGemini)
+          for (final entry in sections.entries)
+            if (entry.key != 'Coach notes for next race' &&
+                entry.key != 'Quick pro from this video' &&
+                entry.key != 'Quick con from this video')
+              _SectionCard(title: entry.key, body: entry.value),
         _CoachNotesEditor(
           controller: _coachNotesController,
           onSave: () => widget.onCoachNotesChanged(_coachNotesController.text),
@@ -306,16 +302,19 @@ class _ScoreStrip extends StatelessWidget {
               final wide = constraints.maxWidth >= 520;
               final children = [
                 _ScoreTile(
+                  analysis: analysis,
                   title: VideoAnalysisScores.overallTitle,
                   value: analysis.overallScore,
                   hint: VideoAnalysisScores.overallSummary(analysis),
                 ),
                 _ScoreTile(
+                  analysis: analysis,
                   title: VideoAnalysisScores.techniqueTitle,
                   value: analysis.techniqueScore,
                   hint: VideoAnalysisScores.techniqueSummary(analysis),
                 ),
                 _ScoreTile(
+                  analysis: analysis,
                   title: VideoAnalysisScores.paceTitle,
                   value: analysis.paceScore,
                   hint: VideoAnalysisScores.paceSummary(analysis),
@@ -349,18 +348,20 @@ class _ScoreStrip extends StatelessWidget {
 
 class _ScoreTile extends StatelessWidget {
   const _ScoreTile({
+    required this.analysis,
     required this.title,
     required this.value,
     required this.hint,
   });
 
+  final SwimVideoAnalysis analysis;
   final String title;
   final int value;
   final String hint;
 
   @override
   Widget build(BuildContext context) {
-    final color = VideoAnalysisScores.scoreColor(value);
+    final color = VideoAnalysisScores.scoreColor(analysis, value);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -387,7 +388,7 @@ class _ScoreTile extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            VideoAnalysisScores.formatScore(value),
+            VideoAnalysisScores.formatScore(analysis, value),
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: AppColors.primaryDeep,
@@ -404,6 +405,50 @@ class _ScoreTile extends StatelessWidget {
               height: 1.35,
               fontWeight: FontWeight.w600,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeployStepsCard extends StatelessWidget {
+  const _DeployStepsCard({required this.body});
+
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.build_circle_outlined, color: AppColors.primaryDeep),
+              const SizedBox(width: 8),
+              Text(
+                'Fix video analysis (4 steps)',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            body,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  height: 1.45,
+                  color: Colors.grey.shade800,
+                ),
           ),
         ],
       ),

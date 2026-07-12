@@ -13,57 +13,84 @@ abstract final class VideoAnalysisScores {
   static const techniqueTitle = 'Technique';
   static const paceTitle = 'Pace';
 
-  static String overallSummary(SwimVideoAnalysis analysis) =>
-      VideoAnalysisScoreSummaries.overall(analysis);
-
-  static String techniqueSummary(SwimVideoAnalysis analysis) =>
-      VideoAnalysisScoreSummaries.technique(analysis);
-
-  static String paceSummary(SwimVideoAnalysis analysis) =>
-      VideoAnalysisScoreSummaries.pace(analysis);
-
-  /// Legacy static hints — prefer [overallSummary] and siblings per analysis.
-  static const overallHint =
-      'Race readiness — how complete and competitive this swim looked.';
-  static const techniqueHint =
-      'Stroke mechanics — body line, catch, kick, breathing, turns.';
-  static const paceHint =
-      'Tempo & rhythm — speed management from start to finish.';
-
-  static String legend(SwimVideoAnalysis analysis) {
-    if (analysis.isGeminiEngine) {
-      return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
-    }
-    return 'Estimated ratings from your upload notes — not frame-by-frame video. '
-        'Gemini watches the clip; MediaPipe adds body-line numbers when enabled. '
-        'Re-run after the video server is updated for true video scores.';
-  }
-
-  /// Short explainer shown when Gemini failed and notes-based ratings are shown.
-  static String? pipelineNote(SwimVideoAnalysis analysis) {
-    if (analysis.isGeminiEngine) return null;
-    if (analysis.hasPoseMetrics) {
-      return 'MediaPipe body-line data was captured, but Gemini could not watch the '
-          'full video — ratings below are from your notes plus pose estimates.';
-    }
-    return 'MediaPipe measures body line on-device before analysis; Gemini watches the '
-        'video for coaching. Both need Gemini running — see the message above.';
-  }
-
   static String? fallbackReason(SwimVideoAnalysis analysis) {
     final raw = analysis.analysisJson?['gemini_fallback_reason']?.toString();
     if (raw != null && raw.trim().isNotEmpty) return raw.trim();
     return null;
   }
 
-  static int clamp(int value) => value.clamp(0, maxScore);
+  /// True when Gemini did not watch the clip — do not show fake video-specific scores.
+  static bool awaitingGeminiVideoRead(SwimVideoAnalysis analysis) {
+    if (analysis.isGeminiEngine) return false;
+    return fallbackReason(analysis) != null || analysis.isNotesDriven;
+  }
 
-  static String formatScore(int value) => '${clamp(value)}/$maxScore';
+  static const awaitingScoreLabel = '—';
 
-  static Color scoreColor(int value) {
+  static const awaitingSummary =
+      'Gemini has not watched this clip yet — complete server setup, then tap Analyze again.';
+
+  static const awaitingLegend =
+      'Video not analyzed yet. Scores and coaching below are placeholders until Gemini runs on your server.';
+
+  static const deployStepsBody =
+      'Step 1: Supabase Dashboard → Edge Functions → Secrets → add GEMINI_API_KEY (your AIza key from Google AI Studio).\n\n'
+      'Step 2: In this swimiq folder, double-click KARA-GEMINI-FIX-NOW.bat (installs tools and deploys).\n\n'
+      'Step 3: When the bat file says SUCCESS, open SwimIQ → Video → tap Analyze on this clip again.\n\n'
+      'Step 4: Wait up to 90 seconds. You should see "Gemini — frame-by-frame video analysis" — not notes-based.';
+
+  static String overallSummary(SwimVideoAnalysis analysis) {
+    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+    return VideoAnalysisScoreSummaries.overall(analysis);
+  }
+
+  static String techniqueSummary(SwimVideoAnalysis analysis) {
+    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+    return VideoAnalysisScoreSummaries.technique(analysis);
+  }
+
+  static String paceSummary(SwimVideoAnalysis analysis) {
+    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+    return VideoAnalysisScoreSummaries.pace(analysis);
+  }
+
+  static String legend(SwimVideoAnalysis analysis) {
+    if (awaitingGeminiVideoRead(analysis)) return awaitingLegend;
+    if (analysis.isGeminiEngine) {
+      return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
+    }
+    return 'Estimated ratings from your upload notes — not frame-by-frame video. '
+        'Add upload notes (start, strokes, finish) or deploy Gemini for video scores.';
+  }
+
+  static String? pipelineNote(SwimVideoAnalysis analysis) {
+    if (analysis.isGeminiEngine) return null;
+    if (awaitingGeminiVideoRead(analysis)) {
+      return 'Until Gemini runs, coaching cannot match your footage. Follow the steps in the orange banner.';
+    }
+    if (analysis.hasPoseMetrics) {
+      return 'MediaPipe body-line data was captured, but Gemini could not watch the '
+          'full video — ratings below are from your notes plus pose estimates.';
+    }
+    return null;
+  }
+
+  static String formatScore(SwimVideoAnalysis analysis, int value) {
+    if (awaitingGeminiVideoRead(analysis)) return awaitingScoreLabel;
+    return '${clamp(value)}/$maxScore';
+  }
+
+  static Color scoreColor(SwimVideoAnalysis analysis, int value) {
+    if (awaitingGeminiVideoRead(analysis)) return Colors.grey.shade500;
+    return scoreColorForValue(value);
+  }
+
+  static Color scoreColorForValue(int value) {
     if (value >= 85) return const Color(0xFF16A34A);
     if (value >= 70) return AppColors.primary;
     if (value >= 55) return const Color(0xFFEA580C);
     return const Color(0xFFDC2626);
   }
+
+  static int clamp(int value) => value.clamp(0, maxScore);
 }
