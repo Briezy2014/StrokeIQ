@@ -152,6 +152,7 @@ async function main() {
       if (data.ok === true) {
         log('OK - Video server ready.');
         log('  Version: ' + (data.function_version || 'unknown'));
+        log('  Gemini model: ' + (data.gemini_model || 'unknown'));
         log('  Max video MB: ' + (data.max_video_mb || '?'));
         log('  Gemini key on server: ' + (data.gemini_configured || '?'));
         log('');

@@ -1,0 +1,101 @@
+================================================================================
+  KARA - FIX GEMINI QUOTA ERROR (429 / limit 0) - READ THIS
+================================================================================
+
+YOUR SCREENSHOT SHOWED THE REAL PROBLEM (finally):
+
+  Google Gemini error 429 RESOURCE_EXHAUSTED
+  model: gemini-2.0-flash
+  limit: 0
+
+That means:
+  - Supabase is working (your diagnosis proved that)
+  - GEMINI_API_KEY is on the server (True)
+  - Google REFUSES requests because gemini-2.0-flash is RETIRED
+    (Google shut it down - quota is literally ZERO)
+
+This is NOT Android Studio, NOT Kara Williams spaces, NOT Supabase secrets
+done wrong. The server was calling a dead AI model.
+
+
+================================================================================
+  FIX PART 1 - DEPLOY THE UPDATED SERVER (double-click)
+================================================================================
+
+1. File Explorer -> Desktop -> StrokeIQ -> swimiq
+
+2. Double-click:  KARA-SEE-UPDATES-NOW.bat
+   (gets the fix that switches to gemini-2.5-flash)
+
+3. Double-click:  KARA-GEMINI-FIX-NOW.bat
+   Wait for:  SUCCESS - Server is updated
+
+4. Double-click:  KARA-WHY-GEMINI-FAILS.bat
+   GEMINI-DIAGNOSIS.txt should now say:
+     Version: 2026-gemini-25-flash
+     Gemini model: gemini-2.5-flash
+
+
+================================================================================
+  FIX PART 2 - IN THE APP
+================================================================================
+
+1. Double-click KARA-CLICK-THIS.bat
+
+2. Video tab -> Test video server
+   Should mention gemini-2.5-flash
+
+3. WAIT 2 MINUTES (Google rate limit from your failed attempts)
+
+4. Tap ANALYZE on your swim clip again (wait 90 sec)
+
+SUCCESS:
+  - Numbers for scores (not dashes)
+  - "Gemini - frame-by-frame video analysis"
+  - No orange quota error
+
+
+================================================================================
+  FIX PART 3 - IF YOU STILL GET QUOTA ERRORS
+================================================================================
+
+Google may require billing LINKED (you are still on free tier - not charged
+for normal tester use). Do this once:
+
+1. Open:  https://aistudio.google.com/apikey
+
+2. Click the key you use for SwimIQ
+
+3. Note which Google Cloud project it is linked to
+
+4. Open:  https://console.cloud.google.com/billing
+
+5. Link a billing account to that project
+   (Google requires this for free-tier API quota on many accounts)
+
+6. In Supabase, you do NOT need a new key if the same key works in AI Studio.
+   If unsure: create a NEW key in AI Studio -> new project -> paste into
+   Supabase -> Edge Functions -> Secrets -> GEMINI_API_KEY
+
+7. Run KARA-GEMINI-FIX-NOW.bat again
+
+8. Wait 2 minutes, tap Analyze again
+
+
+================================================================================
+  DO NOT
+================================================================================
+
+  - Move files into android folder
+  - Use Android Studio for this fix
+  - Keep tapping Analyze rapidly (triggers per-minute quota)
+
+
+================================================================================
+  SUMMARY
+================================================================================
+
+Week-long issue: server used gemini-2.0-flash (dead, limit 0).
+Fix: deploy update -> gemini-2.5-flash -> wait -> Analyze again.
+
+================================================================================

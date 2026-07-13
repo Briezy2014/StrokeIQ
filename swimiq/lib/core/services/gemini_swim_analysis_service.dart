@@ -39,7 +39,7 @@ class GeminiSwimAnalysisService {
         data is Map &&
         data['error']?.toString().contains('storage_path') == true) {
       return VideoAnalysisServerHealth.failed(
-        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy the update.',
+        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash.',
       );
     }
 
@@ -197,6 +197,7 @@ class VideoAnalysisServerHealth {
     return VideoAnalysisServerHealth(
       ok: true,
       message: 'Video server ready (version ${json['function_version']}, '
+          'model ${json['gemini_model'] ?? 'gemini-2.5-flash'}, '
           'max ${json['max_video_mb']} MB). Tap Analyze on your clip.',
       functionVersion: json['function_version']?.toString(),
       maxVideoMb: int.tryParse(json['max_video_mb']?.toString() ?? ''),

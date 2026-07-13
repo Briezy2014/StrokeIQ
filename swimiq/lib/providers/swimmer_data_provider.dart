@@ -273,7 +273,15 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
     if (lower.contains('permission_denied') || lower.contains('billing')) {
       return 'Google Gemini needs billing enabled on your Google Cloud project — '
-          'see Google AI Studio → your key → linked project billing.';
+          'see Google AI Studio -> your key -> linked project billing.';
+    }
+    if (lower.contains('resource_exhausted') ||
+        lower.contains('quota') ||
+        lower.contains('limit: 0') ||
+        lower.contains('gemini-2.0-flash')) {
+      return 'Google Gemini quota hit — gemini-2.0-flash is retired. '
+          'Run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash, wait 2 minutes, '
+          'then tap Analyze again. If it still fails, link billing in Google AI Studio.';
     }
     if (lower.contains('gemini api error')) {
       return 'Google Gemini rejected the request — see Technical error below. '

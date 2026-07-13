@@ -6,7 +6,11 @@ const BUCKET = "swim-videos";
 const MAX_INLINE_BYTES = 18 * 1024 * 1024;
 /** Upper cap via Gemini File API (resumable upload). */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
-const GEMINI_MODEL = "gemini-2.0-flash";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL_FALLBACKS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+];
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 120_000;
 
@@ -107,11 +111,13 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as AnalyzeRequest;
 
     if (body.health_check === true) {
+      const model = resolveGeminiModel();
       return new Response(
         JSON.stringify({
           ok: true,
           gemini_configured: true,
-          function_version: "2026-file-api",
+          function_version: "2026-gemini-25-flash",
+          gemini_model: model,
           max_video_mb: 100,
           inline_max_mb: 18,
         }),
@@ -153,6 +159,7 @@ Deno.serve(async (req) => {
     let geminiFileName: string | null = null;
 
     let geminiJson: Record<string, unknown>;
+    let geminiModelUsed = resolveGeminiModel();
     try {
       if (useFileApi) {
         const uploaded = await uploadVideoToGeminiFile(
@@ -163,14 +170,22 @@ Deno.serve(async (req) => {
         );
         geminiFileName = uploaded.name;
         await waitForGeminiFileActive(geminiApiKey, uploaded.name);
-        geminiJson = await callGeminiGenerateContent(geminiApiKey, {
-          file_data: { mime_type: mimeType, file_uri: uploaded.uri },
-        }, prompt);
+        const result = await callGeminiGenerateContentWithFallback(
+          geminiApiKey,
+          { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
+          prompt,
+        );
+        geminiJson = result.json;
+        geminiModelUsed = result.model;
       } else {
         const base64Video = encodeBase64(videoBytes);
-        geminiJson = await callGeminiGenerateContent(geminiApiKey, {
-          inline_data: { mime_type: mimeType, data: base64Video },
-        }, prompt);
+        const result = await callGeminiGenerateContentWithFallback(
+          geminiApiKey,
+          { inline_data: { mime_type: mimeType, data: base64Video } },
+          prompt,
+        );
+        geminiJson = result.json;
+        geminiModelUsed = result.model;
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -201,7 +216,12 @@ Deno.serve(async (req) => {
     }
 
     const parsed = JSON.parse(textPart) as Record<string, unknown>;
-    const analysis = normalizeAnalysis(parsed, body, useFileApi ? "file_api" : "inline");
+    const analysis = normalizeAnalysis(
+      parsed,
+      body,
+      useFileApi ? "file_api" : "inline",
+      geminiModelUsed,
+    );
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -481,6 +501,7 @@ async function deleteGeminiFile(apiKey: string, fileName: string): Promise<void>
 
 async function callGeminiGenerateContent(
   apiKey: string,
+  model: string,
   videoPart: GeminiVideoPart,
   prompt: string,
 ): Promise<Record<string, unknown>> {
@@ -501,7 +522,7 @@ async function callGeminiGenerateContent(
   };
 
   const geminiResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -511,16 +532,85 @@ async function callGeminiGenerateContent(
 
   if (!geminiResponse.ok) {
     const errText = await geminiResponse.text();
-    throw new Error(`Gemini API error: ${errText}`);
+    const friendly = friendlyGeminiHttpError(errText, model, geminiResponse.status);
+    throw new Error(friendly ?? `Gemini API error (${geminiResponse.status}): ${errText}`);
   }
 
   return await geminiResponse.json() as Record<string, unknown>;
+}
+
+function resolveGeminiModel(): string {
+  const configured = Deno.env.get("GEMINI_MODEL")?.trim();
+  if (configured) return configured;
+  return DEFAULT_GEMINI_MODEL;
+}
+
+function modelCandidates(): string[] {
+  const configured = Deno.env.get("GEMINI_MODEL")?.trim();
+  const models = configured
+    ? [configured, ...GEMINI_MODEL_FALLBACKS.filter((m) => m !== configured)]
+    : [...GEMINI_MODEL_FALLBACKS];
+  return [...new Set(models)];
+}
+
+function isQuotaError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return lower.includes("resource_exhausted") ||
+    lower.includes("quota") ||
+    lower.includes("429");
+}
+
+function friendlyGeminiHttpError(
+  errText: string,
+  model: string,
+  status: number,
+): string | null {
+  const lower = errText.toLowerCase();
+  if (status === 429 || isQuotaError(lower)) {
+    if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
+      return "Gemini 2.0 Flash is retired (quota limit 0). Redeploy analyze-swim-video "
+        + "(KARA-GEMINI-FIX-NOW.bat) to use gemini-2.5-flash.";
+    }
+    return "Google Gemini daily/minute quota reached for your API key. Wait 1-2 minutes "
+      + "and tap Analyze again. If this keeps happening: Google AI Studio -> your key -> "
+      + "enable billing on the linked Cloud project (free tier still works with billing linked), "
+      + "or create a new API key in a fresh project.";
+  }
+  if (lower.includes("api key not valid") || lower.includes("api_key_invalid")) {
+    return "GEMINI_API_KEY is invalid. Create a new key at aistudio.google.com/apikey "
+      + "and update Supabase Edge Function secrets.";
+  }
+  return null;
+}
+
+async function callGeminiGenerateContentWithFallback(
+  apiKey: string,
+  videoPart: GeminiVideoPart,
+  prompt: string,
+): Promise<{ json: Record<string, unknown>; model: string }> {
+  const models = modelCandidates();
+  let lastError = "Gemini request failed.";
+
+  for (const model of models) {
+    try {
+      const json = await callGeminiGenerateContent(apiKey, model, videoPart, prompt);
+      return { json, model };
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      if (!isQuotaError(lastError) || model === models[models.length - 1]) {
+        throw new Error(lastError);
+      }
+    }
+  }
+
+  throw new Error(lastError);
 }
 
 function normalizeAnalysis(
   parsed: Record<string, unknown>,
   body: AnalyzeRequest,
   uploadMethod: GeminiUploadMethod = "inline",
+  geminiModel: string = DEFAULT_GEMINI_MODEL,
 ) {
   const bullet = (items: unknown) =>
     Array.isArray(items)
@@ -580,7 +670,7 @@ function normalizeAnalysis(
     overall_score: overallScore,
     analysis_json: {
       engine,
-      model: GEMINI_MODEL,
+      model: geminiModel,
       upload_method: uploadMethod,
       event: body.event_label,
       disclaimer,
