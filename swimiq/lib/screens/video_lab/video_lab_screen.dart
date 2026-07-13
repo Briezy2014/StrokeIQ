@@ -486,10 +486,26 @@ class _VideoCardState extends State<_VideoCard> {
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Delete video',
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
-                  onPressed: widget.onDelete,
+                PopupMenuButton<String>(
+                  tooltip: 'Video options',
+                  onSelected: (value) {
+                    if (value == 'delete') widget.onDelete();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Delete video',
+                            style: TextStyle(color: Color(0xFFDC2626)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -552,6 +568,19 @@ class _VideoCardState extends State<_VideoCard> {
                 onTestServer: widget.onTestServer,
               ),
             ],
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: widget.onDelete,
+              icon: const Icon(Icons.delete_forever_outlined, size: 20),
+              label: const Text('Delete video'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFDC2626),
+                side: const BorderSide(color: Color(0xFFDC2626)),
+                minimumSize: const Size(double.infinity, 44),
+              ),
+            ),
           ],
         ),
       ),

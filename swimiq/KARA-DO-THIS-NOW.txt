@@ -131,7 +131,9 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
    • Says "Gemini — frame-by-frame video analysis"
    • Coaching matches YOUR video
 
-4. To delete a video: red trash icon on the video card → Delete.
+4. To delete a video: scroll to the BOTTOM of that video's card.
+   Tap the red-outlined button:  Delete video
+   (Or tap the three dots next to the video title → Delete video)
 
 
 ================================================================================
