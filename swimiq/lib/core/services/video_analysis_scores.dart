@@ -19,6 +19,12 @@ abstract final class VideoAnalysisScores {
     return null;
   }
 
+  static String? technicalError(SwimVideoAnalysis analysis) {
+    final raw = analysis.analysisJson?['gemini_error_raw']?.toString();
+    if (raw != null && raw.trim().isNotEmpty) return raw.trim();
+    return null;
+  }
+
   /// True when Gemini did not watch the clip — do not show fake video-specific scores.
   static bool awaitingGeminiVideoRead(SwimVideoAnalysis analysis) {
     if (analysis.isGeminiEngine) return false;

@@ -59,6 +59,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
     final engineLabel = VideoAnalysisPresenter.analysisEngineLabel(widget.analysis);
     final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
     final fallbackReason = VideoAnalysisScores.fallbackReason(widget.analysis);
+    final technicalError = VideoAnalysisScores.technicalError(widget.analysis);
     final pipelineNote = VideoAnalysisScores.pipelineNote(widget.analysis);
     final awaitingGemini = VideoAnalysisScores.awaitingGeminiVideoRead(widget.analysis);
 
@@ -69,6 +70,10 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         const SizedBox(height: 12),
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
+          if (technicalError != null) ...[
+            const SizedBox(height: 8),
+            _TechnicalErrorBanner(error: technicalError),
+          ],
           const SizedBox(height: 8),
         ],
         if (pipelineNote != null) ...[
@@ -467,6 +472,47 @@ class _DeployStepsCard extends StatelessWidget {
               label: const Text('Test video server'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TechnicalErrorBanner extends StatelessWidget {
+  const _TechnicalErrorBanner({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Technical error (send this to support)',
+            style: TextStyle(
+              color: Colors.grey.shade900,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 6),
+          SelectableText(
+            error,
+            style: TextStyle(
+              color: Colors.grey.shade800,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+              fontSize: 11,
+            ),
+          ),
         ],
       ),
     );

@@ -215,6 +215,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     required SwimmerData current,
     SwimPoseMetrics? poseMetrics,
     String? geminiFallbackReason,
+    String? geminiErrorRaw,
   }) {
     final analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
           video: video,
@@ -227,6 +228,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     final json = Map<String, dynamic>.from(analysis.analysisJson ?? {});
     if (geminiFallbackReason != null && geminiFallbackReason.trim().isNotEmpty) {
       json['gemini_fallback_reason'] = geminiFallbackReason.trim();
+    }
+    if (geminiErrorRaw != null && geminiErrorRaw.trim().isNotEmpty) {
+      json['gemini_error_raw'] = geminiErrorRaw.trim();
     }
     return YouthFriendlyAnalysis.sanitizeAnalysis(
       analysis.copyWith(analysisJson: json),
@@ -261,8 +265,25 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (lower.contains('could not download video')) {
       return 'Could not load the video from storage for Gemini. Notes-based coaching saved for now.';
     }
+    if (lower.contains('api key not valid') ||
+        lower.contains('api_key_invalid') ||
+        lower.contains('invalid api key')) {
+      return 'Your GEMINI_API_KEY is rejected by Google — create a new key at '
+          'aistudio.google.com/apikey and update Supabase Edge Function secrets.';
+    }
+    if (lower.contains('permission_denied') || lower.contains('billing')) {
+      return 'Google Gemini needs billing enabled on your Google Cloud project — '
+          'see Google AI Studio → your key → linked project billing.';
+    }
+    if (lower.contains('gemini api error')) {
+      return 'Google Gemini rejected the request — see Technical error below. '
+          'Often a bad API key or billing on the Google project.';
+    }
+    if (lower.contains('not found') && lower.contains('function')) {
+      return 'analyze-swim-video is not deployed — double-click KARA-GEMINI-FIX-NOW.bat.';
+    }
     return 'Gemini video analysis was unavailable — notes-based coaching saved. '
-        'Check swimiq/docs/GEMINI_SETUP.md if this keeps happening.';
+        'Tap Test video server, then read Technical error below.';
   }
 
   /// Pulls the nested `error:` text from Supabase FunctionException strings.
@@ -617,17 +638,20 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           current: current,
           poseMetrics: poseMetrics,
           geminiFallbackReason: friendly,
+          geminiErrorRaw: error.message,
         );
-        fallbackNotice = friendly;
+        fallbackNotice = '$friendly\n\nTechnical error: ${error.message}';
       } catch (error) {
-        final friendly = _friendlyGeminiFallbackMessage(error.toString());
+        final raw = error.toString();
+        final friendly = _friendlyGeminiFallbackMessage(raw);
         analysis = _fallbackVideoAnalysis(
           video: video,
           current: current,
           poseMetrics: poseMetrics,
           geminiFallbackReason: friendly,
+          geminiErrorRaw: raw,
         );
-        fallbackNotice = friendly;
+        fallbackNotice = '$friendly\n\nTechnical error: $raw';
       }
 
       await _persistVideoAnalysis(

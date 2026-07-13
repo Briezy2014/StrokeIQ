@@ -115,25 +115,31 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
   STEP G — TEST VIDEO AI IN THE APP
 ================================================================================
 
-1. In SwimIQ, open the Video tab.
+1. FIRST: double-click KARA-WHY-GEMINI-FAILS.bat
+   Opens GEMINI-DIAGNOSIS.txt — plain English, what is actually broken.
 
-2. Tap:  Test video server  (under "Your Videos")
+2. In SwimIQ, open the Video tab.
+
+3. Tap:  Test video server  (under "Your Videos" or in the blue box)
 
    GOOD message:
      Video server ready (version 2026-file-api...)
 
-   BAD — run KARA-GEMINI-FIX-NOW.bat again and fix what it says.
+   BAD — read GEMINI-DIAGNOSIS.txt
 
-3. Tap Analyze on your swim clip. Wait up to 90 seconds.
+4. Tap Analyze on your swim clip AGAIN. Old scores are FAKE — you must re-analyze.
+   Wait up to 90 seconds.
 
    SUCCESS:
    • Scores show numbers (72/100), not a dash —
    • Says "Gemini — frame-by-frame video analysis"
    • Coaching matches YOUR video
 
-4. To delete a video: scroll to the BOTTOM of that video's card.
+   STILL FAILING:
+   • Scroll to red "Technical error" box — screenshot that text.
+
+5. To delete a video: scroll to the BOTTOM of that video's card.
    Tap the red-outlined button:  Delete video
-   (Or tap the three dots next to the video title → Delete video)
 
 
 ================================================================================
@@ -143,6 +149,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
   FIX-KARA-PATHS.bat        — once, fixes Kara Williams space problem
   KARA-SEE-UPDATES-NOW.bat  — get latest code + open Chrome
   KARA-GEMINI-FIX-NOW.bat   — after Node.js install, fixes video AI server
+  KARA-WHY-GEMINI-FAILS.bat — tells you EXACTLY why Gemini still fails
   KARA-CLICK-THIS.bat       — open SwimIQ in Chrome anytime
 
 
