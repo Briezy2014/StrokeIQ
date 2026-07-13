@@ -30,19 +30,25 @@ class SwimIqDailyProgress {
   /// Today's logged work adds up to 10% extra climb on top of score height.
   double get todayBoostFraction => climbFraction * 0.10;
 
-  /// Rope position: SwimIQ score height plus a small boost from today's points.
+  /// Rope position follows SwimIQ score. Score 0 = star in the water.
+  /// Today's log adds a small boost only when overall score is above zero.
   double get ropeClimbFraction {
-    if (overallSwimIqScore <= 0 && todayPoints <= 0) {
-      return 0.08;
-    }
     if (overallSwimIqScore <= 0) {
-      return (climbFraction * 0.45 + 0.08).clamp(0.08, 1.0);
+      return 0.0;
     }
-    return (scoreRopePercent + todayBoostFraction).clamp(0.08, 1.0);
+    return (scoreRopePercent + todayBoostFraction).clamp(0.0, 1.0);
   }
 
-  /// Whole-number percent shown on the rope (matches score when no boost).
-  int get ropeClimbPercent => (ropeClimbFraction * 100).round();
+  /// Percent on the rope — matches score when there is no daily boost.
+  int get ropeClimbPercent {
+    if (overallSwimIqScore <= 0) {
+      return 0;
+    }
+    return (ropeClimbFraction * 100).round();
+  }
+
+  /// Hero chip: score-only rope height (ignores today's boost).
+  int get scoreRopeClimbPercent => (scoreRopePercent * 100).round();
 
   static SwimIqDailyProgress calculate({
     required List<RaceLog> raceLogs,

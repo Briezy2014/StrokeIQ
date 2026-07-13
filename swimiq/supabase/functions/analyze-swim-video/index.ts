@@ -7,10 +7,12 @@ const MAX_INLINE_BYTES = 18 * 1024 * 1024;
 /** Upper cap via Gemini File API (resumable upload). */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_MODEL_FALLBACKS = [
+/** Only these models are called — ignores retired secrets like gemini-1.5-flash. */
+const ALLOWED_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
+const GEMINI_MODEL_FALLBACKS = [...ALLOWED_GEMINI_MODELS];
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 120_000;
 
@@ -541,18 +543,35 @@ async function callGeminiGenerateContent(
 
 function resolveGeminiModel(): string {
   const configured = Deno.env.get("GEMINI_MODEL")?.trim();
-  if (configured) return configured;
+  if (configured && ALLOWED_GEMINI_MODELS.includes(configured)) {
+    return configured;
+  }
+  if (configured) {
+    console.warn(
+      `Ignoring unsupported GEMINI_MODEL secret "${configured}" - using ${DEFAULT_GEMINI_MODEL}. ` +
+        "Remove GEMINI_MODEL from Supabase secrets unless it is gemini-2.5-flash.",
+    );
+  }
   return DEFAULT_GEMINI_MODEL;
 }
 
 function modelCandidates(): string[] {
-  const configured = Deno.env.get("GEMINI_MODEL")?.trim();
-  const models = configured
-    ? [configured, ...GEMINI_MODEL_FALLBACKS.filter((m) => m !== configured)]
-    : [...GEMINI_MODEL_FALLBACKS];
-  return [...new Set(models)];
+  const primary = resolveGeminiModel();
+  return [
+    primary,
+    ...GEMINI_MODEL_FALLBACKS.filter((model) => model !== primary),
+  ];
 }
 
+function isRetriableModelError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return isQuotaError(lower) ||
+    lower.includes("not_found") ||
+    lower.includes("no longer available") ||
+    lower.includes("not found for api version") ||
+    lower.includes("gemini-1.5") ||
+    lower.includes("gemini-2.0");
+}
 function isQuotaError(message: string): boolean {
   const lower = message.toLowerCase();
   return lower.includes("resource_exhausted") ||
@@ -566,6 +585,12 @@ function friendlyGeminiHttpError(
   status: number,
 ): string | null {
   const lower = errText.toLowerCase();
+  if (status === 404 || lower.includes("no longer available") ||
+      lower.includes("gemini-1.5")) {
+    return "Gemini model is retired (often gemini-1.5-flash in Supabase secrets). "
+      + "Supabase -> Edge Functions -> Secrets -> DELETE GEMINI_MODEL if present. "
+      + "Then run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash.";
+  }
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
       return "Gemini 2.0 Flash is retired (quota limit 0). Redeploy analyze-swim-video "
@@ -597,7 +622,8 @@ async function callGeminiGenerateContentWithFallback(
       return { json, model };
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
-      if (!isQuotaError(lastError) || model === models[models.length - 1]) {
+      const isLast = model === models[models.length - 1];
+      if (!isRetriableModelError(lastError) || isLast) {
         throw new Error(lastError);
       }
     }

@@ -50,7 +50,7 @@ void main() {
     expect(scored.ropeClimbPercent, 55);
   });
 
-  test('rope climb never sticks at zero when score or activity exists', () {
+  test('rope climb is in the water when SwimIQ score is zero', () {
     final empty = SwimIqDailyProgress.calculate(
       raceLogs: const [],
       meetResults: const [],
@@ -58,7 +58,9 @@ void main() {
       goals: const [],
       overallSwimIqScore: 0,
     );
-    expect(empty.ropeClimbFraction, greaterThanOrEqualTo(0.08));
+    expect(empty.ropeClimbFraction, 0.0);
+    expect(empty.ropeClimbPercent, 0);
+    expect(empty.scoreRopeClimbPercent, 0);
 
     final scored = SwimIqDailyProgress.calculate(
       raceLogs: const [],

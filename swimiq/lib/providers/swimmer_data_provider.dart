@@ -283,6 +283,13 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           'Run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash, wait 2 minutes, '
           'then tap Analyze again. If it still fails, link billing in Google AI Studio.';
     }
+    if (lower.contains('gemini-1.5') ||
+        lower.contains('no longer available') ||
+        lower.contains('not_found')) {
+      return 'Gemini model retired (often gemini-1.5-flash in Supabase secrets). '
+          'Delete GEMINI_MODEL secret in Supabase, run KARA-GEMINI-FIX-NOW.bat, '
+          'wait 2 minutes, tap Analyze again.';
+    }
     if (lower.contains('gemini api error')) {
       return 'Google Gemini rejected the request — see Technical error below. '
           'Often a bad API key or billing on the Google project.';

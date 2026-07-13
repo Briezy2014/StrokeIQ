@@ -92,10 +92,56 @@ for normal tester use). Do this once:
 
 
 ================================================================================
-  SUMMARY
+  NEW ERROR: gemini-1.5-flash no longer available
 ================================================================================
 
-Week-long issue: server used gemini-2.0-flash (dead, limit 0).
-Fix: deploy update -> gemini-2.5-flash -> wait -> Analyze again.
+Your Technical error says gemini-1.5-flash. That model is RETIRED by Google.
+
+This usually means Supabase has an OLD secret named GEMINI_MODEL set to
+gemini-1.5-flash (from an old tutorial). The server must use gemini-2.5-flash.
+
 
 ================================================================================
+  FIX - DO THESE IN ORDER (when you are back)
+================================================================================
+
+STEP 1 - DELETE THE BAD SECRET IN SUPABASE (website)
+
+1. Open https://supabase.com/dashboard
+2. Your SwimIQ project
+3. Project Settings (gear) -> Edge Functions -> Secrets
+4. If you see a secret named GEMINI_MODEL - DELETE IT
+   (Keep GEMINI_API_KEY - that one stays)
+5. Only GEMINI_API_KEY should remain for Gemini
+
+STEP 2 - GET CODE + DEPLOY
+
+1. Desktop -> StrokeIQ -> swimiq
+2. Double-click KARA-SEE-UPDATES-NOW.bat
+3. Double-click KARA-GEMINI-FIX-NOW.bat
+4. Wait for SUCCESS
+
+STEP 3 - CONFIRM MODEL
+
+1. Double-click KARA-WHY-GEMINI-FAILS.bat
+2. GEMINI-DIAGNOSIS.txt should say: Gemini model: gemini-2.5-flash
+
+STEP 4 - ANALYZE AGAIN
+
+1. KARA-CLICK-THIS.bat
+2. Wait 2 minutes (rate limit)
+3. Video tab -> Analyze (wait 90 sec)
+
+
+================================================================================
+  ROPE CLIMB FIX (score 0 = star in water)
+================================================================================
+
+Also fixed in this update: when SwimIQ score is 0, the star sits in the
+water (0% up the rope). It was wrongly showing 8-31% because of old code.
+
+After KARA-SEE-UPDATES-NOW.bat, Dashboard score 0 = star at bottom of rope.
+
+
+================================================================================
+

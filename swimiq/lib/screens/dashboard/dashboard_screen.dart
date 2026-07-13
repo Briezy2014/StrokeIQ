@@ -64,7 +64,7 @@ class DashboardScreen extends ConsumerWidget {
               highestCut: showProFeatures
                   ? snapshot.highestCut
                   : (logs.isEmpty ? 'Log swims to score' : 'Upgrade for cuts'),
-              climbPercent: daily.ropeClimbPercent,
+              climbPercent: daily.scoreRopeClimbPercent,
             ),
             const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
