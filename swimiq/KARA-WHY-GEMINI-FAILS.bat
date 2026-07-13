@@ -1,34 +1,52 @@
 @echo off
 title SwimIQ - WHY GEMINI FAILS
 cd /d "%~dp0"
+set "OUT=%~dp0GEMINI-DIAGNOSIS.txt"
 echo.
 echo ============================================================
 echo   KARA - Find out WHY video AI is broken
 echo ============================================================
 echo.
-echo This writes GEMINI-DIAGNOSIS.txt in this folder.
-echo NO typing needed - just read the file when done.
+echo Writes GEMINI-DIAGNOSIS.txt - opens in Notepad when done.
+echo Uses Node.js (NOT PowerShell - no more red script errors).
 echo.
 pause
 
-set "PS1=%~dp0scripts\diagnose-gemini-video.ps1"
-if not exist "%PS1%" set "PS1=%~dp0scripts\diagnosis.ps1"
-if not exist "%PS1%" (
-  echo [ERROR] Missing scripts\diagnose-gemini-video.ps1
+where node >nul 2>&1
+if errorlevel 1 (
+  echo.
+  echo NODE.JS NOT INSTALLED
+  echo.
+  echo 1. Opening nodejs.org ...
+  start https://nodejs.org
+  echo 2. Install LTS, restart PC, run this file again.
+  echo.
+  (
+    echo ERROR: Node.js required for diagnosis.
+    echo Install from https://nodejs.org then run KARA-WHY-GEMINI-FAILS.bat again.
+  ) > "%OUT%"
+  start notepad "%OUT%"
+  pause
+  exit /b 1
+)
+
+if not exist "%~dp0scripts\diagnose-gemini.js" (
+  echo.
+  echo [ERROR] Missing scripts\diagnose-gemini.js
   echo Double-click KARA-SEE-UPDATES-NOW.bat first.
   pause
   exit /b 1
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1%"
+node "%~dp0scripts\diagnose-gemini.js"
 set ERR=%ERRORLEVEL%
 
 echo.
 if %ERR% EQU 0 (
-  echo Opening GEMINI-DIAGNOSIS.txt ...
+  echo DONE - opening GEMINI-DIAGNOSIS.txt
 ) else (
-  echo Script had errors - still read GEMINI-DIAGNOSIS.txt if it exists.
+  echo Had errors - read GEMINI-DIAGNOSIS.txt anyway.
 )
-if exist "%~dp0GEMINI-DIAGNOSIS.txt" start notepad "%~dp0GEMINI-DIAGNOSIS.txt"
-
+if exist "%OUT%" start notepad "%OUT%"
 pause
+exit /b %ERR%

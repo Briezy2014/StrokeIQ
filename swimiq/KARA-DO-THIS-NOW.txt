@@ -116,7 +116,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
 ================================================================================
 
 1. FIRST: double-click KARA-WHY-GEMINI-FAILS.bat
-   Opens GEMINI-DIAGNOSIS.txt — plain English, what is actually broken.
+   Opens GEMINI-DIAGNOSIS.txt in Notepad (uses Node.js, not PowerShell).
 
 2. In SwimIQ, open the Video tab.
 
