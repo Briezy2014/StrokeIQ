@@ -1,178 +1,19 @@
 ================================================================================
-  SWIMIQ VIDEO AI — STEP BY STEP (read this whole file)
+  VIDEO AI FIX — see KARA-DO-THIS-NOW.txt (easier, same steps)
 ================================================================================
 
-You are seeing placeholder coaching because Gemini has NOT run on your Supabase
-server yet. Adding GEMINI_API_KEY in Supabase is only step 1 of 2.
+Open KARA-DO-THIS-NOW.txt in this folder. It has every click spelled out.
 
-Android Studio does NOT connect to Gemini or Supabase automatically.
-Android Studio is only for building the Android app on a phone/tablet.
-You do NOT need Android Studio to fix video analysis.
+Quick list (all double-click, NO Command Prompt):
 
+  A. FIX-KARA-PATHS.bat          (once — fixes Kara Williams space)
+  B. KARA-SEE-UPDATES-NOW.bat    (latest code + Chrome)
+  C. GEMINI_API_KEY in Supabase  (website, you may have done this)
+  D. Install Node.js from nodejs.org, restart PC
+  E. KARA-GEMINI-FIX-NOW.bat     (AFTER step D — deploys Gemini server)
+  F. KARA-CLICK-THIS.bat         (open app)
+  G. Video tab → Test video server → Analyze
 
---------------------------------------------------------------------------------
-WHAT CONNECTS TO WHAT (simple picture)
---------------------------------------------------------------------------------
-
-  Your SwimIQ app (phone, tablet, or Chrome)
-        |
-        |  uploads video + taps Analyze
-        v
-  Supabase cloud (your project: bryurwyeosbffvfpdpbv)
-        |
-        |  Edge Function: analyze-swim-video  <-- THIS MUST BE DEPLOYED
-        v
-  Google Gemini API (uses GEMINI_API_KEY secret you added)
-
-MediaPipe (body angles) runs inside the app when enabled. Today it is turned
-off in all builds. Real video-specific coaching comes from Gemini on the server.
-
-
---------------------------------------------------------------------------------
-BEFORE YOU START — GET THE LATEST CODE
---------------------------------------------------------------------------------
-
-1. Open Command Prompt or PowerShell on your Windows PC.
-2. Go to your StrokeIQ / swimiq project folder (where you cloned from GitHub).
-3. Run:
-     git pull origin main
-   (or pull the branch your developer gave you)
-
-4. Confirm these files exist inside the swimiq folder:
-     KARA-GEMINI-FIX-NOW.bat
-     KARA-VIDEO-AI-FIX.txt   (this file)
-     INSTALL-SUPABASE-CLI.bat
-
-
---------------------------------------------------------------------------------
-STEP 1 — GEMINI API KEY IN SUPABASE (you may have done this)
---------------------------------------------------------------------------------
-
-1. Open https://supabase.com/dashboard
-2. Open your SwimIQ project.
-3. Left sidebar: Project Settings (gear) → Edge Functions → Secrets
-4. You must have a secret named exactly:  GEMINI_API_KEY
-   Value: your key from https://aistudio.google.com/apikey (starts with AIza...)
-
-If the secret is missing or misspelled, analysis will fail.
-
-
---------------------------------------------------------------------------------
-STEP 2 — INSTALL NODE.JS (required for deploy; NOT Android Studio)
---------------------------------------------------------------------------------
-
-1. Open https://nodejs.org
-2. Download the green "LTS" Windows installer.
-3. Install with default options.
-4. Restart your PC (or at least close and reopen Command Prompt).
-
-Check it worked:
-  Open Command Prompt, type:  node --version
-  You should see a version number (e.g. v22.x.x).
-
-
---------------------------------------------------------------------------------
-STEP 3 — DEPLOY THE VIDEO SERVER (the step that was missing)
---------------------------------------------------------------------------------
-
-1. In File Explorer, open your swimiq folder (inside StrokeIQ repo).
-2. Double-click:  KARA-GEMINI-FIX-NOW.bat
-3. Read each step. Press a key when it asks.
-4. Step 2 opens a browser — sign in to Supabase with the Google account that
-   owns your SwimIQ project.
-5. Step 3 links project ref: bryurwyeosbffvfpdpbv
-6. Step 4 deploys analyze-swim-video.
-
-SUCCESS looks like:
-  "SUCCESS - Server is updated"
-
-If it fails:
-  - "Node.js not installed" → do Step 2 above.
-  - "STEP 2 FAILED" → wrong Supabase login; use the account that created the project.
-  - "STEP 4 FAILED" → check GEMINI_API_KEY secret in Supabase.
-
-
---------------------------------------------------------------------------------
-STEP 4 — VERIFY IN SUPABASE DASHBOARD (do not skip)
---------------------------------------------------------------------------------
-
-1. Supabase Dashboard → Edge Functions
-2. You should see:  analyze-swim-video
-3. Click it → Logs (after you test) should show invocations, not 404.
-
-If analyze-swim-video is NOT in the list, Step 3 did not finish — run the bat again.
-
-
---------------------------------------------------------------------------------
-STEP 5 — VERIFY IN THE SWIMIQ APP
---------------------------------------------------------------------------------
-
-1. Open SwimIQ (Chrome or Android build).
-2. Video tab → tap "Test video server" (under Your Videos).
-
-GOOD message:
-  "Video server ready (version 2026-file-api, max 100 MB). Tap Analyze on your clip."
-
-BAD messages and what they mean:
-  - "function not deployed" → run KARA-GEMINI-FIX-NOW.bat again
-  - "GEMINI_API_KEY missing" → fix secret name spelling in Supabase
-  - "Old video server still running" → run KARA-GEMINI-FIX-NOW.bat again
-
-
---------------------------------------------------------------------------------
-STEP 6 — ANALYZE YOUR CLIP AGAIN
---------------------------------------------------------------------------------
-
-1. Video tab → your uploaded clip
-2. Tap Analyze (or Run AI Swim Analysis)
-3. Wait up to 90 seconds (large videos can take longer)
-
-SUCCESS — you will see:
-  - Scores show numbers like 72/100 (not a dash —)
-  - Label: "Gemini — frame-by-frame video analysis"
-  - NO orange banner about "notes-based coaching"
-  - Coaching mentions what is actually in YOUR video
-
-FAILURE — you still see:
-  - Dashes for Overall / Technique / Pace
-  - "Video not analyzed yet..."
-  - Orange notes-based banner
-  → Run Test video server and fix what it says before analyzing again.
-
-
---------------------------------------------------------------------------------
-DELETE VIDEOS
---------------------------------------------------------------------------------
-
-After you pull the latest app update, each video card has a red trash icon
-(top right of the card). Tap it → confirm Delete.
-
-This removes the video file and saved analysis from your account.
-
-
---------------------------------------------------------------------------------
-MANUAL DEPLOY (if the bat file will not run)
---------------------------------------------------------------------------------
-
-Open Command Prompt in the swimiq folder:
-
-  npm install supabase --save-dev
-  npx supabase login
-  npx supabase link --project-ref bryurwyeosbffvfpdpbv
-  npx supabase functions deploy analyze-swim-video
-
-Same success criteria as Step 3.
-
-
---------------------------------------------------------------------------------
-STILL STUCK?
---------------------------------------------------------------------------------
-
-Send your developer:
-  1. Screenshot of Supabase → Edge Functions list
-  2. Screenshot of the "Test video server" snackbar message
-  3. Last 20 lines from the KARA-GEMINI-FIX-NOW.bat window
-
-Full doc: swimiq/docs/GEMINI_SETUP.md
+Do NOT move files into the android folder.
 
 ================================================================================

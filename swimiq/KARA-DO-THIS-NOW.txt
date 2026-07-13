@@ -1,0 +1,155 @@
+================================================================================
+  KARA — DO THIS NOW (no Command Prompt, no Android Studio)
+================================================================================
+
+READ THIS FIRST
+---------------
+• You do NOT need Command Prompt for any step below — only double-click files.
+• Do NOT move the project into the android folder. That will BREAK the app.
+  The android folder is only one small piece. The whole project stays in StrokeIQ.
+• Android Studio does NOT fix video AI. Ignore ChatGPT if it says to use android folder.
+
+Your Windows username "Kara Williams" has a SPACE. That breaks Flutter unless you
+run the path fix once (Step A below).
+
+
+================================================================================
+  STEP A — FIX THE SPACE IN "KARA WILLIAMS" (do once)
+================================================================================
+
+1. Open File Explorer (folder icon on taskbar).
+
+2. Go to your StrokeIQ folder. Usually:
+     Desktop → StrokeIQ → swimiq
+   Full path might look like:
+     C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ\swimiq
+
+3. Inside the swimiq folder, find this file:
+     FIX-KARA-PATHS.bat
+
+4. DOUBLE-CLICK FIX-KARA-PATHS.bat
+   • A black window opens — wait until it says DONE.
+   • If it says ERROR, double-click RESTORE-SCRIPTS.bat first, then try again.
+
+5. This creates C:\SwimIQWork (no spaces). You still open files from your
+   Desktop StrokeIQ folder — the bat files handle the rest.
+
+
+================================================================================
+  STEP B — GET THE LATEST UPDATES (no typing commands)
+================================================================================
+
+1. Same swimiq folder on your Desktop.
+
+2. DOUBLE-CLICK:  KARA-SEE-UPDATES-NOW.bat
+
+3. Wait. It pulls code from GitHub and opens Chrome with SwimIQ.
+   • First time can take 2–3 minutes.
+   • Leave the black window open until Chrome shows the app.
+
+
+================================================================================
+  STEP C — GEMINI API KEY (you probably did this already)
+================================================================================
+
+1. In Chrome, go to:  https://supabase.com/dashboard
+2. Open your SwimIQ project.
+3. Click the gear (Project Settings) → Edge Functions → Secrets.
+4. You need a secret named exactly:  GEMINI_API_KEY
+   (value = your AIza key from https://aistudio.google.com/apikey)
+
+
+================================================================================
+  STEP D — INSTALL NODE.JS (this is what "step 2" was — then go to E)
+================================================================================
+
+1. In Chrome, go to:  https://nodejs.org
+2. Click the big green button that says LTS (recommended).
+3. Run the downloaded installer — click Next through everything (defaults OK).
+4. RESTART YOUR COMPUTER when it finishes. (Important.)
+
+You do NOT need to open Command Prompt to check Node. Step E checks for you.
+
+
+================================================================================
+  STEP E — AFTER NODE.JS: DEPLOY GEMINI (this is what was missing)
+================================================================================
+
+AFTER your PC restarts:
+
+1. File Explorer → Desktop → StrokeIQ → swimiq
+
+2. DOUBLE-CLICK:  KARA-GEMINI-FIX-NOW.bat
+
+3. Black window opens. Press any key when it says to.
+
+4. STEP 1 — "Installing Supabase tools" — wait, can take 1–2 minutes.
+
+5. STEP 2 — Browser opens for Supabase login.
+   • Sign in with the Google account that owns your SwimIQ Supabase project.
+   • Come back to the black window when login succeeds.
+
+6. STEP 3 — "Link SwimIQ project" — automatic, wait.
+
+7. STEP 4 — "Deploy video analysis" — wait 30–60 seconds.
+
+8. SUCCESS looks like this in the black window:
+     SUCCESS - Server is updated
+
+If it says "Node.js not installed" → redo Step D and restart PC, then run this bat again.
+
+
+================================================================================
+  STEP F — OPEN THE APP
+================================================================================
+
+1. File Explorer → swimiq folder
+
+2. DOUBLE-CLICK:  KARA-CLICK-THIS.bat
+   (or KARA-SEE-UPDATES-NOW.bat if you want updates + Chrome together)
+
+3. Wait for Chrome to show SwimIQ and log in.
+
+
+================================================================================
+  STEP G — TEST VIDEO AI IN THE APP
+================================================================================
+
+1. In SwimIQ, open the Video tab.
+
+2. Tap:  Test video server  (under "Your Videos")
+
+   GOOD message:
+     Video server ready (version 2026-file-api...)
+
+   BAD — run KARA-GEMINI-FIX-NOW.bat again and fix what it says.
+
+3. Tap Analyze on your swim clip. Wait up to 90 seconds.
+
+   SUCCESS:
+   • Scores show numbers (72/100), not a dash —
+   • Says "Gemini — frame-by-frame video analysis"
+   • Coaching matches YOUR video
+
+4. To delete a video: red trash icon on the video card → Delete.
+
+
+================================================================================
+  IF YOU ONLY REMEMBER 4 FILES
+================================================================================
+
+  FIX-KARA-PATHS.bat        — once, fixes Kara Williams space problem
+  KARA-SEE-UPDATES-NOW.bat  — get latest code + open Chrome
+  KARA-GEMINI-FIX-NOW.bat   — after Node.js install, fixes video AI server
+  KARA-CLICK-THIS.bat       — open SwimIQ in Chrome anytime
+
+
+================================================================================
+  STILL BROKEN? SEND 3 SCREENSHOTS
+================================================================================
+
+1. Supabase website → Edge Functions — show the list
+2. SwimIQ app → message after "Test video server"
+3. The black window from KARA-GEMINI-FIX-NOW.bat (last lines)
+
+================================================================================
