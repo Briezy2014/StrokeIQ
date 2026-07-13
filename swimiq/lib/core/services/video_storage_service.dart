@@ -55,4 +55,16 @@ class VideoStorageService {
   Future<Uint8List> downloadVideoBytes(String storagePath) async {
     return _client.storage.from(bucketName).download(storagePath);
   }
+
+  Future<void> deleteSwimVideo({
+    required String videoId,
+    required String storagePath,
+  }) async {
+    try {
+      await _client.storage.from(bucketName).remove([storagePath]);
+    } catch (_) {
+      // Metadata delete still proceeds if the file was already removed.
+    }
+    await _repository.deleteSwimVideo(videoId);
+  }
 }

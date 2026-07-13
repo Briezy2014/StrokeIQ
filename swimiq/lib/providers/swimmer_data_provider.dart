@@ -521,6 +521,55 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<String?> checkVideoServerHealth() async {
+    try {
+      final health =
+          await ref.read(geminiSwimAnalysisServiceProvider).checkServerHealth();
+      return health.message;
+    } on GeminiAnalysisException catch (error) {
+      return error.message;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
+  Future<String?> deleteVideo(SwimVideo video) async {
+    final videoId = video.id;
+    if (videoId == null || videoId.isEmpty) {
+      return 'This video cannot be deleted (missing id).';
+    }
+
+    try {
+      await ref.read(videoStorageServiceProvider).deleteSwimVideo(
+            videoId: videoId,
+            storagePath: video.storagePath,
+          );
+
+      final current = state.value;
+      if (current != null) {
+        _localAnalysesByVideoId.remove(videoId);
+        state = AsyncData(
+          current.copyWith(
+            videos: current.videos
+                .where((entry) => entry.id != videoId)
+                .toList(),
+            videoAnalyses: current.videoAnalyses
+                .where((analysis) => analysis.swimVideoId != videoId)
+                .toList(),
+          ),
+        );
+      }
+
+      try {
+        await refresh();
+      } catch (_) {}
+
+      return null;
+    } catch (error) {
+      return error.toString();
+    }
+  }
+
   Future<String?> analyzeVideo(SwimVideo video) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';

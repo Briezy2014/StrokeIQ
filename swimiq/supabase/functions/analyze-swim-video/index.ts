@@ -61,6 +61,7 @@ type PoseMetrics = {
 };
 
 type AnalyzeRequest = {
+  health_check?: boolean;
   storage_path?: string;
   video_id?: string;
   swimmer?: string;
@@ -104,6 +105,23 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as AnalyzeRequest;
+
+    if (body.health_check === true) {
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          gemini_configured: true,
+          function_version: "2026-file-api",
+          max_video_mb: 100,
+          inline_max_mb: 18,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        },
+      );
+    }
+
     const storagePath = body.storage_path?.trim();
     if (!storagePath) {
       return jsonError("storage_path is required.", 400);

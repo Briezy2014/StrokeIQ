@@ -17,6 +17,51 @@ class GeminiSwimAnalysisService {
 
   final SupabaseClient _client;
 
+  /// Ping the deployed edge function — confirms server update + API key.
+  Future<VideoAnalysisServerHealth> checkServerHealth() async {
+    final response = await _client.functions.invoke(
+      functionName,
+      body: {'health_check': true},
+    );
+
+    final data = response.data;
+    if (response.status == 200 && data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      if (map['ok'] == true) {
+        return VideoAnalysisServerHealth.fromJson(map);
+      }
+      if (map['error'] != null) {
+        return VideoAnalysisServerHealth.failed(map['error'].toString());
+      }
+    }
+
+    if (response.status == 400 &&
+        data is Map &&
+        data['error']?.toString().contains('storage_path') == true) {
+      return VideoAnalysisServerHealth.failed(
+        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy the update.',
+      );
+    }
+
+    if (response.status == 404) {
+      return VideoAnalysisServerHealth.failed(
+        'analyze-swim-video function not deployed — run KARA-GEMINI-FIX-NOW.bat.',
+      );
+    }
+
+    if (response.status == 503 &&
+        data is Map &&
+        data['error']?.toString().toLowerCase().contains('gemini_api_key') == true) {
+      return VideoAnalysisServerHealth.failed(
+        'GEMINI_API_KEY missing in Supabase → Edge Functions → Secrets.',
+      );
+    }
+
+    return VideoAnalysisServerHealth.failed(
+      'Server check failed (${response.status}). Deploy analyze-swim-video.',
+    );
+  }
+
   Future<SwimVideoAnalysis> analyzeVideo({
     required SwimVideo video,
     required List<RaceLog> raceLogs,
@@ -138,4 +183,32 @@ class GeminiAnalysisException implements Exception {
 
   @override
   String toString() => message;
+}
+
+class VideoAnalysisServerHealth {
+  const VideoAnalysisServerHealth({
+    required this.ok,
+    required this.message,
+    this.functionVersion,
+    this.maxVideoMb,
+  });
+
+  factory VideoAnalysisServerHealth.fromJson(Map<String, dynamic> json) {
+    return VideoAnalysisServerHealth(
+      ok: true,
+      message: 'Video server ready (version ${json['function_version']}, '
+          'max ${json['max_video_mb']} MB). Tap Analyze on your clip.',
+      functionVersion: json['function_version']?.toString(),
+      maxVideoMb: int.tryParse(json['max_video_mb']?.toString() ?? ''),
+    );
+  }
+
+  factory VideoAnalysisServerHealth.failed(String message) {
+    return VideoAnalysisServerHealth(ok: false, message: message);
+  }
+
+  final bool ok;
+  final String message;
+  final String? functionVersion;
+  final int? maxVideoMb;
 }

@@ -241,6 +241,10 @@ class SwimIqRepository {
     return SwimVideoAnalysis.fromSupabaseRow(response);
   }
 
+  Future<void> deleteSwimVideo(String videoId) async {
+    await _client.from('swim_videos').delete().eq('id', videoId);
+  }
+
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {
     final response = await _client
         .from('usa_time_standards')
