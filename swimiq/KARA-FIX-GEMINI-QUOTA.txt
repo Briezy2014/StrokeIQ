@@ -1,147 +1,65 @@
 ================================================================================
-  KARA - FIX GEMINI QUOTA ERROR (429 / limit 0) - READ THIS
+  KARA - FIX VIDEO AI (the REAL answer - July 2026)
 ================================================================================
 
-YOUR SCREENSHOT SHOWED THE REAL PROBLEM (finally):
+YOU DO NOT NEED A GEMINI_MODEL SECRET.
+Your Supabase screenshot is correct: only GEMINI_API_KEY is required.
 
-  Google Gemini error 429 RESOURCE_EXHAUSTED
-  model: gemini-2.0-flash
-  limit: 0
+The error about gemini-1.5-flash is MISLEADING. Google retired old models.
+New API keys often CANNOT use gemini-2.5 or gemini-1.5 anymore.
 
-That means:
-  - Supabase is working (your diagnosis proved that)
-  - GEMINI_API_KEY is on the server (True)
-  - Google REFUSES requests because gemini-2.0-flash is RETIRED
-    (Google shut it down - quota is literally ZERO)
-
-This is NOT Android Studio, NOT Kara Williams spaces, NOT Supabase secrets
-done wrong. The server was calling a dead AI model.
+SwimIQ now auto-picks gemini-3.5-flash (or the newest model your key allows).
 
 
 ================================================================================
-  FIX PART 1 - DEPLOY THE UPDATED SERVER (double-click)
+  WHAT WAS WRONG (honest)
 ================================================================================
 
-1. File Explorer -> Desktop -> StrokeIQ -> swimiq
-
-2. Double-click:  KARA-SEE-UPDATES-NOW.bat
-   (gets the fix that switches to gemini-2.5-flash)
-
-3. Double-click:  KARA-GEMINI-FIX-NOW.bat
-   Wait for:  SUCCESS - Server is updated
-
-4. Double-click:  KARA-WHY-GEMINI-FAILS.bat
-   GEMINI-DIAGNOSIS.txt should now say:
-     Version: 2026-gemini-25-flash
-     Gemini model: gemini-2.5-flash
+1. Supabase + GEMINI_API_KEY = OK (your diagnosis proved this)
+2. Google rejects OLD model names for many keys
+3. The server must DEPLOY the latest code that asks Google which models work
+4. You may need a FRESH API key from Google AI Studio
 
 
 ================================================================================
-  FIX PART 2 - IN THE APP
+  FIX - WHEN YOU ARE BACK (4 steps)
 ================================================================================
 
-1. Double-click KARA-CLICK-THIS.bat
+STEP 1 - NEW GOOGLE API KEY (2 minutes, website)
 
-2. Video tab -> Test video server
-   Should mention gemini-2.5-flash
+1. Open https://aistudio.google.com/apikey
+2. Click "Create API key"
+3. Choose "Create API key in new project" (important - new project)
+4. Copy the new AIza... key
 
-3. WAIT 2 MINUTES (Google rate limit from your failed attempts)
+STEP 2 - UPDATE SUPABASE (website)
 
-4. Tap ANALYZE on your swim clip again (wait 90 sec)
+1. https://supabase.com/dashboard -> your project
+2. Project Settings -> Edge Functions -> Secrets
+3. Click GEMINI_API_KEY -> Edit -> paste the NEW key -> Save
+4. You do NOT add GEMINI_MODEL. Only GEMINI_API_KEY.
 
-SUCCESS:
-  - Numbers for scores (not dashes)
-  - "Gemini - frame-by-frame video analysis"
-  - No orange quota error
-
-
-================================================================================
-  FIX PART 3 - IF YOU STILL GET QUOTA ERRORS
-================================================================================
-
-Google may require billing LINKED (you are still on free tier - not charged
-for normal tester use). Do this once:
-
-1. Open:  https://aistudio.google.com/apikey
-
-2. Click the key you use for SwimIQ
-
-3. Note which Google Cloud project it is linked to
-
-4. Open:  https://console.cloud.google.com/billing
-
-5. Link a billing account to that project
-   (Google requires this for free-tier API quota on many accounts)
-
-6. In Supabase, you do NOT need a new key if the same key works in AI Studio.
-   If unsure: create a NEW key in AI Studio -> new project -> paste into
-   Supabase -> Edge Functions -> Secrets -> GEMINI_API_KEY
-
-7. Run KARA-GEMINI-FIX-NOW.bat again
-
-8. Wait 2 minutes, tap Analyze again
-
-
-================================================================================
-  DO NOT
-================================================================================
-
-  - Move files into android folder
-  - Use Android Studio for this fix
-  - Keep tapping Analyze rapidly (triggers per-minute quota)
-
-
-================================================================================
-  NEW ERROR: gemini-1.5-flash no longer available
-================================================================================
-
-Your Technical error says gemini-1.5-flash. That model is RETIRED by Google.
-
-This usually means Supabase has an OLD secret named GEMINI_MODEL set to
-gemini-1.5-flash (from an old tutorial). The server must use gemini-2.5-flash.
-
-
-================================================================================
-  FIX - DO THESE IN ORDER (when you are back)
-================================================================================
-
-STEP 1 - DELETE THE BAD SECRET IN SUPABASE (website)
-
-1. Open https://supabase.com/dashboard
-2. Your SwimIQ project
-3. Project Settings (gear) -> Edge Functions -> Secrets
-4. If you see a secret named GEMINI_MODEL - DELETE IT
-   (Keep GEMINI_API_KEY - that one stays)
-5. Only GEMINI_API_KEY should remain for Gemini
-
-STEP 2 - GET CODE + DEPLOY
+STEP 3 - DEPLOY LATEST SERVER (double-click on PC)
 
 1. Desktop -> StrokeIQ -> swimiq
-2. Double-click KARA-SEE-UPDATES-NOW.bat
-3. Double-click KARA-GEMINI-FIX-NOW.bat
-4. Wait for SUCCESS
+2. KARA-SEE-UPDATES-NOW.bat
+3. KARA-GEMINI-FIX-NOW.bat -> wait for SUCCESS
 
-STEP 3 - CONFIRM MODEL
+STEP 4 - TEST
 
-1. Double-click KARA-WHY-GEMINI-FAILS.bat
-2. GEMINI-DIAGNOSIS.txt should say: Gemini model: gemini-2.5-flash
-
-STEP 4 - ANALYZE AGAIN
-
-1. KARA-CLICK-THIS.bat
-2. Wait 2 minutes (rate limit)
-3. Video tab -> Analyze (wait 90 sec)
+1. KARA-WHY-GEMINI-FAILS.bat -> read GEMINI-DIAGNOSIS.txt
+   Should say: gemini-3.5-flash and model probe OK
+2. KARA-CLICK-THIS.bat
+3. Video tab -> Test video server
+4. Wait 2 minutes -> Analyze your clip (90 sec)
 
 
 ================================================================================
-  ROPE CLIMB FIX (score 0 = star in water)
+  ROPE CLIMB (score 0 = star in water)
 ================================================================================
 
-Also fixed in this update: when SwimIQ score is 0, the star sits in the
-water (0% up the rope). It was wrongly showing 8-31% because of old code.
-
-After KARA-SEE-UPDATES-NOW.bat, Dashboard score 0 = star at bottom of rope.
+Fixed: score 0 puts the star at the bottom of the rope (in the water).
+Run KARA-SEE-UPDATES-NOW.bat to get that fix too.
 
 
 ================================================================================
-

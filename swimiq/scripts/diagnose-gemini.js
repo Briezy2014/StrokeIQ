@@ -153,14 +153,22 @@ async function main() {
         log('OK - Video server ready.');
         log('  Version: ' + (data.function_version || 'unknown'));
         log('  Gemini model: ' + (data.gemini_model || 'unknown'));
-        log('  Max video MB: ' + (data.max_video_mb || '?'));
-        log('  Gemini key on server: ' + (data.gemini_configured || '?'));
+        if (data.available_models) {
+          log('  Models your key can use: ' + JSON.stringify(data.available_models));
+        }
         log('');
-        log('WHAT THIS MEANS:');
-        log('  Server is OK. Tap ANALYZE on your clip AGAIN in the app.');
-        log('  Old scores are FAKE placeholders until Gemini runs successfully.');
+        log('Tap ANALYZE on your clip again in the app.');
       } else {
-        log('FAIL - ' + health.body);
+        log('FAIL - Gemini model probe failed.');
+        if (data.model_probe_error) log('  ' + data.model_probe_error);
+        if (data.available_models) {
+          log('  Models found: ' + JSON.stringify(data.available_models));
+        }
+        log('');
+        log('FIX (no GEMINI_MODEL secret needed - only GEMINI_API_KEY):');
+        log('  1. aistudio.google.com/apikey -> Create API key in NEW project');
+        log('  2. Supabase secrets -> replace GEMINI_API_KEY value');
+        log('  3. KARA-GEMINI-FIX-NOW.bat -> redeploy');
       }
     } else {
       log('FAIL - health check HTTP ' + health.status);

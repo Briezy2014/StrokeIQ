@@ -6,13 +6,17 @@ const BUCKET = "swim-videos";
 const MAX_INLINE_BYTES = 18 * 1024 * 1024;
 /** Upper cap via Gemini File API (resumable upload). */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-/** Only these models are called — ignores retired secrets like gemini-1.5-flash. */
-const ALLOWED_GEMINI_MODELS = [
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
+/** Tried in order; server auto-picks the first model your API key can use. */
+const PREFERRED_GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const GEMINI_MODEL_FALLBACKS = [...ALLOWED_GEMINI_MODELS];
+const GEMINI_MODEL_FALLBACKS = [...PREFERRED_GEMINI_MODELS];
+const MODEL_CACHE_MS = 5 * 60 * 1000;
+let cachedModelList: { models: string[]; fetchedAt: number } | null = null;
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 120_000;
 
@@ -113,13 +117,25 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as AnalyzeRequest;
 
     if (body.health_check === true) {
-      const model = resolveGeminiModel();
+      const availableModels = await listGeminiVideoModels(geminiApiKey);
+      const model = availableModels[0] ?? DEFAULT_GEMINI_MODEL;
+      let modelProbeOk = false;
+      let modelProbeError: string | null = null;
+      try {
+        await probeGeminiModel(geminiApiKey, model);
+        modelProbeOk = true;
+      } catch (error) {
+        modelProbeError = error instanceof Error ? error.message : String(error);
+      }
       return new Response(
         JSON.stringify({
-          ok: true,
+          ok: modelProbeOk,
           gemini_configured: true,
-          function_version: "2026-gemini-25-flash",
+          function_version: "2026-gemini-auto-model",
           gemini_model: model,
+          available_models: availableModels,
+          model_probe_ok: modelProbeOk,
+          model_probe_error: modelProbeError,
           max_video_mb: 100,
           inline_max_mb: 18,
         }),
@@ -161,7 +177,8 @@ Deno.serve(async (req) => {
     let geminiFileName: string | null = null;
 
     let geminiJson: Record<string, unknown>;
-    let geminiModelUsed = resolveGeminiModel();
+    let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
+      DEFAULT_GEMINI_MODEL;
     try {
       if (useFileApi) {
         const uploaded = await uploadVideoToGeminiFile(
@@ -543,25 +560,79 @@ async function callGeminiGenerateContent(
 
 function resolveGeminiModel(): string {
   const configured = Deno.env.get("GEMINI_MODEL")?.trim();
-  if (configured && ALLOWED_GEMINI_MODELS.includes(configured)) {
+  if (configured && PREFERRED_GEMINI_MODELS.includes(configured)) {
     return configured;
-  }
-  if (configured) {
-    console.warn(
-      `Ignoring unsupported GEMINI_MODEL secret "${configured}" - using ${DEFAULT_GEMINI_MODEL}. ` +
-        "Remove GEMINI_MODEL from Supabase secrets unless it is gemini-2.5-flash.",
-    );
   }
   return DEFAULT_GEMINI_MODEL;
 }
 
-function modelCandidates(): string[] {
-  const primary = resolveGeminiModel();
-  return [
-    primary,
-    ...GEMINI_MODEL_FALLBACKS.filter((model) => model !== primary),
-  ];
+async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+    );
+    if (!response.ok) {
+      return [...PREFERRED_GEMINI_MODELS];
+    }
+    const data = await response.json() as {
+      models?: Array<{
+        name?: string;
+        supportedGenerationMethods?: string[];
+      }>;
+    };
+    const available = new Set<string>();
+    for (const entry of data.models ?? []) {
+      const name = entry.name?.replace(/^models\//, "") ?? "";
+      const methods = entry.supportedGenerationMethods ?? [];
+      if (name && methods.includes("generateContent")) {
+        available.add(name);
+      }
+    }
+    const preferred = PREFERRED_GEMINI_MODELS.filter((model) =>
+      available.has(model)
+    );
+    if (preferred.length > 0) {
+      return preferred;
+    }
+    const flashModels = [...available].filter((name) =>
+      name.includes("flash") && !name.includes("tts") && !name.includes("live")
+    );
+    return flashModels.length > 0 ? flashModels.slice(0, 4) : [...PREFERRED_GEMINI_MODELS];
+  } catch {
+    return [...PREFERRED_GEMINI_MODELS];
+  }
 }
+
+async function getModelCandidates(apiKey: string): Promise<string[]> {
+  const now = Date.now();
+  if (cachedModelList && now - cachedModelList.fetchedAt < MODEL_CACHE_MS) {
+    return cachedModelList.models;
+  }
+  const models = await listGeminiVideoModels(apiKey);
+  cachedModelList = { models, fetchedAt: now };
+  return models;
+}
+
+async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Reply with exactly: OK" }] }],
+      }),
+    },
+  );
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(
+      friendlyGeminiHttpError(errText, model, response.status) ??
+        `Gemini probe failed for ${model}: ${errText}`,
+    );
+  }
+}
+
 
 function isRetriableModelError(message: string): boolean {
   const lower = message.toLowerCase();
@@ -586,10 +657,11 @@ function friendlyGeminiHttpError(
 ): string | null {
   const lower = errText.toLowerCase();
   if (status === 404 || lower.includes("no longer available") ||
-      lower.includes("gemini-1.5")) {
-    return "Gemini model is retired (often gemini-1.5-flash in Supabase secrets). "
-      + "Supabase -> Edge Functions -> Secrets -> DELETE GEMINI_MODEL if present. "
-      + "Then run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash.";
+      lower.includes("not found for api version")) {
+    return `Google rejected model "${model}" for your API key. New Google keys often `
+      + `cannot use gemini-2.5 or gemini-1.5. Run KARA-GEMINI-FIX-NOW.bat to deploy `
+      + `auto-model picking (gemini-3.5-flash). If it still fails, create a NEW key at `
+      + `aistudio.google.com/apikey and update GEMINI_API_KEY in Supabase (keep only that secret).`;
   }
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
@@ -613,10 +685,12 @@ async function callGeminiGenerateContentWithFallback(
   videoPart: GeminiVideoPart,
   prompt: string,
 ): Promise<{ json: Record<string, unknown>; model: string }> {
-  const models = modelCandidates();
+  const models = await getModelCandidates(apiKey);
   let lastError = "Gemini request failed.";
+  const attempted: string[] = [];
 
   for (const model of models) {
+    attempted.push(model);
     try {
       const json = await callGeminiGenerateContent(apiKey, model, videoPart, prompt);
       return { json, model };
@@ -624,12 +698,14 @@ async function callGeminiGenerateContentWithFallback(
       lastError = error instanceof Error ? error.message : String(error);
       const isLast = model === models[models.length - 1];
       if (!isRetriableModelError(lastError) || isLast) {
-        throw new Error(lastError);
+        throw new Error(
+          `${lastError} (tried: ${attempted.join(", ")})`,
+        );
       }
     }
   }
 
-  throw new Error(lastError);
+  throw new Error(`${lastError} (tried: ${attempted.join(", ")})`);
 }
 
 function normalizeAnalysis(

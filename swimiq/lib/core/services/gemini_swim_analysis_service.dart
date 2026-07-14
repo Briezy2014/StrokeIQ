@@ -191,16 +191,32 @@ class VideoAnalysisServerHealth {
     required this.message,
     this.functionVersion,
     this.maxVideoMb,
+    this.geminiModel,
+    this.availableModels,
+    this.modelProbeOk,
   });
 
   factory VideoAnalysisServerHealth.fromJson(Map<String, dynamic> json) {
+    final models = json['available_models'];
+    final modelList = models is List
+        ? models.map((m) => m.toString()).join(', ')
+        : json['gemini_model']?.toString();
+    final probeOk = json['model_probe_ok'] == true;
+    final probeError = json['model_probe_error']?.toString();
     return VideoAnalysisServerHealth(
-      ok: true,
-      message: 'Video server ready (version ${json['function_version']}, '
-          'model ${json['gemini_model'] ?? 'gemini-2.5-flash'}, '
-          'max ${json['max_video_mb']} MB). Tap Analyze on your clip.',
+      ok: json['ok'] == true,
+      message: json['ok'] == true
+          ? 'Video server ready (version ${json['function_version']}, '
+              'model ${json['gemini_model']}, '
+              'max ${json['max_video_mb']} MB). Tap Analyze on your clip.'
+          : probeError ??
+              'Gemini model probe failed. Run KARA-GEMINI-FIX-NOW.bat and check '
+              'GEMINI_API_KEY at aistudio.google.com/apikey.',
       functionVersion: json['function_version']?.toString(),
       maxVideoMb: int.tryParse(json['max_video_mb']?.toString() ?? ''),
+      geminiModel: json['gemini_model']?.toString(),
+      availableModels: modelList,
+      modelProbeOk: probeOk,
     );
   }
 
@@ -212,4 +228,7 @@ class VideoAnalysisServerHealth {
   final String message;
   final String? functionVersion;
   final int? maxVideoMb;
+  final String? geminiModel;
+  final String? availableModels;
+  final bool? modelProbeOk;
 }
