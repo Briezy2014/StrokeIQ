@@ -308,7 +308,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       return 'analyze-swim-video is not deployed — double-click KARA-GEMINI-FIX-NOW.bat.';
     }
     return 'Gemini video analysis was unavailable — notes-based coaching saved. '
-        'Tap Test video server, then read Technical error below.';
+        'Read the orange banner for fix steps, or Technical error below.';
   }
 
   /// Pulls the nested `error:` text from Supabase FunctionException strings.

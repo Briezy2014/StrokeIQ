@@ -12,7 +12,7 @@ Quick list (all double-click, NO Command Prompt):
   D. Install Node.js from nodejs.org, restart PC
   E. KARA-GEMINI-FIX-NOW.bat     (AFTER step D — deploys Gemini server)
   F. KARA-CLICK-THIS.bat         (open app)
-  G. Video tab → Test video server → Analyze
+  G. Video tab → Analyze your clip
 
 Do NOT move files into the android folder.
 

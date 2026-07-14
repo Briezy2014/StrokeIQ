@@ -198,7 +198,7 @@ async function main() {
 
   log('--- NEXT STEPS ---');
   log('1. KARA-SEE-UPDATES-NOW.bat');
-  log('2. Video tab - Test video server');
+  log('2. Video tab - tap Analyze on your clip');
   log('3. Tap Analyze again (wait 90 sec)');
   log('');
   log('Report: ' + outFile);

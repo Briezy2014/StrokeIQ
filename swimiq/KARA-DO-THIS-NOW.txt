@@ -120,7 +120,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
 
 2. In SwimIQ, open the Video tab.
 
-3. Tap:  Test video server  (under "Your Videos" or in the blue box)
+3. Tap:  Analyze on your clip (server check runs automatically)
 
    GOOD message:
      Video server ready (version 2026-file-api...)
@@ -158,7 +158,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
 ================================================================================
 
 1. Supabase website → Edge Functions — show the list
-2. SwimIQ app → message after "Test video server"
+2. SwimIQ app → message after Analyze (or orange banner if setup still needed)
 3. The black window from KARA-GEMINI-FIX-NOW.bat (last lines)
 
 ================================================================================

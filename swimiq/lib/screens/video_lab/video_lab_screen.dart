@@ -111,18 +111,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
   }
 
-  Future<void> _testVideoServer() async {
-    final message =
-        await ref.read(swimmerDataProvider.notifier).checkVideoServerHealth();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message ?? 'Server check complete.'),
-        duration: const Duration(seconds: 8),
-      ),
-    );
-  }
-
   Future<void> _deleteVideo(SwimVideo video) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -304,17 +292,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             ),
             const SizedBox(height: 24),
             Text('Your Videos', style: Theme.of(context).textTheme.titleMedium),
-            if (canRunAi) ...[
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _testVideoServer,
-                  icon: const Icon(Icons.cloud_sync_outlined, size: 18),
-                  label: const Text('Test video server'),
-                ),
-              ),
-            ],
             const SizedBox(height: 8),
             Text(snapshot.latestAnalysisSummary),
             const SizedBox(height: 12),
@@ -333,7 +310,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
                   onDelete: () => _deleteVideo(video),
-                  onTestServer: _testVideoServer,
                   canRunAi: canRunAi,
                   motivationalCut: _videoMotivationalCut(data, video),
                   onCoachNotesChanged: video.id == null
@@ -427,7 +403,6 @@ class _VideoCard extends StatefulWidget {
     required this.canRunAi,
     this.motivationalCut,
     this.onCoachNotesChanged,
-    this.onTestServer,
   });
 
   final SwimVideo video;
@@ -439,7 +414,6 @@ class _VideoCard extends StatefulWidget {
   final bool canRunAi;
   final String? motivationalCut;
   final ValueChanged<String>? onCoachNotesChanged;
-  final VoidCallback? onTestServer;
 
   @override
   State<_VideoCard> createState() => _VideoCardState();
@@ -565,7 +539,6 @@ class _VideoCardState extends State<_VideoCard> {
               VideoAnalysisReport(
                 analysis: widget.analysis!,
                 onCoachNotesChanged: widget.onCoachNotesChanged ?? (_) {},
-                onTestServer: widget.onTestServer,
               ),
             ],
             const SizedBox(height: 12),

@@ -61,8 +61,8 @@ abstract final class VideoAnalysisScores {
       'Your GEMINI_API_KEY in Supabase is enough - you do NOT need GEMINI_MODEL.\n\n'
       'Step 1: aistudio.google.com/apikey - create a NEW key in a NEW project if errors continue.\n\n'
       'Step 2: Supabase secrets - update GEMINI_API_KEY only.\n\n'
-      'Step 3: KARA-GEMINI-FIX-NOW.bat on your PC (deploys auto-model gemini-3.5-flash).\n\n'
-      'Step 4: Test video server - then Analyze again (wait 90s).';
+      'Step 3: KARA-GEMINI-FIX-NOW.bat on your PC (deploys auto-model server).\n\n'
+      'Step 4: Tap Analyze again on your clip (wait ~90 seconds).';
 
   static String overallSummary(SwimVideoAnalysis analysis) {
     if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;

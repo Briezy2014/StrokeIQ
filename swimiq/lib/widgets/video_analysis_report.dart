@@ -12,12 +12,10 @@ class VideoAnalysisReport extends StatefulWidget {
     super.key,
     required this.analysis,
     required this.onCoachNotesChanged,
-    this.onTestServer,
   });
 
   final SwimVideoAnalysis analysis;
   final ValueChanged<String> onCoachNotesChanged;
-  final VoidCallback? onTestServer;
 
   @override
   State<VideoAnalysisReport> createState() => _VideoAnalysisReportState();
@@ -87,10 +85,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         ] else if (fallbackReason != null)
           const SizedBox(height: 4),
         if (awaitingGemini) ...[
-          _DeployStepsCard(
-            body: VideoAnalysisScores.deployStepsBody,
-            onTestServer: widget.onTestServer,
-          ),
+          _DeployStepsCard(body: VideoAnalysisScores.deployStepsBody),
           const SizedBox(height: 12),
         ] else if (engineLabel != null) ...[
           Text(
@@ -423,13 +418,9 @@ class _ScoreTile extends StatelessWidget {
 }
 
 class _DeployStepsCard extends StatelessWidget {
-  const _DeployStepsCard({
-    required this.body,
-    this.onTestServer,
-  });
+  const _DeployStepsCard({required this.body});
 
   final String body;
-  final VoidCallback? onTestServer;
 
   @override
   Widget build(BuildContext context) {
@@ -464,14 +455,6 @@ class _DeployStepsCard extends StatelessWidget {
                   color: Colors.grey.shade800,
                 ),
           ),
-          if (onTestServer != null) ...[
-            const SizedBox(height: 12),
-            FilledButton.tonalIcon(
-              onPressed: onTestServer,
-              icon: const Icon(Icons.cloud_sync_outlined, size: 18),
-              label: const Text('Test video server'),
-            ),
-          ],
         ],
       ),
     );

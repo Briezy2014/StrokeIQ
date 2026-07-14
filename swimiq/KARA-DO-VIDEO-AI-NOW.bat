@@ -61,7 +61,7 @@ if %ERR% NEQ 0 (
   echo ============================================================
   echo.
   echo Double-click KARA-CLICK-THIS.bat
-  echo Video tab - Test video server - then Analyze your clip.
+  echo Video tab - tap Analyze on your clip.
   echo.
   set /p OPENAPP="Open SwimIQ in Chrome now? (Y/N): "
   if /i "%OPENAPP%"=="Y" (
