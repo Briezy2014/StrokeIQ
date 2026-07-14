@@ -5,25 +5,15 @@ SwimIQ Video Lab uses **Gemini** for coaching reports on all platforms.
 | Layer | Where it runs | What it does |
 |-------|---------------|--------------|
 | **Gemini coaching** | Supabase Edge Function | Watches the video + athlete context → parent-friendly coaching report |
-| **Pose metrics** | Android (coming back) | BlazePose / MediaPipe-compatible body landmarks |
+| **Pose metrics** | Web (Chrome) + Android planned | MediaPipe Pose Landmarker in browser |
 
-**Windows + Chrome:** Use Gemini coaching now. On-device pose was temporarily removed from web/desktop builds so Flutter runs on PCs where the username has a space (see [WINDOWS_SETUP.md](WINDOWS_SETUP.md)).
-
-## How it works
-
-1. Upload a swim clip in **Video Lab**
-2. Tap **Run AI analysis**
-3. The app calls the **analyze-swim-video** Edge Function (Gemini)
-4. The report is saved and shown in the app
-
-See [GEMINI_SETUP.md](GEMINI_SETUP.md) for API key + deploy steps.
-
-## Platform support
+**Windows + Chrome:** Gemini coaching + MediaPipe body-line metrics run in Chrome. 
+On-device pose does not use Android Studio — only the browser.
 
 | Platform | Gemini report | On-device pose |
 |----------|---------------|----------------|
-| **Web (Chrome)** | Yes | Coming back on Android |
-| **Android** | Yes | Planned |
+| **Web (Chrome)** | Yes | Yes (MediaPipe JS) |
+| **Android** | Yes | Planned (native) |
 | **iOS** | Yes | Planned (Mac build required) |
 
 ## Tips for better Gemini reports

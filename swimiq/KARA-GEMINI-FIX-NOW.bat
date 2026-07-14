@@ -98,7 +98,7 @@ if errorlevel 1 (
 echo STEP 3 OK
 
 echo.
-echo STEP 4 of 4 - Deploy video analysis to your server...
+echo STEP 4 of 5 - Deploy video analysis to your server...
 call %SUPABASE_CMD% functions deploy analyze-swim-video
 if errorlevel 1 (
   echo STEP 4 FAILED - is GEMINI_API_KEY in Supabase - Edge Functions - Secrets?
@@ -107,8 +107,24 @@ if errorlevel 1 (
 )
 
 echo.
+echo STEP 5 of 5 - Verify server version (must be 2026-gemini-stream-v5)...
+where node >nul 2>&1
+if not errorlevel 1 (
+  if exist "%~dp0scripts\diagnose-gemini.js" (
+    node "%~dp0scripts\diagnose-gemini.js"
+    echo.
+    echo Read GEMINI-DIAGNOSIS.txt — if version is OLD, run this bat again.
+    if exist "%~dp0GEMINI-DIAGNOSIS.txt" start notepad "%~dp0GEMINI-DIAGNOSIS.txt"
+  ) else (
+    echo diagnose-gemini.js missing — run RESTORE-SCRIPTS.bat then this file again.
+  )
+) else (
+  echo Node.js needed to verify deploy — install from nodejs.org if unsure.
+)
+
+echo.
 echo ============================================================
-echo   SUCCESS - Server is updated
+echo   SUCCESS - Server deploy finished
 echo ============================================================
 echo.
 echo NOW:

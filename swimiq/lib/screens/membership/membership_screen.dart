@@ -143,9 +143,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Center(child: SwimIqLoginBrand(size: 96)),
-                    const SizedBox(height: 14),
-                    const Center(child: SwimIqWordmark(fontSize: 28)),
+                    const Center(child: SwimIqFullLockup(width: 220, framed: true)),
                     const SizedBox(height: 12),
                     Text(
                       'Every new athlete gets a ${SubscriptionCatalog.trialDays}-day Elite trial. '

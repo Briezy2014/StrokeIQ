@@ -151,12 +151,16 @@ async function main() {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
-        const current = '2026-gemini-stream-v4';
+        const current = '2026-gemini-stream-v5';
         if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
-          log('  Need: ' + current);
+          log('  Need: ' + current + ' (streams video — fixes 546 errors)');
           log('');
           log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
+        } else if (version && version < current) {
+          log('WARN - Server version is older than latest: ' + version);
+          log('  Latest: ' + current);
+          log('FIX: Run KARA-GEMINI-FIX-NOW.bat again to deploy v5.');
         } else {
           log('OK - Video server ready.');
           log('  Version: ' + version);

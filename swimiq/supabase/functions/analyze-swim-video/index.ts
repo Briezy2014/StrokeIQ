@@ -4,7 +4,7 @@ const BUCKET = "swim-videos";
 /** Always stream via Gemini File API — inline base64 blows Supabase memory (546 errors). */
 const MAX_INLINE_BYTES = 0;
 /** Edge-safe max clip size (Supabase worker memory limit). */
-const MAX_FILE_API_BYTES = 50 * 1024 * 1024;
+const MAX_FILE_API_BYTES = 25 * 1024 * 1024;
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
@@ -13,7 +13,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v4";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v5";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
           available_models: availableModels,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
-          max_video_mb: 50,
+          max_video_mb: 25,
           inline_max_mb: 0,
         }),
         {
@@ -162,6 +162,15 @@ Deno.serve(async (req) => {
     const displayName = body.title?.trim() ||
       storagePath.split("/").pop() ||
       "swim-video";
+
+    const objectSize = await getStorageObjectSize(admin, storagePath);
+    if (objectSize > MAX_FILE_API_BYTES) {
+      return jsonError(
+        `Video is too large for analysis (max ~25 MB on server, yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Trim the clip and try again.`,
+        413,
+        CURRENT_FUNCTION_VERSION,
+      );
+    }
 
     let geminiJson: Record<string, unknown>;
     let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
@@ -203,8 +212,8 @@ Deno.serve(async (req) => {
       if (message.toLowerCase().includes("resource") ||
           message.toLowerCase().includes("546")) {
         return jsonError(
-          "Video too heavy for the server worker — trim to under 30 seconds or "
-          + "under 25 MB, then tap Analyze again.",
+          "Video server worker limit (546) — run KARA-GEMINI-FIX-NOW.bat to deploy "
+          + "streaming server v5, then trim clips under 25 MB / ~30 sec.",
           413,
           CURRENT_FUNCTION_VERSION,
         );
@@ -425,6 +434,38 @@ type GeminiVideoPart =
   | { file_data: { mime_type: string; file_uri: string } };
 
 type GeminiUploadMethod = "inline" | "file_api";
+
+async function getStorageObjectSize(
+  admin: ReturnType<typeof createClient>,
+  storagePath: string,
+): Promise<number> {
+  const normalized = storagePath.replace(/^\/+/, "");
+  const parts = normalized.split("/");
+  const fileName = parts.pop() ?? normalized;
+  const folder = parts.join("/");
+
+  const { data, error } = await admin.storage.from(BUCKET).list(folder, {
+    limit: 100,
+    search: fileName,
+  });
+
+  if (error || !data?.length) {
+    return 0;
+  }
+
+  const match = data.find((entry) => entry.name === fileName);
+  if (!match) return 0;
+
+  const metaSize = match.metadata &&
+    typeof match.metadata === "object" &&
+    "size" in match.metadata
+    ? Number((match.metadata as { size?: number }).size)
+    : NaN;
+  if (Number.isFinite(metaSize) && metaSize > 0) return metaSize;
+
+  const listedSize = Number(match.size);
+  return Number.isFinite(listedSize) && listedSize > 0 ? listedSize : 0;
+}
 
 async function openStorageVideoStream(
   admin: ReturnType<typeof createClient>,

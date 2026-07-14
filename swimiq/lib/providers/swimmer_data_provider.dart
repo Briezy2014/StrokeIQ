@@ -284,8 +284,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (lower.contains('worker_resource_limit') ||
         lower.contains('not having enough compute resources') ||
         lower.contains('status: 546')) {
-      return 'Video is too large for the server to process in one pass. '
-          'Trim to a shorter clip (under ~30 seconds or 25 MB) and tap Analyze again.';
+      return 'Your Supabase video server is OUT OF DATE (546 worker limit). '
+          'Double-click KARA-GEMINI-FIX-NOW.bat on your PC, wait for SUCCESS, '
+          'then trim clips to under 30 seconds / 25 MB and tap Analyze again. '
+          'No Android Studio needed.';
     }
     if (lower.contains('delete gemini_model') ||
         lower.contains('gemini_model secret') ||

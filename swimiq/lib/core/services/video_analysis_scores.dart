@@ -28,6 +28,14 @@ abstract final class VideoAnalysisScores {
   /// Rewrites outdated server errors saved from older deploys (e.g. bogus GEMINI_MODEL advice).
   static String sanitizeStoredGeminiMessage(String raw) {
     final lower = raw.toLowerCase();
+    if (lower.contains('worker_resource_limit') ||
+        lower.contains('status: 546') ||
+        lower.contains('not having enough compute resources')) {
+      return 'Your video server is OUT OF DATE or the clip is too large. '
+          'Run KARA-GEMINI-FIX-NOW.bat on your PC (deploys streaming server v5), '
+          'then trim clips to under 30 seconds / 25 MB and tap Analyze again. '
+          'You do NOT need Android Studio or a new API key unless diagnosis says so.';
+    }
     if (lower.contains('delete gemini_model') ||
         lower.contains('gemini_model secret') ||
         (lower.contains('model retired') && lower.contains('gemini-1.5'))) {
@@ -40,9 +48,11 @@ abstract final class VideoAnalysisScores {
           'wait 2 minutes, tap Analyze again (only GEMINI_API_KEY needed in Supabase).';
     }
     if (lower.contains('high demand') ||
-        lower.contains('unavailable') ||
         lower.contains('503') ||
-        lower.contains('is busy right now')) {
+        lower.contains('is busy right now') ||
+        (lower.contains('unavailable') &&
+            !lower.contains('video analysis was unavailable') &&
+            !lower.contains('gemini video analysis was unavailable'))) {
       return 'Google Gemini is temporarily busy. Wait 1-2 minutes and tap Analyze again — '
           'the server tries multiple models with automatic retries.';
     }
@@ -69,12 +79,13 @@ abstract final class VideoAnalysisScores {
       'Video not analyzed yet. Scores and coaching below are placeholders until Gemini runs on your server.';
 
   static const deployStepsBody =
-      'Your GEMINI_API_KEY in Supabase is enough - you do NOT need GEMINI_MODEL.\n\n'
-      'Step 1: Supabase SQL Editor — run supabase/fix_video_tables.sql '
-      '(or FIX-VIDEO-DATABASE.bat).\n\n'
-      'Step 2: aistudio.google.com/apikey — GEMINI_API_KEY in Supabase secrets only.\n\n'
-      'Step 3: KARA-GEMINI-FIX-NOW.bat (deploys streaming server v4).\n\n'
-      'Step 4: Tap Analyze again — clips under 50 MB, ~30 sec work best.';
+      'You do NOT need Android Studio. API key is from aistudio.google.com/apikey '
+      '(not Android Studio).\n\n'
+      'Step 1: FIX-VIDEO-DATABASE.bat or paste SQL in Supabase (once).\n\n'
+      'Step 2: GEMINI_API_KEY in Supabase secrets only — no GEMINI_MODEL.\n\n'
+      'Step 3: KARA-GEMINI-FIX-NOW.bat — must show server v5 after deploy.\n\n'
+      'Step 4: KARA-WHY-GEMINI-FAILS.bat if Analyze still fails.\n\n'
+      'Step 5: Tap Analyze again — clips under 25 MB / ~30 sec work best on web.';
 
   static String overallSummary(SwimVideoAnalysis analysis) {
     if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;

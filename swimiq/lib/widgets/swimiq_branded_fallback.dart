@@ -156,6 +156,18 @@ class _SwimMarkPainter extends CustomPainter {
       ).createShader(Offset.zero & size);
     canvas.drawPath(triangle, trianglePaint);
 
+    // Brand "eye" dot — matches SwimIQ triangle lockup when PNG is missing.
+    canvas.drawCircle(
+      Offset(w * 0.5, h * 0.38),
+      w * 0.09,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.5, h * 0.38),
+      w * 0.045,
+      Paint()..color = AppColors.primaryDeep,
+    );
+
     final swimmer = Path()
       ..moveTo(w * 0.22, h * 0.58)
       ..quadraticBezierTo(w * 0.42, h * 0.42, w * 0.62, h * 0.5)

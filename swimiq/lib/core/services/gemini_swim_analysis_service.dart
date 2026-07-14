@@ -14,7 +14,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-stream-v4';
+  static const currentFunctionVersion = '2026-gemini-stream-v5';
   static const analysisTimeout = Duration(minutes: 3);
 
   final SupabaseClient _client;
@@ -102,6 +102,12 @@ class GeminiSwimAnalysisService {
       final data = response.data;
       if (data is Map && data['error'] != null) {
         throw GeminiAnalysisException(data['error'].toString());
+      }
+      if (response.status == 546) {
+        throw GeminiAnalysisException(
+          'WORKER_RESOURCE_LIMIT (546): video server out of date or clip too large. '
+          'Run KARA-GEMINI-FIX-NOW.bat, then use clips under 25 MB.',
+        );
       }
       throw GeminiAnalysisException(
         'Video analysis service error (${response.status}).',
