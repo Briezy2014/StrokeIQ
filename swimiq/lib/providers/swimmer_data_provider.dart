@@ -282,6 +282,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
           'then tap Analyze again.';
     }
+    if (lower.contains('timed out') || lower.contains('timeout')) {
+      return 'Video analysis timed out — try a shorter clip, wait a minute, '
+          'then tap Analyze again.';
+    }
     if (lower.contains('high demand') ||
         lower.contains('unavailable') ||
         lower.contains('503') ||
@@ -617,9 +621,13 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
         );
       }
 
-      try {
-        await refresh();
-      } catch (_) {}
+      await _reloadPreservingUi();
+
+      final stillThere =
+          state.value?.videos.any((entry) => entry.id == videoId) ?? false;
+      if (stillThere) {
+        return 'Video could not be deleted. Sign in again and retry.';
+      }
 
       return null;
     } catch (error) {
@@ -658,12 +666,6 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       SwimVideoAnalysis analysis;
       String? fallbackNotice;
-
-      final health =
-          await ref.read(geminiSwimAnalysisServiceProvider).checkServerHealth();
-      if (!health.ok) {
-        return health.message;
-      }
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(

@@ -242,7 +242,23 @@ class SwimIqRepository {
   }
 
   Future<void> deleteSwimVideo(String videoId) async {
-    await _client.from('swim_videos').delete().eq('id', videoId);
+    await _client
+        .from('swim_video_analyses')
+        .delete()
+        .eq('swim_video_id', videoId);
+
+    final response = await _client
+        .from('swim_videos')
+        .delete()
+        .eq('id', videoId)
+        .select();
+
+    final rows = supabaseRowsToMaps(response);
+    if (rows.isEmpty) {
+      throw StateError(
+        'Video was not removed from the database. Sign in again and retry.',
+      );
+    }
   }
 
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {

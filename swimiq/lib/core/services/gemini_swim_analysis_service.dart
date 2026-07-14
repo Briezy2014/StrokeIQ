@@ -15,8 +15,14 @@ class GeminiSwimAnalysisService {
 
   static const functionName = 'analyze-swim-video';
   static const currentFunctionVersion = '2026-gemini-auto-model-v3';
+  static const analysisTimeout = Duration(minutes: 3);
 
   final SupabaseClient _client;
+
+  static bool isSupportedFunctionVersion(String? version) {
+    if (version == null || version.isEmpty) return false;
+    return version.startsWith('2026-gemini-auto-model');
+  }
 
   /// Ping the deployed edge function — confirms server update + API key.
   Future<VideoAnalysisServerHealth> checkServerHealth() async {
@@ -71,16 +77,26 @@ class GeminiSwimAnalysisService {
     SwimmerProfile? profile,
     SwimPoseMetrics? poseMetrics,
   }) async {
-    final response = await _client.functions.invoke(
-      functionName,
-      body: buildRequestBody(
-        video: video,
-        raceLogs: raceLogs,
-        goals: goals,
-        profile: profile,
-        poseMetrics: poseMetrics,
-      ),
-    );
+    final response = await _client.functions
+        .invoke(
+          functionName,
+          body: buildRequestBody(
+            video: video,
+            raceLogs: raceLogs,
+            goals: goals,
+            profile: profile,
+            poseMetrics: poseMetrics,
+          ),
+        )
+        .timeout(
+          analysisTimeout,
+          onTimeout: () {
+            throw GeminiAnalysisException(
+              'Video analysis timed out after ${analysisTimeout.inMinutes} minutes. '
+              'Try a shorter clip or tap Analyze again in a minute.',
+            );
+          },
+        );
 
     if (response.status != 200) {
       final data = response.data;
@@ -206,9 +222,10 @@ class VideoAnalysisServerHealth {
     final probeOk = json['model_probe_ok'] == true;
     final probeError = json['model_probe_error']?.toString();
     final version = json['function_version']?.toString();
-    final isCurrentVersion = version == GeminiSwimAnalysisService.currentFunctionVersion;
+    final isCurrentVersion =
+        GeminiSwimAnalysisService.isSupportedFunctionVersion(version);
     return VideoAnalysisServerHealth(
-      ok: json['ok'] == true && isCurrentVersion,
+      ok: json['ok'] == true,
       message: _healthMessage(
         ok: json['ok'] == true,
         isCurrentVersion: isCurrentVersion,
@@ -234,9 +251,8 @@ class VideoAnalysisServerHealth {
     String? probeError,
   }) {
     if (!isCurrentVersion) {
-      return 'Video server is OUT OF DATE (version ${version ?? "unknown"}). '
-          'Run KARA-GEMINI-FIX-NOW.bat — you only need GEMINI_API_KEY in Supabase, '
-          'not GEMINI_MODEL.';
+      return 'Video server may need an update (version ${version ?? "unknown"}). '
+          'Run KARA-GEMINI-FIX-NOW.bat if Analyze fails.';
     }
     if (ok) {
       return 'Video server ready (version $version, model $geminiModel, '

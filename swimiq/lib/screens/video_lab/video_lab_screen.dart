@@ -161,12 +161,32 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (!consented || !mounted) return;
 
     setState(() => _analyzingVideoId = videoId);
-    final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Analyzing your video — this can take up to 2 minutes. '
+            'Please keep this tab open.',
+          ),
+          duration: Duration(seconds: 6),
+        ),
+      );
+    }
+
+    String? error;
+    try {
+      error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
+    } finally {
+      if (mounted) {
+        setState(() => _analyzingVideoId = null);
+      }
+    }
+
     if (!mounted) return;
-    setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error ?? 'AI analysis saved.'),
+        duration: Duration(seconds: error != null ? 10 : 4),
       ),
     );
   }
@@ -515,26 +535,13 @@ class _VideoCardState extends State<_VideoCard> {
                 ],
               ),
             ],
-            if (widget.analysis == null)
-              FilledButton.tonalIcon(
-                onPressed: widget.analyzing ? null : widget.onAnalyze,
-                icon: widget.analyzing
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        widget.canRunAi ? Icons.auto_awesome : Icons.lock_outline,
-                        size: 18,
-                      ),
-                label: Text(
-                  widget.canRunAi
-                      ? 'Run AI Swim Analysis'
-                      : 'Run AI Swim Analysis (Elite)',
-                ),
-              )
-            else ...[
+            _AnalysisActionButton(
+              analyzing: widget.analyzing,
+              canRunAi: widget.canRunAi,
+              hasAnalysis: widget.analysis != null,
+              onAnalyze: widget.onAnalyze,
+            ),
+            if (widget.analysis != null) ...[
               const SizedBox(height: 12),
               VideoAnalysisReport(
                 analysis: widget.analysis!,
@@ -557,6 +564,42 @@ class _VideoCardState extends State<_VideoCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnalysisActionButton extends StatelessWidget {
+  const _AnalysisActionButton({
+    required this.analyzing,
+    required this.canRunAi,
+    required this.hasAnalysis,
+    required this.onAnalyze,
+  });
+
+  final bool analyzing;
+  final bool canRunAi;
+  final bool hasAnalysis;
+  final VoidCallback onAnalyze;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = hasAnalysis
+        ? (canRunAi ? 'Analyze again' : 'Analyze again (Elite)')
+        : (canRunAi ? 'Run AI Swim Analysis' : 'Run AI Swim Analysis (Elite)');
+
+    return FilledButton.tonalIcon(
+      onPressed: analyzing ? null : onAnalyze,
+      icon: analyzing
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(
+              canRunAi ? Icons.auto_awesome : Icons.lock_outline,
+              size: 18,
+            ),
+      label: Text(label),
     );
   }
 }
