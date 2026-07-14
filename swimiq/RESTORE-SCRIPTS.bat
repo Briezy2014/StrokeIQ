@@ -6,7 +6,11 @@ echo Restoring scripts folder from GitHub...
 echo.
 git fetch origin cursor/dashboard-rope-schedule-fix-17e8
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- supabase/fix_video_tables.sql
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- SWIMIQ-CHROME-NOW.ps1 SWIMIQ-CHROME-NOW.bat SWIMIQ-BUILD-GODADDY-NOW.ps1 SWIMIQ-BUILD-GODADDY-NOW.bat SWIMIQ-BUILD-ANDROID-NOW.ps1 SWIMIQ-BUILD-ANDROID-NOW.bat START-HERE.bat KARA-CLICK-THIS.bat KARA-SEE-UPDATES-NOW.bat LAUNCH-CHROME.bat FIX-KARA-PATHS.bat FIX-GIT-PULL.bat DIAGNOSE.bat TEST-OWNER-LOGIN.bat SYNC-LOGO-NOW.bat restore-scripts.ps1 COPY-LOGO.bat DRAG-LOGO-HERE.bat ZIP-GODADDY-UPLOAD.bat ACTIVE_BRANCH.txt
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- FIX-VIDEO-DATABASE.bat KARA-FIX-VIDEO-DATABASE.bat KARA-PASTE-THIS-IN-SUPABASE.txt
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-GEMINI-FIX-NOW.bat KARA-DO-VIDEO-AI-NOW.bat KARA-WHY-GEMINI-FAILS.bat KARA-INSTALL-SUPABASE.bat
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-DO-THIS-NOW.txt KARA-VIDEO-AI-FIX.txt KARA-FIX-GEMINI-QUOTA.txt
 
 call "%~dp0scripts\ensure-logo-bats.cmd" 2>nul
 if not exist "%~dp0COPY-LOGO.bat" (
@@ -22,7 +26,11 @@ echo.
 echo DONE. Restored scripts and logo helpers.
 if exist COPY-LOGO.bat echo   [OK] COPY-LOGO.bat
 if exist DRAG-LOGO-HERE.bat echo   [OK] DRAG-LOGO-HERE.bat  ^(drag your 512x512 PNG onto this^)
+if exist FIX-VIDEO-DATABASE.bat echo   [OK] FIX-VIDEO-DATABASE.bat  ^(video Delete / Analyze database fix^)
+if exist KARA-PASTE-THIS-IN-SUPABASE.txt echo   [OK] KARA-PASTE-THIS-IN-SUPABASE.txt  ^(SQL to paste in Supabase^)
 if exist scripts dir scripts
+echo.
+echo Video Delete or Analyze broken? Run FIX-VIDEO-DATABASE.bat once, then KARA-GEMINI-FIX-NOW.bat
 echo.
 pause
 exit /b 0

@@ -49,7 +49,29 @@ run the path fix once (Step A below).
 
 
 ================================================================================
-  STEP C — GEMINI API KEY (you probably did this already)
+  STEP C — FIX VIDEO DATABASE (do once — BEFORE Gemini deploy)
+================================================================================
+
+If Delete video does not work, or Analyze shows "swim_video_analyses" errors:
+
+1. File Explorer → Desktop → StrokeIQ → swimiq
+
+2. DOUBLE-CLICK one of these (same thing — use whichever you see):
+     FIX-VIDEO-DATABASE.bat
+     KARA-FIX-VIDEO-DATABASE.bat
+
+   If neither file exists:
+     • Double-click RESTORE-SCRIPTS.bat first, OR
+     • Open KARA-PASTE-THIS-IN-SUPABASE.txt (instructions + SQL inside)
+
+3. Notepad opens with SQL. Follow the steps at the top:
+   • Supabase website → SQL Editor → paste → RUN → Success
+
+4. You only do this ONCE per Supabase project.
+
+
+================================================================================
+  STEP D — GEMINI API KEY (you probably did this already)
 ================================================================================
 
 1. In Chrome, go to:  https://supabase.com/dashboard
@@ -60,7 +82,7 @@ run the path fix once (Step A below).
 
 
 ================================================================================
-  STEP D — INSTALL NODE.JS (this is what "step 2" was — then go to E)
+  STEP E — INSTALL NODE.JS (this is what "step 2" was — then go to F)
 ================================================================================
 
 1. In Chrome, go to:  https://nodejs.org
@@ -68,11 +90,11 @@ run the path fix once (Step A below).
 3. Run the downloaded installer — click Next through everything (defaults OK).
 4. RESTART YOUR COMPUTER when it finishes. (Important.)
 
-You do NOT need to open Command Prompt to check Node. Step E checks for you.
+You do NOT need to open Command Prompt to check Node. Step F checks for you.
 
 
 ================================================================================
-  STEP E — AFTER NODE.JS: DEPLOY GEMINI (this is what was missing)
+  STEP F — AFTER NODE.JS: DEPLOY GEMINI (this is what was missing)
 ================================================================================
 
 AFTER your PC restarts:
@@ -96,11 +118,11 @@ AFTER your PC restarts:
 8. SUCCESS looks like this in the black window:
      SUCCESS - Server is updated
 
-If it says "Node.js not installed" → redo Step D and restart PC, then run this bat again.
+If it says "Node.js not installed" → redo Step E and restart PC, then run this bat again.
 
 
 ================================================================================
-  STEP F — OPEN THE APP
+  STEP G — OPEN THE APP
 ================================================================================
 
 1. File Explorer → swimiq folder
@@ -112,7 +134,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
 
 
 ================================================================================
-  STEP G — TEST VIDEO AI IN THE APP
+  STEP H — TEST VIDEO AI IN THE APP
 ================================================================================
 
 1. FIRST: double-click KARA-WHY-GEMINI-FAILS.bat
@@ -147,6 +169,7 @@ If it says "Node.js not installed" → redo Step D and restart PC, then run this
 ================================================================================
 
   FIX-KARA-PATHS.bat        — once, fixes Kara Williams space problem
+  FIX-VIDEO-DATABASE.bat    — once, fixes Delete + video AI database tables
   KARA-SEE-UPDATES-NOW.bat  — get latest code + open Chrome
   KARA-GEMINI-FIX-NOW.bat   — after Node.js install, fixes video AI server
   KARA-WHY-GEMINI-FAILS.bat — tells you EXACTLY why Gemini still fails

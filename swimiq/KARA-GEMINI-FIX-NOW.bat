@@ -82,9 +82,10 @@ echo   SUCCESS - Server is updated
 echo ============================================================
 echo.
 echo NOW:
-echo   1. Double-click KARA-CLICK-THIS.bat (opens SwimIQ in Chrome)
-echo   2. Video tab
-echo   3. Tap ANALYZE on your clip - wait 90 seconds
+echo   1. If Delete or Analyze still fail: FIX-VIDEO-DATABASE.bat (Supabase SQL, once)
+echo   2. Double-click KARA-CLICK-THIS.bat (opens SwimIQ in Chrome)
+echo   3. Video tab
+echo   4. Tap ANALYZE on your clip - wait 90 seconds
 echo.
 echo You should see: Gemini - frame-by-frame video analysis
 echo Server now auto-picks the newest Gemini Flash model your API key allows.

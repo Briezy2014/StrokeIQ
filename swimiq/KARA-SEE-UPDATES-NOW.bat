@@ -35,6 +35,16 @@ echo.
 echo [OK] You are on the updates branch.
 git log -1 --oneline
 echo.
+if not exist "FIX-VIDEO-DATABASE.bat" (
+  echo [WARN] FIX-VIDEO-DATABASE.bat is missing.
+  echo        Double-click RESTORE-SCRIPTS.bat, then run FIX-VIDEO-DATABASE.bat.
+  echo.
+) else (
+  echo Video Delete or Analyze broken?
+  echo   1. FIX-VIDEO-DATABASE.bat  ^(Supabase website, once^)
+  echo   2. KARA-GEMINI-FIX-NOW.bat ^(after Node.js^)
+  echo.
+)
 if not exist "assets\branding\icon.png" (
   echo [WARN] assets\branding\icon.png is missing.
   echo        Drag your brand icon onto COPY-LOGO.bat before testing login.

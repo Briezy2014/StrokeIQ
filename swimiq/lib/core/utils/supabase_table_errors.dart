@@ -14,6 +14,6 @@ abstract final class SupabaseTableErrors {
   static String missingVideoAnalysesMessage() {
     return 'Video database table missing in Supabase. '
         'Open Supabase → SQL Editor → run swimiq/supabase/fix_video_tables.sql '
-        '(or double-click KARA-FIX-VIDEO-DATABASE.bat). Then try again.';
+        '(or double-click FIX-VIDEO-DATABASE.bat / KARA-FIX-VIDEO-DATABASE.bat). Then try again.';
   }
 }

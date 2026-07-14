@@ -8,11 +8,16 @@ Quick list (all double-click, NO Command Prompt):
 
   A. FIX-KARA-PATHS.bat          (once — fixes Kara Williams space)
   B. KARA-SEE-UPDATES-NOW.bat    (latest code + Chrome)
-  C. GEMINI_API_KEY in Supabase  (website, you may have done this)
-  D. Install Node.js from nodejs.org, restart PC
-  E. KARA-GEMINI-FIX-NOW.bat     (AFTER step D — deploys Gemini server)
-  F. KARA-CLICK-THIS.bat         (open app)
-  G. Video tab → Analyze your clip
+  C. FIX-VIDEO-DATABASE.bat      (once — Supabase SQL, fixes Delete + save)
+  D. GEMINI_API_KEY in Supabase  (website, you may have done this)
+  E. Install Node.js from nodejs.org, restart PC
+  F. KARA-GEMINI-FIX-NOW.bat     (AFTER step E — deploys Gemini server)
+  G. KARA-CLICK-THIS.bat         (open app)
+  H. Video tab → Analyze your clip
+
+No FIX-VIDEO-DATABASE.bat on your PC?
+  • Double-click RESTORE-SCRIPTS.bat, OR
+  • Open KARA-PASTE-THIS-IN-SUPABASE.txt (copy SQL into Supabase website)
 
 Do NOT move files into the android folder.
 

@@ -1,0 +1,90 @@
+================================================================================
+  KARA — PASTE THIS IN SUPABASE (fixes Delete + Video AI save errors)
+================================================================================
+
+WHEN YOU NEED THIS
+------------------
+• Delete video says deleted but the video comes back
+• Analyze spins forever or shows "swim_video_analyses" / PGRST205 errors
+• Red error box mentions missing database table
+
+WHAT TO DO (website only — no Node.js needed)
+---------------------------------------------
+1. Chrome → https://supabase.com/dashboard
+2. Open your SwimIQ project
+3. Click SQL Editor in the left menu
+4. Click New query
+5. Scroll down in THIS file to ---- START SQL ----
+6. Select from ---- START SQL ---- through ---- END SQL ---- (include those lines)
+7. Copy (Ctrl+C), paste into Supabase SQL Editor (Ctrl+V)
+8. Click RUN (green button)
+9. Should say Success
+
+THEN ON YOUR PC
+---------------
+1. KARA-GEMINI-FIX-NOW.bat   (deploys the video AI server — needs Node.js)
+2. KARA-CLICK-THIS.bat       (open SwimIQ)
+3. Video tab → Delete or Analyze again
+
+================================================================================
+---- START SQL ----
+-- Run once in Supabase Dashboard → SQL Editor
+-- Fixes: "Could not find the table public.swim_video_analyses" (PGRST205)
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS public.swim_videos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  swimmer text,
+  swimmer_name text NOT NULL,
+  title text,
+  stroke text,
+  distance text,
+  course text,
+  storage_path text NOT NULL,
+  video_url text,
+  notes text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.swim_video_analyses (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  swim_video_id uuid REFERENCES public.swim_videos(id) ON DELETE CASCADE,
+  swimmer text,
+  swimmer_name text NOT NULL,
+  summary text,
+  strengths text,
+  improvements text,
+  technique_score integer,
+  pace_score integer,
+  overall_score integer,
+  analysis_json jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.swim_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.swim_video_analyses ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'swim_videos' AND policyname = 'swim_videos_all'
+  ) THEN
+    CREATE POLICY "swim_videos_all" ON public.swim_videos
+      FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'swim_video_analyses' AND policyname = 'swim_video_analyses_all'
+  ) THEN
+    CREATE POLICY "swim_video_analyses_all" ON public.swim_video_analyses
+      FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- Refresh PostgREST schema cache (fixes PGRST205 immediately)
+NOTIFY pgrst, 'reload schema';
+---- END SQL ----
+================================================================================
