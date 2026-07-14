@@ -152,15 +152,29 @@ async function main() {
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
         const current = '2026-gemini-stream-v5';
+        const isStreamServer =
+          version.includes('stream-v4') || version.includes('stream-v5');
         if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
           log('  Need: ' + current + ' (streams video — fixes 546 errors)');
           log('');
           log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
-        } else if (version && version < current) {
-          log('WARN - Server version is older than latest: ' + version);
+        } else if (!isStreamServer) {
+          log('FAIL - WRONG server version (causes 546 errors on large clips): ' + version);
+          log('  Your diagnosis may look OK but Analyze will FAIL on real videos.');
+          log('  Need: ' + current);
+          log('');
+          log('FIX:');
+          log('  1. KARA-SEE-UPDATES-NOW.bat  (pull latest code first)');
+          log('  2. KARA-GEMINI-FIX-NOW.bat     (deploy again — wait for SUCCESS)');
+          log('  3. Run KARA-WHY-GEMINI-FAILS.bat — version must say stream-v5');
+        } else if (version && version.indexOf('stream-v5') < 0) {
+          log('WARN - Server works but update recommended: ' + version);
           log('  Latest: ' + current);
-          log('FIX: Run KARA-GEMINI-FIX-NOW.bat again to deploy v5.');
+          log('FIX: KARA-SEE-UPDATES-NOW.bat then KARA-GEMINI-FIX-NOW.bat');
+          log('');
+          log('  Version: ' + version);
+          log('  Gemini model: ' + (data.gemini_model || 'unknown'));
         } else {
           log('OK - Video server ready.');
           log('  Version: ' + version);
@@ -212,6 +226,8 @@ async function main() {
 
 function writeOut(code) {
   fs.writeFileSync(outFile, lines.join('\r\n') + '\r\n', 'ascii');
+  const failLine = lines.find((l) => l.startsWith('FAIL -'));
+  if (failLine) process.exit(1);
   process.exit(code);
 }
 
