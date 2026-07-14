@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
+import 'swimiq_branded_fallback.dart';
+import 'swimiq_branding.dart';
 import 'swimiq_logo.dart';
 
 class SwimIqHeader extends StatelessWidget {
@@ -92,7 +94,37 @@ class SwimIqAppBarBrand extends StatelessWidget {
   }
 }
 
-/// Secondary screens (Settings, Membership, Legal): mark + screen label.
+/// Square SwimIQ icon for app bars — same asset chain as login.
+class SwimIqAppBarBrandIcon extends StatelessWidget {
+  const SwimIqAppBarBrandIcon({super.key, required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(size * 0.22),
+      ),
+      padding: EdgeInsets.all(size * 0.12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.14),
+        child: SwimIqBrandedImage(
+          candidates: SwimIqBranding.loginIconCandidates,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          fallback: SwimIqPaintedMark(size: size * 0.76),
+        ),
+      ),
+    );
+  }
+}
+
+/// Secondary screens (Settings, Membership, Legal): app icon + screen label.
 class SwimIqScreenAppBarTitle extends StatelessWidget {
   const SwimIqScreenAppBarTitle(this.label, {super.key});
 
@@ -102,7 +134,7 @@ class SwimIqScreenAppBarTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const SwimIqCompactMark(size: 32, borderRadius: 8),
+        const SwimIqAppBarBrandIcon(size: 34),
         const SizedBox(width: 10),
         Flexible(
           child: Text(

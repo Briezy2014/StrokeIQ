@@ -9,6 +9,7 @@ import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
 import '../screens/membership/membership_screen.dart';
 import '../services/auth_service.dart';
+import 'swimiq_header.dart';
 
 /// Basic / Pro / Elite signup — shown on the dashboard right after sign-in.
 class DashboardMembershipPlansCard extends ConsumerStatefulWidget {
@@ -96,7 +97,7 @@ class _DashboardMembershipPlansCardState
           children: [
             Row(
               children: [
-                const Icon(Icons.card_membership, color: AppColors.primary, size: 22),
+                const SwimIqAppBarBrandIcon(size: 22),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

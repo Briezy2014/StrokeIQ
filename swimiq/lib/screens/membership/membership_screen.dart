@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/founder_account_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/stripe_checkout_support.dart';
+import '../../core/services/subscription_service.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
@@ -131,7 +132,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       subscription.statusLabel.toUpperCase(),
@@ -141,20 +142,15 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                         letterSpacing: 1.2,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const Center(child: SwimIqLoginBrand(size: 96)),
+                    const SizedBox(height: 14),
+                    const Center(child: SwimIqWordmark(fontSize: 28)),
                     const SizedBox(height: 12),
-                    const Row(
-                      children: [
-                        SwimIqCompactMark(size: 52, borderRadius: 14),
-                        SizedBox(width: 14),
-                        Expanded(
-                          child: SwimIqWordmark(fontSize: 26),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
                     Text(
                       'Every new athlete gets a ${SubscriptionCatalog.trialDays}-day Elite trial. '
                       'Choose monthly or annual billing when you are ready.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.92),
                         height: 1.4,
@@ -173,6 +169,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                     ],
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              _BillingInfoCard(
+                subscription: subscription,
+                userEmail: user?.email,
               ),
               const SizedBox(height: 20),
               SegmentedButton<BillingCycle>(
@@ -257,6 +258,75 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _BillingInfoCard extends StatelessWidget {
+  const _BillingInfoCard({
+    required this.subscription,
+    required this.userEmail,
+  });
+
+  final SubscriptionState subscription;
+  final String? userEmail;
+
+  @override
+  Widget build(BuildContext context) {
+    final onWeb = kIsWeb;
+    final stripeReady = onWeb;
+    final trialBlocksElite = subscription.isTrialActive;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lock_outline, size: 18, color: AppColors.primaryDeep),
+              const SizedBox(width: 8),
+              Text(
+                'Billing',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (stripeReady) ...[
+            const Text(
+              'Paid plans checkout through secure Stripe billing on the web. '
+              'Choose Basic or Pro anytime; Elite checkout unlocks when your trial ends.',
+              style: TextStyle(height: 1.4),
+            ),
+            if (trialBlocksElite) ...[
+              const SizedBox(height: 8),
+              Text(
+                'You are on the free Elite trial — the Elite plan button shows '
+                '"Trial" until the trial ends. Basic and Pro can still be purchased now.',
+                style: TextStyle(
+                  color: Colors.grey.shade800,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ] else
+            const Text(
+              'In-app purchases use Google Play / App Store when the mobile apps launch.',
+              style: TextStyle(height: 1.4),
+            ),
+        ],
       ),
     );
   }
