@@ -31,20 +31,20 @@ if errorlevel 1 (
   exit /b 1
 )
 
+call :EnsureVideoDbFixFiles
+
 echo.
 echo [OK] You are on the updates branch.
 git log -1 --oneline
 echo.
-if not exist "FIX-VIDEO-DATABASE.bat" (
-  echo [WARN] FIX-VIDEO-DATABASE.bat is missing.
-  echo        Double-click RESTORE-SCRIPTS.bat, then run FIX-VIDEO-DATABASE.bat.
-  echo.
+if exist "FIX-VIDEO-DATABASE.bat" (
+  echo [OK] FIX-VIDEO-DATABASE.bat is here.
+  echo Video Delete or Analyze broken? Run FIX-VIDEO-DATABASE.bat once on Supabase website.
 ) else (
-  echo Video Delete or Analyze broken?
-  echo   1. FIX-VIDEO-DATABASE.bat  ^(Supabase website, once^)
-  echo   2. KARA-GEMINI-FIX-NOW.bat ^(after Node.js^)
-  echo.
+  echo [WARN] FIX-VIDEO-DATABASE.bat still missing - run RESTORE-SCRIPTS.bat
 )
+echo Then run KARA-GEMINI-FIX-NOW.bat
+echo.
 if not exist "assets\branding\icon.png" (
   echo [WARN] assets\branding\icon.png is missing.
   echo        Drag your brand icon onto COPY-LOGO.bat before testing login.
@@ -64,3 +64,14 @@ if exist "%~dp0scripts\launch-chrome-kara.ps1" (
 )
 
 pause
+exit /b 0
+
+:EnsureVideoDbFixFiles
+if exist "%~dp0scripts\ensure-video-db-fix.cmd" (
+  call "%~dp0scripts\ensure-video-db-fix.cmd"
+  exit /b 0
+)
+if exist "%~dp0scripts\ensure-video-db-fix.ps1" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\ensure-video-db-fix.ps1" -SwimIqRoot "%~dp0"
+)
+exit /b 0

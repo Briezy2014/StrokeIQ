@@ -2,6 +2,28 @@
   KARA — DO THIS NOW (no Command Prompt, no Android Studio)
 ================================================================================
 
+*** VIDEO DELETE / ANALYZE BROKEN? READ THIS FIRST ***
+------------------------------------------------------
+You do NOT need a special file name. Use files you ALREADY have:
+
+  1. Double-click  RESTORE-SCRIPTS.bat     (wait for DONE)
+  2. Double-click  KARA-GEMINI-FIX-NOW.bat (creates FIX-VIDEO-DATABASE.bat)
+     OR double-click  KARA-SEE-UPDATES-NOW.bat (pulls updates + creates files)
+
+After step 1 or 2 you should see NEW files in this folder:
+  FIX-VIDEO-DATABASE.bat
+  KARA-PASTE-THIS-IN-SUPABASE.txt
+
+Then:
+  3. Double-click FIX-VIDEO-DATABASE.bat
+  4. Notepad opens — copy SQL — Supabase website — SQL Editor — RUN
+  5. Finish KARA-GEMINI-FIX-NOW.bat (deploy server)
+  6. KARA-CLICK-THIS.bat — Video tab — Delete or Analyze
+
+If git pull fails: open KARA-DO-THIS-NOW.txt on GitHub in Chrome and copy
+the SQL from the bottom of this file after you pull updates.
+
+
 READ THIS FIRST
 ---------------
 • You do NOT need Command Prompt for any step below — only double-click files.

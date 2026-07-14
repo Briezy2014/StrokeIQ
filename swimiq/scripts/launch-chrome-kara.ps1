@@ -3,6 +3,17 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'swimiq-windows-paths.ps1')
 
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$ensureScript = Join-Path $PSScriptRoot 'ensure-video-db-fix.ps1'
+if (Test-Path -LiteralPath $ensureScript) {
+    try {
+        . $ensureScript
+        Ensure-VideoDbFix -Root $repoRoot
+    } catch {
+        Write-Host "Note: could not write video DB fix files: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ' SwimIQ - Launch Chrome' -ForegroundColor Cyan

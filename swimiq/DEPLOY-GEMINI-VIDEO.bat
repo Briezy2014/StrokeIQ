@@ -3,10 +3,15 @@ title SwimIQ - Deploy Gemini Video Analysis
 cd /d "%~dp0"
 set "SUPABASE_CMD=supabase"
 
+call :EnsureVideoDbFixFiles 2>nul
+
 echo.
 echo ========================================
 echo  Fix Video Lab AI (Gemini + large clips)
 echo ========================================
+echo.
+echo STEP 0 - If Delete or Analyze fail, run SQL in Supabase first.
+echo   Double-click FIX-VIDEO-DATABASE.bat (creates/opens paste file).
 echo.
 echo This updates YOUR Supabase server so Gemini can watch uploaded videos.
 echo.
@@ -105,3 +110,9 @@ echo Node.js not found. Install from https://nodejs.org (LTS), then run this aga
 echo.
 echo OR after git pull, double-click KARA-INSTALL-SUPABASE.bat
 exit /b 1
+
+:EnsureVideoDbFixFiles
+git fetch origin cursor/dashboard-rope-schedule-fix-17e8 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/ensure-video-db-fix.ps1 scripts/ensure-video-db-fix.cmd 2>nul
+if exist "%~dp0scripts\ensure-video-db-fix.cmd" call "%~dp0scripts\ensure-video-db-fix.cmd"
+exit /b 0

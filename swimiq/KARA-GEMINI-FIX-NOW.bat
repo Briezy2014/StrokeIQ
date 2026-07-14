@@ -3,12 +3,42 @@ title SwimIQ - KARA fix Gemini video (all steps)
 cd /d "%~dp0"
 set "SUPABASE_CMD=npx supabase"
 
+call :EnsureVideoDbFixFiles
+if not exist "%~dp0FIX-VIDEO-DATABASE.bat" (
+  echo.
+  echo [ERROR] Could not create FIX-VIDEO-DATABASE.bat on this PC.
+  echo Double-click RESTORE-SCRIPTS.bat, then run this file again.
+  echo.
+  pause
+  exit /b 1
+)
+
 echo.
 echo ============================================================
 echo   KARA - Fix Gemini video analysis (run this whole file)
 echo ============================================================
 echo.
 echo Folder: %CD%
+echo.
+echo STEP 0 FIRST - Video database (Supabase website, 2 minutes)
+echo   Delete broken? Analyze not saving? You MUST run the SQL once.
+echo.
+echo Opening KARA-PASTE-THIS-IN-SUPABASE.txt in Notepad...
+echo   1. Copy from ---- START SQL ---- through ---- END SQL ----
+echo   2. Supabase.com - your project - SQL Editor - paste - RUN
+echo   3. Should say Success, then come back here.
+echo.
+start notepad "%~dp0KARA-PASTE-THIS-IN-SUPABASE.txt"
+echo.
+set /p SQLDONE="Did you run the SQL in Supabase and see Success? (Y/N): "
+if /i not "%SQLDONE%"=="Y" (
+  echo.
+  echo OK - run the SQL first, then double-click this file again.
+  echo You can also double-click FIX-VIDEO-DATABASE.bat anytime.
+  pause
+  exit /b 0
+)
+
 echo.
 echo NO Command Prompt skills needed - just read and press keys.
 echo NO Android Studio needed.
@@ -24,7 +54,7 @@ pause
 where node >nul 2>&1
 if errorlevel 1 (
   echo.
-  echo STEP 0 FAILED: Node.js not installed.
+  echo STEP 1 FAILED: Node.js not installed.
   echo.
   echo 1. Opening nodejs.org ...
   start https://nodejs.org
@@ -82,10 +112,10 @@ echo   SUCCESS - Server is updated
 echo ============================================================
 echo.
 echo NOW:
-echo   1. If Delete or Analyze still fail: FIX-VIDEO-DATABASE.bat (Supabase SQL, once)
-echo   2. Double-click KARA-CLICK-THIS.bat (opens SwimIQ in Chrome)
-echo   3. Video tab
-echo   4. Tap ANALYZE on your clip - wait 90 seconds
+echo   1. Double-click KARA-CLICK-THIS.bat (opens SwimIQ in Chrome)
+echo   2. Video tab
+echo   3. Tap ANALYZE on your clip - wait 90 seconds
+echo   4. Delete is at the BOTTOM of each video card (red button)
 echo.
 echo You should see: Gemini - frame-by-frame video analysis
 echo Server now auto-picks the newest Gemini Flash model your API key allows.
@@ -93,3 +123,17 @@ echo You only need GEMINI_API_KEY in Supabase - NOT GEMINI_MODEL.
 echo If errors continue: read KARA-FIX-GEMINI-QUOTA.txt
 echo.
 pause
+exit /b 0
+
+:EnsureVideoDbFixFiles
+git fetch origin cursor/dashboard-rope-schedule-fix-17e8 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/ensure-video-db-fix.ps1 scripts/ensure-video-db-fix.cmd 2>nul
+if exist "%~dp0scripts\ensure-video-db-fix.cmd" (
+  call "%~dp0scripts\ensure-video-db-fix.cmd"
+  exit /b 0
+)
+if exist "%~dp0scripts\ensure-video-db-fix.ps1" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\ensure-video-db-fix.ps1" -SwimIqRoot "%~dp0"
+  exit /b 0
+)
+exit /b 1

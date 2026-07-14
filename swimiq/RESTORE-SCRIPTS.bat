@@ -12,6 +12,13 @@ git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- FIX-VIDEO-DATABAS
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-GEMINI-FIX-NOW.bat KARA-DO-VIDEO-AI-NOW.bat KARA-WHY-GEMINI-FAILS.bat KARA-INSTALL-SUPABASE.bat
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-DO-THIS-NOW.txt KARA-VIDEO-AI-FIX.txt KARA-FIX-GEMINI-QUOTA.txt
 
+call "%~dp0scripts\ensure-video-db-fix.cmd" 2>nul
+if not exist "%~dp0FIX-VIDEO-DATABASE.bat" (
+  if exist "%~dp0scripts\ensure-video-db-fix.ps1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\ensure-video-db-fix.ps1" -SwimIqRoot "%~dp0"
+  )
+)
+
 call "%~dp0scripts\ensure-logo-bats.cmd" 2>nul
 if not exist "%~dp0COPY-LOGO.bat" (
   echo.
