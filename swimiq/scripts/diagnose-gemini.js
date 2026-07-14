@@ -151,8 +151,8 @@ async function main() {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
-        const current = '2026-gemini-auto-model-v3';
-        if (version && !version.startsWith('2026-gemini-auto-model')) {
+        const current = '2026-gemini-stream-v4';
+        if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
           log('  Need: ' + current);
           log('');

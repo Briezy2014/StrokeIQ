@@ -14,14 +14,14 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-auto-model-v3';
+  static const currentFunctionVersion = '2026-gemini-stream-v4';
   static const analysisTimeout = Duration(minutes: 3);
 
   final SupabaseClient _client;
 
   static bool isSupportedFunctionVersion(String? version) {
     if (version == null || version.isEmpty) return false;
-    return version.startsWith('2026-gemini-auto-model');
+    return version.startsWith('2026-gemini');
   }
 
   /// Ping the deployed edge function — confirms server update + API key.

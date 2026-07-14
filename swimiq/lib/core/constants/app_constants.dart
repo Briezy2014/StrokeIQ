@@ -13,7 +13,7 @@ class AppConstants {
   static const copyright = '© 2026 SwimIQ LLC';
 
   /// Max swim clip size for Gemini File API analysis (matches edge function cap).
-  static const maxGeminiVideoBytes = 100 * 1024 * 1024;
+  static const maxGeminiVideoBytes = 50 * 1024 * 1024;
 
   /// Set false to enforce Basic / Pro / Elite tab gates (before public launch).
   static const unlockAllTabsForPreview = false;

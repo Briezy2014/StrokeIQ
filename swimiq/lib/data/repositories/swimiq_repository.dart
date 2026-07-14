@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/utils/supabase_parsers.dart';
+import '../../core/utils/supabase_table_errors.dart';
 import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
@@ -211,15 +212,25 @@ class SwimIqRepository {
   }
 
   Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmer) async {
-    final response = await _client
-        .from('swim_video_analyses')
-        .select()
-        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
-        .order('created_at', ascending: false);
+    try {
+      final response = await _client
+          .from('swim_video_analyses')
+          .select()
+          .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
+          .order('created_at', ascending: false);
 
-    return supabaseRowsToMaps(response)
-        .map(SwimVideoAnalysis.fromJson)
-        .toList();
+      return supabaseRowsToMaps(response)
+          .map(SwimVideoAnalysis.fromJson)
+          .toList();
+    } catch (error) {
+      if (SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        return [];
+      }
+      rethrow;
+    }
   }
 
   Future<SwimVideoAnalysis?> insertVideoAnalysisOptional(
@@ -242,10 +253,19 @@ class SwimIqRepository {
   }
 
   Future<void> deleteSwimVideo(String videoId) async {
-    await _client
-        .from('swim_video_analyses')
-        .delete()
-        .eq('swim_video_id', videoId);
+    try {
+      await _client
+          .from('swim_video_analyses')
+          .delete()
+          .eq('swim_video_id', videoId);
+    } catch (error) {
+      if (!SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        rethrow;
+      }
+    }
 
     final response = await _client
         .from('swim_videos')

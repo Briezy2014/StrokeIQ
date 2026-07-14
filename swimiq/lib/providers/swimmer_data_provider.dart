@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
+import '../core/utils/supabase_table_errors.dart';
 import '../core/utils/youth_friendly_analysis.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/video_analysis_presenter.dart';
@@ -252,7 +253,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           '~100 MB work automatically. Notes-based coaching saved for now.';
     }
     if (lower.contains('too large')) {
-      return 'Video is too large for analysis (max ~100 MB). Trim the clip and re-run. '
+      return 'Video is too large for analysis (max ~50 MB). Trim the clip and re-run. '
           'Notes-based coaching saved for now.';
     }
     if (lower.contains('timed out')) {
@@ -274,6 +275,17 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (lower.contains('permission_denied') || lower.contains('billing')) {
       return 'Google Gemini needs billing enabled on your Google Cloud project — '
           'see Google AI Studio -> your key -> linked project billing.';
+    }
+    if (lower.contains('pgrst205') ||
+        lower.contains('swim_video_analyses') &&
+            lower.contains('could not find')) {
+      return SupabaseTableErrors.missingVideoAnalysesMessage();
+    }
+    if (lower.contains('worker_resource_limit') ||
+        lower.contains('not having enough compute resources') ||
+        lower.contains('status: 546')) {
+      return 'Video is too large for the server to process in one pass. '
+          'Trim to a shorter clip (under ~30 seconds or 25 MB) and tap Analyze again.';
     }
     if (lower.contains('delete gemini_model') ||
         lower.contains('gemini_model secret') ||
@@ -541,7 +553,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
     if (bytes.length > AppConstants.maxGeminiVideoBytes) {
-      return 'Video is too large (max ~100 MB). Trim the clip and try again.';
+      return 'Video is too large (max ~50 MB). Trim the clip and try again.';
     }
 
     try {
@@ -631,6 +643,12 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       return null;
     } catch (error) {
+      if (SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        return SupabaseTableErrors.missingVideoAnalysesMessage();
+      }
       return error.toString();
     }
   }

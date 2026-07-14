@@ -1,11 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const BUCKET = "swim-videos";
-/** Inline base64 limit for generateContent (Gemini request size cap). */
-const MAX_INLINE_BYTES = 18 * 1024 * 1024;
-/** Upper cap via Gemini File API (resumable upload). */
-const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
+/** Always stream via Gemini File API — inline base64 blows Supabase memory (546 errors). */
+const MAX_INLINE_BYTES = 0;
+/** Edge-safe max clip size (Supabase worker memory limit). */
+const MAX_FILE_API_BYTES = 50 * 1024 * 1024;
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
@@ -14,7 +13,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-auto-model-v3";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v4";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -143,8 +142,8 @@ Deno.serve(async (req) => {
           available_models: availableModels,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
-          max_video_mb: 100,
-          inline_max_mb: 18,
+          max_video_mb: 50,
+          inline_max_mb: 0,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -159,64 +158,56 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: fileBlob, error: downloadError } = await admin.storage
-      .from(BUCKET)
-      .download(storagePath);
-
-    if (downloadError || !fileBlob) {
-      return jsonError(
-        `Could not download video: ${downloadError?.message ?? "not found"}`,
-        404,
-      );
-    }
-
-    const videoBytes = new Uint8Array(await fileBlob.arrayBuffer());
-    if (videoBytes.length > MAX_FILE_API_BYTES) {
-      return jsonError(
-        "Video is too large for analysis (max ~100 MB). Trim the clip and try again.",
-        413,
-      );
-    }
-
     const mimeType = mimeTypeForPath(storagePath);
-    const prompt = buildPrompt(body);
-    const useFileApi = videoBytes.length > MAX_INLINE_BYTES;
-    let geminiFileName: string | null = null;
+    const displayName = body.title?.trim() ||
+      storagePath.split("/").pop() ||
+      "swim-video";
 
     let geminiJson: Record<string, unknown>;
     let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
       DEFAULT_GEMINI_MODEL;
+    let geminiFileName: string | null = null;
+
     try {
-      if (useFileApi) {
-        const uploaded = await uploadVideoToGeminiFile(
-          geminiApiKey,
-          videoBytes,
-          mimeType,
-          body.title?.trim() || storagePath.split("/").pop() || "swim-video",
+      const streamed = await openStorageVideoStream(admin, storagePath);
+      if (streamed.byteLength > MAX_FILE_API_BYTES) {
+        return jsonError(
+          "Video is too large for analysis (max ~50 MB on server). Trim the clip and try again.",
+          413,
+          CURRENT_FUNCTION_VERSION,
         );
-        geminiFileName = uploaded.name;
-        await waitForGeminiFileActive(geminiApiKey, uploaded.name);
-        const result = await callGeminiGenerateContentWithFallback(
-          geminiApiKey,
-          { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
-          prompt,
-        );
-        geminiJson = result.json;
-        geminiModelUsed = result.model;
-      } else {
-        const base64Video = encodeBase64(videoBytes);
-        const result = await callGeminiGenerateContentWithFallback(
-          geminiApiKey,
-          { inline_data: { mime_type: mimeType, data: base64Video } },
-          prompt,
-        );
-        geminiJson = result.json;
-        geminiModelUsed = result.model;
       }
+
+      const uploaded = await uploadVideoStreamToGeminiFile(
+        geminiApiKey,
+        streamed.body,
+        streamed.byteLength,
+        mimeType,
+        displayName,
+      );
+      geminiFileName = uploaded.name;
+      await waitForGeminiFileActive(geminiApiKey, uploaded.name);
+      const prompt = buildPrompt(body);
+      const result = await callGeminiGenerateContentWithFallback(
+        geminiApiKey,
+        { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
+        prompt,
+      );
+      geminiJson = result.json;
+      geminiModelUsed = result.model;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.toLowerCase().includes("timed out")) {
-        return jsonError(message, 504);
+        return jsonError(message, 504, CURRENT_FUNCTION_VERSION);
+      }
+      if (message.toLowerCase().includes("resource") ||
+          message.toLowerCase().includes("546")) {
+        return jsonError(
+          "Video too heavy for the server worker — trim to under 30 seconds or "
+          + "under 25 MB, then tap Analyze again.",
+          413,
+          CURRENT_FUNCTION_VERSION,
+        );
       }
       return jsonError(message, 502, CURRENT_FUNCTION_VERSION);
     } finally {
@@ -245,7 +236,7 @@ Deno.serve(async (req) => {
     const analysis = normalizeAnalysis(
       parsed,
       body,
-      useFileApi ? "file_api" : "inline",
+      "file_api",
       geminiModelUsed,
     );
 
@@ -434,6 +425,94 @@ type GeminiVideoPart =
   | { file_data: { mime_type: string; file_uri: string } };
 
 type GeminiUploadMethod = "inline" | "file_api";
+
+async function openStorageVideoStream(
+  admin: ReturnType<typeof createClient>,
+  storagePath: string,
+): Promise<{ body: ReadableStream<Uint8Array>; byteLength: number }> {
+  const { data: signed, error } = await admin.storage
+    .from(BUCKET)
+    .createSignedUrl(storagePath, 3600);
+
+  if (error || !signed?.signedUrl) {
+    throw new Error(
+      `Could not access video in storage: ${error?.message ?? "missing signed URL"}`,
+    );
+  }
+
+  const response = await fetch(signed.signedUrl);
+  if (!response.ok || !response.body) {
+    throw new Error(
+      `Could not download video from storage (HTTP ${response.status}).`,
+    );
+  }
+
+  const lengthHeader = response.headers.get("content-length");
+  const byteLength = lengthHeader ? Number(lengthHeader) : 0;
+  if (Number.isFinite(byteLength) && byteLength > MAX_FILE_API_BYTES) {
+    throw new Error(
+      "Video is too large for analysis (max ~50 MB on server). Trim the clip and try again.",
+    );
+  }
+
+  return { body: response.body, byteLength: byteLength || MAX_FILE_API_BYTES };
+}
+
+async function uploadVideoStreamToGeminiFile(
+  apiKey: string,
+  videoStream: ReadableStream<Uint8Array>,
+  byteLength: number,
+  mimeType: string,
+  displayName: string,
+): Promise<{ name: string; uri: string }> {
+  const startResponse = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Upload-Protocol": "resumable",
+        "X-Goog-Upload-Command": "start",
+        "X-Goog-Upload-Header-Content-Length": String(byteLength),
+        "X-Goog-Upload-Header-Content-Type": mimeType,
+      },
+      body: JSON.stringify({ file: { display_name: displayName } }),
+    },
+  );
+
+  if (!startResponse.ok) {
+    const errText = await startResponse.text();
+    throw new Error(`Gemini file upload start failed: ${errText}`);
+  }
+
+  const uploadUrl = startResponse.headers.get("x-goog-upload-url");
+  if (!uploadUrl) {
+    throw new Error("Gemini file upload missing x-goog-upload-url header.");
+  }
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "Content-Length": String(byteLength),
+      "X-Goog-Upload-Offset": "0",
+      "X-Goog-Upload-Command": "upload, finalize",
+    },
+    body: videoStream,
+  });
+
+  if (!uploadResponse.ok) {
+    const errText = await uploadResponse.text();
+    throw new Error(`Gemini file upload failed: ${errText}`);
+  }
+
+  const uploadJson = await uploadResponse.json();
+  const file = uploadJson?.file as { name?: string; uri?: string } | undefined;
+  if (!file?.uri || !file?.name) {
+    throw new Error("Gemini file upload returned invalid file metadata.");
+  }
+
+  return { name: file.name, uri: file.uri };
+}
 
 async function uploadVideoToGeminiFile(
   apiKey: string,
