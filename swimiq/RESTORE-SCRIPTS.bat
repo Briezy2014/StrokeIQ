@@ -3,6 +3,7 @@ title SwimIQ Restore Scripts
 cd /d "%~dp0"
 echo.
 echo Restoring scripts folder from GitHub...
+echo (Run this FIRST if KARA-SEE-UPDATES-NOW says merge / overwrite errors)
 echo.
 git fetch origin cursor/dashboard-rope-schedule-fix-17e8
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/
