@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/video_analysis_presenter.dart';
 import '../core/services/video_analysis_scores.dart';
 import '../core/theme/app_theme.dart';
@@ -12,10 +13,12 @@ class VideoAnalysisReport extends StatefulWidget {
     super.key,
     required this.analysis,
     required this.onCoachNotesChanged,
+    this.serverHealth,
   });
 
   final SwimVideoAnalysis analysis;
   final ValueChanged<String> onCoachNotesChanged;
+  final VideoAnalysisServerHealth? serverHealth;
 
   @override
   State<VideoAnalysisReport> createState() => _VideoAnalysisReportState();
@@ -56,16 +59,36 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         widget.analysis.analysisJson?['quick_con']?.toString();
     final engineLabel = VideoAnalysisPresenter.analysisEngineLabel(widget.analysis);
     final disclaimer = VideoAnalysisPresenter.friendlyDisclaimer(widget.analysis);
-    final fallbackReason = VideoAnalysisScores.fallbackReason(widget.analysis);
-    final technicalError = VideoAnalysisScores.technicalError(widget.analysis);
-    final pipelineNote = VideoAnalysisScores.pipelineNote(widget.analysis);
-    final awaitingGemini = VideoAnalysisScores.awaitingGeminiVideoRead(widget.analysis);
+    final health = widget.serverHealth;
+    final readyBanner = VideoAnalysisScores.serverReadyBanner(health);
+    final fallbackReason = VideoAnalysisScores.fallbackReason(
+      widget.analysis,
+      serverHealth: health,
+    );
+    final technicalError = VideoAnalysisScores.technicalError(
+      widget.analysis,
+      serverHealth: health,
+    );
+    final pipelineNote = VideoAnalysisScores.pipelineNote(
+      widget.analysis,
+      serverHealth: health,
+    );
+    final awaitingGemini = VideoAnalysisScores.awaitingGeminiVideoRead(
+      widget.analysis,
+      serverHealth: health,
+    );
+    final showDeploySteps = awaitingGemini &&
+        !VideoAnalysisScores.serverIsStreamReady(health);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ScoreStrip(analysis: widget.analysis),
+        _ScoreStrip(analysis: widget.analysis, serverHealth: health),
         const SizedBox(height: 12),
+        if (readyBanner != null) ...[
+          _ServerReadyBanner(message: readyBanner),
+          const SizedBox(height: 8),
+        ],
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
           if (technicalError != null) ...[
@@ -84,7 +107,7 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
           const SizedBox(height: 12),
         ] else if (fallbackReason != null)
           const SizedBox(height: 4),
-        if (awaitingGemini) ...[
+        if (showDeploySteps) ...[
           _DeployStepsCard(body: VideoAnalysisScores.deployStepsBody),
           const SizedBox(height: 12),
         ] else if (engineLabel != null) ...[
@@ -251,9 +274,13 @@ class _MediaPipeBodyMechanicsCard extends StatelessWidget {
 }
 
 class _ScoreStrip extends StatelessWidget {
-  const _ScoreStrip({required this.analysis});
+  const _ScoreStrip({
+    required this.analysis,
+    this.serverHealth,
+  });
 
   final SwimVideoAnalysis analysis;
+  final VideoAnalysisServerHealth? serverHealth;
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +322,10 @@ class _ScoreStrip extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            VideoAnalysisScores.legend(analysis),
+            VideoAnalysisScores.legendFor(
+              analysis,
+              serverHealth: serverHealth,
+            ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,
                   height: 1.35,
@@ -308,21 +338,33 @@ class _ScoreStrip extends StatelessWidget {
               final children = [
                 _ScoreTile(
                   analysis: analysis,
+                  serverHealth: serverHealth,
                   title: VideoAnalysisScores.overallTitle,
                   value: analysis.overallScore,
-                  hint: VideoAnalysisScores.overallSummary(analysis),
+                  hint: VideoAnalysisScores.overallSummary(
+                    analysis,
+                    serverHealth: serverHealth,
+                  ),
                 ),
                 _ScoreTile(
                   analysis: analysis,
+                  serverHealth: serverHealth,
                   title: VideoAnalysisScores.techniqueTitle,
                   value: analysis.techniqueScore,
-                  hint: VideoAnalysisScores.techniqueSummary(analysis),
+                  hint: VideoAnalysisScores.techniqueSummary(
+                    analysis,
+                    serverHealth: serverHealth,
+                  ),
                 ),
                 _ScoreTile(
                   analysis: analysis,
+                  serverHealth: serverHealth,
                   title: VideoAnalysisScores.paceTitle,
                   value: analysis.paceScore,
-                  hint: VideoAnalysisScores.paceSummary(analysis),
+                  hint: VideoAnalysisScores.paceSummary(
+                    analysis,
+                    serverHealth: serverHealth,
+                  ),
                 ),
               ];
               if (wide) {
@@ -357,16 +399,22 @@ class _ScoreTile extends StatelessWidget {
     required this.title,
     required this.value,
     required this.hint,
+    this.serverHealth,
   });
 
   final SwimVideoAnalysis analysis;
   final String title;
   final int value;
   final String hint;
+  final VideoAnalysisServerHealth? serverHealth;
 
   @override
   Widget build(BuildContext context) {
-    final color = VideoAnalysisScores.scoreColor(analysis, value);
+    final color = VideoAnalysisScores.scoreColor(
+      analysis,
+      value,
+      serverHealth: serverHealth,
+    );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -393,7 +441,11 @@ class _ScoreTile extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            VideoAnalysisScores.formatScore(analysis, value),
+            VideoAnalysisScores.formatScore(
+              analysis,
+              value,
+              serverHealth: serverHealth,
+            ),
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: AppColors.primaryDeep,
@@ -494,6 +546,41 @@ class _TechnicalErrorBanner extends StatelessWidget {
               fontWeight: FontWeight.w600,
               height: 1.35,
               fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServerReadyBanner extends StatelessWidget {
+  const _ServerReadyBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF6EE7B7)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle_outline, color: Color(0xFF059669), size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.grey.shade900,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
             ),
           ),
         ],

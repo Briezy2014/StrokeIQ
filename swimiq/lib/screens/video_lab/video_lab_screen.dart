@@ -7,11 +7,13 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../core/models/subscription_plan.dart';
+import '../../core/services/gemini_swim_analysis_service.dart';
 import '../../core/services/subscription_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/video_server_health_provider.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -165,10 +167,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Analyzing your video — this can take up to 2 minutes. '
-            'Please keep this tab open.',
+            'Running MediaPipe body scan, then sending your clip to Gemini '
+            '(up to 2 minutes). Keep this tab open.',
           ),
-          duration: Duration(seconds: 6),
+          duration: Duration(seconds: 8),
         ),
       );
     }
@@ -227,6 +229,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final subscription = ref.watch(subscriptionStateProvider).value;
         final canRunAi = subscription != null &&
             SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription);
+        final serverHealthAsync = ref.watch(videoServerHealthProvider);
+        final serverHealth = serverHealthAsync.valueOrNull;
         final hasPro = subscription != null &&
             SubscriptionCapabilities.canUseProFeatures(subscription);
 
@@ -326,6 +330,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 (video) => _VideoCard(
                   video: video,
                   analysis: data.analysisForVideo(video.id),
+                  serverHealth: serverHealth,
                   dateFormat: dateFormat,
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
@@ -416,6 +421,7 @@ class _VideoCard extends StatefulWidget {
   const _VideoCard({
     required this.video,
     required this.analysis,
+    required this.serverHealth,
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
@@ -427,6 +433,7 @@ class _VideoCard extends StatefulWidget {
 
   final SwimVideo video;
   final SwimVideoAnalysis? analysis;
+  final VideoAnalysisServerHealth? serverHealth;
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
@@ -545,6 +552,7 @@ class _VideoCardState extends State<_VideoCard> {
               const SizedBox(height: 12),
               VideoAnalysisReport(
                 analysis: widget.analysis!,
+                serverHealth: widget.serverHealth,
                 onCoachNotesChanged: widget.onCoachNotesChanged ?? (_) {},
               ),
             ],

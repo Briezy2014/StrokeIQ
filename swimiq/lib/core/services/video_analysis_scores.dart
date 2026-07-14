@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../../data/models/swim_video_analysis.dart';
-import 'video_analysis_presenter.dart';
+import 'gemini_swim_analysis_service.dart';
 import 'video_analysis_score_summaries.dart';
 
 /// Labels and copy for Video Lab AI score chips.
@@ -13,16 +13,50 @@ abstract final class VideoAnalysisScores {
   static const techniqueTitle = 'Technique';
   static const paceTitle = 'Pace';
 
-  static String? fallbackReason(SwimVideoAnalysis analysis) {
+  static bool serverIsStreamReady(VideoAnalysisServerHealth? health) {
+    if (health == null || !health.ok) return false;
+    final version = health.functionVersion ?? '';
+    return version.contains('stream-v4') || version.contains('stream-v5');
+  }
+
+  /// Saved failure from a previous Analyze attempt (not a live error).
+  static bool hasStaleSavedFailure(SwimVideoAnalysis analysis) {
+    if (analysis.isGeminiEngine) return false;
+    final reason = analysis.analysisJson?['gemini_fallback_reason']?.toString();
+    return reason != null && reason.trim().isNotEmpty;
+  }
+
+  static String? fallbackReason(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    final serverReady = serverIsStreamReady(serverHealth);
+    if (serverReady && hasStaleSavedFailure(analysis)) {
+      return null;
+    }
     final raw = analysis.analysisJson?['gemini_fallback_reason']?.toString();
     if (raw == null || raw.trim().isEmpty) return null;
     return sanitizeStoredGeminiMessage(raw.trim());
   }
 
-  static String? technicalError(SwimVideoAnalysis analysis) {
+  static String? technicalError(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
+      return null;
+    }
     final raw = analysis.analysisJson?['gemini_error_raw']?.toString();
     if (raw == null || raw.trim().isEmpty) return null;
     return sanitizeStoredGeminiMessage(raw.trim());
+  }
+
+  static String? serverReadyBanner(VideoAnalysisServerHealth? serverHealth) {
+    if (!serverIsStreamReady(serverHealth)) return null;
+    final version = serverHealth!.functionVersion ?? 'stream';
+    return 'Video server is ready ($version). Tap Analyze again — Gemini watches '
+        'your clip and MediaPipe scans body lines. Any orange errors below are '
+        'from an old attempt before the server was fixed.';
   }
 
   /// Rewrites outdated server errors saved from older deploys (e.g. bogus GEMINI_MODEL advice).
@@ -31,10 +65,9 @@ abstract final class VideoAnalysisScores {
     if (lower.contains('worker_resource_limit') ||
         lower.contains('status: 546') ||
         lower.contains('not having enough compute resources')) {
-      return 'Your video server is OUT OF DATE or the clip is too large. '
-          'Run KARA-GEMINI-FIX-NOW.bat on your PC (deploys streaming server v5), '
-          'then trim clips to under 30 seconds / 25 MB and tap Analyze again. '
-          'You do NOT need Android Studio or a new API key unless diagnosis says so.';
+      return 'Previous attempt failed (server was out of date). '
+          'If KARA-WHY-GEMINI-FAILS.bat shows stream-v5, tap Analyze again. '
+          'Use clips under 30 seconds / 25 MB.';
     }
     if (lower.contains('delete gemini_model') ||
         lower.contains('gemini_model secret') ||
@@ -65,18 +98,52 @@ abstract final class VideoAnalysisScores {
   }
 
   /// True when Gemini did not watch the clip — do not show fake video-specific scores.
-  static bool awaitingGeminiVideoRead(SwimVideoAnalysis analysis) {
+  static bool awaitingGeminiVideoRead(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
     if (analysis.isGeminiEngine) return false;
-    return fallbackReason(analysis) != null || analysis.isNotesDriven;
+    return hasStaleSavedFailure(analysis) ||
+        analysis.isNotesDriven ||
+        fallbackReason(analysis, serverHealth: serverHealth) != null;
   }
 
   static const awaitingScoreLabel = '—';
+
+  static String awaitingSummaryFor(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
+      return 'Ready — tap Analyze again. Gemini will watch this clip; MediaPipe '
+          'will scan body lines in Chrome (rope/non-pool clips may skip pose).';
+    }
+    return awaitingSummary;
+  }
 
   static const awaitingSummary =
       'Gemini has not watched this clip yet — complete server setup, then tap Analyze again.';
 
   static const awaitingLegend =
       'Video not analyzed yet. Scores and coaching below are placeholders until Gemini runs on your server.';
+
+  static String legendFor(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
+        return 'Server is fixed — old errors are saved from a previous try. '
+            'Tap Analyze again for real Gemini + MediaPipe results.';
+      }
+      return awaitingLegend;
+    }
+    if (analysis.isGeminiEngine) {
+      return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
+    }
+    return 'Estimated ratings from your upload notes — not frame-by-frame video. '
+        'Add upload notes (start, strokes, finish) or deploy Gemini for video scores.';
+  }
 
   static const deployStepsBody =
       'You do NOT need Android Studio. API key is from aistudio.google.com/apikey '
@@ -87,33 +154,45 @@ abstract final class VideoAnalysisScores {
       'Step 4: KARA-WHY-GEMINI-FAILS.bat if Analyze still fails.\n\n'
       'Step 5: Tap Analyze again — clips under 25 MB / ~30 sec work best on web.';
 
-  static String overallSummary(SwimVideoAnalysis analysis) {
-    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+  static String overallSummary(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      return awaitingSummaryFor(analysis, serverHealth: serverHealth);
+    }
     return VideoAnalysisScoreSummaries.overall(analysis);
   }
 
-  static String techniqueSummary(SwimVideoAnalysis analysis) {
-    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+  static String techniqueSummary(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      return awaitingSummaryFor(analysis, serverHealth: serverHealth);
+    }
     return VideoAnalysisScoreSummaries.technique(analysis);
   }
 
-  static String paceSummary(SwimVideoAnalysis analysis) {
-    if (awaitingGeminiVideoRead(analysis)) return awaitingSummary;
+  static String paceSummary(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      return awaitingSummaryFor(analysis, serverHealth: serverHealth);
+    }
     return VideoAnalysisScoreSummaries.pace(analysis);
   }
 
-  static String legend(SwimVideoAnalysis analysis) {
-    if (awaitingGeminiVideoRead(analysis)) return awaitingLegend;
-    if (analysis.isGeminiEngine) {
-      return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
-    }
-    return 'Estimated ratings from your upload notes — not frame-by-frame video. '
-        'Add upload notes (start, strokes, finish) or deploy Gemini for video scores.';
-  }
-
-  static String? pipelineNote(SwimVideoAnalysis analysis) {
+  static String? pipelineNote(
+    SwimVideoAnalysis analysis, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
     if (analysis.isGeminiEngine) return null;
-    if (awaitingGeminiVideoRead(analysis)) {
+    if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
+      return null;
+    }
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
       return 'Until Gemini runs, coaching cannot match your footage. Follow the steps in the orange banner.';
     }
     if (analysis.hasPoseMetrics) {
@@ -123,13 +202,25 @@ abstract final class VideoAnalysisScores {
     return null;
   }
 
-  static String formatScore(SwimVideoAnalysis analysis, int value) {
-    if (awaitingGeminiVideoRead(analysis)) return awaitingScoreLabel;
+  static String formatScore(
+    SwimVideoAnalysis analysis,
+    int value, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      return awaitingScoreLabel;
+    }
     return '${clamp(value)}/$maxScore';
   }
 
-  static Color scoreColor(SwimVideoAnalysis analysis, int value) {
-    if (awaitingGeminiVideoRead(analysis)) return Colors.grey.shade500;
+  static Color scoreColor(
+    SwimVideoAnalysis analysis,
+    int value, {
+    VideoAnalysisServerHealth? serverHealth,
+  }) {
+    if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
+      return Colors.grey.shade500;
+    }
     return scoreColorForValue(value);
   }
 
