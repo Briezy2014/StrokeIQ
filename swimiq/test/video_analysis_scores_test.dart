@@ -71,4 +71,10 @@ void main() {
     expect(rewritten, contains('do NOT need a GEMINI_MODEL secret'));
     expect(rewritten, isNot(contains('Delete GEMINI_MODEL')));
   });
+
+  test('rewrites 503 high demand errors with retry guidance', () {
+    const busy = 'Gemini model "gemini-3.5-flash" is busy right now (Google high demand).';
+    final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(busy);
+    expect(rewritten, contains('temporarily busy'));
+  });
 }

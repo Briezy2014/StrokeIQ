@@ -14,7 +14,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-auto-model-v2';
+  static const currentFunctionVersion = '2026-gemini-auto-model-v3';
 
   final SupabaseClient _client;
 

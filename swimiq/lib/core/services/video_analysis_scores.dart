@@ -35,6 +35,17 @@ abstract final class VideoAnalysisScores {
           'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
           'then tap Analyze again.';
     }
+    if (lower.contains('gemini-1.5-flash') || lower.contains('gemini-1.5-pro')) {
+      return 'Your server tried retired gemini-1.5. Run KARA-GEMINI-FIX-NOW.bat, '
+          'wait 2 minutes, tap Analyze again (only GEMINI_API_KEY needed in Supabase).';
+    }
+    if (lower.contains('high demand') ||
+        lower.contains('unavailable') ||
+        lower.contains('503') ||
+        lower.contains('is busy right now')) {
+      return 'Google Gemini is temporarily busy. Wait 1-2 minutes and tap Analyze again — '
+          'the server tries multiple models with automatic retries.';
+    }
     if (lower.contains('gemini-2.0-flash') &&
         (lower.contains('retired') || lower.contains('limit: 0'))) {
       return 'Google retired gemini-2.0-flash. Run KARA-GEMINI-FIX-NOW.bat to deploy the '

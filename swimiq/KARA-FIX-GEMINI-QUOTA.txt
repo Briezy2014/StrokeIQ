@@ -52,7 +52,7 @@ STEP 3 - DEPLOY LATEST SERVER (double-click on PC)
 STEP 4 - TEST
 
 1. KARA-WHY-GEMINI-FAILS.bat -> read GEMINI-DIAGNOSIS.txt
-   Should say: version 2026-gemini-auto-model-v2 and model probe OK
+   Should say: version 2026-gemini-auto-model-v3 and model probe OK
 2. KARA-CLICK-THIS.bat
 3. Video tab -> tap Analyze on your clip
 4. Wait 2 minutes -> Analyze your clip (90 sec)

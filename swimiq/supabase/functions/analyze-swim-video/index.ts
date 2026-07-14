@@ -14,9 +14,16 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-auto-model-v2";
-const MODEL_CACHE_MS = 5 * 60 * 1000;
-let cachedModelList: { models: string[]; fetchedAt: number } | null = null;
+const CURRENT_FUNCTION_VERSION = "2026-gemini-auto-model-v3";
+/** Never call these — retired or wrong for new API keys. */
+const BLOCKED_GEMINI_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+];
+const GEMINI_RETRY_DELAYS_MS = [1500, 3000, 5000];
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 120_000;
 
@@ -211,7 +218,7 @@ Deno.serve(async (req) => {
       if (message.toLowerCase().includes("timed out")) {
         return jsonError(message, 504);
       }
-      return jsonError(message, 502);
+      return jsonError(message, 502, CURRENT_FUNCTION_VERSION);
     } finally {
       if (geminiFileName) {
         await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
@@ -558,12 +565,16 @@ async function callGeminiGenerateContent(
   return await geminiResponse.json() as Record<string, unknown>;
 }
 
-function resolveGeminiModel(): string {
-  const configured = Deno.env.get("GEMINI_MODEL")?.trim();
-  if (configured && PREFERRED_GEMINI_MODELS.includes(configured)) {
-    return configured;
+function isBlockedGeminiModel(model: string): boolean {
+  const lower = model.toLowerCase();
+  if (BLOCKED_GEMINI_MODELS.some((blocked) => lower.includes(blocked))) {
+    return true;
   }
-  return DEFAULT_GEMINI_MODEL;
+  return lower.includes("gemini-1.5") || lower.includes("gemini-2.0");
+}
+
+function filterAllowedModels(models: string[]): string[] {
+  return models.filter((model) => !isBlockedGeminiModel(model));
 }
 
 async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
@@ -584,7 +595,7 @@ async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
     for (const entry of data.models ?? []) {
       const name = entry.name?.replace(/^models\//, "") ?? "";
       const methods = entry.supportedGenerationMethods ?? [];
-      if (name && methods.includes("generateContent")) {
+      if (name && methods.includes("generateContent") && !isBlockedGeminiModel(name)) {
         available.add(name);
       }
     }
@@ -607,14 +618,12 @@ async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
 }
 
 async function getModelCandidates(apiKey: string): Promise<string[]> {
-  const now = Date.now();
-  if (cachedModelList && now - cachedModelList.fetchedAt < MODEL_CACHE_MS) {
-    return cachedModelList.models;
+  const listed = filterAllowedModels(await listGeminiVideoModels(apiKey));
+  if (listed.length > 0) {
+    return listed;
   }
-  const listed = await listGeminiVideoModels(apiKey);
-  const models = listed.length > 0 ? listed : [...PREFERRED_GEMINI_MODELS];
-  cachedModelList = { models, fetchedAt: now };
-  return models;
+  const fallback = filterAllowedModels([...PREFERRED_GEMINI_MODELS]);
+  return fallback.length > 0 ? fallback : [DEFAULT_GEMINI_MODEL];
 }
 
 async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
@@ -641,12 +650,23 @@ async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
 function isRetriableModelError(message: string): boolean {
   const lower = message.toLowerCase();
   return isQuotaError(lower) ||
+    isTransientGeminiError(lower) ||
     lower.includes("not_found") ||
     lower.includes("no longer available") ||
     lower.includes("not found for api version") ||
     lower.includes("gemini-1.5") ||
     lower.includes("gemini-2.0");
 }
+
+function isTransientGeminiError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return lower.includes("503") ||
+    lower.includes("unavailable") ||
+    lower.includes("high demand") ||
+    lower.includes("overloaded") ||
+    lower.includes("try again");
+}
+
 function isQuotaError(message: string): boolean {
   const lower = message.toLowerCase();
   return lower.includes("resource_exhausted") ||
@@ -677,6 +697,10 @@ function friendlyGeminiHttpError(
       + "enable billing on the linked Cloud project (free tier still works with billing linked), "
       + "or create a new API key in a fresh project.";
   }
+  if (status === 503 || isTransientGeminiError(lower)) {
+    return `Gemini model "${model}" is busy right now (Google high demand). `
+      + `SwimIQ will try another model automatically — tap Analyze again in 1-2 minutes.`;
+  }
   if (lower.includes("api key not valid") || lower.includes("api_key_invalid")) {
     return "GEMINI_API_KEY is invalid. Create a new key at aistudio.google.com/apikey "
       + "and update Supabase Edge Function secrets.";
@@ -689,27 +713,48 @@ async function callGeminiGenerateContentWithFallback(
   videoPart: GeminiVideoPart,
   prompt: string,
 ): Promise<{ json: Record<string, unknown>; model: string }> {
-  const models = await getModelCandidates(apiKey);
+  const models = filterAllowedModels(await getModelCandidates(apiKey));
+  if (models.length === 0) {
+    throw new Error(
+      "No supported Gemini Flash models found for your API key. "
+      + "Create a new key at aistudio.google.com/apikey and update GEMINI_API_KEY.",
+    );
+  }
   let lastError = "Gemini request failed.";
   const attempted: string[] = [];
 
   for (const model of models) {
     attempted.push(model);
-    try {
-      const json = await callGeminiGenerateContent(apiKey, model, videoPart, prompt);
-      return { json, model };
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-      const isLast = model === models[models.length - 1];
-      if (!isRetriableModelError(lastError) || isLast) {
-        throw new Error(
-          `${lastError} (tried: ${attempted.join(", ")})`,
-        );
+    for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
+      try {
+        const json = await callGeminiGenerateContent(apiKey, model, videoPart, prompt);
+        return { json, model };
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+        const canRetrySameModel = attempt < GEMINI_RETRY_DELAYS_MS.length &&
+          isTransientGeminiError(lastError.toLowerCase());
+        if (canRetrySameModel) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, GEMINI_RETRY_DELAYS_MS[attempt])
+          );
+          continue;
+        }
+        break;
       }
+    }
+    const isLast = model === models[models.length - 1];
+    if (!isRetriableModelError(lastError) || isLast) {
+      throw new Error(
+        `${lastError} (tried: ${attempted.join(", ")}, `
+          + `server: ${CURRENT_FUNCTION_VERSION})`,
+      );
     }
   }
 
-  throw new Error(`${lastError} (tried: ${attempted.join(", ")})`);
+  throw new Error(
+    `${lastError} (tried: ${attempted.join(", ")}, `
+      + `server: ${CURRENT_FUNCTION_VERSION})`,
+  );
 }
 
 function normalizeAnalysis(
@@ -857,9 +902,15 @@ function mimeTypeForPath(path: string): string {
   return "video/mp4";
 }
 
-function jsonError(message: string, status: number) {
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+function jsonError(message: string, status: number, functionVersion?: string) {
+  return new Response(
+    JSON.stringify({
+      error: message,
+      function_version: functionVersion ?? CURRENT_FUNCTION_VERSION,
+    }),
+    {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    },
+  );
 }

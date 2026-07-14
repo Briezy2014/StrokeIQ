@@ -282,6 +282,13 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
           'then tap Analyze again.';
     }
+    if (lower.contains('high demand') ||
+        lower.contains('unavailable') ||
+        lower.contains('503') ||
+        lower.contains('is busy right now')) {
+      return 'Google Gemini is temporarily busy (high demand). '
+          'Wait 1-2 minutes and tap Analyze again — SwimIQ tries multiple models automatically.';
+    }
     if (lower.contains('resource_exhausted') ||
         lower.contains('quota') ||
         lower.contains('limit: 0') ||
@@ -291,7 +298,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           'then tap Analyze again. If it still fails, create a NEW key at aistudio.google.com/apikey.';
     }
     if (lower.contains('gemini-1.5') ||
-        lower.contains('no longer available') ||
+        lower.contains('gemini-2.0-flash')) {
+      return 'Your server tried a retired Gemini model. Run KARA-GEMINI-FIX-NOW.bat '
+          'to deploy the latest auto-model server, wait 2 minutes, tap Analyze again.';
+    }
+    if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
         lower.contains('tried:') ||
         lower.contains('rejected model')) {
