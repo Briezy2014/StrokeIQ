@@ -8,6 +8,7 @@ echo   KARA - Find out WHY video AI is broken
 echo ============================================================
 echo.
 echo Writes GEMINI-DIAGNOSIS.txt - opens in Notepad when done.
+echo MUST show version 2026-gemini-stream-v5 (NOT auto-model-v3).
 echo Uses Node.js (NOT PowerShell - no more red script errors).
 echo.
 pause
@@ -33,10 +34,14 @@ if errorlevel 1 (
 if not exist "%~dp0scripts\diagnose-gemini.js" (
   echo.
   echo [ERROR] Missing scripts\diagnose-gemini.js
-  echo Double-click KARA-SEE-UPDATES-NOW.bat first.
+  echo Double-click RESTORE-SCRIPTS.bat first.
   pause
   exit /b 1
 )
+
+echo Updating diagnosis script from GitHub...
+git fetch origin cursor/dashboard-rope-schedule-fix-17e8 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/diagnose-gemini.js 2>nul
 
 node "%~dp0scripts\diagnose-gemini.js"
 set ERR=%ERRORLEVEL%

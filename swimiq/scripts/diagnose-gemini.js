@@ -160,14 +160,15 @@ async function main() {
           log('');
           log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
         } else if (!isStreamServer) {
-          log('FAIL - WRONG server version (causes 546 errors on large clips): ' + version);
-          log('  Your diagnosis may look OK but Analyze will FAIL on real videos.');
-          log('  Need: ' + current);
+          log('FAIL - WRONG server version (causes 546 errors on real videos): ' + version);
+          log('  You have: ' + version);
+          log('  Need:     ' + current);
+          log('  auto-model-v3 is NOT correct even if it says OK above.');
           log('');
           log('FIX:');
-          log('  1. KARA-SEE-UPDATES-NOW.bat  (pull latest code first)');
-          log('  2. KARA-GEMINI-FIX-NOW.bat     (deploy again — wait for SUCCESS)');
-          log('  3. Run KARA-WHY-GEMINI-FAILS.bat — version must say stream-v5');
+          log('  1. RESTORE-SCRIPTS.bat');
+          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v5)');
+          log('  3. This file again — must show stream-v5');
         } else if (version && version.indexOf('stream-v5') < 0) {
           log('WARN - Server works but update recommended: ' + version);
           log('  Latest: ' + current);
