@@ -15,14 +15,32 @@ abstract final class VideoAnalysisScores {
 
   static String? fallbackReason(SwimVideoAnalysis analysis) {
     final raw = analysis.analysisJson?['gemini_fallback_reason']?.toString();
-    if (raw != null && raw.trim().isNotEmpty) return raw.trim();
-    return null;
+    if (raw == null || raw.trim().isEmpty) return null;
+    return sanitizeStoredGeminiMessage(raw.trim());
   }
 
   static String? technicalError(SwimVideoAnalysis analysis) {
     final raw = analysis.analysisJson?['gemini_error_raw']?.toString();
-    if (raw != null && raw.trim().isNotEmpty) return raw.trim();
-    return null;
+    if (raw == null || raw.trim().isEmpty) return null;
+    return sanitizeStoredGeminiMessage(raw.trim());
+  }
+
+  /// Rewrites outdated server errors saved from older deploys (e.g. bogus GEMINI_MODEL advice).
+  static String sanitizeStoredGeminiMessage(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('delete gemini_model') ||
+        lower.contains('gemini_model secret') ||
+        (lower.contains('model retired') && lower.contains('gemini-1.5'))) {
+      return 'This error is from an old server version — you do NOT need a GEMINI_MODEL secret. '
+          'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
+          'then tap Analyze again.';
+    }
+    if (lower.contains('gemini-2.0-flash') &&
+        (lower.contains('retired') || lower.contains('limit: 0'))) {
+      return 'Google retired gemini-2.0-flash. Run KARA-GEMINI-FIX-NOW.bat to deploy the '
+          'auto-model server, wait 2 minutes, then tap Analyze again.';
+    }
+    return raw;
   }
 
   /// True when Gemini did not watch the clip — do not show fake video-specific scores.

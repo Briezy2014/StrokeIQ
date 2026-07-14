@@ -275,22 +275,30 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       return 'Google Gemini needs billing enabled on your Google Cloud project — '
           'see Google AI Studio -> your key -> linked project billing.';
     }
+    if (lower.contains('delete gemini_model') ||
+        lower.contains('gemini_model secret') ||
+        (lower.contains('model retired') && lower.contains('gemini-1.5'))) {
+      return 'Old server code gave bad advice — you do NOT need GEMINI_MODEL. '
+          'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
+          'then tap Analyze again.';
+    }
     if (lower.contains('resource_exhausted') ||
         lower.contains('quota') ||
         lower.contains('limit: 0') ||
         lower.contains('gemini-2.0-flash')) {
-      return 'Google Gemini quota hit — gemini-2.0-flash is retired. '
-          'Run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash, wait 2 minutes, '
-          'then tap Analyze again. If it still fails, link billing in Google AI Studio.';
+      return 'Google retired gemini-2.0-flash (quota limit 0). '
+          'Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking, wait 2 minutes, '
+          'then tap Analyze again. If it still fails, create a NEW key at aistudio.google.com/apikey.';
     }
     if (lower.contains('gemini-1.5') ||
         lower.contains('no longer available') ||
         lower.contains('not_found') ||
-        lower.contains('tried:')) {
-      return 'Google rejected the Gemini model for your API key. New keys often '
-          'cannot use older models. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
-          'tap Analyze again. If needed: create a NEW key at aistudio.google.com/apikey '
-          'and update GEMINI_API_KEY in Supabase.';
+        lower.contains('tried:') ||
+        lower.contains('rejected model')) {
+      return 'Google rejected the Gemini model for your API key. '
+          'Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, tap Analyze again. '
+          'If needed: create a NEW key at aistudio.google.com/apikey and update '
+          'GEMINI_API_KEY in Supabase (no GEMINI_MODEL secret needed).';
     }
     if (lower.contains('gemini api error')) {
       return 'Google Gemini rejected the request — see Technical error below. '
@@ -639,6 +647,12 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       SwimVideoAnalysis analysis;
       String? fallbackNotice;
+
+      final health =
+          await ref.read(geminiSwimAnalysisServiceProvider).checkServerHealth();
+      if (!health.ok) {
+        return health.message;
+      }
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(

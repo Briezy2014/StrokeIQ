@@ -6,15 +6,15 @@ const BUCKET = "swim-videos";
 const MAX_INLINE_BYTES = 18 * 1024 * 1024;
 /** Upper cap via Gemini File API (resumable upload). */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
-const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
-/** Tried in order; server auto-picks the first model your API key can use. */
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+/** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
   "gemini-3.5-flash",
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const GEMINI_MODEL_FALLBACKS = [...PREFERRED_GEMINI_MODELS];
+const CURRENT_FUNCTION_VERSION = "2026-gemini-auto-model-v2";
 const MODEL_CACHE_MS = 5 * 60 * 1000;
 let cachedModelList: { models: string[]; fetchedAt: number } | null = null;
 const GEMINI_FILE_POLL_MS = 2000;
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           ok: modelProbeOk,
           gemini_configured: true,
-          function_version: "2026-gemini-auto-model",
+          function_version: CURRENT_FUNCTION_VERSION,
           gemini_model: model,
           available_models: availableModels,
           model_probe_ok: modelProbeOk,
@@ -572,7 +572,7 @@ async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
     );
     if (!response.ok) {
-      return [...PREFERRED_GEMINI_MODELS];
+      return [];
     }
     const data = await response.json() as {
       models?: Array<{
@@ -588,6 +588,9 @@ async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
         available.add(name);
       }
     }
+    if (available.size === 0) {
+      return [];
+    }
     const preferred = PREFERRED_GEMINI_MODELS.filter((model) =>
       available.has(model)
     );
@@ -597,9 +600,9 @@ async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
     const flashModels = [...available].filter((name) =>
       name.includes("flash") && !name.includes("tts") && !name.includes("live")
     );
-    return flashModels.length > 0 ? flashModels.slice(0, 4) : [...PREFERRED_GEMINI_MODELS];
+    return flashModels.length > 0 ? flashModels.slice(0, 6) : [];
   } catch {
-    return [...PREFERRED_GEMINI_MODELS];
+    return [];
   }
 }
 
@@ -608,7 +611,8 @@ async function getModelCandidates(apiKey: string): Promise<string[]> {
   if (cachedModelList && now - cachedModelList.fetchedAt < MODEL_CACHE_MS) {
     return cachedModelList.models;
   }
-  const models = await listGeminiVideoModels(apiKey);
+  const listed = await listGeminiVideoModels(apiKey);
+  const models = listed.length > 0 ? listed : [...PREFERRED_GEMINI_MODELS];
   cachedModelList = { models, fetchedAt: now };
   return models;
 }
@@ -658,15 +662,15 @@ function friendlyGeminiHttpError(
   const lower = errText.toLowerCase();
   if (status === 404 || lower.includes("no longer available") ||
       lower.includes("not found for api version")) {
-    return `Google rejected model "${model}" for your API key. New Google keys often `
-      + `cannot use gemini-2.5 or gemini-1.5. Run KARA-GEMINI-FIX-NOW.bat to deploy `
-      + `auto-model picking (gemini-3.5-flash). If it still fails, create a NEW key at `
-      + `aistudio.google.com/apikey and update GEMINI_API_KEY in Supabase (keep only that secret).`;
+    return `Google rejected model "${model}" for your API key. `
+      + `You only need GEMINI_API_KEY in Supabase (no GEMINI_MODEL secret). `
+      + `Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking. `
+      + `If it still fails, create a NEW key at aistudio.google.com/apikey.`;
   }
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
-      return "Gemini 2.0 Flash is retired (quota limit 0). Redeploy analyze-swim-video "
-        + "(KARA-GEMINI-FIX-NOW.bat) to use gemini-2.5-flash.";
+      return "Gemini 2.0 Flash is retired (quota limit 0). "
+        + "Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking.";
     }
     return "Google Gemini daily/minute quota reached for your API key. Wait 1-2 minutes "
       + "and tap Analyze again. If this keeps happening: Google AI Studio -> your key -> "

@@ -14,6 +14,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
+  static const currentFunctionVersion = '2026-gemini-auto-model-v2';
 
   final SupabaseClient _client;
 
@@ -39,7 +40,8 @@ class GeminiSwimAnalysisService {
         data is Map &&
         data['error']?.toString().contains('storage_path') == true) {
       return VideoAnalysisServerHealth.failed(
-        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy gemini-2.5-flash.',
+        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy '
+        'auto-model picking (you only need GEMINI_API_KEY, not GEMINI_MODEL).',
       );
     }
 
@@ -203,21 +205,46 @@ class VideoAnalysisServerHealth {
         : json['gemini_model']?.toString();
     final probeOk = json['model_probe_ok'] == true;
     final probeError = json['model_probe_error']?.toString();
+    final version = json['function_version']?.toString();
+    final isCurrentVersion = version == GeminiSwimAnalysisService.currentFunctionVersion;
     return VideoAnalysisServerHealth(
-      ok: json['ok'] == true,
-      message: json['ok'] == true
-          ? 'Video server ready (version ${json['function_version']}, '
-              'model ${json['gemini_model']}, '
-              'max ${json['max_video_mb']} MB). Tap Analyze on your clip.'
-          : probeError ??
-              'Gemini model probe failed. Run KARA-GEMINI-FIX-NOW.bat and check '
-              'GEMINI_API_KEY at aistudio.google.com/apikey.',
-      functionVersion: json['function_version']?.toString(),
+      ok: json['ok'] == true && isCurrentVersion,
+      message: _healthMessage(
+        ok: json['ok'] == true,
+        isCurrentVersion: isCurrentVersion,
+        version: version,
+        geminiModel: json['gemini_model']?.toString(),
+        maxVideoMb: json['max_video_mb']?.toString(),
+        probeError: probeError,
+      ),
+      functionVersion: version,
       maxVideoMb: int.tryParse(json['max_video_mb']?.toString() ?? ''),
       geminiModel: json['gemini_model']?.toString(),
       availableModels: modelList,
       modelProbeOk: probeOk,
     );
+  }
+
+  static String _healthMessage({
+    required bool ok,
+    required bool isCurrentVersion,
+    String? version,
+    String? geminiModel,
+    String? maxVideoMb,
+    String? probeError,
+  }) {
+    if (!isCurrentVersion) {
+      return 'Video server is OUT OF DATE (version ${version ?? "unknown"}). '
+          'Run KARA-GEMINI-FIX-NOW.bat — you only need GEMINI_API_KEY in Supabase, '
+          'not GEMINI_MODEL.';
+    }
+    if (ok) {
+      return 'Video server ready (version $version, model $geminiModel, '
+          'max $maxVideoMb MB). Tap Analyze on your clip.';
+    }
+    return probeError ??
+        'Gemini model probe failed. Create a NEW key at aistudio.google.com/apikey, '
+        'update GEMINI_API_KEY in Supabase, then run KARA-GEMINI-FIX-NOW.bat.';
   }
 
   factory VideoAnalysisServerHealth.failed(String message) {

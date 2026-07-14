@@ -8,7 +8,11 @@ Your Supabase screenshot is correct: only GEMINI_API_KEY is required.
 The error about gemini-1.5-flash is MISLEADING. Google retired old models.
 New API keys often CANNOT use gemini-2.5 or gemini-1.5 anymore.
 
-SwimIQ now auto-picks gemini-3.5-flash (or the newest model your key allows).
+The orange "GEMINI_MODEL" error is WRONG and may be SAVED from an old attempt.
+Even with no GEMINI_MODEL secret, an old server version wrote that bad message.
+After KARA-GEMINI-FIX-NOW.bat succeeds, tap Analyze again — the new message will be correct.
+
+SwimIQ auto-picks the newest Gemini Flash model your key allows (often gemini-2.5-flash).
 
 
 ================================================================================
@@ -48,7 +52,7 @@ STEP 3 - DEPLOY LATEST SERVER (double-click on PC)
 STEP 4 - TEST
 
 1. KARA-WHY-GEMINI-FAILS.bat -> read GEMINI-DIAGNOSIS.txt
-   Should say: gemini-3.5-flash and model probe OK
+   Should say: version 2026-gemini-auto-model-v2 and model probe OK
 2. KARA-CLICK-THIS.bat
 3. Video tab -> Test video server
 4. Wait 2 minutes -> Analyze your clip (90 sec)

@@ -88,7 +88,8 @@ echo   3. Tap Test video server - should say Video server ready
 echo   4. Tap ANALYZE on your clip - wait 90 seconds
 echo.
 echo You should see: Gemini - frame-by-frame video analysis
-echo Server now uses gemini-2.5-flash (2.0-flash was retired by Google).
-echo If quota error: read KARA-FIX-GEMINI-QUOTA.txt
+echo Server now auto-picks the newest Gemini Flash model your API key allows.
+echo You only need GEMINI_API_KEY in Supabase - NOT GEMINI_MODEL.
+echo If errors continue: read KARA-FIX-GEMINI-QUOTA.txt
 echo.
 pause

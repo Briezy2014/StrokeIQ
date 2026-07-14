@@ -150,14 +150,23 @@ async function main() {
     if (health.status === 200) {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
-        log('OK - Video server ready.');
-        log('  Version: ' + (data.function_version || 'unknown'));
-        log('  Gemini model: ' + (data.gemini_model || 'unknown'));
-        if (data.available_models) {
-          log('  Models your key can use: ' + JSON.stringify(data.available_models));
+        const version = data.function_version || 'unknown';
+        const current = '2026-gemini-auto-model-v2';
+        if (version !== current) {
+          log('FAIL - OLD server version deployed: ' + version);
+          log('  Need: ' + current);
+          log('');
+          log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
+        } else {
+          log('OK - Video server ready.');
+          log('  Version: ' + version);
+          log('  Gemini model: ' + (data.gemini_model || 'unknown'));
+          if (data.available_models) {
+            log('  Models your key can use: ' + JSON.stringify(data.available_models));
+          }
+          log('');
+          log('Tap ANALYZE on your clip again in the app.');
         }
-        log('');
-        log('Tap ANALYZE on your clip again in the app.');
       } else {
         log('FAIL - Gemini model probe failed.');
         if (data.model_probe_error) log('  ' + data.model_probe_error);

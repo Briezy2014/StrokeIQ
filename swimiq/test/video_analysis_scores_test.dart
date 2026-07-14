@@ -63,4 +63,12 @@ void main() {
       contains('server needs an update'),
     );
   });
+
+  test('rewrites stale GEMINI_MODEL error saved from old server deploys', () {
+    const stale = 'Gemini model is retired (often gemini-1.5-flash in Supabase secrets). '
+        'Delete GEMINI_MODEL secret in Supabase, then run KARA-GEMINI-FIX-NOW.bat';
+    final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(stale);
+    expect(rewritten, contains('do NOT need a GEMINI_MODEL secret'));
+    expect(rewritten, isNot(contains('Delete GEMINI_MODEL')));
+  });
 }
