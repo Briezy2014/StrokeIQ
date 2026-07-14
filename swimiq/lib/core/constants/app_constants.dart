@@ -9,8 +9,8 @@ class AppConstants {
   static const tagline = '';
   static const brandTagline = 'Built in the Water. Driven by Possibility.';
   static const brandTaglineShort = 'Performance. Precision. Possibility.';
-  static const founder = 'Kara Williams';
-  static const copyright = '© 2026 SwimIQ';
+  static const founder = '';
+  static const copyright = '© 2026 SwimIQ LLC';
 
   /// Max swim clip size for Gemini File API analysis (matches edge function cap).
   static const maxGeminiVideoBytes = 100 * 1024 * 1024;

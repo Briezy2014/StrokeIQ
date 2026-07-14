@@ -33,11 +33,13 @@ class SwimIqHeader extends StatelessWidget {
                 ),
           ),
         ],
-        const SizedBox(height: 4),
-        Text(
-          AppConstants.founder,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
+        if (AppConstants.founder.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            AppConstants.founder,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ],
         const SizedBox(height: 16),
         const Divider(),
       ],

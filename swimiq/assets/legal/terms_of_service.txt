@@ -1,5 +1,5 @@
 SwimIQ Terms of Service
-Last updated: July 7, 2026
+Last updated: July 14, 2026
 
 1. Agreement
 By downloading or using SwimIQ, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the app.
@@ -15,7 +15,7 @@ SwimIQ outputs — including AI coaching, nutrition suggestions, race plans, and
 4. Accounts
 SwimIQ is for athletes ages 8 through 30.
 
-Ages 8–12 (under 13): A parent or legal guardian must create and control the account, accept these Terms and our Privacy Policy on the athlete’s behalf, and provide consent for any AI video analysis.
+Ages 8–12 (under 13): A parent or legal guardian must create and control the account, accept these Terms and our Privacy Policy on the athlete's behalf, and provide consent for any AI video analysis.
 
 Ages 13–30: Athletes may create and use their own account.
 
@@ -42,7 +42,7 @@ We may suspend or terminate access for violations of these Terms. You may stop u
 THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, TO THE MAXIMUM EXTENT PERMITTED BY LAW.
 
 11. Limitation of liability
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, KARA JAYNE WILLIAMS AND SWIMIQ WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, SWIMIQ LLC WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL.
 
 12. Governing law
 These Terms are governed by the laws of the State of Ohio, without regard to conflict-of-law rules.
@@ -51,7 +51,7 @@ These Terms are governed by the laws of the State of Ohio, without regard to con
 support@swimiqapp.com
 privacy@swimiqapp.com
 
-Kara Williams · SwimIQ
+SwimIQ LLC
 199 Harbinger Dr.
 Groveport, OH 43125
 United States

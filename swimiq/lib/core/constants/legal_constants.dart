@@ -1,17 +1,13 @@
 import 'app_constants.dart';
 
-/// Legal document metadata — update when forming LLC or when Aspyn Briez Williams
-/// assumes ownership at age 18 (see docs/legal/README.md).
+/// Legal document metadata — SwimIQ LLC is the operator; parent consent rules
+/// for under-13 athletes are in Privacy Policy and Terms (see docs/legal/README.md).
 abstract final class LegalConstants {
   static const appName = 'SwimIQ';
-  static const operatorName = 'Kara Williams';
+  static const operatorName = 'SwimIQ LLC';
   static const legalRepresentativeName = 'Kara Williams';
   static const productName = 'SwimIQ';
   static const founderName = 'Aspyn Briez Williams';
-  /// After Ohio filing, update operatorName display to this in legal docs.
-  static const plannedLlcName = 'SwimIQ LLC';
-  /// Planned operator after age-18 transition — do not use in public legal text until then.
-  static const plannedOwnerAt18 = 'Aspyn Briez Williams';
   static const companyName = operatorName;
   static const contactEmail = 'privacy@swimiqapp.com';
   static const supportEmail = 'support@swimiqapp.com';
@@ -20,7 +16,7 @@ abstract final class LegalConstants {
   static const mailingAddressLine1 = '199 Harbinger Dr.';
   static const mailingCityStateZip = 'Groveport, OH 43125';
   static const mailingCountry = 'United States';
-  static const lastUpdated = 'July 7, 2026';
+  static const lastUpdated = 'July 14, 2026';
 
   static const privacyPolicyWebUrl = '$websiteUrl/privacy';
   static const termsOfServiceWebUrl = '$websiteUrl/terms';
@@ -37,10 +33,17 @@ abstract final class LegalConstants {
 
   static const aiConsentStorageKey = 'swimiq_ai_data_consent_v1';
 
+  /// Full footer on Settings and legal document screens.
   static const settingsFooter =
       '${AppConstants.copyright} · SwimIQ provides coaching estimates only — not '
       'official meet timing or medical advice. Confirm with your coach. '
       '$operatorName · $mailingCityStateZip';
+
+  /// Consent dialogs — company name only, no street address or personal name.
+  static const compactFooter =
+      '${AppConstants.copyright} · SwimIQ provides coaching estimates only — not '
+      'official meet timing or medical advice. Confirm with your coach. '
+      '$operatorName.';
 }
 
 enum LegalDocumentType {
