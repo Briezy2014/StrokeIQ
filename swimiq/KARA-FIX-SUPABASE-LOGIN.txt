@@ -1,0 +1,41 @@
+SwimIQ — Fix "Unable to create CLI session" (20 token limit)
+============================================================
+
+You saw: "User can have up to 20 personal access tokens.
+Please remove the old tokens to create new ones."
+
+This is NOT a SwimIQ bug. Supabase blocks new CLI logins until you
+delete some old tokens.
+
+FIX (2 minutes):
+----------------
+1. Open in Chrome (same Google account as SwimIQ Supabase):
+   https://supabase.com/dashboard/account/tokens
+
+2. You will see a list of Personal Access Tokens.
+   Delete OLD ones you do not need — especially names like:
+   - supabase-cli-...
+   - CLI Session ...
+   - anything from months ago
+
+   Keep at most 1–2 recent tokens. Delete until you have room
+   (Supabase allows 20 total — you are at the limit).
+
+3. Close the browser tab from the failed login.
+
+4. Double-click KARA-GEMINI-FIX-NOW.bat again.
+   When Step 2 opens the browser, sign in — it should work now.
+
+5. Finish Steps 3–5 until you see:
+   SUCCESS - Server is sync-v9
+
+OPTIONAL — deploy without browser login:
+----------------------------------------
+If you keep ONE token after cleanup, you can paste it in a Command
+Prompt (replace YOUR_TOKEN with the new token value):
+
+  set SUPABASE_ACCESS_TOKEN=YOUR_TOKEN
+  cd /d "C:\path\to\swimiq"
+  npx supabase functions deploy analyze-swim-video --project-ref bryurwyeosbffvfpdpbv
+
+Then run KARA-WHY-GEMINI-FAILS.bat — must show sync-v9.

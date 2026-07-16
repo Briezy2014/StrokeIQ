@@ -82,6 +82,13 @@ echo Use the Google account for SwimIQ project %PROJECT_REF%
 call %SUPABASE_CMD% login
 if errorlevel 1 (
   echo STEP 2 FAILED.
+  echo.
+  echo If the browser said "up to 20 personal access tokens":
+  echo   1. Open https://supabase.com/dashboard/account/tokens
+  echo   2. Delete old CLI tokens ^(keep 1-2 recent^)
+  echo   3. Run this file again from Step 2
+  echo   See KARA-FIX-SUPABASE-LOGIN.txt for full steps.
+  start notepad "%~dp0KARA-FIX-SUPABASE-LOGIN.txt"
   pause
   exit /b 1
 )
