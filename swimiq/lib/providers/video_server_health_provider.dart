@@ -12,7 +12,8 @@ final videoServerHealthProvider =
 bool isVideoServerStreamReady(VideoAnalysisServerHealth? health) {
   if (health == null || !health.ok) return false;
   final version = health.functionVersion ?? '';
-  return version.contains('stream-v4') ||
+  return version.contains('sync-v9') ||
+      version.contains('stream-v4') ||
       version.contains('stream-v5') ||
       version.contains('stream-v6') ||
       version.contains('stream-v7') ||

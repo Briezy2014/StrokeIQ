@@ -16,8 +16,9 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-stream-v8';
-  static const analysisTimeout = Duration(minutes: 3);
+  static const currentFunctionVersion = '2026-gemini-sync-v9';
+  /// Sync server returns full analysis in one HTTP response (up to ~2 min).
+  static const invokeTimeout = Duration(seconds: 150);
   static const pollInterval = Duration(seconds: 3);
   static const pollMaxWait = Duration(minutes: 3);
 
@@ -25,6 +26,7 @@ class GeminiSwimAnalysisService {
 
   static bool isSupportedFunctionVersion(String? version) {
     if (version == null || version.isEmpty) return false;
+    if (version.contains('sync-v9')) return true;
     return version.startsWith('2026-gemini');
   }
 
@@ -94,10 +96,11 @@ class GeminiSwimAnalysisService {
           ),
         )
         .timeout(
-          const Duration(seconds: 30),
+          invokeTimeout,
           onTimeout: () {
             throw GeminiAnalysisException(
-              'Could not reach the video analysis server. Check your connection and try again.',
+              'Video analysis timed out after ${invokeTimeout.inSeconds} seconds. '
+              'Run KARA-GEMINI-FIX-NOW.bat to deploy sync-v9, then try a clip under 30 seconds / 25 MB.',
             );
           },
         );
@@ -119,8 +122,8 @@ class GeminiSwimAnalysisService {
       }
       if (response.status == 504) {
         throw GeminiAnalysisException(
-          'Video server timed out (504). Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v6, '
-          'then try again with a clip under 60 seconds.',
+          'Video server timed out (504). Run KARA-GEMINI-FIX-NOW.bat to deploy sync-v9, '
+          'then try again with a clip under 30 seconds / 25 MB.',
         );
       }
       if (response.status == 546) {

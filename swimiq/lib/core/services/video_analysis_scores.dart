@@ -16,7 +16,8 @@ abstract final class VideoAnalysisScores {
   static bool serverIsStreamReady(VideoAnalysisServerHealth? health) {
     if (health == null) return false;
     final version = health.functionVersion ?? '';
-    if (version.contains('stream-v4') ||
+    if (version.contains('sync-v9') ||
+        version.contains('stream-v4') ||
         version.contains('stream-v5') ||
         version.contains('stream-v6') ||
         version.contains('stream-v7') ||
@@ -41,7 +42,8 @@ abstract final class VideoAnalysisScores {
     final reason = analysis.analysisJson?['gemini_fallback_reason']?.toString();
     if (reason == null || reason.trim().isEmpty) return false;
     final version = analysis.analysisJson?['function_version']?.toString() ?? '';
-    if (version.contains('stream-v6') ||
+    if (version.contains('sync-v9') ||
+        version.contains('stream-v6') ||
         version.contains('stream-v7') ||
         version.contains('stream-v8')) {
       return false;
@@ -49,7 +51,7 @@ abstract final class VideoAnalysisScores {
     return true;
   }
 
-  /// Old server errors mention gemini-1.5 — hide after stream-v6+ deploy.
+  /// Old server errors mention gemini-1.5 — hide after sync-v9 / stream-v6+ deploy.
   static bool isObsoleteGemini15Error(SwimVideoAnalysis analysis) {
     final raw = analysis.analysisJson?['gemini_error_raw']?.toString() ?? '';
     final reason = analysis.analysisJson?['gemini_fallback_reason']?.toString() ?? '';
@@ -59,7 +61,8 @@ abstract final class VideoAnalysisScores {
     }
     final savedVersion =
         analysis.analysisJson?['function_version']?.toString() ?? '';
-    if (savedVersion.contains('stream-v6') ||
+    if (savedVersion.contains('sync-v9') ||
+        savedVersion.contains('stream-v6') ||
         savedVersion.contains('stream-v7') ||
         savedVersion.contains('stream-v8')) {
       return false;

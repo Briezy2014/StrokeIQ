@@ -12,7 +12,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v8";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v9";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -29,6 +29,8 @@ const MAX_VIDEO_GEMINI_MODELS = 6;
 declare const EdgeRuntime: {
   waitUntil(promise: Promise<unknown>): void;
 };
+// EdgeRuntime unused in v9 sync path — kept for future background jobs.
+void EdgeRuntime;
 
 const GEMINI_SAFETY_SETTINGS = [
   {
@@ -162,37 +164,35 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Return immediately — Gemini runs in background (avoids 504 IDLE_TIMEOUT).
-    EdgeRuntime.waitUntil(
-      runVideoAnalysisJob(admin, geminiApiKey, body).catch((error) => {
-        console.error("analyze-swim-video background job failed:", error);
-      }),
-    );
-
-    return new Response(
-      JSON.stringify({
-        status: "processing",
-        swim_video_id: body.video_id ?? null,
-        message:
-          "Gemini is analyzing your clip on the server. This usually finishes in under 2 minutes.",
-        function_version: CURRENT_FUNCTION_VERSION,
-      }),
-      {
+    // Synchronous path (worked reliably before) — returns full analysis in one response.
+    // Inline video for clips <=12 MB keeps this under Supabase's 150s limit.
+    try {
+      const analysis = await buildVideoAnalysis(admin, geminiApiKey, body);
+      return new Response(JSON.stringify(analysis), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 202,
-      },
-    );
+        status: 200,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.toLowerCase().includes("timed out")) {
+        return jsonError(message, 504, CURRENT_FUNCTION_VERSION);
+      }
+      if (message.toLowerCase().includes("too large")) {
+        return jsonError(message, 413, CURRENT_FUNCTION_VERSION);
+      }
+      return jsonError(message, 502, CURRENT_FUNCTION_VERSION);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return jsonError(message, 500);
   }
 });
 
-async function runVideoAnalysisJob(
+async function buildVideoAnalysis(
   admin: ReturnType<typeof createClient>,
   geminiApiKey: string,
   body: AnalyzeRequest,
-): Promise<void> {
+): Promise<Record<string, unknown>> {
   const storagePath = body.storage_path?.trim();
   if (!storagePath) {
     throw new Error("storage_path is required.");
@@ -259,8 +259,7 @@ async function runVideoAnalysisJob(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await persistFailedAnalysis(admin, body, message);
-    throw error;
+    throw new Error(message);
   } finally {
     if (geminiFileName) {
       await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
@@ -270,12 +269,9 @@ async function runVideoAnalysisJob(
   const candidate = geminiJson?.candidates?.[0];
   const finishReason = candidate?.finishReason;
   if (finishReason === "SAFETY" || finishReason === "BLOCKLIST") {
-    await persistFailedAnalysis(
-      admin,
-      body,
+    throw new Error(
       "SwimIQ could not generate coaching feedback for this clip. Try a shorter pool-only video.",
     );
-    return;
   }
 
   const textPart = candidate?.content?.parts?.find(
@@ -283,19 +279,16 @@ async function runVideoAnalysisJob(
   )?.text;
 
   if (!textPart) {
-    await persistFailedAnalysis(admin, body, "Gemini returned an empty analysis.");
-    return;
+    throw new Error("Gemini returned an empty analysis.");
   }
 
   const parsed = JSON.parse(textPart) as Record<string, unknown>;
-  const analysis = normalizeAnalysis(
+  return normalizeAnalysis(
     parsed,
     body,
     uploadMethod,
     geminiModelUsed,
   );
-
-  await persistAnalysisToDb(admin, analysis);
 }
 
 async function persistAnalysisToDb(
@@ -901,12 +894,12 @@ function friendlyGeminiHttpError(
   }
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-1.5") || model.includes("1.5")) {
-      return "Google retired gemini-1.5 (quota 0). Redeploy stream-v8 — your server "
+      return "Google retired gemini-1.5 (quota 0). Redeploy sync-v9 — your server "
         + "must only use gemini-2.5-flash. Create a NEW key at aistudio.google.com/apikey if needed.";
     }
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
       return "Gemini 2.0 Flash is retired (quota limit 0). "
-        + "Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v8.";
+        + "Run KARA-GEMINI-FIX-NOW.bat to deploy sync-v9.";
     }
     return "Google Gemini rate limit for your API key. Wait 2-3 minutes and tap Analyze again. "
       + "If this keeps happening: create a NEW key at aistudio.google.com/apikey in a fresh "
@@ -1045,6 +1038,7 @@ function normalizeAnalysis(
       event: body.event_label,
       disclaimer,
       pose_metrics: body.pose_metrics ?? null,
+      function_version: CURRENT_FUNCTION_VERSION,
       sections,
       top_3_priorities: Array.isArray(parsed.top_3_priorities)
         ? parsed.top_3_priorities.map((item) => sanitizeCoachText(String(item)))

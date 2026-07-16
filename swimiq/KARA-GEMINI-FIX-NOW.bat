@@ -23,11 +23,11 @@ echo.
 echo Folder: %CD%
 echo.
 
-echo STEP A - Get latest stream-v8 code from GitHub (required)...
+echo STEP A - Get latest sync-v9 code from GitHub (required)...
 call :SyncDeployCodeFromGitHub
 if errorlevel 1 (
   echo.
-  echo [ERROR] Could not download stream-v8 server code.
+  echo [ERROR] Could not download sync-v9 server code.
   echo.
   echo TRY IN ORDER:
   echo   1. FIX-GIT-PULL.bat
@@ -39,7 +39,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-echo [OK] Local code is 2026-gemini-stream-v8 — ready to deploy
+echo [OK] Local code is 2026-gemini-sync-v9 — ready to deploy
 echo.
 
 echo STEP 0 - Video database (Supabase website, once if not done)
@@ -98,7 +98,7 @@ if errorlevel 1 (
 echo STEP 3 OK
 
 echo.
-echo STEP 4 of 5 - Deploy stream-v8 video server to Supabase...
+echo STEP 4 of 5 - Deploy sync-v9 video server to Supabase...
 call %SUPABASE_CMD% functions deploy analyze-swim-video --project-ref %PROJECT_REF%
 if errorlevel 1 (
   echo STEP 4 FAILED - check GEMINI_API_KEY in Supabase Edge Function secrets.
@@ -109,7 +109,7 @@ echo STEP 4 OK — waiting 15 seconds for server to update...
 timeout /t 15 /nobreak >nul
 
 echo.
-echo STEP 5 of 5 - Verify version MUST be 2026-gemini-stream-v8 ...
+echo STEP 5 of 5 - Verify version MUST be 2026-gemini-sync-v9 ...
 call :SyncDeployCodeFromGitHub
 if exist "%~dp0scripts\diagnose-gemini.js" (
   node "%~dp0scripts\diagnose-gemini.js"
@@ -121,14 +121,14 @@ if exist "%~dp0scripts\diagnose-gemini.js" (
 
 if exist "%~dp0GEMINI-DIAGNOSIS.txt" start notepad "%~dp0GEMINI-DIAGNOSIS.txt"
 
-findstr /C:"2026-gemini-stream-v8" "%~dp0GEMINI-DIAGNOSIS.txt" >nul 2>&1
+findstr /C:"2026-gemini-sync-v9" "%~dp0GEMINI-DIAGNOSIS.txt" >nul 2>&1
 if errorlevel 1 (
   echo.
   echo ============================================================
   echo   DEPLOY FAILED — STILL WRONG VERSION ON SERVER
   echo ============================================================
   echo.
-  echo If you still see auto-model-v3 in Notepad:
+  echo If you still see auto-model-v3 or stream-v8 in Notepad:
   echo   - Wrong Supabase login? Use the Google account for SwimIQ
   echo   - Run this ENTIRE file again from the top
   echo   - Or screenshot this window for support
@@ -139,11 +139,12 @@ if errorlevel 1 (
 
 echo.
 echo ============================================================
-echo   SUCCESS - Server is stream-v8 (correct version)
+echo   SUCCESS - Server is sync-v9 (correct version)
 echo ============================================================
 echo.
 echo NOW: KARA-CLICK-THIS.bat - Video tab - Analyze again
 echo Use clips under 25 MB / ~30 seconds on web.
+echo Keep the tab open up to 2 minutes while Gemini runs.
 echo.
 pause
 exit /b 0
@@ -173,7 +174,7 @@ if errorlevel 1 (
 git checkout origin/%BRANCH% -- %GPREFIX%supabase/functions/analyze-swim-video/ 2>nul
 git checkout origin/%BRANCH% -- %GPREFIX%scripts/diagnose-gemini.js 2>nul
 popd
-findstr /C:"2026-gemini-stream-v8" "%~dp0supabase\functions\analyze-swim-video\index.ts" >nul 2>&1
+findstr /C:"2026-gemini-sync-v9" "%~dp0supabase\functions\analyze-swim-video\index.ts" >nul 2>&1
 if errorlevel 1 exit /b 1
 exit /b 0
 

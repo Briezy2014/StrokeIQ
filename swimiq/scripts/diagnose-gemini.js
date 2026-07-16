@@ -151,17 +151,18 @@ async function main() {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
-        const current = '2026-gemini-stream-v8';
-        const isStreamServer =
+        const current = '2026-gemini-sync-v9';
+        const isReadyServer =
+          version.includes('sync-v9') ||
           version.includes('stream-v4') || version.includes('stream-v5') ||
           version.includes('stream-v6') || version.includes('stream-v7') ||
           version.includes('stream-v8');
         if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
-          log('  Need: ' + current + ' (async + inline fast path — fixes 504 timeouts)');
+          log('  Need: ' + current + ' (synchronous — returns full analysis in one response)');
           log('');
           log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
-        } else if (!isStreamServer) {
+        } else if (!isReadyServer) {
           log('FAIL - WRONG server version (causes 546 errors on real videos): ' + version);
           log('  You have: ' + version);
           log('  Need:     ' + current);
@@ -169,14 +170,11 @@ async function main() {
           log('');
           log('FIX:');
           log('  1. RESTORE-SCRIPTS.bat');
-          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v8)');
-          log('  3. This file again — must show stream-v8');
-        } else if (version && version.indexOf('stream-v8') < 0 &&
-            version.indexOf('stream-v7') < 0 &&
-            version.indexOf('stream-v6') < 0 &&
-            version.indexOf('stream-v5') < 0) {
+          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS sync-v9)');
+          log('  3. This file again — must show sync-v9');
+        } else if (version && version.indexOf('sync-v9') < 0) {
           log('WARN - Server works but update recommended: ' + version);
-          log('  Latest: ' + current);
+          log('  Latest: ' + current + ' (fixes infinite Analyzing... spin)');
           log('FIX: KARA-SEE-UPDATES-NOW.bat then KARA-GEMINI-FIX-NOW.bat');
           log('');
           log('  Version: ' + version);

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_constants.dart';
@@ -333,7 +334,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
     if (lower.contains('gemini-1.5')) {
       return 'Old error from a retired gemini-1.5 model — ignore this banner. '
-          'Run KARA-GEMINI-FIX-NOW.bat for stream-v8, wait 2 minutes, tap Run AI Swim Analysis again.';
+          'Run KARA-GEMINI-FIX-NOW.bat for sync-v9, wait 2 minutes, tap Run AI Swim Analysis again.';
     }
     if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
@@ -743,7 +744,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     });
 
     final latest = matches.first;
-    if (VideoAnalysisScores.hasStaleSavedFailure(latest)) {
+    if (latest.isGeminiEngine) return latest;
+
+    final reason = latest.analysisJson?['gemini_fallback_reason']?.toString();
+    if (reason != null && reason.trim().isNotEmpty) {
       return latest;
     }
     return null;
@@ -753,6 +757,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   static const _videoDownloadTimeout = Duration(seconds: 12);
 
   Future<SwimPoseMetrics?> _tryOptionalPoseMetrics(SwimVideo video) async {
+    if (kIsWeb) return null;
+
     final poseService = ref.read(swimPoseAnalysisServiceProvider);
     if (!poseService.isSupported) return null;
 

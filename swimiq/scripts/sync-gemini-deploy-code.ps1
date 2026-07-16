@@ -4,7 +4,7 @@
 param(
     [string]$SwimIqRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$Branch = 'cursor/dashboard-rope-schedule-fix-17e8',
-    [string]$RequiredVersion = '2026-gemini-stream-v8'
+    [string]$RequiredVersion = '2026-gemini-sync-v9'
 )
 
 $ErrorActionPreference = 'Continue'
@@ -74,7 +74,7 @@ if (Sync-FromGit) {
 Write-Host 'Git sync failed - downloading from GitHub (no git needed)...'
 try {
     if (Sync-FromGitHubRaw) {
-        Write-Host 'OK - Downloaded stream-v6 from GitHub.'
+        Write-Host 'OK - Downloaded sync-v9 from GitHub.'
         exit 0
     }
 }
