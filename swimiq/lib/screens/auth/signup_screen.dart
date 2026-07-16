@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/models/subscription_plan.dart';
+import '../../core/services/pending_coach_code_storage.dart';
 import '../../core/utils/auth_validators.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
+import '../../widgets/coach_access_code_dialog.dart';
 import '../../widgets/loading_button.dart';
 import '../../widgets/swimiq_header.dart';
 import '../../widgets/swimiq_logo.dart';
@@ -29,6 +32,25 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _obscureConfirm = true;
   String? _errorMessage;
   String? _successMessage;
+  String? _pendingCoachCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingCoachCode();
+  }
+
+  Future<void> _loadPendingCoachCode() async {
+    final code = await PendingCoachCodeStorage.peek();
+    if (mounted) setState(() => _pendingCoachCode = code);
+  }
+
+  Future<void> _enterCoachCode() async {
+    final code = await showCoachAccessCodeDialog(context);
+    if (code == null || !mounted) return;
+    await PendingCoachCodeStorage.save(code);
+    setState(() => _pendingCoachCode = code);
+  }
 
   @override
   void dispose() {
@@ -107,6 +129,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 24),
+                        if (_pendingCoachCode != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Text(
+                              'Coach code saved — after you create your account you will get '
+                              '${SubscriptionCatalog.coachTrialDays}-day Pro access and '
+                              '${SubscriptionCatalog.coachElitePeekDays} days of Elite AI preview.',
+                              style: TextStyle(
+                                color: Colors.green.shade900,
+                                height: 1.35,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         if (_successMessage != null) ...[
                           _SuccessBanner(message: _successMessage!),
                           const SizedBox(height: 16),
@@ -204,6 +247,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         TextButton(
                           onPressed: widget.onSwitchToLogin,
                           child: const Text('Already have an account? Sign in'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _enterCoachCode,
+                          icon: const Icon(Icons.school_outlined, size: 18),
+                          label: Text(
+                            _pendingCoachCode == null
+                                ? 'Have a coach access code?'
+                                : 'Change coach code',
+                          ),
                         ),
                           ],
                         ),

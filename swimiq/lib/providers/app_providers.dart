@@ -5,6 +5,7 @@ import '../core/models/subscription_plan.dart';
 import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_college_match_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
+import '../core/services/pending_coach_code_storage.dart';
 import '../core/services/profile_photo_service.dart';
 import '../core/services/swim_pose_analysis_service.dart';
 import '../core/services/stripe_checkout_support.dart';
@@ -150,5 +151,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     final service = ref.read(subscriptionServiceProvider);
     final current = state.value ?? await service.load();
     state = AsyncData(await service.recordCoachAiAnalysis(current));
+  }
+
+  Future<String?> redeemPendingCoachCodeIfAny() async {
+    final pending = await PendingCoachCodeStorage.take();
+    if (pending == null || pending.isEmpty) return null;
+    return redeemCoachCode(pending);
   }
 }

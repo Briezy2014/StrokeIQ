@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/constants/demo_account_constants.dart';
 import '../../core/constants/owner_account_constants.dart';
+import '../../core/models/subscription_plan.dart';
+import '../../core/services/pending_coach_code_storage.dart';
 import '../../core/utils/auth_validators.dart';
-import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
+import '../../widgets/coach_access_code_dialog.dart';
 import '../../widgets/loading_button.dart';
 import '../../widgets/swimiq_header.dart';
 import '../../widgets/swimiq_logo.dart';
@@ -59,23 +60,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _demoLogin() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      await ref.read(authServiceProvider).signIn(
-            email: DemoAccountConstants.email,
-            password: DemoAccountConstants.password,
-          );
-    } on AuthException catch (e) {
-      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
-    } catch (e) {
-      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+  Future<void> _coachAccess() async {
+    final code = await showCoachAccessCodeDialog(context);
+    if (code == null || !mounted) return;
+
+    await PendingCoachCodeStorage.save(code);
+    if (!mounted) return;
+
+    final createAccount = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Coach preview unlocked'),
+        content: Text(
+          'Your code is saved. Create your coach account below, or sign in if you '
+          'already have one — you will get ${SubscriptionCatalog.coachTrialDays}-day Pro '
+          'access plus ${SubscriptionCatalog.coachElitePeekDays} days of Elite AI '
+          '(${SubscriptionCatalog.coachEliteAnalysisLimit} video analyses).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Sign in below'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Create account'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || createAccount != true) return;
+    widget.onSwitchToSignup();
   }
 
   Future<void> _ownerLogin() async {
@@ -193,11 +209,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: const Text('Create an account'),
                         ),
                         const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _coachAccess,
+                          icon: const Icon(Icons.school_outlined, size: 18),
+                          label: const Text('Coach access'),
+                        ),
                         if (!kReleaseMode) ...[
-                          OutlinedButton(
-                            onPressed: _isLoading ? null : _demoLogin,
-                            child: const Text('Coach demo login'),
-                          ),
                           const SizedBox(height: 8),
                           TextButton(
                             onPressed: _isLoading ? null : _ownerLogin,

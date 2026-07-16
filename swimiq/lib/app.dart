@@ -70,6 +70,14 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
                     email: user.email,
                   );
               await ref.read(subscriptionStateProvider.notifier).refreshFromServer();
+              final coachError = await ref
+                  .read(subscriptionStateProvider.notifier)
+                  .redeemPendingCoachCodeIfAny();
+              if (coachError != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(coachError)),
+                );
+              }
             });
             return const SplashScreen();
           }
