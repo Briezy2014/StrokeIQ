@@ -301,9 +301,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
           'then tap Analyze again.';
     }
-    if (lower.contains('timed out') || lower.contains('timeout')) {
-      return 'Video analysis timed out — try a shorter clip, wait a minute, '
-          'then tap Analyze again.';
+    if (lower.contains('timed out') || lower.contains('timeout') ||
+        lower.contains('idle_timeout') || lower.contains('504')) {
+      return 'Video analysis timed out on the server. Run KARA-GEMINI-FIX-NOW.bat to deploy '
+          'stream-v6 (async analysis), then try a clip under 60 seconds / 25 MB.';
     }
     if (lower.contains('high demand') ||
         lower.contains('unavailable') ||
@@ -358,7 +359,21 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     required String videoId,
     required SwimVideo video,
     required SwimVideoAnalysis analysis,
+    bool skipIfAlreadySaved = false,
   }) async {
+    if (skipIfAlreadySaved) {
+      _localAnalysesByVideoId[videoId] = analysis;
+      final refreshed = state.value;
+      if (refreshed != null) {
+        state = AsyncData(
+          refreshed.copyWith(
+            videoAnalyses: _mergeAnalyses(refreshed.videoAnalyses),
+          ),
+        );
+      }
+      return;
+    }
+
     final analysisWithIds = analysis.copyWith(
       swimVideoId: videoId,
       swimmer: video.swimmer,
@@ -695,6 +710,37 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  Future<SwimVideoAnalysis?> _pollVideoAnalysisResult(String videoId) async {
+    try {
+      await _reloadPreservingUi();
+    } catch (_) {
+      // Continue polling with current in-memory state.
+    }
+
+    final current = state.value;
+    if (current == null) return null;
+
+    final gemini = current.analysisForVideo(videoId);
+    if (gemini != null) return gemini;
+
+    final matches = current.videoAnalyses
+        .where((analysis) => analysis.swimVideoId == videoId)
+        .toList();
+    if (matches.isEmpty) return null;
+
+    matches.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bDate.compareTo(aDate);
+    });
+
+    final latest = matches.first;
+    if (VideoAnalysisScores.hasStaleSavedFailure(latest)) {
+      return latest;
+    }
+    return null;
+  }
+
   static const _poseAnalysisTimeout = Duration(seconds: 8);
   static const _videoDownloadTimeout = Duration(seconds: 12);
 
@@ -745,6 +791,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               goals: current.goals,
               profile: current.profile,
               poseMetrics: poseMetrics,
+              pollForResult: () => _pollVideoAnalysisResult(videoId),
             );
       } on GeminiAnalysisException catch (error) {
         final friendly = _friendlyGeminiFallbackMessage(error.message);
@@ -773,6 +820,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
         videoId: videoId,
         video: video,
         analysis: analysis,
+        skipIfAlreadySaved: analysis.id != null && !analysis.id!.startsWith('local-'),
       );
 
       await _reloadPreservingUi();

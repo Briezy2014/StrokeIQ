@@ -151,12 +151,13 @@ async function main() {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
-        const current = '2026-gemini-stream-v5';
+        const current = '2026-gemini-stream-v6';
         const isStreamServer =
-          version.includes('stream-v4') || version.includes('stream-v5');
+          version.includes('stream-v4') || version.includes('stream-v5') ||
+          version.includes('stream-v6');
         if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
-          log('  Need: ' + current + ' (streams video — fixes 546 errors)');
+          log('  Need: ' + current + ' (async + inline fast path — fixes 504 timeouts)');
           log('');
           log('FIX: Double-click KARA-GEMINI-FIX-NOW.bat (no GEMINI_MODEL secret needed).');
         } else if (!isStreamServer) {
@@ -167,9 +168,10 @@ async function main() {
           log('');
           log('FIX:');
           log('  1. RESTORE-SCRIPTS.bat');
-          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v5)');
-          log('  3. This file again — must show stream-v5');
-        } else if (version && version.indexOf('stream-v5') < 0) {
+          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v6)');
+          log('  3. This file again — must show stream-v6');
+        } else if (version && version.indexOf('stream-v6') < 0 &&
+            version.indexOf('stream-v5') < 0) {
           log('WARN - Server works but update recommended: ' + version);
           log('  Latest: ' + current);
           log('FIX: KARA-SEE-UPDATES-NOW.bat then KARA-GEMINI-FIX-NOW.bat');

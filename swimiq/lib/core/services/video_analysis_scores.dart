@@ -16,7 +16,9 @@ abstract final class VideoAnalysisScores {
   static bool serverIsStreamReady(VideoAnalysisServerHealth? health) {
     if (health == null) return false;
     final version = health.functionVersion ?? '';
-    if (version.contains('stream-v4') || version.contains('stream-v5')) {
+    if (version.contains('stream-v4') ||
+        version.contains('stream-v5') ||
+        version.contains('stream-v6')) {
       return true;
     }
     return health.ok;

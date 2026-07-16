@@ -1,19 +1,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const BUCKET = "swim-videos";
-/** Always stream via Gemini File API — inline base64 blows Supabase memory (546 errors). */
-const MAX_INLINE_BYTES = 0;
+/** Inline Gemini for clips ≤12 MB — skips File API upload wait (fixes 504 IDLE_TIMEOUT). */
+const MAX_INLINE_BYTES = 12 * 1024 * 1024;
 /** Edge-safe max clip size (Supabase worker memory limit). */
 const MAX_FILE_API_BYTES = 25 * 1024 * 1024;
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
+  "gemini-2.5-flash-lite",
   "gemini-3.5-flash",
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v5";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v6";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -24,7 +24,12 @@ const BLOCKED_GEMINI_MODELS = [
 ];
 const GEMINI_RETRY_DELAYS_MS = [1500, 3000, 5000];
 const GEMINI_FILE_POLL_MS = 2000;
-const GEMINI_FILE_MAX_WAIT_MS = 120_000;
+const GEMINI_FILE_MAX_WAIT_MS = 90_000;
+const MAX_VIDEO_GEMINI_MODELS = 2;
+
+declare const EdgeRuntime: {
+  waitUntil(promise: Promise<unknown>): void;
+};
 
 const GEMINI_SAFETY_SETTINGS = [
   {
@@ -143,7 +148,7 @@ Deno.serve(async (req) => {
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
           max_video_mb: 25,
-          inline_max_mb: 0,
+          inline_max_mb: Math.round(MAX_INLINE_BYTES / (1024 * 1024)),
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -158,32 +163,82 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const mimeType = mimeTypeForPath(storagePath);
-    const displayName = body.title?.trim() ||
-      storagePath.split("/").pop() ||
-      "swim-video";
 
-    const objectSize = await getStorageObjectSize(admin, storagePath);
-    if (objectSize > MAX_FILE_API_BYTES) {
-      return jsonError(
-        `Video is too large for analysis (max ~25 MB on server, yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Trim the clip and try again.`,
-        413,
-        CURRENT_FUNCTION_VERSION,
+    // Return immediately — Gemini runs in background (avoids 504 IDLE_TIMEOUT).
+    EdgeRuntime.waitUntil(
+      runVideoAnalysisJob(admin, geminiApiKey, body).catch((error) => {
+        console.error("analyze-swim-video background job failed:", error);
+      }),
+    );
+
+    return new Response(
+      JSON.stringify({
+        status: "processing",
+        swim_video_id: body.video_id ?? null,
+        message:
+          "Gemini is analyzing your clip on the server. This usually finishes in under 2 minutes.",
+        function_version: CURRENT_FUNCTION_VERSION,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 202,
+      },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return jsonError(message, 500);
+  }
+});
+
+async function runVideoAnalysisJob(
+  admin: ReturnType<typeof createClient>,
+  geminiApiKey: string,
+  body: AnalyzeRequest,
+): Promise<void> {
+  const storagePath = body.storage_path?.trim();
+  if (!storagePath) {
+    throw new Error("storage_path is required.");
+  }
+
+  const mimeType = mimeTypeForPath(storagePath);
+  const displayName = body.title?.trim() ||
+    storagePath.split("/").pop() ||
+    "swim-video";
+
+  const objectSize = await getStorageObjectSize(admin, storagePath);
+  if (objectSize > MAX_FILE_API_BYTES) {
+    throw new Error(
+      `Video is too large for analysis (max ~25 MB on server, yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Trim the clip and try again.`,
+    );
+  }
+
+  let geminiJson: Record<string, unknown>;
+  let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
+    DEFAULT_GEMINI_MODEL;
+  let uploadMethod: GeminiUploadMethod = "file_api";
+  let geminiFileName: string | null = null;
+
+  try {
+    const prompt = buildPrompt(body);
+    const inlineEligible = objectSize > 0 && objectSize <= MAX_INLINE_BYTES;
+
+    if (inlineEligible) {
+      uploadMethod = "inline";
+      const videoBytes = await downloadStorageVideoBytes(admin, storagePath);
+      const base64 = bytesToBase64(videoBytes);
+      const result = await callGeminiGenerateContentWithFallback(
+        geminiApiKey,
+        { inline_data: { mime_type: mimeType, data: base64 } },
+        prompt,
+        MAX_VIDEO_GEMINI_MODELS,
       );
-    }
-
-    let geminiJson: Record<string, unknown>;
-    let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
-      DEFAULT_GEMINI_MODEL;
-    let geminiFileName: string | null = null;
-
-    try {
+      geminiJson = result.json;
+      geminiModelUsed = result.model;
+    } else {
       const streamed = await openStorageVideoStream(admin, storagePath);
       if (streamed.byteLength > MAX_FILE_API_BYTES) {
-        return jsonError(
-          "Video is too large for analysis (max ~50 MB on server). Trim the clip and try again.",
-          413,
-          CURRENT_FUNCTION_VERSION,
+        throw new Error(
+          "Video is too large for analysis (max ~25 MB on server). Trim the clip and try again.",
         );
       }
 
@@ -196,68 +251,118 @@ Deno.serve(async (req) => {
       );
       geminiFileName = uploaded.name;
       await waitForGeminiFileActive(geminiApiKey, uploaded.name);
-      const prompt = buildPrompt(body);
       const result = await callGeminiGenerateContentWithFallback(
         geminiApiKey,
         { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
         prompt,
+        MAX_VIDEO_GEMINI_MODELS,
       );
       geminiJson = result.json;
       geminiModelUsed = result.model;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.toLowerCase().includes("timed out")) {
-        return jsonError(message, 504, CURRENT_FUNCTION_VERSION);
-      }
-      if (message.toLowerCase().includes("resource") ||
-          message.toLowerCase().includes("546")) {
-        return jsonError(
-          "Video server worker limit (546) — run KARA-GEMINI-FIX-NOW.bat to deploy "
-          + "streaming server v5, then trim clips under 25 MB / ~30 sec.",
-          413,
-          CURRENT_FUNCTION_VERSION,
-        );
-      }
-      return jsonError(message, 502, CURRENT_FUNCTION_VERSION);
-    } finally {
-      if (geminiFileName) {
-        await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
-      }
     }
-    const candidate = geminiJson?.candidates?.[0];
-    const finishReason = candidate?.finishReason;
-    if (finishReason === "SAFETY" || finishReason === "BLOCKLIST") {
-      return jsonError(
-        "SwimIQ could not generate coaching feedback for this clip. Try a shorter pool-only video.",
-        422,
-      );
-    }
-
-    const textPart = candidate?.content?.parts?.find(
-      (part: { text?: string }) => typeof part.text === "string",
-    )?.text;
-
-    if (!textPart) {
-      return jsonError("Gemini returned an empty analysis.", 502);
-    }
-
-    const parsed = JSON.parse(textPart) as Record<string, unknown>;
-    const analysis = normalizeAnalysis(
-      parsed,
-      body,
-      "file_api",
-      geminiModelUsed,
-    );
-
-    return new Response(JSON.stringify(analysis), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return jsonError(message, 500);
+    await persistFailedAnalysis(admin, body, message);
+    throw error;
+  } finally {
+    if (geminiFileName) {
+      await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
+    }
   }
-});
+
+  const candidate = geminiJson?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  if (finishReason === "SAFETY" || finishReason === "BLOCKLIST") {
+    await persistFailedAnalysis(
+      admin,
+      body,
+      "SwimIQ could not generate coaching feedback for this clip. Try a shorter pool-only video.",
+    );
+    return;
+  }
+
+  const textPart = candidate?.content?.parts?.find(
+    (part: { text?: string }) => typeof part.text === "string",
+  )?.text;
+
+  if (!textPart) {
+    await persistFailedAnalysis(admin, body, "Gemini returned an empty analysis.");
+    return;
+  }
+
+  const parsed = JSON.parse(textPart) as Record<string, unknown>;
+  const analysis = normalizeAnalysis(
+    parsed,
+    body,
+    uploadMethod,
+    geminiModelUsed,
+  );
+
+  await persistAnalysisToDb(admin, analysis);
+}
+
+async function persistAnalysisToDb(
+  admin: ReturnType<typeof createClient>,
+  analysis: Record<string, unknown>,
+): Promise<void> {
+  const videoId = analysis.swim_video_id;
+  if (!videoId || typeof videoId !== "string") return;
+
+  const swimmer = String(analysis.swimmer ?? "");
+  const row = {
+    swim_video_id: videoId,
+    swimmer,
+    swimmer_name: swimmer,
+    summary: analysis.summary ?? "",
+    strengths: analysis.strengths ?? "",
+    improvements: analysis.improvements ?? "",
+    technique_score: analysis.technique_score ?? 70,
+    pace_score: analysis.pace_score ?? 70,
+    overall_score: analysis.overall_score ?? 70,
+    analysis_json: analysis.analysis_json ?? {},
+  };
+
+  const { error } = await admin.from("swim_video_analyses").insert(row);
+  if (error) {
+    console.error("Failed to persist swim_video_analysis:", error.message);
+    throw new Error(`Could not save analysis: ${error.message}`);
+  }
+}
+
+async function persistFailedAnalysis(
+  admin: ReturnType<typeof createClient>,
+  body: AnalyzeRequest,
+  message: string,
+): Promise<void> {
+  const videoId = body.video_id?.trim();
+  if (!videoId) return;
+
+  const swimmer = body.swimmer?.trim() ||
+    body.coach_context?.display_name?.trim() ||
+    "swimmer";
+
+  const { error } = await admin.from("swim_video_analyses").insert({
+    swim_video_id: videoId,
+    swimmer,
+    swimmer_name: swimmer,
+    summary: "Analysis unavailable",
+    strengths: "",
+    improvements: "",
+    technique_score: 70,
+    pace_score: 70,
+    overall_score: 70,
+    analysis_json: {
+      engine: "swimiq-v1-notes-mediapipe",
+      gemini_fallback_reason: message,
+      gemini_error_raw: message,
+      sections: {},
+    },
+  });
+
+  if (error) {
+    console.error("Failed to persist failed analysis:", error.message);
+  }
+}
 
 const analysisResponseSchema = {
   type: "OBJECT",
@@ -497,6 +602,35 @@ async function openStorageVideoStream(
   }
 
   return { body: response.body, byteLength: byteLength || MAX_FILE_API_BYTES };
+}
+
+async function downloadStorageVideoBytes(
+  admin: ReturnType<typeof createClient>,
+  storagePath: string,
+): Promise<Uint8Array> {
+  const { data, error } = await admin.storage.from(BUCKET).download(storagePath);
+  if (error || !data) {
+    throw new Error(
+      `Could not download video from storage: ${error?.message ?? "empty file"}`,
+    );
+  }
+  const bytes = new Uint8Array(await data.arrayBuffer());
+  if (bytes.length > MAX_FILE_API_BYTES) {
+    throw new Error(
+      "Video is too large for analysis (max ~25 MB on server). Trim the clip and try again.",
+    );
+  }
+  return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const slice = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, Array.from(slice));
+  }
+  return btoa(binary);
 }
 
 async function uploadVideoStreamToGeminiFile(
@@ -832,8 +966,12 @@ async function callGeminiGenerateContentWithFallback(
   apiKey: string,
   videoPart: GeminiVideoPart,
   prompt: string,
+  maxModels = MAX_VIDEO_GEMINI_MODELS,
 ): Promise<{ json: Record<string, unknown>; model: string }> {
-  const models = filterAllowedModels(await getModelCandidates(apiKey));
+  const models = filterAllowedModels(await getModelCandidates(apiKey)).slice(
+    0,
+    Math.max(1, maxModels),
+  );
   if (models.length === 0) {
     throw new Error(
       "No supported Gemini Flash models found for your API key. "

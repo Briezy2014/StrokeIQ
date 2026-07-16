@@ -23,18 +23,18 @@ echo.
 echo Folder: %CD%
 echo.
 
-echo STEP A - Get latest stream-v5 code from GitHub (required)...
+echo STEP A - Get latest stream-v6 code from GitHub (required)...
 call :SyncDeployCodeFromGitHub
 if errorlevel 1 (
   echo.
-  echo [ERROR] Could not download stream-v5 server code.
+  echo [ERROR] Could not download stream-v6 server code.
   echo   1. RESTORE-SCRIPTS.bat
   echo   2. FIX-GIT-PULL.bat
   echo   3. Run this file again
   pause
   exit /b 1
 )
-echo [OK] Local code is 2026-gemini-stream-v5 — ready to deploy
+echo [OK] Local code is 2026-gemini-stream-v6 — ready to deploy
 echo.
 
 echo STEP 0 - Video database (Supabase website, once if not done)
@@ -93,7 +93,7 @@ if errorlevel 1 (
 echo STEP 3 OK
 
 echo.
-echo STEP 4 of 5 - Deploy stream-v5 video server to Supabase...
+echo STEP 4 of 5 - Deploy stream-v6 video server to Supabase...
 call %SUPABASE_CMD% functions deploy analyze-swim-video --project-ref %PROJECT_REF%
 if errorlevel 1 (
   echo STEP 4 FAILED - check GEMINI_API_KEY in Supabase Edge Function secrets.
@@ -104,7 +104,7 @@ echo STEP 4 OK — waiting 15 seconds for server to update...
 timeout /t 15 /nobreak >nul
 
 echo.
-echo STEP 5 of 5 - Verify version MUST be 2026-gemini-stream-v5 ...
+echo STEP 5 of 5 - Verify version MUST be 2026-gemini-stream-v6 ...
 call :SyncDeployCodeFromGitHub
 if exist "%~dp0scripts\diagnose-gemini.js" (
   node "%~dp0scripts\diagnose-gemini.js"
@@ -116,7 +116,7 @@ if exist "%~dp0scripts\diagnose-gemini.js" (
 
 if exist "%~dp0GEMINI-DIAGNOSIS.txt" start notepad "%~dp0GEMINI-DIAGNOSIS.txt"
 
-findstr /C:"2026-gemini-stream-v5" "%~dp0GEMINI-DIAGNOSIS.txt" >nul 2>&1
+findstr /C:"2026-gemini-stream-v6" "%~dp0GEMINI-DIAGNOSIS.txt" >nul 2>&1
 if errorlevel 1 (
   echo.
   echo ============================================================
@@ -134,7 +134,7 @@ if errorlevel 1 (
 
 echo.
 echo ============================================================
-echo   SUCCESS - Server is stream-v5 (correct version)
+echo   SUCCESS - Server is stream-v6 (correct version)
 echo ============================================================
 echo.
 echo NOW: KARA-CLICK-THIS.bat - Video tab - Analyze again
@@ -148,7 +148,7 @@ git fetch origin %BRANCH% 2>nul
 if errorlevel 1 exit /b 1
 git checkout origin/%BRANCH% -- supabase/functions/analyze-swim-video/ 2>nul
 git checkout origin/%BRANCH% -- scripts/diagnose-gemini.js 2>nul
-findstr /C:"2026-gemini-stream-v5" "%~dp0supabase\functions\analyze-swim-video\index.ts" >nul 2>&1
+findstr /C:"2026-gemini-stream-v6" "%~dp0supabase\functions\analyze-swim-video\index.ts" >nul 2>&1
 if errorlevel 1 exit /b 1
 exit /b 0
 

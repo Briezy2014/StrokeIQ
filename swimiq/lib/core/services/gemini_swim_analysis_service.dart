@@ -9,13 +9,17 @@ import '../../data/models/swim_video_analysis.dart';
 import '../utils/youth_friendly_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 
+typedef VideoAnalysisPoll = Future<SwimVideoAnalysis?> Function();
+
 /// Calls the Supabase Edge Function that sends swim video to Google Gemini.
 class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-stream-v5';
-  static const analysisTimeout = Duration(minutes: 2);
+  static const currentFunctionVersion = '2026-gemini-stream-v6';
+  static const analysisTimeout = Duration(minutes: 3);
+  static const pollInterval = Duration(seconds: 3);
+  static const pollMaxWait = Duration(minutes: 3);
 
   final SupabaseClient _client;
 
@@ -76,6 +80,7 @@ class GeminiSwimAnalysisService {
     required List<SwimGoal> goals,
     SwimmerProfile? profile,
     SwimPoseMetrics? poseMetrics,
+    VideoAnalysisPoll? pollForResult,
   }) async {
     final response = await _client.functions
         .invoke(
@@ -89,19 +94,34 @@ class GeminiSwimAnalysisService {
           ),
         )
         .timeout(
-          analysisTimeout,
+          const Duration(seconds: 30),
           onTimeout: () {
             throw GeminiAnalysisException(
-              'Video analysis timed out after ${analysisTimeout.inMinutes} minutes. '
-              'Try a shorter clip or tap Analyze again in a minute.',
+              'Could not reach the video analysis server. Check your connection and try again.',
             );
           },
         );
 
+    final data = response.data;
+    if (response.status == 202 ||
+        (data is Map && data['status']?.toString() == 'processing')) {
+      if (pollForResult == null) {
+        throw GeminiAnalysisException(
+          'Video server is processing your clip — refresh the Video tab in a minute.',
+        );
+      }
+      return _pollForVideoAnalysis(pollForResult);
+    }
+
     if (response.status != 200) {
-      final data = response.data;
       if (data is Map && data['error'] != null) {
         throw GeminiAnalysisException(data['error'].toString());
+      }
+      if (response.status == 504) {
+        throw GeminiAnalysisException(
+          'Video server timed out (504). Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v6, '
+          'then try again with a clip under 60 seconds.',
+        );
       }
       if (response.status == 546) {
         throw GeminiAnalysisException(
@@ -114,7 +134,6 @@ class GeminiSwimAnalysisService {
       );
     }
 
-    final data = response.data;
     if (data is Map && data['error'] != null) {
       throw GeminiAnalysisException(data['error'].toString());
     }
@@ -127,6 +146,31 @@ class GeminiSwimAnalysisService {
 
     return YouthFriendlyAnalysis.sanitizeAnalysis(
       parseAnalysisResponse(Map<String, dynamic>.from(data)),
+    );
+  }
+
+  Future<SwimVideoAnalysis> _pollForVideoAnalysis(
+    VideoAnalysisPoll pollForResult,
+  ) async {
+    final deadline = DateTime.now().add(pollMaxWait);
+    while (DateTime.now().isBefore(deadline)) {
+      await Future.delayed(pollInterval);
+      final result = await pollForResult();
+      if (result == null) continue;
+
+      if (result.isGeminiEngine) {
+        return YouthFriendlyAnalysis.sanitizeAnalysis(result);
+      }
+
+      final reason = result.analysisJson?['gemini_fallback_reason']?.toString();
+      if (reason != null && reason.trim().isNotEmpty) {
+        throw GeminiAnalysisException(reason.trim());
+      }
+    }
+
+    throw GeminiAnalysisException(
+      'Video analysis is taking longer than expected. Wait 1 minute, refresh the Video tab, '
+      'or try a shorter clip (under 60 seconds / 25 MB).',
     );
   }
 
