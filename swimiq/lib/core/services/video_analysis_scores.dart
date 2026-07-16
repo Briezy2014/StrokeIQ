@@ -18,7 +18,8 @@ abstract final class VideoAnalysisScores {
     final version = health.functionVersion ?? '';
     if (version.contains('stream-v4') ||
         version.contains('stream-v5') ||
-        version.contains('stream-v6')) {
+        version.contains('stream-v6') ||
+        version.contains('stream-v7')) {
       return true;
     }
     return health.ok;

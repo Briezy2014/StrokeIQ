@@ -8,12 +8,11 @@ const MAX_FILE_API_BYTES = 25 * 1024 * 1024;
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
-  "gemini-2.5-flash-lite",
-  "gemini-3.5-flash",
-  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-pro",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v6";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v7";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -25,7 +24,7 @@ const BLOCKED_GEMINI_MODELS = [
 const GEMINI_RETRY_DELAYS_MS = [1500, 3000, 5000];
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 90_000;
-const MAX_VIDEO_GEMINI_MODELS = 2;
+const MAX_VIDEO_GEMINI_MODELS = 6;
 
 declare const EdgeRuntime: {
   waitUntil(promise: Promise<unknown>): void;
@@ -908,8 +907,10 @@ function isRetriableModelError(message: string): boolean {
     lower.includes("not_found") ||
     lower.includes("no longer available") ||
     lower.includes("not found for api version") ||
+    lower.includes("rejected model") ||
     lower.includes("gemini-1.5") ||
-    lower.includes("gemini-2.0");
+    lower.includes("gemini-2.0") ||
+    lower.includes("flash-lite");
 }
 
 function isTransientGeminiError(message: string): boolean {
@@ -936,10 +937,9 @@ function friendlyGeminiHttpError(
   const lower = errText.toLowerCase();
   if (status === 404 || lower.includes("no longer available") ||
       lower.includes("not found for api version")) {
-    return `Google rejected model "${model}" for your API key. `
-      + `You only need GEMINI_API_KEY in Supabase (no GEMINI_MODEL secret). `
-      + `Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking. `
-      + `If it still fails, create a NEW key at aistudio.google.com/apikey.`;
+    return `Google rejected model "${model}" for your API key — SwimIQ will try another model. `
+      + `If all models fail, create a NEW key at aistudio.google.com/apikey and update `
+      + `GEMINI_API_KEY in Supabase Edge Function secrets (no GEMINI_MODEL secret).`;
   }
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {

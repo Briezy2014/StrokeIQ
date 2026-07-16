@@ -1,5 +1,5 @@
 @echo off
-title SwimIQ - Fix Step A (download stream-v6)
+title SwimIQ - Fix Step A (download stream-v7)
 cd /d "%~dp0"
 set "BRANCH=cursor/dashboard-rope-schedule-fix-17e8"
 set "INDEX=%~dp0supabase\functions\analyze-swim-video\index.ts"
@@ -8,16 +8,16 @@ set "BASE=https://raw.githubusercontent.com/Briezy2014/StrokeIQ/%BRANCH%/swimiq"
 
 echo.
 echo ============================================================
-echo   Fix STEP A only - download stream-v6 server code
+echo   Fix STEP A only - download stream-v7 server code
 echo ============================================================
 echo.
 echo Folder: %CD%
 echo.
 
 if exist "%INDEX%" (
-  findstr /C:"2026-gemini-stream-v6" "%INDEX%" >nul 2>&1
+  findstr /C:"2026-gemini-stream-v7" "%INDEX%" >nul 2>&1
   if not errorlevel 1 (
-    echo OK - stream-v6 already on this PC.
+    echo OK - stream-v7 already on this PC.
     goto success
   )
 )
@@ -40,16 +40,16 @@ if not exist "%INDEX%" (
   echo ERROR - Could not create index.ts
   goto fail
 )
-findstr /C:"2026-gemini-stream-v6" "%INDEX%" >nul 2>&1
+findstr /C:"2026-gemini-stream-v7" "%INDEX%" >nul 2>&1
 if errorlevel 1 (
-  echo ERROR - Downloaded file but stream-v6 not found inside.
+  echo ERROR - Downloaded file but stream-v7 not found inside.
   echo Check internet, then run FIX-GIT-PULL.bat and try again.
   goto fail
 )
 
 :success
 echo.
-echo SUCCESS - stream-v6 code is on this PC.
+echo SUCCESS - stream-v7 code is on this PC.
 echo Next: double-click KARA-GEMINI-FIX-NOW.bat
 echo.
 pause

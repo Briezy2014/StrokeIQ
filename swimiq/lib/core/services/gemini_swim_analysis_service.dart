@@ -16,7 +16,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-stream-v6';
+  static const currentFunctionVersion = '2026-gemini-stream-v7';
   static const analysisTimeout = Duration(minutes: 3);
   static const pollInterval = Duration(seconds: 3);
   static const pollMaxWait = Duration(minutes: 3);

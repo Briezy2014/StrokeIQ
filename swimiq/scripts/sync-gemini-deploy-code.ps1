@@ -4,7 +4,7 @@
 param(
     [string]$SwimIqRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$Branch = 'cursor/dashboard-rope-schedule-fix-17e8',
-    [string]$RequiredVersion = '2026-gemini-stream-v6'
+    [string]$RequiredVersion = '2026-gemini-stream-v7'
 )
 
 $ErrorActionPreference = 'Continue'

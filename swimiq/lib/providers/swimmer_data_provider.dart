@@ -246,7 +246,16 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   String _friendlyGeminiFallbackMessage(String raw) {
     final extracted = _extractGeminiErrorDetail(raw);
     final lower = extracted.toLowerCase();
-    if (lower.contains('gemini_api_key')) {
+    if (lower.contains('rejected model') ||
+        (lower.contains('tried:') && lower.contains('gemini-2.5'))) {
+      return 'Google rejected one Gemini model for your API key — the server tries others '
+          'automatically. Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v7, wait 2 minutes, '
+          'then tap Run AI Swim Analysis again. If it still fails, create a NEW key at '
+          'aistudio.google.com/apikey and update GEMINI_API_KEY in Supabase secrets.';
+    }
+    if (lower.contains('gemini_api_key is not configured') ||
+        lower.contains('gemini_api_key missing') ||
+        (lower.contains('not configured') && lower.contains('gemini_api_key'))) {
       return 'Gemini is not configured yet — add GEMINI_API_KEY in Supabase '
           '(see swimiq/docs/GEMINI_SETUP.md). Notes-based coaching saved for now.';
     }
@@ -328,10 +337,9 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
     if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
-        lower.contains('tried:') ||
-        lower.contains('rejected model')) {
+        lower.contains('tried:')) {
       return 'Google rejected the Gemini model for your API key. '
-          'Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, tap Analyze again. '
+          'Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v7, wait 2 minutes, tap Analyze again. '
           'If needed: create a NEW key at aistudio.google.com/apikey and update '
           'GEMINI_API_KEY in Supabase (no GEMINI_MODEL secret needed).';
     }

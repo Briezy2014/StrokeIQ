@@ -151,10 +151,10 @@ async function main() {
       const data = JSON.parse(health.body);
       if (data.ok === true) {
         const version = data.function_version || 'unknown';
-        const current = '2026-gemini-stream-v6';
+        const current = '2026-gemini-stream-v7';
         const isStreamServer =
           version.includes('stream-v4') || version.includes('stream-v5') ||
-          version.includes('stream-v6');
+          version.includes('stream-v6') || version.includes('stream-v7');
         if (version && !version.startsWith('2026-gemini')) {
           log('FAIL - OLD server version deployed: ' + version);
           log('  Need: ' + current + ' (async + inline fast path — fixes 504 timeouts)');
@@ -168,9 +168,10 @@ async function main() {
           log('');
           log('FIX:');
           log('  1. RESTORE-SCRIPTS.bat');
-          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v6)');
-          log('  3. This file again — must show stream-v6');
-        } else if (version && version.indexOf('stream-v6') < 0 &&
+          log('  2. KARA-GEMINI-FIX-NOW.bat (entire file — must end SUCCESS stream-v7)');
+          log('  3. This file again — must show stream-v7');
+        } else if (version && version.indexOf('stream-v7') < 0 &&
+            version.indexOf('stream-v6') < 0 &&
             version.indexOf('stream-v5') < 0) {
           log('WARN - Server works but update recommended: ' + version);
           log('  Latest: ' + current);
