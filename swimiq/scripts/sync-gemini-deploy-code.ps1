@@ -1,12 +1,13 @@
 # Syncs analyze-swim-video edge function + diagnose script for KARA-GEMINI-FIX-NOW.bat
 # Works when git root is StrokeIQ (parent) OR swimiq (repo root).
+# ASCII-only strings - avoids PowerShell [bracket] parse errors on Windows.
 param(
     [string]$SwimIqRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$Branch = 'cursor/dashboard-rope-schedule-fix-17e8',
     [string]$RequiredVersion = '2026-gemini-stream-v6'
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 $SwimIqRoot = (Resolve-Path -LiteralPath $SwimIqRoot).Path
 $indexPath = Join-Path $SwimIqRoot 'supabase\functions\analyze-swim-video\index.ts'
 $diagPath = Join-Path $SwimIqRoot 'scripts\diagnose-gemini.js'
@@ -55,32 +56,32 @@ function Sync-FromGitHubRaw {
     return (Test-StreamVersion -Path $indexPath)
 }
 
-Write-Host "SwimIQ folder: $SwimIqRoot"
-Write-Host "Need server version: $RequiredVersion"
-Write-Host ""
+Write-Host ('SwimIQ folder: ' + $SwimIqRoot)
+Write-Host ('Need server version: ' + $RequiredVersion)
+Write-Host ''
 
 if (Test-StreamVersion -Path $indexPath) {
-    Write-Host "[OK] Stream server code already present ($RequiredVersion)."
+    Write-Host ('OK - Stream server code already present: ' + $RequiredVersion)
     exit 0
 }
 
-Write-Host "Trying git sync..."
+Write-Host 'Trying git sync...'
 if (Sync-FromGit) {
-    Write-Host "[OK] Synced via git."
+    Write-Host 'OK - Synced via git.'
     exit 0
 }
 
-Write-Host "Git sync failed — downloading from GitHub (no git needed)..."
+Write-Host 'Git sync failed - downloading from GitHub (no git needed)...'
 try {
     if (Sync-FromGitHubRaw) {
-        Write-Host "[OK] Downloaded stream-v6 from GitHub."
+        Write-Host 'OK - Downloaded stream-v6 from GitHub.'
         exit 0
     }
 }
 catch {
-    Write-Host "[ERROR] GitHub download failed: $($_.Exception.Message)"
+    Write-Host ('ERROR - GitHub download failed: ' + $_.Exception.Message)
     exit 1
 }
 
-Write-Host "[ERROR] Downloaded file but version check failed — need $RequiredVersion"
+Write-Host ('ERROR - Downloaded file but version check failed. Need: ' + $RequiredVersion)
 exit 1
