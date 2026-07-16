@@ -210,7 +210,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   onSelect: () => _selectPlan(plan.tier),
                 ),
               ),
-              if (showCoachAdmin) ...[
+              if (user != null) ...[
                 const SizedBox(height: 24),
                 Text(
                   'Coach preview access',
@@ -220,11 +220,16 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Coaches evaluate SwimIQ before buying for their team:\n'
-                  '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
-                  '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
-                  '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
-                  'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}',
+                  showCoachAdmin
+                      ? 'Coaches evaluate SwimIQ before buying for their team:\n'
+                          '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
+                          '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
+                          '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
+                          'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}'
+                      : 'Have a coach access code from SwimIQ? Enter it below to unlock '
+                          '${SubscriptionCatalog.coachTrialDays}-day Pro access plus a '
+                          '${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek '
+                          '(${SubscriptionCatalog.coachEliteAnalysisLimit} video analyses).',
                   style: TextStyle(color: Colors.grey.shade700, height: 1.45),
                 ),
                 const SizedBox(height: 12),
@@ -232,14 +237,28 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                   controller: _coachCodeController,
                   decoration: InputDecoration(
                     labelText: 'Coach access code',
-                    hintText: SubscriptionCatalog.coachAccessCode,
+                    hintText: showCoachAdmin
+                        ? SubscriptionCatalog.coachAccessCode
+                        : 'Enter code from your SwimIQ contact',
                   ),
+                  textCapitalization: TextCapitalization.characters,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: _redeemCoachCode,
                   child: const Text('Unlock coach preview'),
                 ),
+                if (subscription.isCoachTrialActive) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    SubscriptionCapabilities.coachPreviewSummary(subscription),
+                    style: TextStyle(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
               ],
               if (_message != null) ...[
                 const SizedBox(height: 16),

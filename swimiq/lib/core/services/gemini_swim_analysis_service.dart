@@ -15,7 +15,7 @@ class GeminiSwimAnalysisService {
 
   static const functionName = 'analyze-swim-video';
   static const currentFunctionVersion = '2026-gemini-stream-v5';
-  static const analysisTimeout = Duration(minutes: 3);
+  static const analysisTimeout = Duration(minutes: 2);
 
   final SupabaseClient _client;
 

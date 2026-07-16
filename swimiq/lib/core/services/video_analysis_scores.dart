@@ -65,8 +65,8 @@ abstract final class VideoAnalysisScores {
   static String? serverReadyBanner(VideoAnalysisServerHealth? serverHealth) {
     if (!serverIsStreamReady(serverHealth)) return null;
     final version = serverHealth!.functionVersion ?? 'stream';
-    return 'Video server is ready ($version). Tap Analyze again — Gemini watches '
-        'your clip and MediaPipe scans body lines. Any orange errors below are '
+    return 'Video server is ready ($version). Tap Run AI Swim Analysis above — Gemini watches '
+        'your clip and MediaPipe scans body lines when available. Any orange errors below are '
         'from an old attempt before the server was fixed.';
   }
 
@@ -126,8 +126,8 @@ abstract final class VideoAnalysisScores {
     VideoAnalysisServerHealth? serverHealth,
   }) {
     if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
-      return 'Ready — tap Analyze again. Gemini will watch this clip; MediaPipe '
-          'will scan body lines in Chrome (rope/non-pool clips may skip pose).';
+      return 'Ready — tap Run AI Swim Analysis above. Gemini will watch this clip; MediaPipe '
+          'will scan body lines in Chrome when available (rope/non-pool clips may skip pose).';
     }
     return awaitingSummary;
   }
@@ -145,7 +145,7 @@ abstract final class VideoAnalysisScores {
     if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
       if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
         return 'Server is fixed — old errors are saved from a previous try. '
-            'Tap Analyze again for real Gemini + MediaPipe results.';
+            'Tap Run AI Swim Analysis above for real Gemini + MediaPipe results.';
       }
       return awaitingLegend;
     }

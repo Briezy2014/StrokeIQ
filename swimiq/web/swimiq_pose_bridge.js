@@ -19,6 +19,17 @@ const LANDMARK_MAP = {
 
 let poseLandmarkerPromise = null;
 
+const POSE_TIMEOUT_MS = 12000;
+
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ]);
+}
+
 async function ensurePoseLandmarker() {
   if (!poseLandmarkerPromise) {
     poseLandmarkerPromise = (async () => {
@@ -100,8 +111,16 @@ function landmarksFromResult(result, timestampSec) {
 
 window.swimiqPoseFromVideoBytes = async function swimiqPoseFromVideoBytes(videoBytes) {
   try {
-    const landmarker = await ensurePoseLandmarker();
-    const frames = await sampleVideoFrames(videoBytes, 10);
+    const landmarker = await withTimeout(
+      ensurePoseLandmarker(),
+      POSE_TIMEOUT_MS,
+      'MediaPipe model load'
+    );
+    const frames = await withTimeout(
+      sampleVideoFrames(videoBytes, 10),
+      POSE_TIMEOUT_MS,
+      'Video frame sampling'
+    );
     const snapshots = [];
 
     for (let i = 0; i < frames.length; i++) {

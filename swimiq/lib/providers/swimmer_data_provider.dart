@@ -695,6 +695,30 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
   }
 
+  static const _poseAnalysisTimeout = Duration(seconds: 8);
+  static const _videoDownloadTimeout = Duration(seconds: 12);
+
+  Future<SwimPoseMetrics?> _tryOptionalPoseMetrics(SwimVideo video) async {
+    final poseService = ref.read(swimPoseAnalysisServiceProvider);
+    if (!poseService.isSupported) return null;
+
+    try {
+      return await Future<SwimPoseMetrics?>(() async {
+        final bytes = await ref
+            .read(videoStorageServiceProvider)
+            .downloadVideoBytes(video.storagePath)
+            .timeout(_videoDownloadTimeout);
+        return poseService.analyzeVideoBytes(
+          bytes,
+          fileName: video.storagePath,
+        );
+      }).timeout(_poseAnalysisTimeout);
+    } catch (_) {
+      // Pose metrics are optional; Gemini analysis proceeds without them.
+      return null;
+    }
+  }
+
   Future<String?> analyzeVideo(SwimVideo video) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
@@ -708,21 +732,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (current == null) return 'No swimmer data loaded.';
 
     try {
-      SwimPoseMetrics? poseMetrics;
-      final poseService = ref.read(swimPoseAnalysisServiceProvider);
-      if (poseService.isSupported) {
-        try {
-          final bytes = await ref
-              .read(videoStorageServiceProvider)
-              .downloadVideoBytes(video.storagePath);
-          poseMetrics = await poseService.analyzeVideoBytes(
-            bytes,
-            fileName: video.storagePath,
-          );
-        } catch (_) {
-          // Pose metrics are optional; Gemini analysis can still run.
-        }
-      }
+      // Pose is optional enrichment — never block Gemini (MediaPipe CDN can hang on web).
+      final poseMetrics = await _tryOptionalPoseMetrics(video);
 
       SwimVideoAnalysis analysis;
       String? fallbackNotice;

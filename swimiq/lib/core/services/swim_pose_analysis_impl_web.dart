@@ -5,6 +5,9 @@ import '../../data/models/swim_pose_metrics.dart';
 import '../utils/swim_pose_metrics_calculator.dart';
 
 /// Chrome/web MediaPipe pose via JS bridge (no native Flutter plugins).
+/// Capped so Gemini analysis is never blocked by CDN/model load.
+const _poseBridgeTimeout = Duration(seconds: 12);
+
 bool get isPoseAnalysisSupported => true;
 
 @JS('swimiqPoseFromVideoBytes')
@@ -26,7 +29,12 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
   }
 
   try {
-    final raw = await _swimiqPoseFromVideoBytes(bytes.toJS).toDart;
+    final raw = await _swimiqPoseFromVideoBytes(bytes.toJS)
+        .toDart
+        .timeout(
+          _poseBridgeTimeout,
+          onTimeout: () => throw StateError('MediaPipe timed out'),
+        );
     if (raw is! JSObject) return null;
 
     final map = raw.dartify();

@@ -182,8 +182,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Running MediaPipe body scan, then sending your clip to Gemini '
-            '(up to 2 minutes). Keep this tab open.',
+            'Sending your clip to Gemini for AI coaching (usually under 2 minutes). '
+            'Keep this tab open.',
           ),
           duration: Duration(seconds: 8),
         ),
@@ -563,16 +563,16 @@ class _VideoCardState extends State<_VideoCard> {
               hasAnalysis: widget.analysis != null,
               onAnalyze: widget.onAnalyze,
             ),
-            if (widget.analysis != null) ...[
+            if (widget.analyzing) ...[
+              const SizedBox(height: 12),
+              const _AnalysisInProgressCard(),
+            ] else if (widget.analysis != null) ...[
               const SizedBox(height: 12),
               VideoAnalysisReport(
                 analysis: widget.analysis!,
                 serverHealth: widget.serverHealth,
                 onCoachNotesChanged: widget.onCoachNotesChanged ?? (_) {},
               ),
-            ] else ...[
-              const SizedBox(height: 12),
-              const _TapAnalyzePromptCard(),
             ],
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -630,8 +630,8 @@ class _AnalysisActionButton extends StatelessWidget {
   }
 }
 
-class _TapAnalyzePromptCard extends StatelessWidget {
-  const _TapAnalyzePromptCard();
+class _AnalysisInProgressCard extends StatelessWidget {
+  const _AnalysisInProgressCard();
 
   @override
   Widget build(BuildContext context) {
@@ -639,35 +639,41 @@ class _TapAnalyzePromptCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
+        color: const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF6EE7B7)),
+        border: Border.all(color: const Color(0xFF93C5FD)),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.play_circle_outline, color: Color(0xFF059669)),
-              const SizedBox(width: 8),
-              Text(
-                'Ready for AI analysis',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF065F46),
-                    ),
-              ),
-            ],
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'No errors yet — tap Analyze again above. Gemini watches your clip '
-            'on the server; MediaPipe scans body lines in Chrome (pool clips work best). '
-            'Use clips under ~30 seconds / 25 MB.',
-            style: TextStyle(
-              color: Colors.grey.shade800,
-              height: 1.4,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Analyzing your clip…',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1E40AF),
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Gemini is watching your video on the server. This usually finishes '
+                  'in under 2 minutes — keep this tab open. Clips under ~30 seconds / 25 MB work best.',
+                  style: TextStyle(
+                    color: Colors.grey.shade800,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
