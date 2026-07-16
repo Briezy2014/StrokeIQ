@@ -324,16 +324,16 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     }
     if (lower.contains('resource_exhausted') ||
         lower.contains('quota') ||
+        lower.contains('rate limit') ||
         lower.contains('limit: 0') ||
         lower.contains('gemini-2.0-flash')) {
-      return 'Google retired gemini-2.0-flash (quota limit 0). '
-          'Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking, wait 2 minutes, '
-          'then tap Analyze again. If it still fails, create a NEW key at aistudio.google.com/apikey.';
+      return 'Google Gemini rate limit on your API key. Wait 2-3 minutes, then tap Run AI Swim Analysis again. '
+          'If this keeps happening: create a NEW key at aistudio.google.com/apikey (fresh Google Cloud project) '
+          'and update GEMINI_API_KEY in Supabase Edge Function secrets.';
     }
-    if (lower.contains('gemini-1.5') ||
-        lower.contains('gemini-2.0-flash')) {
-      return 'Your server tried a retired Gemini model. Run KARA-GEMINI-FIX-NOW.bat '
-          'to deploy the latest auto-model server, wait 2 minutes, tap Analyze again.';
+    if (lower.contains('gemini-1.5')) {
+      return 'Old error from a retired gemini-1.5 model — ignore this banner. '
+          'Run KARA-GEMINI-FIX-NOW.bat for stream-v8, wait 2 minutes, tap Run AI Swim Analysis again.';
     }
     if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
@@ -786,6 +786,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     if (current == null) return 'No swimmer data loaded.';
 
     try {
+      // Clear old failed attempts so stale gemini-1.5 errors do not show during this run.
+      try {
+        await ref
+            .read(swimIqRepositoryProvider)
+            .deletePlaceholderAnalysesForVideo(videoId);
+        _localAnalysesByVideoId.remove(videoId);
+      } catch (_) {}
+
       // Pose is optional enrichment — never block Gemini (MediaPipe CDN can hang on web).
       final poseMetrics = await _tryOptionalPoseMetrics(video);
 

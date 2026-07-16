@@ -19,7 +19,8 @@ abstract final class VideoAnalysisScores {
     if (version.contains('stream-v4') ||
         version.contains('stream-v5') ||
         version.contains('stream-v6') ||
-        version.contains('stream-v7')) {
+        version.contains('stream-v7') ||
+        version.contains('stream-v8')) {
       return true;
     }
     return health.ok;
@@ -36,8 +37,34 @@ abstract final class VideoAnalysisScores {
   /// Saved failure from a previous Analyze attempt (not a live error).
   static bool hasStaleSavedFailure(SwimVideoAnalysis analysis) {
     if (analysis.isGeminiEngine) return false;
+    if (isObsoleteGemini15Error(analysis)) return true;
     final reason = analysis.analysisJson?['gemini_fallback_reason']?.toString();
-    return reason != null && reason.trim().isNotEmpty;
+    if (reason == null || reason.trim().isEmpty) return false;
+    final version = analysis.analysisJson?['function_version']?.toString() ?? '';
+    if (version.contains('stream-v6') ||
+        version.contains('stream-v7') ||
+        version.contains('stream-v8')) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Old server errors mention gemini-1.5 — hide after stream-v6+ deploy.
+  static bool isObsoleteGemini15Error(SwimVideoAnalysis analysis) {
+    final raw = analysis.analysisJson?['gemini_error_raw']?.toString() ?? '';
+    final reason = analysis.analysisJson?['gemini_fallback_reason']?.toString() ?? '';
+    final combined = '$raw $reason'.toLowerCase();
+    if (!combined.contains('gemini-1.5') && !combined.contains('gemini-2.0')) {
+      return false;
+    }
+    final savedVersion =
+        analysis.analysisJson?['function_version']?.toString() ?? '';
+    if (savedVersion.contains('stream-v6') ||
+        savedVersion.contains('stream-v7') ||
+        savedVersion.contains('stream-v8')) {
+      return false;
+    }
+    return true;
   }
 
   static String? fallbackReason(

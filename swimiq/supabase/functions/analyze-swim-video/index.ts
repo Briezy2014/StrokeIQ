@@ -12,7 +12,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v7";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-stream-v8";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -127,8 +127,7 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as AnalyzeRequest;
 
     if (body.health_check === true) {
-      const availableModels = await listGeminiVideoModels(geminiApiKey);
-      const model = availableModels[0] ?? DEFAULT_GEMINI_MODEL;
+      const model = DEFAULT_GEMINI_MODEL;
       let modelProbeOk = false;
       let modelProbeError: string | null = null;
       try {
@@ -143,7 +142,7 @@ Deno.serve(async (req) => {
           gemini_configured: true,
           function_version: CURRENT_FUNCTION_VERSION,
           gemini_model: model,
-          available_models: availableModels,
+          available_models: PREFERRED_GEMINI_MODELS,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
           max_video_mb: 25,
@@ -212,8 +211,7 @@ async function runVideoAnalysisJob(
   }
 
   let geminiJson: Record<string, unknown>;
-  let geminiModelUsed = (await getModelCandidates(geminiApiKey))[0] ??
-    DEFAULT_GEMINI_MODEL;
+  let geminiModelUsed = DEFAULT_GEMINI_MODEL;
   let uploadMethod: GeminiUploadMethod = "file_api";
   let geminiFileName: string | null = null;
 
@@ -354,6 +352,7 @@ async function persistFailedAnalysis(
       engine: "swimiq-v1-notes-mediapipe",
       gemini_fallback_reason: message,
       gemini_error_raw: message,
+      function_version: CURRENT_FUNCTION_VERSION,
       sections: {},
     },
   });
@@ -831,52 +830,13 @@ function filterAllowedModels(models: string[]): string[] {
 }
 
 async function listGeminiVideoModels(apiKey: string): Promise<string[]> {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-    );
-    if (!response.ok) {
-      return [];
-    }
-    const data = await response.json() as {
-      models?: Array<{
-        name?: string;
-        supportedGenerationMethods?: string[];
-      }>;
-    };
-    const available = new Set<string>();
-    for (const entry of data.models ?? []) {
-      const name = entry.name?.replace(/^models\//, "") ?? "";
-      const methods = entry.supportedGenerationMethods ?? [];
-      if (name && methods.includes("generateContent") && !isBlockedGeminiModel(name)) {
-        available.add(name);
-      }
-    }
-    if (available.size === 0) {
-      return [];
-    }
-    const preferred = PREFERRED_GEMINI_MODELS.filter((model) =>
-      available.has(model)
-    );
-    if (preferred.length > 0) {
-      return preferred;
-    }
-    const flashModels = [...available].filter((name) =>
-      name.includes("flash") && !name.includes("tts") && !name.includes("live")
-    );
-    return flashModels.length > 0 ? flashModels.slice(0, 6) : [];
-  } catch {
-    return [];
-  }
+  // Deprecated for video analysis — kept for diagnostics only.
+  return [...PREFERRED_GEMINI_MODELS];
 }
 
-async function getModelCandidates(apiKey: string): Promise<string[]> {
-  const listed = filterAllowedModels(await listGeminiVideoModels(apiKey));
-  if (listed.length > 0) {
-    return listed;
-  }
-  const fallback = filterAllowedModels([...PREFERRED_GEMINI_MODELS]);
-  return fallback.length > 0 ? fallback : [DEFAULT_GEMINI_MODEL];
+/** Video analysis always uses gemini-2.5* only — never ListModels (avoids retired 1.5). */
+function getModelCandidates(_apiKey: string): string[] {
+  return filterAllowedModels([...PREFERRED_GEMINI_MODELS]);
 }
 
 async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
@@ -902,14 +862,12 @@ async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
 
 function isRetriableModelError(message: string): boolean {
   const lower = message.toLowerCase();
-  return isQuotaError(lower) ||
-    isTransientGeminiError(lower) ||
+  if (isQuotaError(lower)) return false;
+  return isTransientGeminiError(lower) ||
     lower.includes("not_found") ||
     lower.includes("no longer available") ||
     lower.includes("not found for api version") ||
     lower.includes("rejected model") ||
-    lower.includes("gemini-1.5") ||
-    lower.includes("gemini-2.0") ||
     lower.includes("flash-lite");
 }
 
@@ -942,14 +900,17 @@ function friendlyGeminiHttpError(
       + `GEMINI_API_KEY in Supabase Edge Function secrets (no GEMINI_MODEL secret).`;
   }
   if (status === 429 || isQuotaError(lower)) {
+    if (lower.includes("gemini-1.5") || model.includes("1.5")) {
+      return "Google retired gemini-1.5 (quota 0). Redeploy stream-v8 — your server "
+        + "must only use gemini-2.5-flash. Create a NEW key at aistudio.google.com/apikey if needed.";
+    }
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
       return "Gemini 2.0 Flash is retired (quota limit 0). "
-        + "Run KARA-GEMINI-FIX-NOW.bat to deploy auto-model picking.";
+        + "Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v8.";
     }
-    return "Google Gemini daily/minute quota reached for your API key. Wait 1-2 minutes "
-      + "and tap Analyze again. If this keeps happening: Google AI Studio -> your key -> "
-      + "enable billing on the linked Cloud project (free tier still works with billing linked), "
-      + "or create a new API key in a fresh project.";
+    return "Google Gemini rate limit for your API key. Wait 2-3 minutes and tap Analyze again. "
+      + "If this keeps happening: create a NEW key at aistudio.google.com/apikey in a fresh "
+      + "Google Cloud project and update GEMINI_API_KEY in Supabase Edge Function secrets.";
   }
   if (status === 503 || isTransientGeminiError(lower)) {
     return `Gemini model "${model}" is busy right now (Google high demand). `
@@ -968,7 +929,7 @@ async function callGeminiGenerateContentWithFallback(
   prompt: string,
   maxModels = MAX_VIDEO_GEMINI_MODELS,
 ): Promise<{ json: Record<string, unknown>; model: string }> {
-  const models = filterAllowedModels(await getModelCandidates(apiKey)).slice(
+  const models = getModelCandidates(apiKey).slice(
     0,
     Math.max(1, maxModels),
   );
