@@ -281,6 +281,24 @@ class SwimIqRepository {
     }
   }
 
+  /// Removes saved placeholder analyses (failed Gemini / notes-only) so Video Lab
+  /// does not show stale errors before the user taps Analyze again.
+  Future<void> deletePlaceholderAnalysesForVideo(String videoId) async {
+    try {
+      await _client
+          .from('swim_video_analyses')
+          .delete()
+          .eq('swim_video_id', videoId);
+    } catch (error) {
+      if (!SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        rethrow;
+      }
+    }
+  }
+
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {
     final response = await _client
         .from('usa_time_standards')

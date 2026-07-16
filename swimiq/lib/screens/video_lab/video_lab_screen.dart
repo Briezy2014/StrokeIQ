@@ -38,6 +38,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   final _courseController = TextEditingController(text: 'LCM');
   bool _uploading = false;
   String? _analyzingVideoId;
+  bool _clearedPlaceholders = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _clearStalePlaceholderAnalysesOnce();
+    });
+  }
+
+  Future<void> _clearStalePlaceholderAnalysesOnce() async {
+    if (_clearedPlaceholders || !mounted) return;
+    _clearedPlaceholders = true;
+    await ref.read(swimmerDataProvider.notifier).clearPlaceholderVideoAnalyses();
+  }
 
   @override
   void dispose() {
@@ -555,6 +570,9 @@ class _VideoCardState extends State<_VideoCard> {
                 serverHealth: widget.serverHealth,
                 onCoachNotesChanged: widget.onCoachNotesChanged ?? (_) {},
               ),
+            ] else ...[
+              const SizedBox(height: 12),
+              const _TapAnalyzePromptCard(),
             ],
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -608,6 +626,52 @@ class _AnalysisActionButton extends StatelessWidget {
               size: 18,
             ),
       label: Text(label),
+    );
+  }
+}
+
+class _TapAnalyzePromptCard extends StatelessWidget {
+  const _TapAnalyzePromptCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF6EE7B7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.play_circle_outline, color: Color(0xFF059669)),
+              const SizedBox(width: 8),
+              Text(
+                'Ready for AI analysis',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF065F46),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No errors yet — tap Analyze again above. Gemini watches your clip '
+            'on the server; MediaPipe scans body lines in Chrome (pool clips work best). '
+            'Use clips under ~30 seconds / 25 MB.',
+            style: TextStyle(
+              color: Colors.grey.shade800,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

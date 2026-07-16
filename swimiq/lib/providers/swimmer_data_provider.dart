@@ -9,6 +9,7 @@ import '../core/utils/supabase_table_errors.dart';
 import '../core/utils/youth_friendly_analysis.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/video_analysis_presenter.dart';
+import '../core/services/video_analysis_scores.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../data/models/meet_result.dart';
@@ -59,7 +60,11 @@ class SwimmerData {
       final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       return bDate.compareTo(aDate);
     });
-    return matches.first;
+    final latest = matches.first;
+    if (VideoAnalysisScores.isPlaceholderAnalysis(latest)) {
+      return null;
+    }
+    return latest;
   }
 
   List<SwimVideo> get userFacingVideos =>
@@ -606,6 +611,41 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     } catch (error) {
       return error.toString();
     }
+  }
+
+  /// Clears saved placeholder analyses (old failed tries) from DB + local state.
+  Future<void> clearPlaceholderVideoAnalyses() async {
+    final current = state.value;
+    if (current == null) return;
+
+    final placeholders = current.videoAnalyses
+        .where(VideoAnalysisScores.isPlaceholderAnalysis)
+        .toList();
+    if (placeholders.isEmpty) return;
+
+    final videoIds = placeholders
+        .map((a) => a.swimVideoId)
+        .whereType<String>()
+        .toSet();
+
+    for (final videoId in videoIds) {
+      try {
+        await ref
+            .read(swimIqRepositoryProvider)
+            .deletePlaceholderAnalysesForVideo(videoId);
+        _localAnalysesByVideoId.remove(videoId);
+      } catch (_) {
+        // Best effort — UI still hides placeholders via analysisForVideo.
+      }
+    }
+
+    state = AsyncData(
+      current.copyWith(
+        videoAnalyses: current.videoAnalyses
+            .where((a) => !VideoAnalysisScores.isPlaceholderAnalysis(a))
+            .toList(),
+      ),
+    );
   }
 
   Future<String?> deleteVideo(SwimVideo video) async {

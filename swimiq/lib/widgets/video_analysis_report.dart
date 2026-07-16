@@ -52,6 +52,10 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
 
   @override
   Widget build(BuildContext context) {
+    if (VideoAnalysisScores.isPlaceholderAnalysis(widget.analysis)) {
+      return const SizedBox.shrink();
+    }
+
     final sections = VideoAnalysisPresenter.visibleSections(widget.analysis);
     final pro = sections['Quick pro from this video'] ??
         widget.analysis.analysisJson?['quick_pro']?.toString();

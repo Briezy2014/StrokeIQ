@@ -14,9 +14,20 @@ abstract final class VideoAnalysisScores {
   static const paceTitle = 'Pace';
 
   static bool serverIsStreamReady(VideoAnalysisServerHealth? health) {
-    if (health == null || !health.ok) return false;
+    if (health == null) return false;
     final version = health.functionVersion ?? '';
-    return version.contains('stream-v4') || version.contains('stream-v5');
+    if (version.contains('stream-v4') || version.contains('stream-v5')) {
+      return true;
+    }
+    return health.ok;
+  }
+
+  /// Failed Gemini attempts saved to DB — hide and auto-clear these.
+  static bool isPlaceholderAnalysis(SwimVideoAnalysis analysis) {
+    if (analysis.isGeminiEngine) return false;
+    if (hasStaleSavedFailure(analysis)) return true;
+    final raw = analysis.analysisJson?['gemini_error_raw']?.toString();
+    return raw != null && raw.trim().isNotEmpty;
   }
 
   /// Saved failure from a previous Analyze attempt (not a live error).
