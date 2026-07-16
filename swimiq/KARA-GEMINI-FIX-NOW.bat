@@ -28,9 +28,14 @@ call :SyncDeployCodeFromGitHub
 if errorlevel 1 (
   echo.
   echo [ERROR] Could not download stream-v6 server code.
-  echo   1. RESTORE-SCRIPTS.bat
-  echo   2. FIX-GIT-PULL.bat
+  echo.
+  echo TRY IN ORDER:
+  echo   1. FIX-GIT-PULL.bat
+  echo   2. RESTORE-SCRIPTS.bat
   echo   3. Run this file again
+  echo.
+  echo If git keeps failing, Step A can still work via direct GitHub download —
+  echo check your internet connection and try again.
   pause
   exit /b 1
 )
@@ -144,17 +149,44 @@ pause
 exit /b 0
 
 :SyncDeployCodeFromGitHub
+if exist "%~dp0scripts\sync-gemini-deploy-code.cmd" (
+  call "%~dp0scripts\sync-gemini-deploy-code.cmd"
+  exit /b %ERRORLEVEL%
+)
+if exist "%~dp0scripts\sync-gemini-deploy-code.ps1" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\sync-gemini-deploy-code.ps1" -SwimIqRoot "%~dp0"
+  exit /b %ERRORLEVEL%
+)
+for /f "delims=" %%i in ('git rev-parse --show-toplevel 2^>nul') do set "GITROOT=%%i"
+if not defined GITROOT exit /b 1
+pushd "%GITROOT%"
+if exist "swimiq\supabase\functions\analyze-swim-video\index.ts" (
+  set "GPREFIX=swimiq/"
+) else (
+  set "GPREFIX="
+)
 git fetch origin %BRANCH% 2>nul
-if errorlevel 1 exit /b 1
-git checkout origin/%BRANCH% -- supabase/functions/analyze-swim-video/ 2>nul
-git checkout origin/%BRANCH% -- scripts/diagnose-gemini.js 2>nul
+if errorlevel 1 (
+  popd
+  exit /b 1
+)
+git checkout origin/%BRANCH% -- %GPREFIX%supabase/functions/analyze-swim-video/ 2>nul
+git checkout origin/%BRANCH% -- %GPREFIX%scripts/diagnose-gemini.js 2>nul
+popd
 findstr /C:"2026-gemini-stream-v6" "%~dp0supabase\functions\analyze-swim-video\index.ts" >nul 2>&1
 if errorlevel 1 exit /b 1
 exit /b 0
 
 :EnsureVideoDbFixFiles
+if exist "%~dp0scripts\sync-gemini-deploy-code.ps1" (
+  git fetch origin %BRANCH% 2>nul
+)
 git fetch origin %BRANCH% 2>nul
-git checkout origin/%BRANCH% -- scripts/ensure-video-db-fix.ps1 scripts/ensure-video-db-fix.cmd 2>nul
+for /f "delims=" %%i in ('git rev-parse --show-toplevel 2^>nul') do set "GITROOT=%%i"
+if defined GITROOT if exist "%GITROOT%\swimiq\scripts" (
+  git checkout origin/%BRANCH% -- swimiq/scripts/ensure-video-db-fix.ps1 swimiq/scripts/ensure-video-db-fix.cmd swimiq/scripts/sync-gemini-deploy-code.ps1 swimiq/scripts/sync-gemini-deploy-code.cmd swimiq/KARA-FIX-STEP-A.bat 2>nul
+)
+git checkout origin/%BRANCH% -- scripts/ensure-video-db-fix.ps1 scripts/ensure-video-db-fix.cmd scripts/sync-gemini-deploy-code.ps1 scripts/sync-gemini-deploy-code.cmd KARA-FIX-STEP-A.bat 2>nul
 if exist "%~dp0scripts\ensure-video-db-fix.cmd" (
   call "%~dp0scripts\ensure-video-db-fix.cmd"
   exit /b 0

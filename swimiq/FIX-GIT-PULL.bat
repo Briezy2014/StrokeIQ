@@ -76,7 +76,7 @@ git log -1 --oneline
 echo.
 echo Next:
 echo   1. KARA-GEMINI-FIX-NOW.bat
-echo   2. KARA-WHY-GEMINI-FAILS.bat — need version stream-v5
+echo   2. KARA-WHY-GEMINI-FAILS.bat — need version stream-v6
 echo   3. KARA-CLICK-THIS.bat
 echo.
 pause

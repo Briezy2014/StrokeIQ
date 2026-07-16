@@ -46,7 +46,7 @@ if exist "FIX-VIDEO-DATABASE.bat" (
 ) else (
   echo [WARN] FIX-VIDEO-DATABASE.bat still missing - run RESTORE-SCRIPTS.bat
 )
-echo Then run KARA-GEMINI-FIX-NOW.bat — diagnosis must show stream-v5 NOT auto-model-v3
+echo Then run KARA-GEMINI-FIX-NOW.bat — diagnosis must show stream-v6
 echo.
 if not exist "assets\branding\icon.png" (
   echo [WARN] assets\branding\icon.png is missing.

@@ -6,12 +6,24 @@ echo Restoring scripts folder from GitHub...
 echo (Run this FIRST if KARA-SEE-UPDATES-NOW says merge / overwrite errors)
 echo.
 git fetch origin cursor/dashboard-rope-schedule-fix-17e8
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- scripts/
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- supabase/functions/analyze-swim-video/
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- supabase/fix_video_tables.sql
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- SWIMIQ-CHROME-NOW.ps1 SWIMIQ-CHROME-NOW.bat SWIMIQ-BUILD-GODADDY-NOW.ps1 SWIMIQ-BUILD-GODADDY-NOW.bat SWIMIQ-BUILD-ANDROID-NOW.ps1 SWIMIQ-BUILD-ANDROID-NOW.bat START-HERE.bat KARA-CLICK-THIS.bat KARA-SEE-UPDATES-NOW.bat LAUNCH-CHROME.bat FIX-KARA-PATHS.bat FIX-GIT-PULL.bat DIAGNOSE.bat TEST-OWNER-LOGIN.bat SYNC-LOGO-NOW.bat restore-scripts.ps1 COPY-LOGO.bat DRAG-LOGO-HERE.bat ZIP-GODADDY-UPLOAD.bat ACTIVE_BRANCH.txt
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- FIX-VIDEO-DATABASE.bat KARA-FIX-VIDEO-DATABASE.bat KARA-PASTE-THIS-IN-SUPABASE.txt
-git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-GEMINI-FIX-NOW.bat KARA-DO-VIDEO-AI-NOW.bat KARA-WHY-GEMINI-FAILS.bat KARA-INSTALL-SUPABASE.bat
+if errorlevel 1 goto fetchfail
+for /f "delims=" %%i in ('git rev-parse --show-toplevel 2^>nul') do set "GITROOT=%%i"
+if exist "%GITROOT%\swimiq\supabase" (
+  set "GPREFIX=swimiq/"
+) else (
+  set "GPREFIX="
+)
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%scripts/
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%supabase/functions/analyze-swim-video/
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%supabase/fix_video_tables.sql
+goto restored
+:fetchfail
+echo git fetch failed — if RESTORE fails, run FIX-GIT-PULL.bat first.
+:restored
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%SWIMIQ-CHROME-NOW.ps1 %GPREFIX%SWIMIQ-CHROME-NOW.bat %GPREFIX%SWIMIQ-BUILD-GODADDY-NOW.ps1 %GPREFIX%SWIMIQ-BUILD-GODADDY-NOW.bat %GPREFIX%SWIMIQ-BUILD-ANDROID-NOW.ps1 %GPREFIX%SWIMIQ-BUILD-ANDROID-NOW.bat %GPREFIX%START-HERE.bat %GPREFIX%KARA-CLICK-THIS.bat %GPREFIX%KARA-SEE-UPDATES-NOW.bat %GPREFIX%LAUNCH-CHROME.bat %GPREFIX%FIX-KARA-PATHS.bat %GPREFIX%FIX-GIT-PULL.bat %GPREFIX%DIAGNOSE.bat %GPREFIX%TEST-OWNER-LOGIN.bat %GPREFIX%SYNC-LOGO-NOW.bat %GPREFIX%restore-scripts.ps1 %GPREFIX%COPY-LOGO.bat %GPREFIX%DRAG-LOGO-HERE.bat %GPREFIX%ZIP-GODADDY-UPLOAD.bat %GPREFIX%ACTIVE_BRANCH.txt 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%FIX-VIDEO-DATABASE.bat %GPREFIX%KARA-FIX-VIDEO-DATABASE.bat %GPREFIX%KARA-PASTE-THIS-IN-SUPABASE.txt %GPREFIX%KARA-FIX-STEP-A.bat 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- %GPREFIX%KARA-GEMINI-FIX-NOW.bat %GPREFIX%KARA-DO-VIDEO-AI-NOW.bat %GPREFIX%KARA-WHY-GEMINI-FAILS.bat %GPREFIX%KARA-INSTALL-SUPABASE.bat 2>nul
+git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-GEMINI-FIX-NOW.bat KARA-DO-VIDEO-AI-NOW.bat KARA-WHY-GEMINI-FAILS.bat KARA-INSTALL-SUPABASE.bat 2>nul
 git checkout origin/cursor/dashboard-rope-schedule-fix-17e8 -- KARA-DO-THIS-NOW.txt KARA-VIDEO-AI-FIX.txt KARA-FIX-GEMINI-QUOTA.txt
 
 call "%~dp0scripts\ensure-video-db-fix.cmd" 2>nul
