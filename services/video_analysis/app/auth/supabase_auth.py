@@ -50,9 +50,27 @@ async def require_user(
 
     token = credentials.credentials
     user = await _verify_supabase_jwt(token, settings)
+    _assert_allowlisted(user, settings)
     request.state.auth_user = user
     request.state.access_token = token
     return user
+
+
+def _assert_allowlisted(user: AuthUser, settings: Settings) -> None:
+    """Mirror Flutter VIDEO_ENGINE_V2_ALLOWLIST when set on the backend."""
+    raw = (settings.video_engine_v2_allowlist or "").strip()
+    if not raw:
+        return
+    allowed = {part.strip().lower() for part in raw.split(",") if part.strip()}
+    email = (user.email or "").strip().lower()
+    if email not in allowed:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error_code": "FORBIDDEN",
+                "message": "Video Engine V2 is not enabled for this account yet.",
+            },
+        )
 
 
 async def _verify_supabase_jwt(token: str, settings: Settings) -> AuthUser:

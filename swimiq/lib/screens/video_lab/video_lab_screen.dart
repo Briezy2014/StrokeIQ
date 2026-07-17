@@ -137,7 +137,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
   }
 
-  Future<void> _runAnalysis(SwimVideo video) async {
+  Future<void> _runAnalysis(SwimVideo video, {bool forceLegacy = false}) async {
     final videoId = video.id;
     if (videoId == null) return;
 
@@ -157,7 +157,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (!consented || !mounted) return;
 
     final email = ref.read(currentUserProvider)?.email;
-    if (FeatureFlags.isVideoEngineV2AllowedForEmail(email)) {
+    final v2Allowed = FeatureFlags.isVideoEngineV2AllowedForEmail(email);
+    if (v2Allowed && !forceLegacy) {
       final swimmer = ref.read(activeSwimmerProvider);
       if (!mounted) return;
       await VideoEngineV2SetupSheet.open(
@@ -169,7 +170,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       return;
     }
 
-    // Legacy Gemini / notes analysis path (preserved when V2 is off or not allowlisted).
+    // Legacy Gemini / notes analysis path (V2 off, not allowlisted, or dual-run).
     setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
@@ -214,6 +215,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final snapshot = data.passportSnapshot(swimmer);
         final email = ref.watch(currentUserProvider)?.email;
         final v2Allowed = FeatureFlags.isVideoEngineV2AllowedForEmail(email);
+        final dualRun = v2Allowed && FeatureFlags.videoEngineLegacyEnabled;
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -312,6 +314,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   dateFormat: dateFormat,
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
+                  onLegacyAnalyze: dualRun
+                      ? () => _runAnalysis(video, forceLegacy: true)
+                      : null,
+                  v2Primary: v2Allowed,
                   motivationalCut: _videoMotivationalCut(data, video),
                 ),
               ),
@@ -322,13 +328,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 }
 
-class _VideoCard extends StatefulWidget {
+class _VideoCard extends ConsumerStatefulWidget {
   const _VideoCard({
     required this.video,
     required this.analysis,
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
+    this.onLegacyAnalyze,
+    this.v2Primary = false,
     this.motivationalCut,
   });
 
@@ -337,13 +345,15 @@ class _VideoCard extends StatefulWidget {
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
+  final VoidCallback? onLegacyAnalyze;
+  final bool v2Primary;
   final String? motivationalCut;
 
   @override
-  State<_VideoCard> createState() => _VideoCardState();
+  ConsumerState<_VideoCard> createState() => _VideoCardState();
 }
 
-class _VideoCardState extends State<_VideoCard> {
+class _VideoCardState extends ConsumerState<_VideoCard> {
   VideoPlayerController? _controller;
 
   @override
@@ -353,11 +363,26 @@ class _VideoCardState extends State<_VideoCard> {
   }
 
   Future<void> _initPlayer() async {
-    final url = widget.video.videoUrl;
-    if (url == null || url.isEmpty) return;
+    String? url = widget.video.videoUrl;
+    try {
+      url = await ref
+          .read(videoStorageServiceProvider)
+          .resolvePlaybackUrl(widget.video);
+    } catch (_) {
+      // Widget tests / pre-Supabase boot: keep stored URL fallback.
+    }
+    if (!mounted || url == null || url.isEmpty) return;
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    await controller.initialize();
-    if (!mounted) return;
+    try {
+      await controller.initialize();
+    } catch (_) {
+      await controller.dispose();
+      return;
+    }
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
     setState(() => _controller = controller);
   }
 
@@ -369,6 +394,8 @@ class _VideoCardState extends State<_VideoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryLabel =
+        widget.v2Primary ? 'Run Elote Analysis' : 'Run AI Swim Analysis';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -410,7 +437,7 @@ class _VideoCardState extends State<_VideoCard> {
                 ],
               ),
             ],
-            if (widget.analysis == null)
+            if (widget.analysis == null) ...[
               FilledButton.tonal(
                 onPressed: widget.analyzing ? null : widget.onAnalyze,
                 child: widget.analyzing
@@ -419,9 +446,16 @@ class _VideoCardState extends State<_VideoCard> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Run AI Swim Analysis'),
-              )
-            else ...[
+                    : Text(primaryLabel),
+              ),
+              if (widget.onLegacyAnalyze != null) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: widget.analyzing ? null : widget.onLegacyAnalyze,
+                  child: const Text('Run legacy analysis'),
+                ),
+              ],
+            ] else ...[
               if (widget.analysis!.disclaimer != null) ...[
                 const SizedBox(height: 8),
                 Text(

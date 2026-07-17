@@ -61,4 +61,25 @@ class VideoStorageService {
   Future<Uint8List> downloadVideoBytes(String storagePath) async {
     return _client.storage.from(bucketName).download(storagePath);
   }
+
+  /// Playback URL for private `swim-videos` objects.
+  /// Prefers a short-lived signed URL; falls back to stored `videoUrl`.
+  Future<String?> resolvePlaybackUrl(
+    SwimVideo video, {
+    int expiresIn = 3600,
+  }) async {
+    final path = video.storagePath.trim();
+    if (path.isNotEmpty) {
+      try {
+        return await _client.storage
+            .from(bucketName)
+            .createSignedUrl(path, expiresIn);
+      } catch (_) {
+        // Fall through to legacy/public URL when signing is unavailable.
+      }
+    }
+    final url = video.videoUrl?.trim();
+    if (url == null || url.isEmpty) return null;
+    return url;
+  }
 }

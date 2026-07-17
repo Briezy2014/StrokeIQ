@@ -69,6 +69,33 @@ async def create_analysis(
             },
         )
 
+    # Production / Flutter mode: never accept arbitrary server filesystem paths.
+    if settings.supabase_auth_required and body.local_path:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "LOCAL_PATH_FORBIDDEN",
+                "message": "local_path is not allowed when Supabase auth is required. Use storage_path.",
+            },
+        )
+
+    if settings.supabase_auth_required and body.storage_path:
+        from app.services.supabase_bridge import SupabaseBridge
+
+        bridge = SupabaseBridge(settings)
+        if not bridge.user_owns_storage_path(
+            user_id=user.user_id,
+            storage_path=body.storage_path,
+            video_id=body.video_id,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error_code": "NOT_OWNER",
+                    "message": "You do not have access to this video.",
+                },
+            )
+
     athlete_key = body.athlete.swimmer_key if body.athlete else None
     job = AnalysisJob(
         job_id=new_job_id(),

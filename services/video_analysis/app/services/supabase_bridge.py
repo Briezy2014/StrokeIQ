@@ -313,6 +313,42 @@ class SupabaseBridge:
         rows = self._rest_select("video_analysis_jobs", f"id=eq.{job_id}&limit=1")
         return rows[0] if rows else None
 
+    def user_owns_storage_path(
+        self,
+        *,
+        user_id: str,
+        storage_path: str,
+        video_id: str | None = None,
+    ) -> bool:
+        """
+        Ownership check before service-role download.
+
+        Accepts either `{user_id}/...` object prefixes or a swim_videos row
+        owned by the caller.
+        """
+        path = (storage_path or "").lstrip("/")
+        if not path or not user_id:
+            return False
+        if path.startswith(f"{user_id}/"):
+            return True
+        if not self.enabled:
+            return False
+        from urllib.parse import quote
+
+        encoded = quote(path, safe="")
+        if video_id and _is_uuid(video_id):
+            rows = self._rest_select(
+                "swim_videos",
+                f"id=eq.{video_id}&user_id=eq.{user_id}&limit=1",
+            )
+            if rows and str(rows[0].get("storage_path") or "").lstrip("/") == path:
+                return True
+        rows = self._rest_select(
+            "swim_videos",
+            f"storage_path=eq.{encoded}&user_id=eq.{user_id}&limit=1",
+        )
+        return bool(rows)
+
     def _rest_select(self, table: str, query: str) -> list[dict]:
         url = f"{self.base}/rest/v1/{table}?{query}"
         with httpx.Client(timeout=30.0) as client:

@@ -96,6 +96,7 @@ class VideoEngineV2Service {
         if (targetTrackId != null) 'target_track_id': targetTrackId,
         'generate_gemini_report': generateGeminiReport,
         'generate_overlay': true,
+        'run_pose_stage': true,
         'run_butterfly_analysis': true,
         'run_underwater_analysis': true,
         'run_turn_analysis': true,

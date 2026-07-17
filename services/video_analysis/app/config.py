@@ -101,6 +101,8 @@ class Settings(BaseSettings):
     supabase_signed_url_ttl_s: int = 3600
     video_engine_name: str = "video_engine_v2"
     cors_allow_origins: str = "*"
+    # Comma-separated emails; empty = all authenticated users (matches Flutter).
+    video_engine_v2_allowlist: str = ""
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)
