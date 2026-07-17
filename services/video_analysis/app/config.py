@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.3.0"
+    engine_version: str = "elote-0.4.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -50,6 +50,20 @@ class Settings(BaseSettings):
     pose_input_height: int = 256
     min_keypoint_confidence: float = 0.30
     min_visible_core_joints: int = 6
+
+    # Milestone 4 — pose validation / temporal smoothing / diagnostics
+    pose_smoothing_enabled: bool = True
+    max_interpolation_gap_frames: int = 3
+    max_joint_velocity_px_s: float = 2500.0
+    max_joint_acceleration_px_s2: float = 15000.0
+    continuity_max_jump_px: float = 100.0
+    savgol_window: int = 5
+    savgol_polyorder: int = 2
+    long_occlusion_gap_frames: int = 8
+    usable_frame_min_core_joints: int = 4
+    usable_frame_min_confidence: float = 0.20
+    overlay_min_draw_confidence: float = 0.25
+    diagnostic_frame_count: int = 12
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

@@ -67,6 +67,18 @@ def settings(tmp_path: Path) -> Settings:
         / "models/rtmpose/rtmpose-m_simcc-coco-wholebody_pt-aic-coco_270e-256x192-cd5e845c_20230123.pth",
         min_keypoint_confidence=0.3,
         min_visible_core_joints=6,
+        pose_smoothing_enabled=True,
+        max_interpolation_gap_frames=3,
+        max_joint_velocity_px_s=2500.0,
+        max_joint_acceleration_px_s2=15000.0,
+        continuity_max_jump_px=100.0,
+        savgol_window=5,
+        savgol_polyorder=2,
+        long_occlusion_gap_frames=8,
+        usable_frame_min_core_joints=4,
+        usable_frame_min_confidence=0.20,
+        overlay_min_draw_confidence=0.25,
+        diagnostic_frame_count=12,
     )
     s.ensure_dirs()
     return s

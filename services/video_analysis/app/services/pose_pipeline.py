@@ -14,6 +14,7 @@ from app.config import Settings
 from app.models.detector_adapter import DetectorAdapter
 from app.models.rtmpose_adapter import RTMPoseWholeBodyAdapter
 from app.services.pose_estimator import PoseEstimate, PoseEstimator, PoseEstimatorError
+from app.services.pose_validation import run_pose_validation
 from app.services.swimmer_detector import run_detection_and_tracking
 from app.services.tracking_diagnostics import write_json
 from app.utils.compat import assert_pose_stack_ready, collect_compat_report
@@ -362,6 +363,7 @@ def run_pose_stage(
     if unusable:
         limitations.append(f"{len(unusable)} unusable frames recorded")
 
+    raw_pose_dicts = [p.to_dict() for p in poses]
     pose_json_path = out_root / "raw_pose.json"
     unusable_path = out_root / "unusable_frames.json"
     summary_path = out_root / "pose_stage_summary.json"
@@ -374,10 +376,51 @@ def run_pose_stage(
             "model_name": estimator.model_name,
             "model_version": estimator.model_version,
             "dependency_versions": compat,
-            "poses": [p.to_dict() for p in poses],
+            "dataset": "raw",
+            "poses": raw_pose_dicts,
         },
     )
     write_json(unusable_path, {"unusable_frames": unusable})
+
+    artifact_paths: dict[str, str] = {
+        "raw_pose_json": str(pose_json_path.resolve()),
+        "unusable_frames_json": str(unusable_path.resolve()),
+        "pose_stage_summary": str(summary_path.resolve()),
+    }
+
+    # Milestone 4: validate/smooth from raw RTMPose output (raw file left unchanged).
+    coverage_summary: dict[str, Any] = {}
+    if settings.pose_smoothing_enabled:
+        tracked_frames: set[int] | None = None
+        if tracks_payload:
+            tracked_frames = {
+                int(obs["frame_number"])
+                for obs in _track_observations(
+                    tracks_payload,
+                    (tracks_payload.get("target") or {}).get("track_id"),
+                )
+            }
+        validation = run_pose_validation(
+            settings=settings,
+            job_id=job_id,
+            video_id=video_id,
+            raw_poses=raw_pose_dicts,
+            output_root=out_root,
+            video_path=media_path if _is_video(media_path) else None,
+            tracked_frame_numbers=tracked_frames,
+        )
+        artifact_paths.update(validation.artifact_paths)
+        limitations = list(dict.fromkeys([*limitations, *validation.limitations]))
+        coverage_summary = validation.coverage
+
+        # Verify raw artifact on disk was not rewritten by smoothing.
+        disk_raw = json.loads(pose_json_path.read_text(encoding="utf-8"))
+        if disk_raw.get("poses") != raw_pose_dicts:
+            raise PoseStageError(
+                "RAW_POSE_MUTATED",
+                "raw_pose.json was altered after Milestone 3 write",
+            )
+
     write_json(
         summary_path,
         {
@@ -388,6 +431,8 @@ def run_pose_stage(
             "average_inference_ms": avg_ms,
             "device_mode": compat.get("device_mode"),
             "torch_cuda_available": compat.get("torch_cuda_available"),
+            "pose_coverage": coverage_summary,
+            "milestone": "4" if settings.pose_smoothing_enabled else "3",
         },
     )
 
@@ -406,6 +451,7 @@ def run_pose_stage(
                 "average_inference_ms": avg_ms,
                 "pose_json": str(pose_json_path.resolve()),
                 "model_version": estimator.model_version,
+                "pose_coverage": coverage_summary,
             },
         )
 
@@ -414,18 +460,14 @@ def run_pose_stage(
         job_id=job_id,
         video_id=video_id,
         status=status,
-        poses=[p.to_dict() for p in poses],
+        poses=raw_pose_dicts,
         unusable_frames=unusable,
-        artifact_paths={
-            "raw_pose_json": str(pose_json_path.resolve()),
-            "unusable_frames_json": str(unusable_path.resolve()),
-            "pose_stage_summary": str(summary_path.resolve()),
-        },
+        artifact_paths=artifact_paths,
         model_versions={
             "pose": estimator.model_name,
             "pose_version": estimator.model_version,
             "engine": settings.engine_version,
-            "milestone": "3",
+            "milestone": "4" if settings.pose_smoothing_enabled else "3",
             "stage": stage,
         },
         dependency_versions=compat,

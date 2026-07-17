@@ -171,6 +171,18 @@ def run_analysis_pipeline(
                 detector=detector,
                 write_acceptance=bool(options.get("write_pose_acceptance", True)),
             )
+            summary_path = pose_result.artifact_paths.get("pose_stage_summary")
+            coverage = {}
+            if summary_path:
+                import json
+                from pathlib import Path as _Path
+
+                try:
+                    coverage = json.loads(_Path(summary_path).read_text(encoding="utf-8")).get(
+                        "pose_coverage"
+                    ) or {}
+                except Exception:  # noqa: BLE001
+                    coverage = {}
             job.pose = {
                 "stage": pose_result.stage,
                 "status": pose_result.status,
@@ -179,6 +191,7 @@ def run_analysis_pipeline(
                 "unusable_frames": pose_result.unusable_frames,
                 "acceptance_path": pose_result.acceptance_path,
                 "pose_count": len(pose_result.poses),
+                "pose_coverage": coverage,
             }
             job.model_versions.update(pose_result.model_versions)
             job.limitations = list(

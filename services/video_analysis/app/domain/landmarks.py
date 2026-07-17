@@ -44,3 +44,27 @@ WHOLEBODY_LANDMARK_COUNT = len(COCO_WHOLEBODY_KEYPOINT_NAMES)  # 133
 
 # Core body joints used for "insufficient visible body parts" checks.
 CORE_BODY_INDICES = list(range(17))
+
+# Skeleton edges for diagnostic overlays (body + feet only; face/hands omitted).
+BODY_EDGES: list[tuple[str, str]] = [
+    ("left_shoulder", "right_shoulder"),
+    ("left_shoulder", "left_elbow"),
+    ("left_elbow", "left_wrist"),
+    ("right_shoulder", "right_elbow"),
+    ("right_elbow", "right_wrist"),
+    ("left_shoulder", "left_hip"),
+    ("right_shoulder", "right_hip"),
+    ("left_hip", "right_hip"),
+    ("left_hip", "left_knee"),
+    ("left_knee", "left_ankle"),
+    ("right_hip", "right_knee"),
+    ("right_knee", "right_ankle"),
+    ("nose", "left_eye"),
+    ("nose", "right_eye"),
+    ("left_eye", "left_ear"),
+    ("right_eye", "right_ear"),
+    ("left_ankle", "left_heel"),
+    ("left_ankle", "left_big_toe"),
+    ("right_ankle", "right_heel"),
+    ("right_ankle", "right_big_toe"),
+]

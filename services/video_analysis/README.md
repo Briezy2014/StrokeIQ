@@ -2,15 +2,16 @@
 
 Isolated Python FastAPI backend for SwimIQ video analysis.
 
-**Current milestone: Milestone 3**
+**Current milestone: Milestone 4**
 
 | Milestone | Scope |
 |-----------|--------|
 | 1 | Validation, metadata, jobs, logging, `/health` |
 | 2 | RTMDet detection, tracking, target selection, diagnostics |
 | 3 | RTMPose WholeBody pose (MMPose), stages A/B/C |
+| 4 | Pose validation, temporal smoothing, quality flags, skeleton overlay |
 
-**Not in Milestone 3:** biomechanics metrics, underwater/turn analysis, Gemini reports, Flutter, pose smoothing overlays (Milestone 4).
+**Not in Milestone 4:** stroke-rate / biomechanics metrics, underwater/turn analysis, Gemini reports, Flutter integration.
 
 ## Pose stages (no auto-advance)
 
