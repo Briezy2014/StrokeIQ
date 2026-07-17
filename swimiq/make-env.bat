@@ -1,36 +1,40 @@
 @echo off
-REM Creates swimiq\.env from .env.example if missing, then opens Notepad to edit it.
 cd /d "%~dp0"
+setlocal
+
+echo.
+echo Creating/opening swimiq\.env ...
+echo.
 
 if exist ".env" (
-  echo .env already exists:
-  echo   %CD%\.env
-  echo.
-  echo Opening it in Notepad so you can check SUPABASE_URL and SUPABASE_ANON_KEY...
-  notepad ".env"
-  goto done
+  echo [OK] .env already exists.
+  goto edit
+)
+
+if exist "..\..\StrokeIQ\swimiq\.env" (
+  copy /Y "..\..\StrokeIQ\swimiq\.env" ".env" >nul
+  echo [OK] Copied .env from Desktop\StrokeIQ\swimiq
+  goto edit
 )
 
 if not exist ".env.example" (
-  echo ERROR: .env.example is missing in %CD%
+  echo [FAIL] .env.example missing
   pause
   exit /b 1
 )
 
 copy /Y ".env.example" ".env" >nul
-echo Created: %CD%\.env
+echo [OK] Created .env from .env.example
+
+:edit
 echo.
-echo Notepad will open. Replace these two lines with your real Supabase values:
-echo   SUPABASE_URL=https://xxxx.supabase.co
-echo   SUPABASE_ANON_KEY=eyJ...
-echo.
-echo Also set:
+echo Notepad will open. Make sure these are REAL values:
+echo   SUPABASE_URL=https://YOURPROJECT.supabase.co
+echo   SUPABASE_ANON_KEY=eyJ...   ^(anon public key from Supabase API settings^)
 echo   VIDEO_ENGINE_V2=true
 echo.
-echo Save and close Notepad, then run run-chrome.bat
+echo Save, close Notepad, then double-click START-SWIMIQ.bat
 echo.
 notepad ".env"
-
-:done
 echo.
 pause

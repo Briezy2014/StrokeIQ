@@ -37,7 +37,8 @@ Future<void> main() async {
 
 Future<void> _loadEnvironment() async {
   try {
-    // Web needs `.env` listed under flutter/assets in pubspec.yaml.
+    // Optional local file load (mobile/desktop). Flutter web Chrome launches
+    // should pass --dart-define from START-SWIMIQ.bat / start_swimiq.ps1.
     await dotenv.load(fileName: '.env', isOptional: true);
     Env.loadFromDotenv(dotenv.env);
   } catch (_) {
