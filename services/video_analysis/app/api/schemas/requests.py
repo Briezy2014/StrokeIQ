@@ -63,6 +63,11 @@ class AnalysisOptions(BaseModel):
     view_hint: ViewHint = "unknown"
     generate_overlay: bool = True
     generate_gemini_report: bool = False
+    # Milestone 3 — run exactly one pose stage when enabled (no auto-advance).
+    run_pose_stage: bool = False
+    pose_stage: Literal["A", "B", "C"] | None = None
+    pose_source_path: str | None = None
+    write_pose_acceptance: bool = True
 
 
 class CreateAnalysisRequest(BaseModel):

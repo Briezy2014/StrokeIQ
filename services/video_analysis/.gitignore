@@ -8,3 +8,5 @@ analysis_artifacts/
 *.egg-info/
 .coverage
 htmlcov/
+# Large pose checkpoints — download via scripts/download_rtmpose.py
+models/rtmpose/*.pth

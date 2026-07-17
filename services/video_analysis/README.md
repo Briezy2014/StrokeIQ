@@ -2,65 +2,52 @@
 
 Isolated Python FastAPI backend for SwimIQ video analysis.
 
-**Current milestone: Milestone 2**
+**Current milestone: Milestone 3**
 
-### Milestone 1
-- Video validation (`ffprobe`), metadata artifacts, jobs, logging, `/health`
+| Milestone | Scope |
+|-----------|--------|
+| 1 | Validation, metadata, jobs, logging, `/health` |
+| 2 | RTMDet detection, tracking, target selection, diagnostics |
+| 3 | RTMPose WholeBody pose (MMPose), stages A/B/C |
 
-### Milestone 2
-- RTMDet-n person detection via ONNX Runtime (Apache-2.0)
-- Replaceable `DetectorAdapter` interface
-- Persistent multi-swimmer tracking
-- Target selection: `automatic` | `track_id` | `normalized_coordinate` | `bounding_box`
-- Diagnostics: `detections.json`, `tracks.json`, annotated tracking video, target frames, quality summary
+**Not in Milestone 3:** biomechanics metrics, underwater/turn analysis, Gemini reports, Flutter, pose smoothing overlays (Milestone 4).
 
-**Not in Milestone 2:** RTMPose pose estimation, biomechanics metrics, Gemini reports, Flutter integration.
+## Pose stages (no auto-advance)
 
-## Requirements
+```bash
+python scripts/download_rtmpose.py
+python scripts/make_pose_clips.py
+python scripts/run_pose_stage.py --stage A --source tests/fixtures/pose_stage_a_still.jpg
+python scripts/run_pose_stage.py --stage B --source tests/fixtures/pose_stage_b_5s.mp4
+python scripts/run_pose_stage.py --stage C --source tests/fixtures/pose_stage_c_full.mp4
+```
 
-- Python 3.11+ (3.12 OK for local tests)
-- System `ffmpeg` / `ffprobe`
-- RTMDet ONNX weights (`models/rtmdet-n-person.onnx`)
+Stage B requires Stage A acceptance; Stage C requires Stage B acceptance.
 
-## Setup
+## Setup (CPU)
+
+See [`docs/POSE_DEPENDENCIES.md`](docs/POSE_DEPENDENCIES.md) for the pinned matrix.
 
 ```bash
 cd services/video_analysis
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+pip install torch==2.2.2 torchvision==0.17.2 --index-url https://download.pytorch.org/whl/cpu
+pip install numpy==1.26.4 scipy==1.11.4 opencv-python==4.10.0.84
+pip install mmengine==0.10.7
+pip install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch2.2.0/index.html
+pip install mmdet==3.3.0 mmpose==1.3.2
+python scripts/patch_mmdet_mmcv.py
 python scripts/download_rtmdet.py
-python scripts/make_m2_fixtures.py
+python scripts/download_rtmpose.py
 ```
 
-## Run API
+## Test
 
 ```bash
-uvicorn app.main:app --reload --port 8080
-```
-
-## Test (reproducible)
-
-```bash
-cd services/video_analysis
-source .venv/bin/activate
 pytest -q
 ```
 
-## Artifacts (per job)
+## MediaPipe
 
-```
-analysis_artifacts/{job_id}/
-  metadata.json
-  detections.json
-  tracks.json
-  tracking_quality_summary.json
-  annotated_tracking.mp4
-  frames/target/
-  events/tracking_events.json
-```
-
-## Next milestone
-
-Milestone 3: RTMPose WholeBody inference (image → short clip → full clip).
+Disabled as a production dependency. Not used by the pose pipeline.

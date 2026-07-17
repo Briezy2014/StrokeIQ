@@ -9,6 +9,7 @@ from app.config import Settings
 from app.domain.jobs import AnalysisJob
 from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
+from app.services.pose_pipeline import PoseStageError, run_pose_stage
 from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
 from app.services.video_preprocessor import artifact_dir, preprocess_video
 from app.services.video_validator import VideoValidationError, validate_video
@@ -150,6 +151,40 @@ def run_analysis_pipeline(
         job.model_versions = tracking.model_versions
         job.limitations = list(dict.fromkeys([*job.limitations, *tracking.limitations]))
 
+        # Milestone 3: optional single pose stage (A/B/C). Never auto-advances stages.
+        if settings.pose_enabled or bool(options.get("run_pose_stage")):
+            stage = str(options.get("pose_stage") or settings.pose_stage or "A").upper()
+            if stage not in {"A", "B", "C"}:
+                raise PoseStageError("INVALID_POSE_STAGE", f"Invalid pose stage {stage}")
+            job.transition(JobStatus.estimating_pose, progress=0.75)
+            store.save(job)
+            pose_source = Path(
+                options.get("pose_source_path") or video_for_detection
+            )
+            pose_result = run_pose_stage(
+                settings=settings,
+                stage=stage,  # type: ignore[arg-type]
+                job_id=job_id,
+                video_id=video_id,
+                source_path=pose_source,
+                output_root=art / "pose" / f"stage_{stage}",
+                detector=detector,
+                write_acceptance=bool(options.get("write_pose_acceptance", True)),
+            )
+            job.pose = {
+                "stage": pose_result.stage,
+                "status": pose_result.status,
+                "artifact_paths": pose_result.artifact_paths,
+                "average_inference_ms": pose_result.average_inference_ms,
+                "unusable_frames": pose_result.unusable_frames,
+                "acceptance_path": pose_result.acceptance_path,
+                "pose_count": len(pose_result.poses),
+            }
+            job.model_versions.update(pose_result.model_versions)
+            job.limitations = list(
+                dict.fromkeys([*job.limitations, *pose_result.limitations])
+            )
+
         if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
         else:
@@ -161,10 +196,28 @@ def run_analysis_pipeline(
             stage=job.stage,
             job_id=job_id,
             video_id=video_id,
-            message="Milestone 2 detection/tracking completed",
+            message="Pipeline completed through configured milestone stages",
             target_track_id=tracking.target.get("track_id"),
             annotated=tracking.artifact_paths.get("annotated_tracking_video"),
+            pose_stage=(job.pose or {}).get("stage"),
         )
+        return job
+
+    except PoseStageError as exc:
+        log_exception(
+            logger,
+            stage=job.stage,
+            job_id=job_id,
+            video_id=video_id,
+            error=exc,
+        )
+        job.mark_failed(
+            error_code=exc.error_code,
+            message=exc.message,
+            stage=job.stage,
+            retriable=False,
+        )
+        store.save(job)
         return job
 
     except VideoValidationError as exc:

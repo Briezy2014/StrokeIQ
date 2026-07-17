@@ -181,6 +181,12 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
     model_versions = {"engine": job.engine_version, "milestone": "2"}
     model_versions.update(job.model_versions or {})
 
+    # Attach pose summary into tracking-adjacent payload via model_versions / limitations.
+    if job.pose:
+        model_versions["pose_stage"] = str(job.pose.get("stage"))
+        if job.pose.get("artifact_paths"):
+            evidence.append({"pose_artifacts": job.pose["artifact_paths"]})
+
     return AnalysisResultsResponse(
         job_id=job.job_id,
         status=job.status,
@@ -189,7 +195,12 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         video=video,
         athlete=athlete,
         stroke=stroke,
-        tracking=job.tracking,
+        tracking={
+            **(job.tracking or {}),
+            **({"pose": job.pose} if job.pose else {}),
+        }
+        if (job.tracking or job.pose)
+        else None,
         phases=[],
         metrics=[],
         limitations=job.limitations,

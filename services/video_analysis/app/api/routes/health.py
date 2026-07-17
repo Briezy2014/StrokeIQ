@@ -7,9 +7,12 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
+from fastapi.responses import JSONResponse
+
 from app.api.schemas.responses import HealthResponse
 from app.config import get_settings
 from app.models.model_registry import resolve_detector_model_path
+from app.services.pose_pipeline import health_pose_model
 
 router = APIRouter(tags=["health"])
 
@@ -32,4 +35,16 @@ def health() -> HealthResponse:
         ffprobe_available=ffprobe_available,
         ffmpeg_path=ffmpeg_path,
         ffprobe_path=ffprobe_path,
+    )
+
+
+@router.get("/health/pose")
+def health_pose() -> JSONResponse:
+    """Model-loading health check for RTMPose WholeBody (Milestone 3)."""
+    settings = get_settings()
+    report = health_pose_model(settings)
+    ok = bool(report.get("pose_model_loaded")) and bool(report.get("pose_checkpoint_present"))
+    return JSONResponse(
+        status_code=200 if ok else 503,
+        content={"status": "ok" if ok else "degraded", **report},
     )

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.2.0"
+    engine_version: str = "elote-0.3.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -35,6 +35,21 @@ class Settings(BaseSettings):
     frame_processing_interval: int = 1
     inference_resolution: int = 320
     max_active_tracks: int = 12
+
+    # Milestone 3 — RTMPose WholeBody
+    pose_enabled: bool = False
+    pose_stage: str = "A"  # A | B | C — never auto-advance
+    pose_device: str = "cpu"  # cpu | cuda:0 | auto
+    pose_config_path: Path = Path(
+        "models/rtmpose/rtmpose-m_8xb64-270e_coco-wholebody-256x192.py"
+    )
+    pose_checkpoint_path: Path = Path(
+        "models/rtmpose/rtmpose-m_simcc-coco-wholebody_pt-aic-coco_270e-256x192-cd5e845c_20230123.pth"
+    )
+    pose_input_width: int = 192
+    pose_input_height: int = 256
+    min_keypoint_confidence: float = 0.30
+    min_visible_core_joints: int = 6
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

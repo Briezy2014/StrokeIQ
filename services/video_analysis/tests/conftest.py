@@ -58,6 +58,15 @@ def settings(tmp_path: Path) -> Settings:
         frame_processing_interval=1,
         inference_resolution=320,
         max_active_tracks=12,
+        pose_enabled=False,
+        pose_stage="A",
+        pose_device="cpu",
+        pose_config_path=Path(__file__).resolve().parents[1]
+        / "models/rtmpose/rtmpose-m_8xb64-270e_coco-wholebody-256x192.py",
+        pose_checkpoint_path=Path(__file__).resolve().parents[1]
+        / "models/rtmpose/rtmpose-m_simcc-coco-wholebody_pt-aic-coco_270e-256x192-cd5e845c_20230123.pth",
+        min_keypoint_confidence=0.3,
+        min_visible_core_joints=6,
     )
     s.ensure_dirs()
     return s

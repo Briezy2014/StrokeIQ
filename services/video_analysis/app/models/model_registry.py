@@ -11,7 +11,17 @@ KNOWN_MODELS = {
         "license": "Apache-2.0",
         "default_path": "models/rtmdet-n-person.onnx",
     },
-    "pose": None,  # RTMPose WholeBody — Milestone 3
+    "pose": {
+        "name": "rtmpose-m-wholebody",
+        "version": "mmpose-1.3.2-rtmpose-m-coco-wholebody-256x192",
+        "license": "Apache-2.0",
+        "config": "models/rtmpose/rtmpose-m_8xb64-270e_coco-wholebody-256x192.py",
+        "checkpoint": (
+            "models/rtmpose/"
+            "rtmpose-m_simcc-coco-wholebody_pt-aic-coco_270e-256x192-cd5e845c_20230123.pth"
+        ),
+        "keypoints": 133,
+    },
 }
 
 
