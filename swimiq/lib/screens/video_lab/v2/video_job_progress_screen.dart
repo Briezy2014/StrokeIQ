@@ -118,7 +118,7 @@ class _VideoJobProgressScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SwimIqScreenHeader(
-                    title: 'Elote Video Lab',
+                    title: 'Elite Video Lab',
                     subtitle:
                         'Analysis in progress — stage updates as work completes.',
                   ),

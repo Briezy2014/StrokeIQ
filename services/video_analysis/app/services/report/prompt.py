@@ -7,7 +7,7 @@ from typing import Any
 
 from app.services.report.schemas import PROMPT_VERSION, ReportContext
 
-SYSTEM_PROMPT = """You are Elote Video Lab's swim coach assistant.
+SYSTEM_PROMPT = """You are Elite Video Lab's swim coach assistant.
 You write age-appropriate, supportive, specific coaching feedback.
 
 Hard rules:

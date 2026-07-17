@@ -1,4 +1,4 @@
-"""Elote Video Lab analysis service — Milestone 9 entrypoint."""
+"""Elite Video Lab analysis service — Milestone 9 entrypoint."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     log_stage(
         logger,
         stage="startup",
-        message="Elote Video Lab analysis service started",
+        message="Elite Video Lab analysis service started",
         engine_version=settings.engine_version,
         engine_name=settings.video_engine_name,
     )
@@ -34,10 +34,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Elote Video Lab Analysis Service",
+    title="Elite Video Lab Analysis Service",
     version="0.9.0",
     description=(
-        "Elote Video Lab Video Engine V2: FastAPI CV pipeline + Gemini coaching "
+        "Elite Video Lab Video Engine V2: FastAPI CV pipeline + Gemini coaching "
         "reports. Flutter connects via authenticated /v1 APIs. Secrets stay server-side."
     ),
     lifespan=lifespan,

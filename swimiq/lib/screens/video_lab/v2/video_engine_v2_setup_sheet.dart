@@ -130,7 +130,7 @@ class _VideoEngineV2SetupSheetState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Elote Video Lab'),
+        title: const Text('Elite Video Lab'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

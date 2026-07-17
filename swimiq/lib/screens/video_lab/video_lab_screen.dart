@@ -222,7 +222,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
-              title: v2Allowed ? 'Elote Video Lab' : 'Video Lab',
+              title: v2Allowed ? 'Elite Video Lab' : 'Video Lab',
               subtitle:
                   '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
             ),
@@ -395,7 +395,7 @@ class _VideoCardState extends ConsumerState<_VideoCard> {
   @override
   Widget build(BuildContext context) {
     final primaryLabel =
-        widget.v2Primary ? 'Run Elote Analysis' : 'Run AI Swim Analysis';
+        widget.v2Primary ? 'Run Elite Analysis' : 'Run AI Swim Analysis';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(

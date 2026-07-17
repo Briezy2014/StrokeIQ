@@ -1,4 +1,4 @@
-"""Environment-driven settings for the Elote Video Lab analysis service."""
+"""Environment-driven settings for the Elite Video Lab analysis service."""
 
 from functools import lru_cache
 from pathlib import Path

@@ -610,7 +610,7 @@ class _VideoAnalysisHistoryScreenState
                 )
               : (_jobs == null || _jobs!.isEmpty)
                   ? const EmptyStateMessage(
-                      message: 'No prior Elote analyses yet.',
+                      message: 'No prior Elite analyses yet.',
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
