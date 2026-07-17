@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.5.0"
+    engine_version: str = "elote-0.6.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -72,6 +72,13 @@ class Settings(BaseSettings):
     butterfly_min_peak_prominence: float = 0.08
     butterfly_min_bilateral_sync: float = 0.25
     pool_distance_calibrated: bool = False
+
+    # Milestone 6 — underwater / dolphin-kick / breakout
+    underwater_analysis_enabled: bool = False
+    underwater_min_kick_interval_s: float = 0.28
+    underwater_max_kick_interval_s: float = 1.10
+    underwater_kick_prominence_px: float = 4.0
+    underwater_min_duration_s: float = 0.40
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

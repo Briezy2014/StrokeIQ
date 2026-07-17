@@ -11,6 +11,7 @@ from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
 from app.services.butterfly.analyzer import ButterflyAnalyzer
 from app.services.pose_pipeline import PoseStageError, run_pose_stage
+from app.services.underwater.analyzer import UnderwaterAnalyzer
 from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
 from app.services.video_preprocessor import artifact_dir, preprocess_video
 from app.services.video_validator import VideoValidationError, validate_video
@@ -246,6 +247,66 @@ def run_analysis_pipeline(
                         dict.fromkeys([*job.limitations, *bfly.limitations])
                     )
 
+            # Milestone 6: underwater / dolphin-kick / breakout (uses smoothed poses + optional M5 entries).
+            run_uw = settings.underwater_analysis_enabled or bool(
+                options.get("run_underwater_analysis")
+            )
+            if run_uw:
+                smoothed_path = (job.pose or {}).get("artifact_paths", {}).get(
+                    "smoothed_pose_json"
+                ) or pose_result.artifact_paths.get("smoothed_pose_json")
+                if not smoothed_path:
+                    job.limitations.append("underwater_analysis_skipped_no_smoothed_poses")
+                else:
+                    # Advance through event/metric stages only when not already there (M5 may have).
+                    if job.status == JobStatus.estimating_pose:
+                        job.transition(JobStatus.detecting_events, progress=0.86)
+                        store.save(job)
+                    view_hint = str(options.get("view_hint") or "unknown")
+                    surface_entries = list((job.butterfly or {}).get("entry_frames") or [])
+                    track_obs = []
+                    if job.tracking and job.tracking.get("target"):
+                        track_obs = list(
+                            ((job.tracking.get("target") or {}).get("observations")) or []
+                        )
+                    uw_analyzer = UnderwaterAnalyzer(settings=settings)
+                    uw = uw_analyzer.analyze_from_smoothed_json(
+                        Path(smoothed_path),
+                        job_id=job_id,
+                        video_id=video_id,
+                        output_dir=art / "underwater",
+                        view_hint=view_hint,
+                        pool_distance_calibrated=bool(
+                            options.get("pool_distance_calibrated")
+                            or settings.pool_distance_calibrated
+                        ),
+                        surface_stroke_entry_frames=surface_entries or None,
+                        track_observations=track_obs or None,
+                    )
+                    if job.status == JobStatus.detecting_events:
+                        job.transition(JobStatus.calculating_metrics, progress=0.94)
+                        store.save(job)
+                    elif job.status == JobStatus.calculating_metrics:
+                        job.progress = max(job.progress, 0.94)
+                        store.save(job)
+                    job.underwater = {
+                        "summary": uw.summary,
+                        "artifact_paths": uw.artifact_paths,
+                        "kick_frames": uw.kick_frames,
+                        "breakout_frame": uw.breakout_frame,
+                        "first_surface_stroke_frame": uw.first_surface_stroke_frame,
+                        "detection_method": uw.detection_method,
+                        "quality_flags": uw.quality_flags,
+                        "metrics": uw.metrics,
+                        "events": uw.events,
+                        "phase": uw.phase,
+                    }
+                    job.model_versions["milestone"] = "6"
+                    job.model_versions["underwater"] = "phase_v1"
+                    job.limitations = list(
+                        dict.fromkeys([*job.limitations, *uw.limitations])
+                    )
+
         if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
         else:
@@ -263,6 +324,9 @@ def run_analysis_pipeline(
             pose_stage=(job.pose or {}).get("stage"),
             butterfly_cycles=((job.butterfly or {}).get("summary") or {}).get(
                 "complete_cycles"
+            ),
+            underwater_kicks=((job.underwater or {}).get("summary") or {}).get(
+                "kick_count"
             ),
         )
         return job

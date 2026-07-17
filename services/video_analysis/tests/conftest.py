@@ -85,6 +85,11 @@ def settings(tmp_path: Path) -> Settings:
         butterfly_min_peak_prominence=0.08,
         butterfly_min_bilateral_sync=0.25,
         pool_distance_calibrated=False,
+        underwater_analysis_enabled=False,
+        underwater_min_kick_interval_s=0.28,
+        underwater_max_kick_interval_s=1.10,
+        underwater_kick_prominence_px=4.0,
+        underwater_min_duration_s=0.40,
     )
     s.ensure_dirs()
     return s

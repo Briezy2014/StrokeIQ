@@ -70,6 +70,7 @@ class AnalysisOptions(BaseModel):
     write_pose_acceptance: bool = True
     # Milestone 5 — butterfly surface analysis (requires smoothed poses)
     run_butterfly_analysis: bool = False
+    run_underwater_analysis: bool = False
     pool_distance_calibrated: bool = False
 
 

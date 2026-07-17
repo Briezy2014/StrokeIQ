@@ -215,6 +215,34 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
                 "butterfly_summary": job.butterfly.get("summary"),
             }
 
+    if job.underwater:
+        metrics = list(metrics) + list(job.underwater.get("metrics") or [])
+        phase = job.underwater.get("phase")
+        if phase:
+            phases.append(
+                {
+                    "name": "underwater_phase",
+                    "start_ms": int(phase.get("start_ms") or 0),
+                    "end_ms": int(phase.get("end_ms") or 0),
+                    "start_frame": phase.get("start_frame"),
+                    "end_frame": phase.get("end_frame"),
+                    "confidence": phase.get("confidence") or 0.0,
+                    "editable": True,
+                    "quality_flags": phase.get("quality_flags") or [],
+                    "evidence_frames": [
+                        job.underwater.get("breakout_frame"),
+                        *(job.underwater.get("kick_frames") or [])[:4],
+                    ],
+                }
+            )
+        if job.underwater.get("artifact_paths"):
+            evidence.append({"underwater_artifacts": job.underwater["artifact_paths"]})
+        if stroke is not None:
+            stroke = {
+                **stroke,
+                "underwater_summary": job.underwater.get("summary"),
+            }
+
     return AnalysisResultsResponse(
         job_id=job.job_id,
         status=job.status,
@@ -227,8 +255,9 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
             **(job.tracking or {}),
             **({"pose": job.pose} if job.pose else {}),
             **({"butterfly": job.butterfly} if job.butterfly else {}),
+            **({"underwater": job.underwater} if job.underwater else {}),
         }
-        if (job.tracking or job.pose or job.butterfly)
+        if (job.tracking or job.pose or job.butterfly or job.underwater)
         else None,
         phases=phases,
         metrics=metrics,

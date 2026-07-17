@@ -2,7 +2,7 @@
 
 Isolated Python FastAPI backend for SwimIQ video analysis.
 
-**Current milestone: Milestone 5**
+**Current milestone: Milestone 6**
 
 | Milestone | Scope |
 |-----------|--------|
@@ -11,8 +11,9 @@ Isolated Python FastAPI backend for SwimIQ video analysis.
 | 3 | RTMPose WholeBody pose (MMPose), stages A/B/C |
 | 4 | Pose validation, temporal smoothing, quality flags, skeleton overlay |
 | 5 | Butterfly surface-stroke cycles + reliable timing/breathing metrics |
+| 6 | Underwater phase, dolphin kicks, breakout |
 
-**Not in Milestone 5:** underwater kick analysis, turns/finishes, Gemini reports, Flutter integration, distance-per-stroke without pool calibration.
+**Not in Milestone 6:** turns/finishes, Gemini reports, Flutter integration.
 
 ## Pose stages (no auto-advance)
 
@@ -54,6 +55,15 @@ pytest tests/unit/test_butterfly_analyzer.py -q
 ```
 
 Enable in a job via `options.run_butterfly_analysis=true` with `event.stroke=butterfly`.
+
+## Underwater / breakout (Milestone 6)
+
+```bash
+python scripts/make_underwater_fixtures.py
+pytest tests/unit/test_underwater_analyzer.py -q
+```
+
+Enable via `options.run_underwater_analysis=true` (uses M4 smoothed poses; optional M5 surface entry frames).
 
 ## Test
 

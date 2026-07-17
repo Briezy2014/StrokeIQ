@@ -18,12 +18,21 @@ BUTTERFLY_SURFACE_METRICS = (
     "late_clip_timing_consistency_change",
 )
 
-# Legacy name kept for docs; underwater names are NOT implemented in M5.
-BUTTERFLY_M1_METRICS = BUTTERFLY_SURFACE_METRICS + (
+UNDERWATER_M6_METRICS = (
     "underwater_duration",
-    "breakout_timing",
-    "underwater_kick_count",
+    "breakout_timestamp",
+    "first_surface_stroke_timestamp",
+    "estimated_underwater_kick_count",
+    "kick_frequency",
+    "first_kick_timing",
+    "time_between_final_kick_and_first_stroke",
+    "underwater_body_line_consistency_proxy",
+    "breakout_confidence",
+    "underwater_analysis_quality_score",
 )
+
+# Legacy combined list (surface + underwater names).
+BUTTERFLY_M1_METRICS = BUTTERFLY_SURFACE_METRICS + UNDERWATER_M6_METRICS
 
 # Explicitly unavailable in M5 (no pool calibration / unsupported views).
 BUTTERFLY_M5_UNSUPPORTED = (
