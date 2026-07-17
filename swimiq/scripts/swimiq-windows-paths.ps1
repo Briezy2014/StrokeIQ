@@ -123,9 +123,12 @@ function Ensure-SubstDrive {
 function Find-FlutterRoot {
     foreach ($candidate in @(
             'C:\FlutterWork',
+            "$env:USERPROFILE\Flutter",
             "$env:USERPROFILE\flutter",
             'C:\flutter',
-            'C:\src\flutter'
+            'C:\src\flutter',
+            'C:\Users\Kara Williams\Flutter',
+            'C:\Users\Kara Williams\flutter'
         )) {
         $physical = Get-PhysicalRootPath $candidate
         if (Test-Path -LiteralPath "$physical\bin\flutter.bat") {

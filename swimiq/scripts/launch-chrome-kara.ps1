@@ -61,17 +61,37 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
-Write-Host 'Pulling latest SwimIQ code from GitHub...' -ForegroundColor Yellow
-Push-Location $paths.WorkDir
+Write-Host 'Pulling fixed app branch (dashboard + Elite Video)...' -ForegroundColor Yellow
+Push-Location (Split-Path $paths.WorkDir -Parent)
 try {
-    git fetch origin cursor/dashboard-rope-schedule-fix-17e8 2>$null
-    git checkout cursor/dashboard-rope-schedule-fix-17e8 2>$null
-    git pull origin cursor/dashboard-rope-schedule-fix-17e8 2>$null
-    Write-Host '[OK] Code updated.' -ForegroundColor Green
+    git fetch origin cursor/elite-video-on-dashboard-b7ef 2>$null
+    git checkout -f cursor/elite-video-on-dashboard-b7ef 2>$null
+    git reset --hard origin/cursor/elite-video-on-dashboard-b7ef 2>$null
+    Write-Host '[OK] On cursor/elite-video-on-dashboard-b7ef' -ForegroundColor Green
 } catch {
-    Write-Host '[WARN] Git pull skipped — using local copy.' -ForegroundColor Yellow
+    Write-Host '[WARN] Git update skipped — using local copy.' -ForegroundColor Yellow
 } finally {
     Pop-Location
+}
+
+# Keep Video on the working legacy path until the Elite Python server is running.
+try {
+    $envLines = Get-Content -LiteralPath $envFile
+    $out = @()
+    $found = $false
+    foreach ($line in $envLines) {
+        if ($line -match '^\s*VIDEO_ENGINE_V2\s*=') {
+            $out += 'VIDEO_ENGINE_V2=false'
+            $found = $true
+        } else {
+            $out += $line
+        }
+    }
+    if (-not $found) { $out += 'VIDEO_ENGINE_V2=false' }
+    Set-Content -LiteralPath $envFile -Value $out -Encoding UTF8
+    Write-Host '[OK] VIDEO_ENGINE_V2=false (working Video Lab path)' -ForegroundColor Green
+} catch {
+    Write-Host '[WARN] Could not update VIDEO_ENGINE_V2 in .env' -ForegroundColor Yellow
 }
 
 Write-Host 'Checking branding PNG...' -ForegroundColor Cyan
