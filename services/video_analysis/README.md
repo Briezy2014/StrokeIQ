@@ -2,7 +2,7 @@
 
 Isolated Python FastAPI backend for SwimIQ video analysis.
 
-**Current milestone: Milestone 6**
+**Current milestone: Milestone 7**
 
 | Milestone | Scope |
 |-----------|--------|
@@ -12,8 +12,9 @@ Isolated Python FastAPI backend for SwimIQ video analysis.
 | 4 | Pose validation, temporal smoothing, quality flags, skeleton overlay |
 | 5 | Butterfly surface-stroke cycles + reliable timing/breathing metrics |
 | 6 | Underwater phase, dolphin kicks, breakout |
+| 7 | Turn / finish event framework + wall calibration |
 
-**Not in Milestone 6:** turns/finishes, Gemini reports, Flutter integration.
+**Not in Milestone 7:** Gemini reports, Flutter integration.
 
 ## Pose stages (no auto-advance)
 
@@ -64,6 +65,15 @@ pytest tests/unit/test_underwater_analyzer.py -q
 ```
 
 Enable via `options.run_underwater_analysis=true` (uses M4 smoothed poses; optional M5 surface entry frames).
+
+## Turn / finish framework (Milestone 7)
+
+```bash
+python scripts/make_turn_finish_fixtures.py
+pytest tests/unit/test_turn_finish_analyzers.py -q
+```
+
+Enable via `options.run_turn_analysis` / `options.run_finish_analysis`. Unsupported views return explicit `unavailable` events/metrics.
 
 ## Test
 

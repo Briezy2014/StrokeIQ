@@ -243,6 +243,15 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
                 "underwater_summary": job.underwater.get("summary"),
             }
 
+    if job.turn:
+        metrics = list(metrics) + list(job.turn.get("metrics") or [])
+        if job.turn.get("artifact_paths"):
+            evidence.append({"turn_artifacts": job.turn["artifact_paths"]})
+    if job.finish:
+        metrics = list(metrics) + list(job.finish.get("metrics") or [])
+        if job.finish.get("artifact_paths"):
+            evidence.append({"finish_artifacts": job.finish["artifact_paths"]})
+
     return AnalysisResultsResponse(
         job_id=job.job_id,
         status=job.status,
@@ -256,8 +265,10 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
             **({"pose": job.pose} if job.pose else {}),
             **({"butterfly": job.butterfly} if job.butterfly else {}),
             **({"underwater": job.underwater} if job.underwater else {}),
+            **({"turn": job.turn} if job.turn else {}),
+            **({"finish": job.finish} if job.finish else {}),
         }
-        if (job.tracking or job.pose or job.butterfly or job.underwater)
+        if (job.tracking or job.pose or job.butterfly or job.underwater or job.turn or job.finish)
         else None,
         phases=phases,
         metrics=metrics,

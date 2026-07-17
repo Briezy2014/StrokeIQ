@@ -35,6 +35,7 @@ class MetricValue:
     supporting_timestamps_ms: list[float] = field(default_factory=list)
     supporting_frame_numbers: list[int] = field(default_factory=list)
     quality_flags: list[str] = field(default_factory=list)
+    limitations: list[str] = field(default_factory=list)
     unavailable_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,6 +51,7 @@ class MetricValue:
         method: str,
         reason: str,
         quality_flags: list[str] | None = None,
+        limitations: list[str] | None = None,
     ) -> MetricValue:
         return cls(
             name=name,
@@ -61,6 +63,7 @@ class MetricValue:
             classification="unavailable",
             method=method,
             quality_flags=quality_flags or [],
+            limitations=limitations or [reason],
             unavailable_reason=reason,
         )
 

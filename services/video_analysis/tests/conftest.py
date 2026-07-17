@@ -90,6 +90,8 @@ def settings(tmp_path: Path) -> Settings:
         underwater_max_kick_interval_s=1.10,
         underwater_kick_prominence_px=4.0,
         underwater_min_duration_s=0.40,
+        turn_analysis_enabled=False,
+        finish_analysis_enabled=False,
     )
     s.ensure_dirs()
     return s

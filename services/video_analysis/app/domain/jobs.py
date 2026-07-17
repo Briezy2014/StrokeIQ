@@ -91,6 +91,8 @@ class AnalysisJob:
         self.pose: dict[str, Any] | None = None
         self.butterfly: dict[str, Any] | None = None
         self.underwater: dict[str, Any] | None = None
+        self.turn: dict[str, Any] | None = None
+        self.finish: dict[str, Any] | None = None
         self.model_versions: dict[str, str] = {}
         self.created_at = now
         self.updated_at = now
@@ -149,6 +151,8 @@ class AnalysisJob:
             "pose": self.pose,
             "butterfly": self.butterfly,
             "underwater": self.underwater,
+            "turn": self.turn,
+            "finish": self.finish,
             "model_versions": self.model_versions,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -179,6 +183,8 @@ class AnalysisJob:
         job.pose = data.get("pose")
         job.butterfly = data.get("butterfly")
         job.underwater = data.get("underwater")
+        job.turn = data.get("turn")
+        job.finish = data.get("finish")
         job.model_versions = dict(data.get("model_versions") or {})
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])

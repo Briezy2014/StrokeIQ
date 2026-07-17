@@ -71,7 +71,15 @@ class AnalysisOptions(BaseModel):
     # Milestone 5 — butterfly surface analysis (requires smoothed poses)
     run_butterfly_analysis: bool = False
     run_underwater_analysis: bool = False
+    run_turn_analysis: bool = False
+    run_finish_analysis: bool = False
     pool_distance_calibrated: bool = False
+    # Milestone 7 wall calibration inputs (optional)
+    manual_wall_line: dict | None = None
+    pool_geometry: dict | None = None
+    lane_line_termination_x: float | None = None
+    starting_block_x: float | None = None
+    turn_type_hint: str | None = None  # flip | open | unknown
 
 
 class CreateAnalysisRequest(BaseModel):

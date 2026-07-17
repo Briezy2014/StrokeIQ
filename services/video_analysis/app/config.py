@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.6.0"
+    engine_version: str = "elote-0.7.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -79,6 +79,10 @@ class Settings(BaseSettings):
     underwater_max_kick_interval_s: float = 1.10
     underwater_kick_prominence_px: float = 4.0
     underwater_min_duration_s: float = 0.40
+
+    # Milestone 7 — turn / finish event framework
+    turn_analysis_enabled: bool = False
+    finish_analysis_enabled: bool = False
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

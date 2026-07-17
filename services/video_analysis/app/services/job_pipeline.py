@@ -11,6 +11,7 @@ from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
 from app.services.butterfly.analyzer import ButterflyAnalyzer
 from app.services.pose_pipeline import PoseStageError, run_pose_stage
+from app.services.turn_finish import FinishAnalyzer, TurnAnalyzer
 from app.services.underwater.analyzer import UnderwaterAnalyzer
 from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
 from app.services.video_preprocessor import artifact_dir, preprocess_video
@@ -306,6 +307,98 @@ def run_analysis_pipeline(
                     job.limitations = list(
                         dict.fromkeys([*job.limitations, *uw.limitations])
                     )
+
+            # Milestone 7: turn / finish event framework (unavailable when view unsupported).
+            run_turn = settings.turn_analysis_enabled or bool(options.get("run_turn_analysis"))
+            run_finish = settings.finish_analysis_enabled or bool(
+                options.get("run_finish_analysis")
+            )
+            if run_turn or run_finish:
+                smoothed_path = (job.pose or {}).get("artifact_paths", {}).get(
+                    "smoothed_pose_json"
+                ) or pose_result.artifact_paths.get("smoothed_pose_json")
+                if not smoothed_path:
+                    job.limitations.append("turn_finish_skipped_no_smoothed_poses")
+                else:
+                    if job.status == JobStatus.estimating_pose:
+                        job.transition(JobStatus.detecting_events, progress=0.88)
+                        store.save(job)
+                    import json as _json
+
+                    poses = _json.loads(Path(smoothed_path).read_text(encoding="utf-8")).get(
+                        "poses"
+                    ) or []
+                    view_hint = str(options.get("view_hint") or "unknown")
+                    stroke_hint = str(
+                        ((job.request_payload or {}).get("event") or {}).get("stroke")
+                        or "unknown"
+                    )
+                    surface_entries = list((job.butterfly or {}).get("entry_frames") or [])
+                    uw_kicks = list((job.underwater or {}).get("kick_frames") or [])
+                    uw_breakout = (job.underwater or {}).get("breakout_frame")
+                    wall_kwargs = {
+                        "manual_wall_line": options.get("manual_wall_line"),
+                        "pool_geometry": options.get("pool_geometry"),
+                        "lane_line_termination_x": options.get("lane_line_termination_x"),
+                        "starting_block_x": options.get("starting_block_x"),
+                    }
+                    if run_turn:
+                        turn_result = TurnAnalyzer(settings=settings).analyze(
+                            poses,
+                            job_id=job_id,
+                            video_id=video_id,
+                            output_dir=art / "turn",
+                            view_hint=view_hint,
+                            stroke_hint=stroke_hint,
+                            turn_type_hint=options.get("turn_type_hint"),
+                            surface_stroke_entry_frames=surface_entries or None,
+                            underwater_kick_frames=uw_kicks or None,
+                            breakout_frame=uw_breakout,
+                            **wall_kwargs,
+                        )
+                        job.turn = {
+                            "summary": turn_result.summary,
+                            "artifact_paths": turn_result.artifact_paths,
+                            "calibration": turn_result.calibration,
+                            "events": turn_result.events,
+                            "metrics": turn_result.metrics,
+                            "quality_flags": turn_result.quality_flags,
+                            "view_supported": turn_result.view_supported,
+                        }
+                        job.limitations = list(
+                            dict.fromkeys([*job.limitations, *turn_result.limitations])
+                        )
+                    if run_finish:
+                        finish_result = FinishAnalyzer(settings=settings).analyze(
+                            poses,
+                            job_id=job_id,
+                            video_id=video_id,
+                            output_dir=art / "finish",
+                            view_hint=view_hint,
+                            stroke_hint=stroke_hint,
+                            surface_stroke_entry_frames=surface_entries or None,
+                            **wall_kwargs,
+                        )
+                        job.finish = {
+                            "summary": finish_result.summary,
+                            "artifact_paths": finish_result.artifact_paths,
+                            "calibration": finish_result.calibration,
+                            "events": finish_result.events,
+                            "metrics": finish_result.metrics,
+                            "quality_flags": finish_result.quality_flags,
+                            "view_supported": finish_result.view_supported,
+                        }
+                        job.limitations = list(
+                            dict.fromkeys([*job.limitations, *finish_result.limitations])
+                        )
+                    if job.status == JobStatus.detecting_events:
+                        job.transition(JobStatus.calculating_metrics, progress=0.96)
+                        store.save(job)
+                    elif job.status == JobStatus.calculating_metrics:
+                        job.progress = max(job.progress, 0.96)
+                        store.save(job)
+                    job.model_versions["milestone"] = "7"
+                    job.model_versions["turn_finish"] = "framework_v1"
 
         if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
