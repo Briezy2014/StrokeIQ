@@ -22,10 +22,19 @@ Put real Supabase values:
 SUPABASE_URL=https://YOURPROJECT.supabase.co
 SUPABASE_ANON_KEY=eyJ...your_anon_key...
 ANALYSIS_API_BASE_URL=http://localhost:8080
-VIDEO_ENGINE_V2=true
+VIDEO_ENGINE_V2=false
 VIDEO_ENGINE_V2_ALLOWLIST=
 VIDEO_ENGINE_V2_DUAL_RUN=false
 ```
+
+Keep `VIDEO_ENGINE_V2=false` until the Python Elite analysis server is running.  
+With V2 off, Video Lab uses the working path + AI consent dialog.
+
+If you already turned V2 on and see “analysis service is temporarily unavailable”, double-click:
+
+`USE-WORKING-VIDEO-LAB.bat`
+
+then restart with `START-SWIMIQ.bat`.
 
 Save and close Notepad.
 

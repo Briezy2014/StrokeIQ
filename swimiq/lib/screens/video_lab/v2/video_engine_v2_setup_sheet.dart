@@ -15,17 +15,22 @@ class VideoEngineV2SetupSheet extends ConsumerStatefulWidget {
     required this.video,
     this.swimmerKey,
     this.displayName,
+    this.onFallbackLegacy,
   });
 
   final SwimVideo video;
   final String? swimmerKey;
   final String? displayName;
 
+  /// Called when the Elite analysis API is down so the app can run legacy analysis.
+  final VoidCallback? onFallbackLegacy;
+
   static Future<void> open(
     BuildContext context, {
     required SwimVideo video,
     String? swimmerKey,
     String? displayName,
+    VoidCallback? onFallbackLegacy,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -33,6 +38,7 @@ class VideoEngineV2SetupSheet extends ConsumerStatefulWidget {
           video: video,
           swimmerKey: swimmerKey,
           displayName: displayName,
+          onFallbackLegacy: onFallbackLegacy,
         ),
       ),
     );

@@ -55,7 +55,9 @@ $api = [string]$envMap['ANALYSIS_API_BASE_URL']
 $v2 = [string]$envMap['VIDEO_ENGINE_V2']
 
 if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://localhost:8080' }
-if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'true' }
+# Default OFF until the Python analysis server is running locally.
+# Legacy Video Lab (Edge Function + consent dialog) stays fully usable.
+if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'false' }
 
 Write-Host "SUPABASE_URL=$url"
 if ([string]::IsNullOrWhiteSpace($key)) {
