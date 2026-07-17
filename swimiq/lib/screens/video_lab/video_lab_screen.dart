@@ -190,6 +190,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       subscription: subscription,
     );
 
+    // Elite Video Lab is the only analysis path when V2 is enabled (unless dual-run).
     if (v2Allowed && !forceLegacy) {
       final consented = await AiDataConsentDialog.ensureGranted(context);
       if (!consented || !mounted) return;
@@ -201,11 +202,19 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         video: video,
         swimmerKey: swimmer ?? video.swimmer,
         displayName: swimmer ?? video.swimmer,
-        onFallbackLegacy: () {
-          // Ignore async gap: user explicitly chose legacy from the offline dialog.
-          // ignore: discarded_futures
-          _runAnalysis(video, forceLegacy: true);
-        },
+      );
+      return;
+    }
+
+    // Legacy path only when Elite V2 is off, or dual-run + forceLegacy.
+    if (v2Allowed && !FeatureFlags.videoEngineLegacyEnabled) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Elite Video Lab is required. Start the analysis server, then try again.',
+          ),
+        ),
       );
       return;
     }

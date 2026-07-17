@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/feature_flags.dart';
 import '../core/constants/app_constants.dart';
 import '../core/models/subscription_plan.dart';
 import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
+import '../services/auth_service.dart';
 import '../widgets/swimiq_tab_banner.dart';
 import '../widgets/swimiq_header.dart';
 import '../widgets/subscription_upgrade_panel.dart';
@@ -113,6 +115,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final swimmer = ref.watch(activeSwimmerProvider)!;
     final selectedIndex = ref.watch(homeTabIndexProvider);
     final subscription = ref.watch(subscriptionStateProvider).value;
+    final email = ref.watch(currentUserProvider)?.email;
+    final eliteVideo = FeatureFlags.isVideoEngineV2Allowed(
+      email: email,
+      subscription: subscription,
+    );
+    final videoTabLabel = eliteVideo ? 'Elite' : 'Video';
 
     return Scaffold(
       appBar: AppBar(
@@ -171,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
               _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
               _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
-              _dest(Icons.videocam_outlined, Icons.videocam, 'Video', HomeTab.videoLab, subscription),
+              _dest(Icons.videocam_outlined, Icons.videocam, videoTabLabel, HomeTab.videoLab, subscription),
               _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
             ],
           ),

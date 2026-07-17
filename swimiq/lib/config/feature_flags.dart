@@ -11,7 +11,8 @@ abstract final class FeatureFlags {
 
   static bool get videoEngineV2Enabled => Env.videoEngineV2;
 
-  /// Legacy Gemini path stays on when V2 is off, or when dual-run is enabled.
+  /// Legacy Gemini path only when V2 is off, or dual-run is explicitly enabled.
+  /// When V2 is on and dual-run is off, the old Video Lab analyze path is hidden.
   static bool get videoEngineLegacyEnabled =>
       !videoEngineV2Enabled || Env.videoEngineV2DualRun;
 

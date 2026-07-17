@@ -15,22 +15,17 @@ class VideoEngineV2SetupSheet extends ConsumerStatefulWidget {
     required this.video,
     this.swimmerKey,
     this.displayName,
-    this.onFallbackLegacy,
   });
 
   final SwimVideo video;
   final String? swimmerKey;
   final String? displayName;
 
-  /// Called when the Elite analysis API is down so the app can run legacy analysis.
-  final VoidCallback? onFallbackLegacy;
-
   static Future<void> open(
     BuildContext context, {
     required SwimVideo video,
     String? swimmerKey,
     String? displayName,
-    VoidCallback? onFallbackLegacy,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -38,7 +33,6 @@ class VideoEngineV2SetupSheet extends ConsumerStatefulWidget {
           video: video,
           swimmerKey: swimmerKey,
           displayName: displayName,
-          onFallbackLegacy: onFallbackLegacy,
         ),
       ),
     );
@@ -122,37 +116,17 @@ class _VideoEngineV2SetupSheetState
       final unavailable = e.errorCode == 'SERVER_UNAVAILABLE' ||
           e.errorCode == 'SERVICE_UNAVAILABLE' ||
           e.message.toLowerCase().contains('unavailable');
-      if (unavailable && widget.onFallbackLegacy != null) {
-        final useLegacy = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Elite analysis server is offline'),
-            content: const Text(
-              'The new Elite Video Lab server is not running on this computer, '
-              'so Confirm & Analyze cannot finish.\n\n'
-              'You can run the working Video Lab analysis instead '
-              '(includes the AI consent / legality step).',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Run working analysis'),
-              ),
-            ],
-          ),
-        );
-        if (useLegacy == true && mounted) {
-          Navigator.of(context).pop();
-          widget.onFallbackLegacy!();
-        }
-        return;
-      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+        SnackBar(
+          content: Text(
+            unavailable
+                ? 'Elite analysis server is offline. Double-click '
+                    'START-ELITE-ANALYSIS-SERVER.bat, wait for it to say running, '
+                    'then tap Confirm & Analyze again.'
+                : e.message,
+          ),
+          duration: const Duration(seconds: 10),
+        ),
       );
     } catch (e) {
       if (!mounted) return;

@@ -74,22 +74,33 @@ try {
     Pop-Location
 }
 
-# Keep Video on the working legacy path until the Elite Python server is running.
+# Elite Video Lab is the product Video experience (old Gemini tab path stays off).
 try {
     $envLines = Get-Content -LiteralPath $envFile
     $out = @()
-    $found = $false
+    $foundV2 = $false
+    $foundApi = $false
+    $foundDual = $false
     foreach ($line in $envLines) {
         if ($line -match '^\s*VIDEO_ENGINE_V2\s*=') {
-            $out += 'VIDEO_ENGINE_V2=false'
-            $found = $true
+            $out += 'VIDEO_ENGINE_V2=true'
+            $foundV2 = $true
+        } elseif ($line -match '^\s*ANALYSIS_API_BASE_URL\s*=') {
+            $out += 'ANALYSIS_API_BASE_URL=http://localhost:8080'
+            $foundApi = $true
+        } elseif ($line -match '^\s*VIDEO_ENGINE_V2_DUAL_RUN\s*=') {
+            $out += 'VIDEO_ENGINE_V2_DUAL_RUN=false'
+            $foundDual = $true
         } else {
             $out += $line
         }
     }
-    if (-not $found) { $out += 'VIDEO_ENGINE_V2=false' }
+    if (-not $foundV2) { $out += 'VIDEO_ENGINE_V2=true' }
+    if (-not $foundApi) { $out += 'ANALYSIS_API_BASE_URL=http://localhost:8080' }
+    if (-not $foundDual) { $out += 'VIDEO_ENGINE_V2_DUAL_RUN=false' }
     Set-Content -LiteralPath $envFile -Value $out -Encoding UTF8
-    Write-Host '[OK] VIDEO_ENGINE_V2=false (working Video Lab path)' -ForegroundColor Green
+    Write-Host '[OK] VIDEO_ENGINE_V2=true (Elite Video Lab)' -ForegroundColor Green
+    Write-Host '     Start Elite server with START-ELITE-ANALYSIS-SERVER.bat before Analyze.' -ForegroundColor Yellow
 } catch {
     Write-Host '[WARN] Could not update VIDEO_ENGINE_V2 in .env' -ForegroundColor Yellow
 }
