@@ -12,10 +12,7 @@ void main() {
   testWidgets('login brand shows square icon slot', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          backgroundColor: Colors.white,
-          body: SwimIqLoginBrand(),
-        ),
+        home: Scaffold(backgroundColor: Colors.white, body: SwimIqLoginBrand()),
       ),
     );
     await tester.pumpAndSettle();
@@ -26,11 +23,7 @@ void main() {
 
   testWidgets('full lockup widget builds', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: SwimIqFullLockup(width: 200),
-        ),
-      ),
+      const MaterialApp(home: Scaffold(body: SwimIqFullLockup(width: 200))),
     );
     await tester.pumpAndSettle();
 
@@ -39,11 +32,7 @@ void main() {
 
   testWidgets('compact mark widget builds', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: SwimIqCompactMark(size: 48),
-        ),
-      ),
+      const MaterialApp(home: Scaffold(body: SwimIqCompactMark(size: 48))),
     );
     await tester.pumpAndSettle();
 
@@ -51,14 +40,8 @@ void main() {
   });
 
   test('login uses icon.png first', () {
-    expect(
-      SwimIqBranding.loginIconCandidates.first,
-      SwimIqBranding.iconAsset,
-    );
-    expect(
-      SwimIqBranding.compactCandidates.first,
-      SwimIqBranding.markAsset,
-    );
+    expect(SwimIqBranding.loginIconCandidates.first, SwimIqBranding.iconAsset);
+    expect(SwimIqBranding.compactCandidates.first, SwimIqBranding.markAsset);
     expect(AppConstants.brandIconAsset, SwimIqBranding.iconAsset);
     expect(AppConstants.brandLogoAsset, 'assets/branding/logo.png');
     expect(AppConstants.brandIconSizePx, 512);
@@ -72,7 +55,8 @@ void main() {
     expect(
       icon.readAsBytesSync(),
       logo.readAsBytesSync(),
-      reason: 'icon.png and logo.png must be identical — login reads icon.png only',
+      reason:
+          'icon.png and logo.png must be identical — login reads icon.png only',
     );
   });
 }

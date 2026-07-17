@@ -18,6 +18,8 @@ SMALL SWIMMER MARK (optional tiny slots):
 NOT USED BY THE APP (ignored):
   swimiq_icon.png, swimiq_logo.png in this folder
   assets/images/swimiq_logo.png is source art only — login does not read it
+  If you keep swimiq_logo.png for the website/Godaddy workflow, treat it as
+  source/reference art only. Runtime branding still reads icon/banner/mark.
 
 VERIFY ON WINDOWS:
   Run DIAGNOSE.bat — it shows which files exist and warns on mismatches.

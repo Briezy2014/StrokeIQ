@@ -1,0 +1,58 @@
+{
+  "name": "variable_frame_rate",
+  "view": "side",
+  "fps": 30.0,
+  "n_cycles": 4,
+  "entry_frames": [
+    0,
+    33,
+    67,
+    103,
+    138
+  ],
+  "cycles": [
+    {
+      "cycle_index": 0,
+      "start_frame": 0,
+      "end_frame": 33,
+      "start_ms": 0.0,
+      "end_ms": 1208.9527220419495,
+      "duration_s": 1.2089527220419496
+    },
+    {
+      "cycle_index": 1,
+      "start_frame": 33,
+      "end_frame": 67,
+      "start_ms": 1208.9527220419495,
+      "end_ms": 2389.4686626505963,
+      "duration_s": 1.180515940608647
+    },
+    {
+      "cycle_index": 2,
+      "start_frame": 67,
+      "end_frame": 103,
+      "start_ms": 2389.4686626505963,
+      "end_ms": 3582.740084292992,
+      "duration_s": 1.1932714216423954
+    },
+    {
+      "cycle_index": 3,
+      "start_frame": 103,
+      "end_frame": 138,
+      "start_ms": 3582.740084292992,
+      "end_ms": 4791.709184699738,
+      "duration_s": 1.2089691004067462
+    }
+  ],
+  "breath_frames": [
+    11,
+    12,
+    45,
+    80,
+    81,
+    115,
+    116
+  ],
+  "breath_every": 1,
+  "notes": "Manually defined synthetic butterfly kinematics with labeled entry boundaries."
+}

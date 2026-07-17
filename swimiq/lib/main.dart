@@ -37,7 +37,9 @@ Future<void> main() async {
 
 Future<void> _loadEnvironment() async {
   try {
-    await dotenv.load(fileName: '.env');
+    // Optional local file load (mobile/desktop). Flutter web Chrome launches
+    // should pass --dart-define from START-SWIMIQ.bat / start_swimiq.ps1.
+    await dotenv.load(fileName: '.env', isOptional: true);
     Env.loadFromDotenv(dotenv.env);
   } catch (_) {
     // dart-define values are used when .env is unavailable.

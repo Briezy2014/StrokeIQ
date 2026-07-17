@@ -13,6 +13,8 @@ import '../core/services/stripe_checkout_service.dart';
 import '../core/services/subscription_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/services/usa_standards_service.dart';
+import '../core/services/video_analytics_service.dart';
+import '../core/services/video_engine_v2_service.dart';
 import '../core/services/video_storage_service.dart';
 import '../data/repositories/swimiq_repository.dart';
 
@@ -70,6 +72,16 @@ final videoStorageServiceProvider = Provider<VideoStorageService>(
   (ref) => VideoStorageService(
     ref.watch(supabaseClientProvider),
     ref.watch(swimIqRepositoryProvider),
+  ),
+);
+
+final videoAnalyticsServiceProvider = Provider<VideoAnalyticsService>(
+  (ref) => const VideoAnalyticsService(),
+);
+
+final videoEngineV2ServiceProvider = Provider<VideoEngineV2Service>(
+  (ref) => VideoEngineV2Service(
+    supabase: ref.watch(supabaseClientProvider),
   ),
 );
 

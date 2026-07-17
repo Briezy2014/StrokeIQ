@@ -20,6 +20,7 @@ import 'package:swimiq/screens/personal_bests/personal_bests_screen.dart';
 import 'package:swimiq/screens/training_log/training_log_screen.dart';
 import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
+import 'package:swimiq/services/auth_service.dart';
 import 'package:swimiq/widgets/swimiq_logo.dart';
 
 import 'support/motivational_standards_test_helper.dart';
@@ -77,9 +78,6 @@ SwimmerData _buildHarnessData() {
   );
 
   final meetResults = pbTitles.asMap().entries.map((entry) {
-    final parts = entry.value.split(' ');
-    final distance = int.parse(parts.first);
-    final stroke = parts.sublist(1).join(' ');
     return MeetResult(
       swimmerName: _fixture['swimmer'] as String,
       meetName: _fixture['nextMeet'] as String,
@@ -141,8 +139,11 @@ Widget _screenHarness(Widget screen) {
   _harnessData = _buildHarnessData();
   return ProviderScope(
     overrides: [
-      activeSwimmerProvider.overrideWith((ref) => _fixture['swimmer'] as String),
+      activeSwimmerProvider.overrideWith(
+        (ref) => _fixture['swimmer'] as String,
+      ),
       swimmerDataProvider.overrideWith(_HarnessSwimmerDataNotifier.new),
+      currentUserProvider.overrideWith((ref) => null),
       ...subscriptionTestOverrides,
     ],
     child: MaterialApp(
@@ -165,7 +166,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final data = _harnessData!;
-      expect(find.text(data.displayName(_fixture['swimmer'] as String)), findsOneWidget);
+      expect(
+        find.text(data.displayName(_fixture['swimmer'] as String)),
+        findsOneWidget,
+      );
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
@@ -195,7 +199,10 @@ void main() {
       await tester.pumpWidget(_screenHarness(const AthletePassportV2Screen()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
+      expect(
+        find.textContaining(_fixture['displayName'] as String),
+        findsWidgets,
+      );
       expect(find.text('USA Swimming'), findsOneWidget);
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
 
@@ -253,10 +260,7 @@ void main() {
 
       final pbCount = _harnessData!.personalBests.length;
       expect(find.text('Personal Bests'), findsOneWidget);
-      expect(
-        find.textContaining('$pbCount official meet PBs'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('$pbCount official meet PBs'), findsOneWidget);
       expect(find.text('Upload best times'), findsOneWidget);
       expect(find.byType(SwimIqCompactMark), findsNothing);
     });
@@ -276,10 +280,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Meet Results'), findsOneWidget);
-      expect(
-        find.textContaining('Top cut:'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Top cut:'), findsOneWidget);
     });
 
     testWidgets('USA Standards', (tester) async {

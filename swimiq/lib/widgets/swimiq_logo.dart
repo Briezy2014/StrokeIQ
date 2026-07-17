@@ -6,11 +6,7 @@ import 'swimiq_branding.dart';
 
 /// Small slot: swimmer mark only (zooms full lockup PNG to the icon region).
 class SwimIqCompactMark extends StatelessWidget {
-  const SwimIqCompactMark({
-    super.key,
-    this.size = 48,
-    this.borderRadius = 12,
-  });
+  const SwimIqCompactMark({super.key, this.size = 48, this.borderRadius = 12});
 
   final double size;
   final double borderRadius;
@@ -42,10 +38,7 @@ class SwimIqCompactMark extends StatelessWidget {
 
 /// Login / signup: full square app icon (icon.png) — contain, never zoom/crop.
 class SwimIqLoginBrand extends StatelessWidget {
-  const SwimIqLoginBrand({
-    super.key,
-    this.size = 200,
-  });
+  const SwimIqLoginBrand({super.key, this.size = 200});
 
   final double size;
 
@@ -93,6 +86,7 @@ class SwimIqFullLockup extends StatelessWidget {
 
   final double width;
   final double borderRadius;
+
   /// Black frame — use on white login/signup cards so the lockup always reads.
   final bool framed;
 
@@ -132,10 +126,7 @@ class SwimIqFullLockup extends StatelessWidget {
 }
 
 class _FullLockupFallback extends StatelessWidget {
-  const _FullLockupFallback({
-    required this.width,
-    required this.borderRadius,
-  });
+  const _FullLockupFallback({required this.width, required this.borderRadius});
 
   final double width;
   final double borderRadius;
@@ -166,11 +157,7 @@ class _FullLockupFallback extends StatelessWidget {
 
 /// Legacy alias — compact mark for tight slots.
 class SwimIqLogo extends StatelessWidget {
-  const SwimIqLogo({
-    super.key,
-    this.size = 72,
-    this.borderRadius = 16,
-  });
+  const SwimIqLogo({super.key, this.size = 72, this.borderRadius = 16});
 
   final double size;
   final double borderRadius;
@@ -194,10 +181,7 @@ class SwimIqHeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SwimIqFullLockup(
-        width: height * 1.4,
-        borderRadius: borderRadius,
-      ),
+      child: SwimIqFullLockup(width: height * 1.4, borderRadius: borderRadius),
     );
   }
 }
@@ -233,8 +217,14 @@ class SwimIqWordmark extends StatelessWidget {
                 letterSpacing: 0.8,
               ),
               children: [
-                TextSpan(text: 'Swim', style: TextStyle(color: swimColor)),
-                TextSpan(text: 'IQ', style: TextStyle(color: iqColor)),
+                TextSpan(
+                  text: 'Swim',
+                  style: TextStyle(color: swimColor),
+                ),
+                TextSpan(
+                  text: 'IQ',
+                  style: TextStyle(color: iqColor),
+                ),
               ],
             ),
           ),

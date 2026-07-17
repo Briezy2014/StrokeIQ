@@ -1,4 +1,4 @@
 @echo off
+REM Back-compat wrapper — same as START-SWIMIQ.bat
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-chrome.ps1"
-if errorlevel 1 pause
+call "%~dp0START-SWIMIQ.bat"

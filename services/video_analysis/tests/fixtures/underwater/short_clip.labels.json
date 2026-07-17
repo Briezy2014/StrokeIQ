@@ -1,0 +1,116 @@
+{
+  "name": "short_clip",
+  "view": "side",
+  "fps": 30.0,
+  "kick_frames": [],
+  "kick_count": 0,
+  "water_entry_frame": null,
+  "underwater_start_frame": 0,
+  "underwater_end_frame": 9,
+  "breakout_frame": null,
+  "first_surface_stroke_frame": null,
+  "notes": "Short clip.",
+  "scenario": "short_clip",
+  "track_observations": [
+    {
+      "frame_number": 0,
+      "timestamp_ms": 0.0,
+      "bbox": [
+        80.0,
+        190.0,
+        400.0,
+        365.0
+      ]
+    },
+    {
+      "frame_number": 1,
+      "timestamp_ms": 33.333333333333336,
+      "bbox": [
+        80.0,
+        187.57648442691752,
+        400.0,
+        376.3097393410516
+      ]
+    },
+    {
+      "frame_number": 2,
+      "timestamp_ms": 66.66666666666667,
+      "bbox": [
+        80.0,
+        185.66853475912276,
+        400.0,
+        385.2135044574271
+      ]
+    },
+    {
+      "frame_number": 3,
+      "timestamp_ms": 100.0,
+      "bbox": [
+        80.0,
+        184.68203813373407,
+        400.0,
+        389.81715537590765
+      ]
+    },
+    {
+      "frame_number": 4,
+      "timestamp_ms": 133.33333333333334,
+      "bbox": [
+        80.0,
+        184.82685663349636,
+        400.0,
+        389.1413357103503
+      ]
+    },
+    {
+      "frame_number": 5,
+      "timestamp_ms": 166.66666666666666,
+      "bbox": [
+        80.0,
+        186.07218233550554,
+        400.0,
+        383.3298157676408
+      ]
+    },
+    {
+      "frame_number": 6,
+      "timestamp_ms": 200.0,
+      "bbox": [
+        80.0,
+        188.1530912260414,
+        400.0,
+        373.61890761180683
+      ]
+    },
+    {
+      "frame_number": 7,
+      "timestamp_ms": 233.33333333333334,
+      "bbox": [
+        80.0,
+        190.62690173627624,
+        400.0,
+        362.0744585640442
+      ]
+    },
+    {
+      "frame_number": 8,
+      "timestamp_ms": 266.6666666666667,
+      "bbox": [
+        80.0,
+        192.96734848158235,
+        400.0,
+        351.1523737526157
+      ]
+    },
+    {
+      "frame_number": 9,
+      "timestamp_ms": 300.0,
+      "bbox": [
+        80.0,
+        194.67653718043596,
+        400.0,
+        343.1761598246322
+      ]
+    }
+  ]
+}

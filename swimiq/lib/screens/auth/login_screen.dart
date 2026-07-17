@@ -47,7 +47,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authServiceProvider).signIn(
+      await ref
+          .read(authServiceProvider)
+          .signIn(
             email: _emailController.text,
             password: _passwordController.text,
           );
@@ -100,7 +102,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
     try {
-      await ref.read(authServiceProvider).signIn(
+      await ref
+          .read(authServiceProvider)
+          .signIn(
             email: OwnerAccountConstants.email,
             password: OwnerAccountConstants.password,
           );
@@ -134,93 +138,93 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                        const Center(
-                          child: SwimIqLoginBrand(),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Welcome back',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        if (_errorMessage != null) ...[
-                          _ErrorBanner(message: _errorMessage!),
-                          if (_emailController.text.trim().toLowerCase() ==
-                              OwnerAccountConstants.email.toLowerCase())
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                'This owner account must be created at supabase.com '
-                                '(Authentication → Users → Add user). '
-                                'Or sign in with briezy682014@gmail.com — that account already works.',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Colors.grey.shade800,
-                                      height: 1.35,
-                                    ),
-                              ),
+                            const Center(child: SwimIqLoginBrand()),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Welcome back',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                          const SizedBox(height: 16),
-                        ],
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          autocorrect: false,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: AuthValidators.email,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                            const SizedBox(height: 24),
+                            if (_errorMessage != null) ...[
+                              _ErrorBanner(message: _errorMessage!),
+                              if (_emailController.text.trim().toLowerCase() ==
+                                  OwnerAccountConstants.email.toLowerCase())
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Text(
+                                    'This owner account must be created at supabase.com '
+                                    '(Authentication → Users → Add user). '
+                                    'Or sign in with briezy682014@gmail.com — that account already works.',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Colors.grey.shade800,
+                                          height: 1.35,
+                                        ),
+                                  ),
+                                ),
+                              const SizedBox(height: 16),
+                            ],
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              autocorrect: false,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email_outlined),
                               ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
+                              validator: AuthValidators.email,
                             ),
-                          ),
-                          validator: AuthValidators.password,
-                        ),
-                        const SizedBox(height: 24),
-                        LoadingButton(
-                          label: 'Sign In',
-                          isLoading: _isLoading,
-                          onPressed: _submit,
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: widget.onSwitchToSignup,
-                          child: const Text('Create an account'),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: _isLoading ? null : _coachAccess,
-                          icon: const Icon(Icons.school_outlined, size: 18),
-                          label: const Text('Coach access'),
-                        ),
-                        if (!kReleaseMode) ...[
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: _isLoading ? null : _ownerLogin,
-                            child: const Text('Owner test login (Elite AI)'),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
+                                ),
+                              ),
+                              validator: AuthValidators.password,
+                            ),
+                            const SizedBox(height: 24),
+                            LoadingButton(
+                              label: 'Sign In',
+                              isLoading: _isLoading,
+                              onPressed: _submit,
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: widget.onSwitchToSignup,
+                              child: const Text('Create an account'),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _coachAccess,
+                              icon: const Icon(Icons.school_outlined, size: 18),
+                              label: const Text('Coach access'),
+                            ),
+                            if (!kReleaseMode) ...[
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: _isLoading ? null : _ownerLogin,
+                                child: const Text(
+                                  'Owner test login (Elite AI)',
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -252,10 +256,7 @@ class _ErrorBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.red.shade200),
       ),
-      child: Text(
-        message,
-        style: TextStyle(color: Colors.red.shade800),
-      ),
+      child: Text(message, style: TextStyle(color: Colors.red.shade800)),
     );
   }
 }

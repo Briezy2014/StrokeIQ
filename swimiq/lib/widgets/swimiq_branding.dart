@@ -77,6 +77,7 @@ class SwimIqBrandedImage extends StatefulWidget {
   final Alignment alignment;
   final double borderRadius;
   final Widget? fallback;
+
   /// When true, zooms into the top of a full lockup so the swimmer mark fills the slot.
   final bool zoomToMark;
 
@@ -125,7 +126,8 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
     final w = widget.width;
     final h = widget.height;
 
-    final isFullLockup = _resolvedPath != null &&
+    final isFullLockup =
+        _resolvedPath != null &&
         SwimIqBranding.fullLockupCandidates.contains(_resolvedPath);
 
     if (!_resolved) {
@@ -170,8 +172,7 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
     );
 
     // Never zoom full lockup PNGs — zoom was cropping to empty black padding.
-    final shouldZoom =
-        widget.zoomToMark && !isFullLockup && !_isMarkOnly;
+    final shouldZoom = widget.zoomToMark && !isFullLockup && !_isMarkOnly;
     if (shouldZoom && w != null && h != null) {
       image = ClipRect(
         child: SizedBox(

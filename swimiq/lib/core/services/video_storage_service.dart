@@ -27,16 +27,25 @@ class VideoStorageService {
     String? notes,
   }) async {
     final ext = p.extension(fileName);
-    final storagePath =
-        '$swimmer/${_uuid.v4()}${ext.isEmpty ? '.mp4' : ext}';
+    final extension = ext.isEmpty ? '.mp4' : ext;
+    final userId = _client.auth.currentUser?.id;
+    // Prefer `{userId}/{uuid}{ext}` for private storage RLS when authenticated.
+    final storagePath = userId != null && userId.isNotEmpty
+        ? '$userId/${_uuid.v4()}$extension'
+        : '$swimmer/${_uuid.v4()}$extension';
 
-    await _client.storage.from(bucketName).uploadBinary(
+    await _client.storage
+        .from(bucketName)
+        .uploadBinary(
           storagePath,
           bytes,
           fileOptions: const FileOptions(upsert: true),
         );
 
-    final publicUrl = _client.storage.from(bucketName).getPublicUrl(storagePath);
+    // Legacy public URL helper (V2 playback should prefer signed URLs from API).
+    final publicUrl = _client.storage
+        .from(bucketName)
+        .getPublicUrl(storagePath);
 
     final video = SwimVideo(
       swimmer: swimmer,
@@ -47,6 +56,7 @@ class VideoStorageService {
       storagePath: storagePath,
       videoUrl: publicUrl,
       notes: notes,
+      userId: userId,
     );
 
     return _repository.insertSwimVideo(video);
@@ -54,6 +64,27 @@ class VideoStorageService {
 
   Future<Uint8List> downloadVideoBytes(String storagePath) async {
     return _client.storage.from(bucketName).download(storagePath);
+  }
+
+  /// Playback URL for private `swim-videos` objects.
+  /// Prefers a short-lived signed URL; falls back to stored `videoUrl`.
+  Future<String?> resolvePlaybackUrl(
+    SwimVideo video, {
+    int expiresIn = 3600,
+  }) async {
+    final path = video.storagePath.trim();
+    if (path.isNotEmpty) {
+      try {
+        return await _client.storage
+            .from(bucketName)
+            .createSignedUrl(path, expiresIn);
+      } catch (_) {
+        // Fall through to legacy/public URL when signing is unavailable.
+      }
+    }
+    final url = video.videoUrl?.trim();
+    if (url == null || url.isEmpty) return null;
+    return url;
   }
 
   Future<void> deleteSwimVideo({
