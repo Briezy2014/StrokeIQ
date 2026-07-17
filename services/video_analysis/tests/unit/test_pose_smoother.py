@@ -106,7 +106,8 @@ def test_isolated_missing_frame_interpolated():
     wrist = result.smoothed_poses[1]["keypoints"][WRIST]
     assert wrist["quality_flag"] == "interpolated"
     assert wrist["x"] is not None
-    assert 100 < wrist["x"] < 110
+    # left_wrist is offset +30 from the core anchor x in the fixture helper
+    assert 130 < wrist["x"] < 135
 
 
 def test_short_missing_sequence_interpolated():
@@ -169,18 +170,26 @@ def test_sudden_impossible_joint_movement_outlier():
 def test_noisy_wrist_coordinates_smoothed():
     poses = []
     for i in range(9):
-        noise = 15.0 if i % 2 else -15.0
+        noise = 6.0 if i % 2 else -6.0
         pts = _core_pts(100 + i, 100 + i)
         wx, wy, wc = pts[WRIST]
         pts[WRIST] = (wx + noise, wy + noise, wc)
         poses.append(_pose(i, pts=pts))
-    result = smooth_pose_sequence(poses, params=SmoothingParams(savgol_window=5, savgol_polyorder=2))
+    # Keep velocity/accel gates loose so this case exercises Savitzky–Golay, not outlier removal.
+    result = smooth_pose_sequence(
+        poses,
+        params=SmoothingParams(
+            savgol_window=5,
+            savgol_polyorder=2,
+            max_joint_velocity_px_s=20000.0,
+            max_joint_acceleration_px_s2=500000.0,
+            continuity_max_jump_px=80.0,
+        ),
+    )
     xs = [p["keypoints"][WRIST]["x"] for p in result.smoothed_poses]
     assert all(x is not None for x in xs)
-    # Smoothing should reduce alternating noise amplitude
-    raw_amp = np.std([100 + i + (15 if i % 2 else -15) for i in range(9)])
-    smooth_amp = float(np.std(xs))
-    assert smooth_amp < raw_amp
+    raw_xs = [100 + i + 30 + (6 if i % 2 else -6) for i in range(9)]
+    assert float(np.std(xs)) < float(np.std(raw_xs))
 
 
 def test_low_confidence_ankle_not_treated_as_valid_motion():

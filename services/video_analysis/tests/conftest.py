@@ -70,7 +70,7 @@ def settings(tmp_path: Path) -> Settings:
         pose_smoothing_enabled=True,
         max_interpolation_gap_frames=3,
         max_joint_velocity_px_s=2500.0,
-        max_joint_acceleration_px_s2=15000.0,
+        max_joint_acceleration_px_s2=80000.0,
         continuity_max_jump_px=100.0,
         savgol_window=5,
         savgol_polyorder=2,

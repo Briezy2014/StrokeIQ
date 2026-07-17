@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     pose_smoothing_enabled: bool = True
     max_interpolation_gap_frames: int = 3
     max_joint_velocity_px_s: float = 2500.0
-    max_joint_acceleration_px_s2: float = 15000.0
+    max_joint_acceleration_px_s2: float = 80000.0
     continuity_max_jump_px: float = 100.0
     savgol_window: int = 5
     savgol_polyorder: int = 2

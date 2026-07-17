@@ -1,4 +1,4 @@
-"""Signal processing helpers — expanded when pose smoothing lands."""
+"""Signal processing helpers (shared utilities; pose smoothing lives in pose_smoother)."""
 
 from __future__ import annotations
 

@@ -33,7 +33,8 @@ class SmoothingParams:
     max_interpolation_gap_frames: int = 3
     # Velocity/acceleration use timestamps (supports variable frame rate).
     max_joint_velocity_px_s: float = 2500.0
-    max_joint_acceleration_px_s2: float = 15000.0
+    # High enough to tolerate small keypoint jitter; teleports still fail velocity/continuity.
+    max_joint_acceleration_px_s2: float = 80000.0
     # Hard frame-to-frame continuity ceiling (teleport detection), fps-independent.
     continuity_max_jump_px: float = 100.0
     savgol_window: int = 5
@@ -238,7 +239,9 @@ def smooth_pose_sequence(
             for j in CORE_BODY_INDICES
             if j < k and kps_out[j]["x"] is not None and kps_out[j]["quality_flag"] in {"valid", "interpolated"}
         )
-        overall = float(np.nanmean(confs[i])) if np.any(confs[i] > 0) else 0.0
+        # Average over observed keypoints only — do not dilute with unused WholeBody slots.
+        observed = confs[i][confs[i] > 0]
+        overall = float(np.mean(observed)) if observed.size else 0.0
         usable = (
             core_valid >= params.usable_frame_min_core_joints
             and overall >= params.usable_frame_min_confidence
@@ -317,43 +320,52 @@ def _mark_outliers_1d(
     j: int,
     params: SmoothingParams,
 ) -> None:
+    """Reject impossible jumps using the last valid sample (not only i-1)."""
     n = len(xs)
-    for i in range(1, n):
-        if flags[i][j] != "valid" or flags[i - 1][j] != "valid":
+    last_valid = -1
+    prev_valid = -1
+    for i in range(n):
+        if flags[i][j] != "valid" or np.isnan(xs[i]) or np.isnan(ys[i]):
             continue
-        if np.isnan(xs[i]) or np.isnan(xs[i - 1]):
+        if last_valid < 0:
+            prev_valid = -1
+            last_valid = i
             continue
-        dx = xs[i] - xs[i - 1]
-        dy = ys[i] - ys[i - 1]
+
+        dx = xs[i] - xs[last_valid]
+        dy = ys[i] - ys[last_valid]
         jump = float(np.hypot(dx, dy))
-        dt = float(timestamps_s[i] - timestamps_s[i - 1])
+        dt = float(timestamps_s[i] - timestamps_s[last_valid])
         if dt <= 1e-6:
             dt = 1.0 / 30.0
         speed = jump / dt
-        if jump > params.continuity_max_jump_px or speed > params.max_joint_velocity_px_s:
-            xs[i] = np.nan
-            ys[i] = np.nan
-            flags[i][j] = "outlier_removed"
-            continue
-        if i >= 2 and flags[i - 2][j] == "valid" and not np.isnan(xs[i - 2]):
-            prev_dx = xs[i - 1] - xs[i - 2]
-            prev_dy = ys[i - 1] - ys[i - 2]
-            dt_prev = float(timestamps_s[i - 1] - timestamps_s[i - 2])
+        reject = jump > params.continuity_max_jump_px or speed > params.max_joint_velocity_px_s
+
+        if not reject and prev_valid >= 0:
+            prev_dx = xs[last_valid] - xs[prev_valid]
+            prev_dy = ys[last_valid] - ys[prev_valid]
+            dt_prev = float(timestamps_s[last_valid] - timestamps_s[prev_valid])
             if dt_prev <= 1e-6:
                 dt_prev = 1.0 / 30.0
             vx = dx / dt
             vy = dy / dt
             prev_vx = prev_dx / dt_prev
             prev_vy = prev_dy / dt_prev
-            # Approximate acceleration using average of adjacent dts
             dt_acc = 0.5 * (dt + dt_prev)
-            ax = (vx - prev_vx) / dt_acc
-            ay = (vy - prev_vy) / dt_acc
-            accel = float(np.hypot(ax, ay))
+            if dt_acc <= 1e-6:
+                dt_acc = 1.0 / 30.0
+            accel = float(np.hypot((vx - prev_vx) / dt_acc, (vy - prev_vy) / dt_acc))
             if accel > params.max_joint_acceleration_px_s2:
-                xs[i] = np.nan
-                ys[i] = np.nan
-                flags[i][j] = "outlier_removed"
+                reject = True
+
+        if reject:
+            xs[i] = np.nan
+            ys[i] = np.nan
+            flags[i][j] = "outlier_removed"
+            continue
+
+        prev_valid = last_valid
+        last_valid = i
 
 
 def _interpolate_short_gaps(
