@@ -44,3 +44,8 @@ swimiq/.metadata
 *.swo
 .DS_Store
 Thumbs.db
+
+# Elote analysis service local env
+services/video_analysis/.venv/
+services/video_analysis/analysis_artifacts/
+services/video_analysis/.env
