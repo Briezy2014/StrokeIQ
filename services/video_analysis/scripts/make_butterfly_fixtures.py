@@ -29,33 +29,45 @@ ANKLE_L = COCO_WHOLEBODY_KEYPOINT_NAMES.index("left_ankle")
 ANKLE_R = COCO_WHOLEBODY_KEYPOINT_NAMES.index("right_ankle")
 
 
+# Compact fixtures: only core landmarks used by ButterflyAnalyzer (matched by name).
+_CORE_IDXS = [
+    NOSE,
+    SH_L,
+    SH_R,
+    ELBOW_L,
+    ELBOW_R,
+    WRIST_L,
+    WRIST_R,
+    HIP_L,
+    HIP_R,
+    KNEE_L,
+    KNEE_R,
+    ANKLE_L,
+    ANKLE_R,
+]
+
+
 def _empty_kps() -> list[dict]:
-    return [
-        {
-            "name": name,
-            "x": None,
-            "y": None,
-            "z": None,
-            "confidence": 0.0,
-            "x_crop": None,
-            "y_crop": None,
-            "quality_flag": "unavailable",
-        }
-        for name in COCO_WHOLEBODY_KEYPOINT_NAMES
-    ]
+    return []
 
 
 def _set(kps: list[dict], idx: int, x: float, y: float, conf: float = 0.9, flag: str = "valid") -> None:
-    kps[idx] = {
-        "name": COCO_WHOLEBODY_KEYPOINT_NAMES[idx],
-        "x": float(x),
-        "y": float(y),
+    name = COCO_WHOLEBODY_KEYPOINT_NAMES[idx]
+    payload = {
+        "name": name,
+        "x": float(x) if flag in {"valid", "interpolated"} else None,
+        "y": float(y) if flag in {"valid", "interpolated"} else None,
         "z": None,
         "confidence": conf,
-        "x_crop": float(x),
-        "y_crop": float(y),
+        "x_crop": float(x) if flag in {"valid", "interpolated"} else None,
+        "y_crop": float(y) if flag in {"valid", "interpolated"} else None,
         "quality_flag": flag,
     }
+    for i, kp in enumerate(kps):
+        if kp.get("name") == name:
+            kps[i] = payload
+            return
+    kps.append(payload)
 
 
 def synthesize(
@@ -202,10 +214,6 @@ def synthesize(
         if fi in missing_wrist_frames or splash:
             _set(kps, WRIST_L, lx, ly, conf=0.05, flag="low_confidence")
             _set(kps, WRIST_R, rx, ry, conf=0.05, flag="low_confidence")
-            kps[WRIST_L]["x"] = None
-            kps[WRIST_L]["y"] = None
-            kps[WRIST_R]["x"] = None
-            kps[WRIST_R]["y"] = None
         else:
             _set(kps, WRIST_L, lx - width / 2 + shoulder_w / 2, ly)
             _set(kps, WRIST_R, rx + width / 2 - shoulder_w / 2, ry)
@@ -249,6 +257,7 @@ def write_case(name: str, poses: list[dict], labels: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     pose_path = OUT / f"{name}.smoothed_pose.json"
     label_path = OUT / f"{name}.labels.json"
+    # Compact JSON (no indent) keeps fixture repo size manageable.
     pose_path.write_text(
         json.dumps(
             {
@@ -258,7 +267,7 @@ def write_case(name: str, poses: list[dict], labels: dict) -> None:
                 "filter_method": "synthetic",
                 "poses": poses,
             },
-            indent=2,
+            separators=(",", ":"),
         ),
         encoding="utf-8",
     )
@@ -288,16 +297,12 @@ def main() -> None:
     cases.append(("breath_every_second_cycle", poses, labels))
 
     # missing wrists around mid clip
-    base_poses, base_labels = synthesize(name="missing_wrist_frames", n_cycles=4)
-    miss = set(range(40, 48))
-    for i in miss:
-        if i < len(base_poses):
-            for idx in (WRIST_L, WRIST_R):
-                base_poses[i]["keypoints"][idx]["x"] = None
-                base_poses[i]["keypoints"][idx]["y"] = None
-                base_poses[i]["keypoints"][idx]["confidence"] = 0.0
-                base_poses[i]["keypoints"][idx]["quality_flag"] = "unavailable"
-    base_labels["missing_wrist_frames"] = sorted(miss)
+    base_poses, base_labels = synthesize(
+        name="missing_wrist_frames",
+        n_cycles=4,
+        missing_wrist_frames=set(range(40, 48)),
+    )
+    base_labels["missing_wrist_frames"] = list(range(40, 48))
     cases.append(("missing_wrist_frames", base_poses, base_labels))
 
     poses, labels = synthesize(

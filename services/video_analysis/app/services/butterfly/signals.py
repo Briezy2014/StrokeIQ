@@ -47,10 +47,24 @@ class ButterflySignals:
 
 def _kp_xy(pose: dict[str, Any], name: str) -> tuple[float, float, float, str]:
     kps = pose.get("keypoints") or []
-    idx = IDX[name]
-    if idx >= len(kps) or not isinstance(kps[idx], dict):
+    kp = None
+    idx = IDX.get(name)
+    # Fast path: full COCO-WholeBody positional list from Milestone 3/4.
+    if (
+        idx is not None
+        and len(kps) >= 17
+        and idx < len(kps)
+        and isinstance(kps[idx], dict)
+        and kps[idx].get("name") in {None, name}
+    ):
+        kp = kps[idx]
+    if kp is None:
+        for item in kps:
+            if isinstance(item, dict) and item.get("name") == name:
+                kp = item
+                break
+    if kp is None:
         return np.nan, np.nan, 0.0, "unavailable"
-    kp = kps[idx]
     q = str(kp.get("quality_flag") or ("valid" if kp.get("x") is not None else "unavailable"))
     conf = float(kp.get("confidence") or 0.0)
     x, y = kp.get("x"), kp.get("y")
