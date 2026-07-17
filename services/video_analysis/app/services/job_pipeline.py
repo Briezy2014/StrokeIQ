@@ -9,6 +9,7 @@ from app.config import Settings
 from app.domain.jobs import AnalysisJob
 from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
+from app.services.butterfly.analyzer import ButterflyAnalyzer
 from app.services.pose_pipeline import PoseStageError, run_pose_stage
 from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
 from app.services.video_preprocessor import artifact_dir, preprocess_video
@@ -198,6 +199,53 @@ def run_analysis_pipeline(
                 dict.fromkeys([*job.limitations, *pose_result.limitations])
             )
 
+            # Milestone 5: butterfly surface analysis on smoothed poses only.
+            run_bfly = settings.butterfly_analysis_enabled or bool(
+                options.get("run_butterfly_analysis")
+            )
+            stroke_hint = str(
+                ((job.request_payload or {}).get("event") or {}).get("stroke") or "unknown"
+            )
+            if run_bfly:
+                smoothed_path = pose_result.artifact_paths.get("smoothed_pose_json")
+                if not smoothed_path:
+                    job.limitations.append("butterfly_analysis_skipped_no_smoothed_poses")
+                else:
+                    job.transition(JobStatus.detecting_events, progress=0.85)
+                    store.save(job)
+                    view_hint = str(options.get("view_hint") or "unknown")
+                    analyzer = ButterflyAnalyzer(settings=settings)
+                    bfly = analyzer.analyze_from_smoothed_json(
+                        Path(smoothed_path),
+                        job_id=job_id,
+                        video_id=video_id,
+                        output_dir=art / "butterfly",
+                        stroke_hint=stroke_hint,
+                        view_hint=view_hint,
+                        pool_distance_calibrated=bool(
+                            options.get("pool_distance_calibrated")
+                            or settings.pool_distance_calibrated
+                        ),
+                    )
+                    job.transition(JobStatus.calculating_metrics, progress=0.92)
+                    store.save(job)
+                    job.butterfly = {
+                        "summary": bfly.summary,
+                        "artifact_paths": bfly.artifact_paths,
+                        "entry_frames": bfly.entry_frames,
+                        "breath_frames": bfly.breath_frames,
+                        "detection_method": bfly.detection_method,
+                        "quality_flags": bfly.quality_flags,
+                        "metrics": bfly.metrics,
+                        "events": bfly.events,
+                        "cycles": bfly.cycles,
+                    }
+                    job.model_versions["milestone"] = "5"
+                    job.model_versions["butterfly"] = "surface_v1"
+                    job.limitations = list(
+                        dict.fromkeys([*job.limitations, *bfly.limitations])
+                    )
+
         if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
         else:
@@ -213,6 +261,9 @@ def run_analysis_pipeline(
             target_track_id=tracking.target.get("track_id"),
             annotated=tracking.artifact_paths.get("annotated_tracking_video"),
             pose_stage=(job.pose or {}).get("stage"),
+            butterfly_cycles=((job.butterfly or {}).get("summary") or {}).get(
+                "complete_cycles"
+            ),
         )
         return job
 

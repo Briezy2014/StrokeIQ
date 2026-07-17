@@ -68,6 +68,9 @@ class AnalysisOptions(BaseModel):
     pose_stage: Literal["A", "B", "C"] | None = None
     pose_source_path: str | None = None
     write_pose_acceptance: bool = True
+    # Milestone 5 — butterfly surface analysis (requires smoothed poses)
+    run_butterfly_analysis: bool = False
+    pool_distance_calibrated: bool = False
 
 
 class CreateAnalysisRequest(BaseModel):

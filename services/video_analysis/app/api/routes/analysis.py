@@ -187,6 +187,34 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         if job.pose.get("artifact_paths"):
             evidence.append({"pose_artifacts": job.pose["artifact_paths"]})
 
+    metrics = []
+    phases = []
+    if job.butterfly:
+        metrics = list(job.butterfly.get("metrics") or [])
+        # Surface cycle boundaries as phase-like event spans for clients.
+        for c in job.butterfly.get("cycles") or []:
+            phases.append(
+                {
+                    "name": "butterfly_stroke_cycle",
+                    "start_ms": int(c.get("start_ms") or 0),
+                    "end_ms": int(c.get("end_ms") or 0),
+                    "start_frame": c.get("start_frame"),
+                    "end_frame": c.get("end_frame"),
+                    "confidence": c.get("confidence") or 0.0,
+                    "editable": True,
+                    "quality_flags": c.get("quality_flags") or [],
+                    "evidence_frames": [c.get("entry_frame"), c.get("next_entry_frame")],
+                }
+            )
+        if job.butterfly.get("artifact_paths"):
+            evidence.append({"butterfly_artifacts": job.butterfly["artifact_paths"]})
+        if stroke is not None:
+            stroke = {
+                **stroke,
+                "note": "Surface butterfly metrics from Milestone 5; stroke ID still request-hinted.",
+                "butterfly_summary": job.butterfly.get("summary"),
+            }
+
     return AnalysisResultsResponse(
         job_id=job.job_id,
         status=job.status,
@@ -198,11 +226,12 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         tracking={
             **(job.tracking or {}),
             **({"pose": job.pose} if job.pose else {}),
+            **({"butterfly": job.butterfly} if job.butterfly else {}),
         }
-        if (job.tracking or job.pose)
+        if (job.tracking or job.pose or job.butterfly)
         else None,
-        phases=[],
-        metrics=[],
+        phases=phases,
+        metrics=metrics,
         limitations=job.limitations,
         evidence_frames=evidence,
         model_versions=model_versions,

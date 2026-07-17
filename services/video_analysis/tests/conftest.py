@@ -79,6 +79,12 @@ def settings(tmp_path: Path) -> Settings:
         usable_frame_min_confidence=0.20,
         overlay_min_draw_confidence=0.25,
         diagnostic_frame_count=12,
+        butterfly_analysis_enabled=False,
+        butterfly_min_cycle_duration_s=0.70,
+        butterfly_max_cycle_duration_s=2.20,
+        butterfly_min_peak_prominence=0.08,
+        butterfly_min_bilateral_sync=0.25,
+        pool_distance_calibrated=False,
     )
     s.ensure_dirs()
     return s

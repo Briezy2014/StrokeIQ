@@ -29,6 +29,18 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.failed,
     },
     JobStatus.estimating_pose: {
+        JobStatus.detecting_events,
+        JobStatus.completed,
+        JobStatus.completed_with_limitations,
+        JobStatus.failed,
+    },
+    JobStatus.detecting_events: {
+        JobStatus.calculating_metrics,
+        JobStatus.completed,
+        JobStatus.completed_with_limitations,
+        JobStatus.failed,
+    },
+    JobStatus.calculating_metrics: {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
@@ -77,6 +89,7 @@ class AnalysisJob:
         self.metadata_artifact_path: str | None = None
         self.tracking: dict[str, Any] | None = None
         self.pose: dict[str, Any] | None = None
+        self.butterfly: dict[str, Any] | None = None
         self.model_versions: dict[str, str] = {}
         self.created_at = now
         self.updated_at = now
@@ -133,6 +146,7 @@ class AnalysisJob:
             "metadata_artifact_path": self.metadata_artifact_path,
             "tracking": self.tracking,
             "pose": self.pose,
+            "butterfly": self.butterfly,
             "model_versions": self.model_versions,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -161,6 +175,7 @@ class AnalysisJob:
         job.metadata_artifact_path = data.get("metadata_artifact_path")
         job.tracking = data.get("tracking")
         job.pose = data.get("pose")
+        job.butterfly = data.get("butterfly")
         job.model_versions = dict(data.get("model_versions") or {})
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])

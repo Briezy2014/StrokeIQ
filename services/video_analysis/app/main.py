@@ -36,7 +36,7 @@ app = FastAPI(
     version="0.1.0",
     description=(
         "Milestone 3: validation, RTMDet tracking, RTMPose WholeBody pose stages "
-        "A/B/C via MMPose. No biomechanics metrics or Gemini yet."
+        "A/B/C via MMPose, M4 smoothing, M5 butterfly surface metrics. No underwater/Gemini/Flutter yet."
     ),
     lifespan=lifespan,
 )

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.4.0"
+    engine_version: str = "elote-0.5.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -64,6 +64,14 @@ class Settings(BaseSettings):
     usable_frame_min_confidence: float = 0.20
     overlay_min_draw_confidence: float = 0.25
     diagnostic_frame_count: int = 12
+
+    # Milestone 5 — butterfly surface-stroke analysis
+    butterfly_analysis_enabled: bool = False
+    butterfly_min_cycle_duration_s: float = 0.70
+    butterfly_max_cycle_duration_s: float = 2.20
+    butterfly_min_peak_prominence: float = 0.08
+    butterfly_min_bilateral_sync: float = 0.25
+    pool_distance_calibrated: bool = False
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)
