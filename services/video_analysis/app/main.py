@@ -35,8 +35,9 @@ app = FastAPI(
     title="Elote Video Lab Analysis Service",
     version="0.1.0",
     description=(
-        "Milestone 3: validation, RTMDet tracking, RTMPose WholeBody pose stages "
-        "A/B/C via MMPose, M4–M7 smoothing/butterfly/underwater/turn-finish. No Gemini/Flutter yet."
+        "Elote Video Lab: validation, RTMDet tracking, RTMPose WholeBody, "
+        "M4–M7 biomechanics, M8 confidence-aware Gemini coaching reports from "
+        "structured CV results only (never raw video). No Flutter integration yet."
     ),
     lifespan=lifespan,
 )

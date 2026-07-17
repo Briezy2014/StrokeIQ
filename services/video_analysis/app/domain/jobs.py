@@ -24,23 +24,39 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
     },
     JobStatus.detecting_swimmer: {
         JobStatus.estimating_pose,
+        JobStatus.generating_report,
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
     },
     JobStatus.estimating_pose: {
         JobStatus.detecting_events,
+        JobStatus.generating_report,
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
     },
     JobStatus.detecting_events: {
         JobStatus.calculating_metrics,
+        JobStatus.generating_report,
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
     },
     JobStatus.calculating_metrics: {
+        JobStatus.validating_results,
+        JobStatus.generating_report,
+        JobStatus.completed,
+        JobStatus.completed_with_limitations,
+        JobStatus.failed,
+    },
+    JobStatus.validating_results: {
+        JobStatus.generating_report,
+        JobStatus.completed,
+        JobStatus.completed_with_limitations,
+        JobStatus.failed,
+    },
+    JobStatus.generating_report: {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
@@ -93,6 +109,7 @@ class AnalysisJob:
         self.underwater: dict[str, Any] | None = None
         self.turn: dict[str, Any] | None = None
         self.finish: dict[str, Any] | None = None
+        self.report: dict[str, Any] | None = None
         self.model_versions: dict[str, str] = {}
         self.created_at = now
         self.updated_at = now
@@ -153,6 +170,7 @@ class AnalysisJob:
             "underwater": self.underwater,
             "turn": self.turn,
             "finish": self.finish,
+            "report": self.report,
             "model_versions": self.model_versions,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -185,6 +203,7 @@ class AnalysisJob:
         job.underwater = data.get("underwater")
         job.turn = data.get("turn")
         job.finish = data.get("finish")
+        job.report = data.get("report")
         job.model_versions = dict(data.get("model_versions") or {})
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])

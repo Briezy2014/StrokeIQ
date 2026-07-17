@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.7.0"
+    engine_version: str = "elote-0.8.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -83,6 +83,14 @@ class Settings(BaseSettings):
     # Milestone 7 — turn / finish event framework
     turn_analysis_enabled: bool = False
     finish_analysis_enabled: bool = False
+
+    # Milestone 8 — Gemini coaching report (structured results only; never raw video)
+    gemini_report_enabled: bool = False
+    gemini_api_key: str | None = None  # backend env only (GEMINI_API_KEY)
+    gemini_model_name: str = "gemini-2.5-flash"
+    gemini_timeout_s: float = 45.0
+    gemini_max_regenerate_attempts: int = 2
+    gemini_attach_evidence_images: bool = False
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

@@ -11,6 +11,8 @@ from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
 from app.services.butterfly.analyzer import ButterflyAnalyzer
 from app.services.pose_pipeline import PoseStageError, run_pose_stage
+from app.services.report import ReportGenerator
+from app.services.report.artifacts import result_to_job_payload
 from app.services.turn_finish import FinishAnalyzer, TurnAnalyzer
 from app.services.underwater.analyzer import UnderwaterAnalyzer
 from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
@@ -400,6 +402,48 @@ def run_analysis_pipeline(
                     job.model_versions["milestone"] = "7"
                     job.model_versions["turn_finish"] = "framework_v1"
 
+        # Milestone 8: coaching report from structured CV results only (never raw video).
+        # Deterministic metrics remain on the job even when Gemini fails.
+        run_report = settings.gemini_report_enabled or bool(
+            options.get("generate_gemini_report")
+        )
+        if run_report:
+            if job.status != JobStatus.generating_report:
+                job.transition(JobStatus.generating_report, progress=0.98)
+                store.save(job)
+            report_opts = options.get("report_options") or {}
+            report_result = ReportGenerator(settings=settings).generate_for_job(
+                job,
+                output_dir=art / "report",
+                authorize_age_group=bool(report_opts.get("authorize_age_group")),
+                authorize_previous_results=bool(
+                    report_opts.get("authorize_previous_results")
+                ),
+                previous_athlete_results=report_opts.get("previous_athlete_results"),
+                approved_standards=report_opts.get("approved_standards"),
+                evidence_frame_paths=report_opts.get("evidence_frame_paths"),
+                attach_evidence_images=bool(
+                    settings.gemini_attach_evidence_images
+                    or report_opts.get("attach_evidence_images")
+                ),
+            )
+            job.report = result_to_job_payload(report_result)
+            job.limitations = list(
+                dict.fromkeys([*job.limitations, *report_result.limitations])
+            )
+            job.model_versions["milestone"] = "8"
+            job.model_versions["gemini_report"] = (
+                (report_result.report.model_name if report_result.report else None)
+                or settings.gemini_model_name
+            )
+            if report_result.report:
+                job.model_versions["gemini_prompt_version"] = (
+                    report_result.report.prompt_version
+                )
+                job.model_versions["gemini_report_schema"] = (
+                    report_result.report.schema_version
+                )
+
         if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
         else:
@@ -421,6 +465,7 @@ def run_analysis_pipeline(
             underwater_kicks=((job.underwater or {}).get("summary") or {}).get(
                 "kick_count"
             ),
+            gemini_report=bool((job.report or {}).get("gemini_succeeded")),
         )
         return job
 

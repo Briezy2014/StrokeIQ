@@ -63,6 +63,15 @@ class AnalysisOptions(BaseModel):
     view_hint: ViewHint = "unknown"
     generate_overlay: bool = True
     generate_gemini_report: bool = False
+    report_options: dict | None = Field(
+        default=None,
+        description=(
+            "Optional M8 report controls: authorize_age_group, "
+            "authorize_previous_results, previous_athlete_results, "
+            "approved_standards, evidence_frame_paths, attach_evidence_images. "
+            "Never include API keys. Gemini never receives raw video."
+        ),
+    )
     # Milestone 3 — run exactly one pose stage when enabled (no auto-advance).
     run_pose_stage: bool = False
     pose_stage: Literal["A", "B", "C"] | None = None

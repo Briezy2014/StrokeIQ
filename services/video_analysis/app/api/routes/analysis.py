@@ -275,7 +275,7 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         limitations=job.limitations,
         evidence_frames=evidence,
         model_versions=model_versions,
-        report=None,
+        report=(job.report or {}).get("report") if job.report else None,
         error=job.error,
         created_at=job.created_at,
         metadata_artifact_path=job.metadata_artifact_path,
