@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 
+from app.api.ownership import assert_can_access, attach_owner
 from app.api.schemas.requests import CreateAnalysisRequest
 from app.api.schemas.responses import (
     AnalysisResultsResponse,
@@ -12,6 +13,7 @@ from app.api.schemas.responses import (
     JobStatusResponse,
     VideoMetadataResult,
 )
+from app.auth import AuthUser, require_user
 from app.config import Settings
 from app.domain.jobs import AnalysisJob, new_job_id
 from app.models.detector_adapter import DetectorAdapter
@@ -48,10 +50,11 @@ def _process_job(
 
 
 @router.post("", response_model=CreateAnalysisResponse, status_code=202)
-def create_analysis(
+async def create_analysis(
     body: CreateAnalysisRequest,
     background_tasks: BackgroundTasks,
     request: Request,
+    user: AuthUser = Depends(require_user),
 ) -> CreateAnalysisResponse:
     settings = _settings(request)
     store = _store(request)
@@ -66,6 +69,7 @@ def create_analysis(
             },
         )
 
+    athlete_key = body.athlete.swimmer_key if body.athlete else None
     job = AnalysisJob(
         job_id=new_job_id(),
         video_id=body.video_id,
@@ -75,6 +79,8 @@ def create_analysis(
         storage_bucket=body.storage_bucket,
         storage_path=body.storage_path,
     )
+    attach_owner(job, user, athlete_key)
+    job.model_versions["engine_name"] = settings.video_engine_name
     store.save(job)
     log_stage(
         logger,
@@ -82,6 +88,8 @@ def create_analysis(
         job_id=job.job_id,
         video_id=job.video_id,
         message="Job created",
+        owner_user_id=user.user_id,
+        engine_name=settings.video_engine_name,
     )
 
     background_tasks.add_task(_process_job, job.job_id, settings, store, detector)
@@ -97,10 +105,15 @@ def create_analysis(
 
 
 @router.get("/{job_id}", response_model=JobStatusResponse)
-def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
+async def get_job_status(
+    job_id: str,
+    request: Request,
+    user: AuthUser = Depends(require_user),
+) -> JobStatusResponse:
     job = _store(request).get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    assert_can_access(job, user)
     return JobStatusResponse(
         job_id=job.job_id,
         status=job.status,
@@ -116,15 +129,21 @@ def get_job_status(job_id: str, request: Request) -> JobStatusResponse:
 
 
 @router.get("/{job_id}/results", response_model=AnalysisResultsResponse)
-def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
+async def get_job_results(
+    job_id: str,
+    request: Request,
+    user: AuthUser = Depends(require_user),
+) -> AnalysisResultsResponse:
     job = _store(request).get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    assert_can_access(job, user)
 
     if job.status not in {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     }:
         raise HTTPException(
             status_code=409,
@@ -178,10 +197,9 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         frames = job.tracking["artifact_paths"].get("selected_target_frames") or []
         evidence = [{"path": p} for p in frames]
 
-    model_versions = {"engine": job.engine_version, "milestone": "2"}
+    model_versions = {"engine": job.engine_version, "milestone": "9"}
     model_versions.update(job.model_versions or {})
 
-    # Attach pose summary into tracking-adjacent payload via model_versions / limitations.
     if job.pose:
         model_versions["pose_stage"] = str(job.pose.get("stage"))
         if job.pose.get("artifact_paths"):
@@ -191,7 +209,6 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
     phases = []
     if job.butterfly:
         metrics = list(job.butterfly.get("metrics") or [])
-        # Surface cycle boundaries as phase-like event spans for clients.
         for c in job.butterfly.get("cycles") or []:
             phases.append(
                 {

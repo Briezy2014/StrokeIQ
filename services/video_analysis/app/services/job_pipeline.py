@@ -23,12 +23,32 @@ from app.utils.logging import get_logger, log_exception, log_stage
 logger = get_logger("video_analysis.pipeline")
 
 
-def resolve_local_path(job: AnalysisJob) -> Path:
+def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
     if job.local_path:
         return Path(job.local_path).expanduser().resolve()
+    if job.storage_path:
+        from app.services.supabase_bridge import SupabaseBridge, SupabaseBridgeError
+
+        bridge = SupabaseBridge(settings)
+        dest = (
+            settings.artifact_root
+            / job.job_id
+            / "source"
+            / Path(job.storage_path).name
+        )
+        try:
+            bridge.download_storage_object(
+                bucket=job.storage_bucket or "swim-videos",
+                storage_path=job.storage_path,
+                dest=dest,
+            )
+        except SupabaseBridgeError as exc:
+            raise VideoValidationError(exc.code, exc.message, retriable=False) from exc
+        job.local_path = str(dest.resolve())
+        return dest.resolve()
     raise VideoValidationError(
         "LOCAL_PATH_REQUIRED",
-        "Milestone 1/2 requires local_path. Supabase download lands in a later milestone.",
+        "Provide local_path or a Supabase storage_path for analysis.",
         retriable=False,
     )
 
@@ -66,7 +86,7 @@ def run_analysis_pipeline(
             message="Starting video validation",
         )
 
-        path = resolve_local_path(job)
+        path = resolve_local_path(job, settings=settings)
         validated = validate_video(path, settings)
 
         if job.cancelled:
@@ -450,6 +470,7 @@ def run_analysis_pipeline(
             job.transition(JobStatus.completed, progress=1.0)
         job.error = None
         store.save(job)
+        _persist_job_to_supabase(job, settings=settings)
         log_stage(
             logger,
             stage=job.stage,
@@ -484,6 +505,7 @@ def run_analysis_pipeline(
             retriable=False,
         )
         store.save(job)
+        _persist_job_to_supabase(job, settings=settings)
         return job
 
     except VideoValidationError as exc:
@@ -501,6 +523,7 @@ def run_analysis_pipeline(
             retriable=exc.retriable,
         )
         store.save(job)
+        _persist_job_to_supabase(job, settings=settings)
         return job
     except DetectionError as exc:
         log_exception(
@@ -517,6 +540,7 @@ def run_analysis_pipeline(
             retriable=exc.retriable,
         )
         store.save(job)
+        _persist_job_to_supabase(job, settings=settings)
         return job
     except Exception as exc:  # noqa: BLE001
         log_exception(
@@ -533,7 +557,34 @@ def run_analysis_pipeline(
             retriable=True,
         )
         store.save(job)
+        _persist_job_to_supabase(job, settings=settings)
         return job
+
+
+def _persist_job_to_supabase(job: AnalysisJob, *, settings: Settings) -> None:
+    if not settings.supabase_persist_results or not job.owner_user_id:
+        return
+    try:
+        from app.services.supabase_bridge import SupabaseBridge
+
+        bridge = SupabaseBridge(settings)
+        swimmer = job.swimmer_key or (
+            ((job.request_payload or {}).get("athlete") or {}).get("swimmer_key")
+            or "unknown"
+        )
+        bridge.upsert_job_row(job, user_id=job.owner_user_id, swimmer_key=str(swimmer))
+        if job.status in {
+            JobStatus.completed,
+            JobStatus.completed_with_limitations,
+            JobStatus.failed,
+            JobStatus.cancelled,
+        }:
+            bridge.replace_job_children(job, user_id=job.owner_user_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Supabase persist failed job=%s err=%s", job.job_id, exc)
+        job.limitations = list(
+            dict.fromkeys([*job.limitations, "supabase_persist_failed"])
+        )
 
 
 # Backwards-compatible alias used by older tests/imports

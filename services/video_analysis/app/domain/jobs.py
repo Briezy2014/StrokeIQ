@@ -10,17 +10,19 @@ from app.api.schemas.responses import JobError, JobStatus
 
 
 ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
-    JobStatus.queued: {JobStatus.validating, JobStatus.failed},
+    JobStatus.queued: {JobStatus.validating, JobStatus.failed, JobStatus.cancelled},
     JobStatus.validating: {
         JobStatus.preprocessing,
         JobStatus.failed,
         JobStatus.completed_with_limitations,
+        JobStatus.cancelled,
     },
     JobStatus.preprocessing: {
         JobStatus.detecting_swimmer,
         JobStatus.completed,  # M1-only path if detection skipped (not used in M2 default)
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.detecting_swimmer: {
         JobStatus.estimating_pose,
@@ -28,6 +30,7 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.estimating_pose: {
         JobStatus.detecting_events,
@@ -35,6 +38,7 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.detecting_events: {
         JobStatus.calculating_metrics,
@@ -42,6 +46,7 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.calculating_metrics: {
         JobStatus.validating_results,
@@ -49,21 +54,25 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.validating_results: {
         JobStatus.generating_report,
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.generating_report: {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     },
     JobStatus.failed: {JobStatus.queued, JobStatus.validating},
     JobStatus.completed: set(),
     JobStatus.completed_with_limitations: set(),
+    JobStatus.cancelled: set(),
 }
 
 
@@ -111,6 +120,8 @@ class AnalysisJob:
         self.finish: dict[str, Any] | None = None
         self.report: dict[str, Any] | None = None
         self.model_versions: dict[str, str] = {}
+        self.owner_user_id: str | None = None
+        self.swimmer_key: str | None = None
         self.created_at = now
         self.updated_at = now
         self.cancelled = False
@@ -135,7 +146,11 @@ class AnalysisJob:
         stage: str,
         retriable: bool,
     ) -> None:
-        self.status = JobStatus.failed
+        if error_code == "CANCELLED":
+            self.status = JobStatus.cancelled
+            self.cancelled = True
+        else:
+            self.status = JobStatus.failed
         self.stage = stage
         self.progress = 1.0
         self.error = JobError(
@@ -172,6 +187,8 @@ class AnalysisJob:
             "finish": self.finish,
             "report": self.report,
             "model_versions": self.model_versions,
+            "owner_user_id": self.owner_user_id,
+            "swimmer_key": self.swimmer_key,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "cancelled": self.cancelled,
@@ -205,6 +222,8 @@ class AnalysisJob:
         job.finish = data.get("finish")
         job.report = data.get("report")
         job.model_versions = dict(data.get("model_versions") or {})
+        job.owner_user_id = data.get("owner_user_id")
+        job.swimmer_key = data.get("swimmer_key")
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])
         job.cancelled = bool(data.get("cancelled", False))

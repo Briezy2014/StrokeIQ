@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.8.0"
+    engine_version: str = "elote-0.9.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -91,6 +91,16 @@ class Settings(BaseSettings):
     gemini_timeout_s: float = 45.0
     gemini_max_regenerate_attempts: int = 2
     gemini_attach_evidence_images: bool = False
+
+    # Milestone 9 — Flutter / Supabase integration (secrets backend-only)
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+    supabase_service_role_key: str | None = None  # NEVER expose to Flutter
+    supabase_auth_required: bool = False  # True in production Flutter deployments
+    supabase_persist_results: bool = False
+    supabase_signed_url_ttl_s: int = 3600
+    video_engine_name: str = "video_engine_v2"
+    cors_allow_origins: str = "*"
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

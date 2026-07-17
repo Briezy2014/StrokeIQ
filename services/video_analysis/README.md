@@ -2,7 +2,7 @@
 
 Isolated Python FastAPI backend for SwimIQ video analysis.
 
-**Current milestone: Milestone 8**
+**Current milestone: Milestone 9**
 
 | Milestone | Scope |
 |-----------|--------|
@@ -14,8 +14,9 @@ Isolated Python FastAPI backend for SwimIQ video analysis.
 | 6 | Underwater phase, dolphin kicks, breakout |
 | 7 | Turn / finish event framework + wall calibration |
 | 8 | Confidence-aware Gemini coaching reports (structured CV results only) |
+| 9 | Flutter + Supabase integration (`video_engine_v2` feature flag) |
 
-**Not in Milestone 8:** Flutter integration, Milestone 9+.
+**Not in Milestone 9:** Removing the legacy Edge Function engine (kept as `video_engine_legacy` until V2 real-video approval).
 
 ## Pose stages (no auto-advance)
 
@@ -85,6 +86,25 @@ pytest tests/unit/test_gemini_report.py -q
 ```
 
 Enable via `options.generate_gemini_report=true`. If Gemini fails, deterministic metrics are still returned.
+
+## Flutter / Supabase integration (Milestone 9)
+
+Backend validates Supabase JWTs (`SUPABASE_AUTH_REQUIRED=true` in production), downloads private `swim-videos` objects with the **service role** (never in Flutter), and optionally persists jobs/metrics/reports to Supabase tables with RLS.
+
+```bash
+pytest tests/integration/test_flutter_bridge_api.py -q
+cd ../../swimiq && flutter test test/video_engine_v2_test.dart
+```
+
+Flutter enablement (test accounts first):
+
+```
+VIDEO_ENGINE_V2=true
+VIDEO_ENGINE_V2_ALLOWLIST=tester@example.com
+ANALYSIS_API_BASE_URL=https://your-analysis-host
+```
+
+Legacy Video Lab (`analyze-swim-video` Edge Function) remains available when V2 is disabled.
 
 ## Test
 
