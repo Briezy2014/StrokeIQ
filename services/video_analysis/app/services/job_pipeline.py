@@ -1,4 +1,4 @@
-"""Milestone 1 pipeline: validate → preprocess → complete (metadata only)."""
+"""Analysis pipeline: validate → preprocess → detect/track (Milestone 2)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,10 @@ from pathlib import Path
 from app.api.schemas.responses import JobStatus
 from app.config import Settings
 from app.domain.jobs import AnalysisJob
+from app.models.detector_adapter import DetectorAdapter
 from app.services.result_store import ResultStore
-from app.services.video_preprocessor import preprocess_video
+from app.services.swimmer_detector import DetectionError, run_detection_and_tracking
+from app.services.video_preprocessor import artifact_dir, preprocess_video
 from app.services.video_validator import VideoValidationError, validate_video
 from app.utils.logging import get_logger, log_exception, log_stage
 
@@ -20,17 +22,20 @@ def resolve_local_path(job: AnalysisJob) -> Path:
         return Path(job.local_path).expanduser().resolve()
     raise VideoValidationError(
         "LOCAL_PATH_REQUIRED",
-        "Milestone 1 requires local_path. Supabase download lands in a later milestone.",
+        "Milestone 1/2 requires local_path. Supabase download lands in a later milestone.",
         retriable=False,
     )
 
 
-def run_milestone1_pipeline(
+def run_analysis_pipeline(
     job: AnalysisJob,
     *,
     settings: Settings,
     store: ResultStore,
+    detector: DetectorAdapter | None = None,
+    skip_detection: bool = False,
 ) -> AnalysisJob:
+    """Full M1+M2 pipeline. `skip_detection` retained for pure M1 unit tests."""
     video_id = job.video_id
     job_id = job.job_id
 
@@ -45,7 +50,7 @@ def run_milestone1_pipeline(
         return job
 
     try:
-        job.transition(JobStatus.validating, progress=0.1)
+        job.transition(JobStatus.validating, progress=0.08)
         store.save(job)
         log_stage(
             logger,
@@ -68,14 +73,14 @@ def run_milestone1_pipeline(
             store.save(job)
             return job
 
-        job.transition(JobStatus.preprocessing, progress=0.55)
+        job.transition(JobStatus.preprocessing, progress=0.25)
         store.save(job)
         log_stage(
             logger,
             stage=job.stage,
             job_id=job_id,
             video_id=video_id,
-            message="Validation passed; writing artifacts",
+            message="Validation passed; writing metadata artifacts",
         )
 
         options = (job.request_payload or {}).get("options") or {}
@@ -92,7 +97,60 @@ def run_milestone1_pipeline(
         job.metadata_artifact_path = result.metadata_path
         job.limitations = list(result.limitations)
 
-        if job.limitations:
+        video_for_detection = Path(result.normalized_path or result.original_path)
+
+        if skip_detection:
+            if job.limitations:
+                job.transition(JobStatus.completed_with_limitations, progress=1.0)
+            else:
+                job.transition(JobStatus.completed, progress=1.0)
+            job.error = None
+            store.save(job)
+            return job
+
+        if job.cancelled:
+            job.mark_failed(
+                error_code="CANCELLED",
+                message="Job was cancelled before detection",
+                stage=JobStatus.preprocessing.value,
+                retriable=False,
+            )
+            store.save(job)
+            return job
+
+        job.transition(JobStatus.detecting_swimmer, progress=0.45)
+        store.save(job)
+        log_stage(
+            logger,
+            stage=job.stage,
+            job_id=job_id,
+            video_id=video_id,
+            message="Starting swimmer detection and tracking",
+        )
+
+        art = artifact_dir(settings, job_id)
+        tracking = run_detection_and_tracking(
+            settings=settings,
+            job_id=job_id,
+            video_id=video_id,
+            video_path=video_for_detection,
+            artifact_root=art,
+            options=options,
+            detector=detector,
+        )
+
+        job.tracking = {
+            "target": tracking.target,
+            "quality_summary": tracking.quality_summary,
+            "artifact_paths": tracking.artifact_paths,
+            "config": tracking.config_versions,
+            "track_count": len(tracking.tracks),
+            "detection_count": len(tracking.detections),
+        }
+        job.model_versions = tracking.model_versions
+        job.limitations = list(dict.fromkeys([*job.limitations, *tracking.limitations]))
+
+        if tracking.completed_with_limitations or job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)
         else:
             job.transition(JobStatus.completed, progress=1.0)
@@ -103,8 +161,9 @@ def run_milestone1_pipeline(
             stage=job.stage,
             job_id=job_id,
             video_id=video_id,
-            message="Milestone 1 pipeline completed",
-            metadata_path=result.metadata_path,
+            message="Milestone 2 detection/tracking completed",
+            target_track_id=tracking.target.get("track_id"),
+            annotated=tracking.artifact_paths.get("annotated_tracking_video"),
         )
         return job
 
@@ -124,7 +183,23 @@ def run_milestone1_pipeline(
         )
         store.save(job)
         return job
-    except Exception as exc:  # noqa: BLE001 — must log and fail the job, not swallow
+    except DetectionError as exc:
+        log_exception(
+            logger,
+            stage=job.stage,
+            job_id=job_id,
+            video_id=video_id,
+            error=exc,
+        )
+        job.mark_failed(
+            error_code=exc.error_code,
+            message=exc.message,
+            stage=job.stage if job.stage else JobStatus.detecting_swimmer.value,
+            retriable=exc.retriable,
+        )
+        store.save(job)
+        return job
+    except Exception as exc:  # noqa: BLE001
         log_exception(
             logger,
             stage=job.stage,
@@ -140,3 +215,15 @@ def run_milestone1_pipeline(
         )
         store.save(job)
         return job
+
+
+# Backwards-compatible alias used by older tests/imports
+def run_milestone1_pipeline(
+    job: AnalysisJob,
+    *,
+    settings: Settings,
+    store: ResultStore,
+) -> AnalysisJob:
+    return run_analysis_pipeline(
+        job, settings=settings, store=store, skip_detection=True
+    )

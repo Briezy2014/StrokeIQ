@@ -12,9 +12,10 @@ from app.api.schemas.responses import (
     JobStatusResponse,
     VideoMetadataResult,
 )
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.domain.jobs import AnalysisJob, new_job_id
-from app.services.job_pipeline import run_milestone1_pipeline
+from app.models.detector_adapter import DetectorAdapter
+from app.services.job_pipeline import run_analysis_pipeline
 from app.services.result_store import ResultStore
 from app.utils.logging import get_logger, log_stage
 
@@ -30,11 +31,20 @@ def _settings(request: Request) -> Settings:
     return request.app.state.settings
 
 
-def _process_job(job_id: str, settings: Settings, store: ResultStore) -> None:
+def _detector(request: Request) -> DetectorAdapter | None:
+    return getattr(request.app.state, "detector", None)
+
+
+def _process_job(
+    job_id: str,
+    settings: Settings,
+    store: ResultStore,
+    detector: DetectorAdapter | None,
+) -> None:
     job = store.get(job_id)
     if job is None:
         return
-    run_milestone1_pipeline(job, settings=settings, store=store)
+    run_analysis_pipeline(job, settings=settings, store=store, detector=detector)
 
 
 @router.post("", response_model=CreateAnalysisResponse, status_code=202)
@@ -45,13 +55,14 @@ def create_analysis(
 ) -> CreateAnalysisResponse:
     settings = _settings(request)
     store = _store(request)
+    detector = _detector(request)
 
     if not body.local_path and not body.storage_path:
         raise HTTPException(
             status_code=400,
             detail={
                 "error_code": "PATH_REQUIRED",
-                "message": "Provide local_path (Milestone 1) or storage_path.",
+                "message": "Provide local_path (Milestone 1/2) or storage_path.",
             },
         )
 
@@ -73,7 +84,7 @@ def create_analysis(
         message="Job created",
     )
 
-    background_tasks.add_task(_process_job, job.job_id, settings, store)
+    background_tasks.add_task(_process_job, job.job_id, settings, store, detector)
 
     return CreateAnalysisResponse(
         job_id=job.job_id,
@@ -149,13 +160,26 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
     stroke = None
     payload = job.request_payload or {}
     if payload.get("athlete"):
-        athlete = payload["athlete"]
+        athlete = dict(payload["athlete"])
+        if job.tracking and job.tracking.get("target"):
+            athlete["track_id"] = job.tracking["target"].get("track_id")
+            athlete["tracking_confidence"] = job.tracking["target"].get(
+                "target_identity_confidence"
+            )
     if payload.get("event"):
         stroke = {
             "predicted": payload["event"].get("stroke") or "unknown",
             "confidence": None,
-            "note": "Milestone 1 does not classify stroke from video.",
+            "note": "Stroke classification from video begins in a later milestone.",
         }
+
+    evidence = []
+    if job.tracking and job.tracking.get("artifact_paths"):
+        frames = job.tracking["artifact_paths"].get("selected_target_frames") or []
+        evidence = [{"path": p} for p in frames]
+
+    model_versions = {"engine": job.engine_version, "milestone": "2"}
+    model_versions.update(job.model_versions or {})
 
     return AnalysisResultsResponse(
         job_id=job.job_id,
@@ -165,11 +189,12 @@ def get_job_results(job_id: str, request: Request) -> AnalysisResultsResponse:
         video=video,
         athlete=athlete,
         stroke=stroke,
+        tracking=job.tracking,
         phases=[],
         metrics=[],
         limitations=job.limitations,
-        evidence_frames=[],
-        model_versions={"engine": job.engine_version, "milestone": "1"},
+        evidence_frames=evidence,
+        model_versions=model_versions,
         report=None,
         error=job.error,
         created_at=job.created_at,

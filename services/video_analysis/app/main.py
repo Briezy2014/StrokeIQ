@@ -35,8 +35,8 @@ app = FastAPI(
     title="Elote Video Lab Analysis Service",
     version="0.1.0",
     description=(
-        "Milestone 1: video validation, metadata extraction, job lifecycle, "
-        "structured logging, and health. No pose, detection, or Gemini yet."
+        "Milestone 2: validation, metadata, RTMDet detection, swimmer tracking, "
+        "target selection, and diagnostics. No pose estimation or Gemini yet."
     ),
     lifespan=lifespan,
 )

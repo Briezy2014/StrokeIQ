@@ -82,7 +82,7 @@ class VideoMetadataResult(BaseModel):
 
 
 class AnalysisResultsResponse(BaseModel):
-    """Milestone 1 returns validation/metadata only — no coaching report."""
+    """Milestone 2 returns metadata + tracking; no coaching report / pose metrics."""
 
     job_id: str
     status: JobStatus
@@ -91,6 +91,7 @@ class AnalysisResultsResponse(BaseModel):
     video: VideoMetadataResult | None = None
     athlete: dict[str, Any] | None = None
     stroke: dict[str, Any] | None = None
+    tracking: dict[str, Any] | None = None
     phases: list[Any] = Field(default_factory=list)
     metrics: list[Any] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)

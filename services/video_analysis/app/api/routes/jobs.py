@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from app.api.schemas.responses import CancelResponse, JobStatus, RetryResponse
-from app.services.job_pipeline import run_milestone1_pipeline
+from app.services.job_pipeline import run_analysis_pipeline
 from app.utils.logging import get_logger, log_stage
 
 router = APIRouter(prefix="/v1/analyses", tags=["jobs"])
@@ -109,7 +109,14 @@ def retry_job(
     job.progress = 0.0
     store.save(job)
 
-    background_tasks.add_task(run_milestone1_pipeline, job, settings=settings, store=store)
+    detector = getattr(request.app.state, "detector", None)
+    background_tasks.add_task(
+        run_analysis_pipeline,
+        job,
+        settings=settings,
+        store=store,
+        detector=detector,
+    )
     log_stage(
         logger,
         stage=job.stage,

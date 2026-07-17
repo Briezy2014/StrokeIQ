@@ -1,4 +1,4 @@
-"""In-process job model and allowed state transitions for Milestone 1."""
+"""In-process job model and allowed state transitions."""
 
 from __future__ import annotations
 
@@ -9,8 +9,7 @@ from uuid import uuid4
 from app.api.schemas.responses import JobError, JobStatus
 
 
-# Milestone 1 active stages only; later stages remain in the enum for forward compat.
-M1_ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
+ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
     JobStatus.queued: {JobStatus.validating, JobStatus.failed},
     JobStatus.validating: {
         JobStatus.preprocessing,
@@ -18,11 +17,17 @@ M1_ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.completed_with_limitations,
     },
     JobStatus.preprocessing: {
+        JobStatus.detecting_swimmer,
+        JobStatus.completed,  # M1-only path if detection skipped (not used in M2 default)
+        JobStatus.completed_with_limitations,
+        JobStatus.failed,
+    },
+    JobStatus.detecting_swimmer: {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
     },
-    JobStatus.failed: {JobStatus.queued, JobStatus.validating},  # retry
+    JobStatus.failed: {JobStatus.queued, JobStatus.validating},
     JobStatus.completed: set(),
     JobStatus.completed_with_limitations: set(),
 }
@@ -64,12 +69,14 @@ class AnalysisJob:
         self.metadata: dict[str, Any] | None = None
         self.limitations: list[str] = []
         self.metadata_artifact_path: str | None = None
+        self.tracking: dict[str, Any] | None = None
+        self.model_versions: dict[str, str] = {}
         self.created_at = now
         self.updated_at = now
         self.cancelled = False
 
     def transition(self, new_status: JobStatus, *, progress: float | None = None) -> None:
-        allowed = M1_ALLOWED_TRANSITIONS.get(self.status, set())
+        allowed = ALLOWED_TRANSITIONS.get(self.status, set())
         if new_status not in allowed and new_status != self.status:
             raise ValueError(
                 f"Illegal transition {self.status.value} -> {new_status.value}"
@@ -117,6 +124,8 @@ class AnalysisJob:
             "metadata": self.metadata,
             "limitations": self.limitations,
             "metadata_artifact_path": self.metadata_artifact_path,
+            "tracking": self.tracking,
+            "model_versions": self.model_versions,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "cancelled": self.cancelled,
@@ -142,6 +151,8 @@ class AnalysisJob:
         job.metadata = data.get("metadata")
         job.limitations = list(data.get("limitations") or [])
         job.metadata_artifact_path = data.get("metadata_artifact_path")
+        job.tracking = data.get("tracking")
+        job.model_versions = dict(data.get("model_versions") or {})
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])
         job.cancelled = bool(data.get("cancelled", False))

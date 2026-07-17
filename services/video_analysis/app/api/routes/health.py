@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
 
 from fastapi import APIRouter
 
 from app.api.schemas.responses import HealthResponse
 from app.config import get_settings
+from app.models.model_registry import resolve_detector_model_path
 
 router = APIRouter(tags=["health"])
 
@@ -19,8 +21,10 @@ def health() -> HealthResponse:
     ffprobe_path = shutil.which(settings.ffprobe_path) or settings.ffprobe_path
     ffmpeg_available = shutil.which(settings.ffmpeg_path) is not None
     ffprobe_available = shutil.which(settings.ffprobe_path) is not None
+    model_path = resolve_detector_model_path(settings.detector_model_path)
+    model_available = Path(model_path).is_file()
 
-    status = "ok" if ffmpeg_available and ffprobe_available else "degraded"
+    status = "ok" if ffmpeg_available and ffprobe_available and model_available else "degraded"
     return HealthResponse(
         status=status,
         engine_version=settings.engine_version,
