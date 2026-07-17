@@ -37,7 +37,8 @@ Future<void> main() async {
 
 Future<void> _loadEnvironment() async {
   try {
-    await dotenv.load(fileName: '.env');
+    // Web needs `.env` listed under flutter/assets in pubspec.yaml.
+    await dotenv.load(fileName: '.env', isOptional: true);
     Env.loadFromDotenv(dotenv.env);
   } catch (_) {
     // dart-define values are used when .env is unavailable.
