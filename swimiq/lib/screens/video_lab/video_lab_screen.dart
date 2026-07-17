@@ -4,16 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../config/feature_flags.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
+import '../../core/services/video_analytics_service.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import 'v2/video_analysis_results_screen.dart';
+import 'v2/video_engine_v2_setup_sheet.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
   const VideoLabScreen({super.key});
@@ -88,6 +93,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
 
     setState(() => _uploading = true);
+    final analytics = ref.read(videoAnalyticsServiceProvider);
+    analytics.logEvent(VideoAnalyticsService.uploadStarted, {
+      'file_name': fileName,
+      'byte_length': file.bytes!.length,
+    });
     final distance = int.tryParse(_distanceController.text.trim()) ?? 50;
     final error = await ref.read(swimmerDataProvider.notifier).uploadVideo(
           fileName: fileName,
@@ -103,6 +113,17 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
 
     if (!mounted) return;
     setState(() => _uploading = false);
+
+    if (error == null) {
+      analytics.logEvent(VideoAnalyticsService.uploadSucceeded, {
+        'file_name': fileName,
+      });
+    } else {
+      analytics.logEvent(VideoAnalyticsService.uploadFailed, {
+        'file_name': fileName,
+        'error': error,
+      });
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -135,6 +156,20 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     final consented = await AiDataConsentDialog.ensureGranted(context);
     if (!consented || !mounted) return;
 
+    final email = ref.read(currentUserProvider)?.email;
+    if (FeatureFlags.isVideoEngineV2AllowedForEmail(email)) {
+      final swimmer = ref.read(activeSwimmerProvider);
+      if (!mounted) return;
+      await VideoEngineV2SetupSheet.open(
+        context,
+        video: video,
+        swimmerKey: swimmer ?? video.swimmer,
+        displayName: swimmer ?? video.swimmer,
+      );
+      return;
+    }
+
+    // Legacy Gemini / notes analysis path (preserved when V2 is off or not allowlisted).
     setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
@@ -177,16 +212,37 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final dateFormat = DateFormat.yMMMd();
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
+        final email = ref.watch(currentUserProvider)?.email;
+        final v2Allowed = FeatureFlags.isVideoEngineV2AllowedForEmail(email);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
-              title: 'Video Lab',
+              title: v2Allowed ? 'Elote Video Lab' : 'Video Lab',
               subtitle:
                   '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
             ),
+            if (v2Allowed) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => VideoAnalysisHistoryScreen(
+                          swimmerKey: swimmer,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.history),
+                  label: const Text('Analysis history'),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,

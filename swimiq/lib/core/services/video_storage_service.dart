@@ -27,8 +27,12 @@ class VideoStorageService {
     String? notes,
   }) async {
     final ext = p.extension(fileName);
-    final storagePath =
-        '$swimmer/${_uuid.v4()}${ext.isEmpty ? '.mp4' : ext}';
+    final extension = ext.isEmpty ? '.mp4' : ext;
+    final userId = _client.auth.currentUser?.id;
+    // Prefer `{userId}/{uuid}{ext}` for private storage RLS when authenticated.
+    final storagePath = userId != null && userId.isNotEmpty
+        ? '$userId/${_uuid.v4()}$extension'
+        : '$swimmer/${_uuid.v4()}$extension';
 
     await _client.storage.from(bucketName).uploadBinary(
           storagePath,
@@ -36,6 +40,7 @@ class VideoStorageService {
           fileOptions: const FileOptions(upsert: true),
         );
 
+    // Legacy public URL helper (V2 playback should prefer signed URLs from API).
     final publicUrl = _client.storage.from(bucketName).getPublicUrl(storagePath);
 
     final video = SwimVideo(
@@ -47,6 +52,7 @@ class VideoStorageService {
       storagePath: storagePath,
       videoUrl: publicUrl,
       notes: notes,
+      userId: userId,
     );
 
     return _repository.insertSwimVideo(video);

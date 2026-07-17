@@ -14,6 +14,7 @@ class SwimVideo {
     this.course,
     this.videoUrl,
     this.notes,
+    this.userId,
     this.createdAt,
   });
 
@@ -26,6 +27,8 @@ class SwimVideo {
   final String? course;
   final String? videoUrl;
   final String? notes;
+  /// Optional owner for private storage RLS (`swim_videos.user_id`).
+  final String? userId;
   final DateTime? createdAt;
 
   String get swimmerName => swimmer;
@@ -73,6 +76,7 @@ class SwimVideo {
       course: parseOptionalText(json['course']),
       videoUrl: parseOptionalText(json['video_url']),
       notes: parseOptionalText(json['notes']),
+      userId: parseOptionalText(json['user_id']),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
   }
@@ -91,6 +95,7 @@ class SwimVideo {
     String? course,
     String? videoUrl,
     String? notes,
+    String? userId,
     DateTime? createdAt,
   }) {
     return SwimVideo(
@@ -103,6 +108,7 @@ class SwimVideo {
       course: course ?? this.course,
       videoUrl: videoUrl ?? this.videoUrl,
       notes: notes ?? this.notes,
+      userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -117,5 +123,6 @@ class SwimVideo {
         'storage_path': storagePath,
         'video_url': videoUrl,
         'notes': notes,
+        if (userId != null && userId!.isNotEmpty) 'user_id': userId,
       };
 }
