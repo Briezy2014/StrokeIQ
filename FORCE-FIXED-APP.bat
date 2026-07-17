@@ -42,8 +42,12 @@ if not exist "swimiq\lib\core\recruiting\recruiting_business_card_pdf.dart" (
 echo [OK] Fixed branch loaded.
 echo [OK] Rope + passport card files present.
 echo.
-echo NEXT: launching with the Kara path-safe Chrome script...
-echo This avoids the 'C:\Users\Kara' space crash.
+echo IMPORTANT for Elite Video Lab:
+echo   Open a SECOND window and run:
+echo     swimiq\START-ELITE-ANALYSIS-SERVER.bat
+echo   Leave that server window open, then come back here.
+echo.
+echo Launching Chrome with Elite Video Lab enabled...
 echo.
 cd /d "%~dp0swimiq"
 call "%~dp0swimiq\LAUNCH-CHROME.bat"
