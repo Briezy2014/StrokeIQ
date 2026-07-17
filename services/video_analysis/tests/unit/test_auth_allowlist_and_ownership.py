@@ -31,6 +31,18 @@ def test_allowlist_allows_member_case_insensitive() -> None:
     _assert_allowlisted(user, settings)
 
 
+def test_allowlist_always_allows_master_and_demo() -> None:
+    settings = Settings(video_engine_v2_allowlist="someone-else@example.com")
+    _assert_allowlisted(
+        AuthUser(user_id="m1", email="briezy682014@gmail.com"),
+        settings,
+    )
+    _assert_allowlisted(
+        AuthUser(user_id="d1", email="demo@swimiqapp.com"),
+        settings,
+    )
+
+
 def test_user_owns_storage_path_by_prefix() -> None:
     bridge = SupabaseBridge(Settings(supabase_url=None, supabase_service_role_key=None))
     assert bridge.user_owns_storage_path(

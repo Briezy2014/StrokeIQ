@@ -157,7 +157,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (!consented || !mounted) return;
 
     final email = ref.read(currentUserProvider)?.email;
-    final v2Allowed = FeatureFlags.isVideoEngineV2AllowedForEmail(email);
+    final v2Allowed = FeatureFlags.isVideoEngineV2Allowed(
+      email: email,
+      subscription: subscription,
+    );
     if (v2Allowed && !forceLegacy) {
       final swimmer = ref.read(activeSwimmerProvider);
       if (!mounted) return;
@@ -214,7 +217,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
         final email = ref.watch(currentUserProvider)?.email;
-        final v2Allowed = FeatureFlags.isVideoEngineV2AllowedForEmail(email);
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final v2Allowed = FeatureFlags.isVideoEngineV2Allowed(
+          email: email,
+          subscription: subscription,
+        );
         final dualRun = v2Allowed && FeatureFlags.videoEngineLegacyEnabled;
 
         return ListView(

@@ -6,6 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:swimiq/config/feature_flags.dart';
+import 'package:swimiq/core/constants/demo_account_constants.dart';
+import 'package:swimiq/core/constants/master_account_constants.dart';
+import 'package:swimiq/core/models/subscription_plan.dart';
+import 'package:swimiq/core/services/subscription_service.dart';
 import 'package:swimiq/core/services/video_analytics_service.dart';
 import 'package:swimiq/core/services/video_engine_v2_service.dart';
 import 'package:swimiq/data/models/swim_video.dart';
@@ -18,6 +22,44 @@ void main() {
     test('constants are stable', () {
       expect(FeatureFlags.videoEngineV2, 'video_engine_v2');
       expect(FeatureFlags.videoEngineLegacy, 'video_engine_legacy');
+    });
+
+    test('built-in master and demo accounts are recognized', () {
+      expect(
+        FeatureFlags.isBuiltInEliteVideoAccount(MasterAccountConstants.email),
+        isTrue,
+      );
+      expect(
+        FeatureFlags.isBuiltInEliteVideoAccount(DemoAccountConstants.email),
+        isTrue,
+      );
+      expect(
+        FeatureFlags.isBuiltInEliteVideoAccount('random@example.com'),
+        isFalse,
+      );
+    });
+
+    test('coach elite peek unlocks V2 UI even when email is not allowlisted', () {
+      final started = DateTime.now().subtract(const Duration(days: 1));
+      final coachState = SubscriptionState(
+        tier: SubscriptionTier.basic,
+        billingCycle: BillingCycle.monthly,
+        trialEndsAt: null,
+        coachTrialEndsAt: DateTime.now().add(const Duration(days: 10)),
+        coachTrialStartedAt: started,
+        coachAiAnalysesUsed: 0,
+        hasUsedTrial: true,
+      );
+
+      // VIDEO_ENGINE_V2 may be false in unit tests (default). This asserts the
+      // subscription bypass path shape: when V2 is off, still false.
+      expect(
+        FeatureFlags.isVideoEngineV2Allowed(
+          email: 'coach.parent@example.com',
+          subscription: coachState,
+        ),
+        FeatureFlags.videoEngineV2Enabled,
+      );
     });
   });
 

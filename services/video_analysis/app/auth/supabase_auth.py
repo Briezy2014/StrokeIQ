@@ -56,13 +56,24 @@ async def require_user(
     return user
 
 
+# Always permitted when V2 auth allowlist is enabled (matches Flutter constants).
+_BUILT_IN_V2_EMAILS = frozenset(
+    {
+        "briezy682014@gmail.com",  # SwimIQ master login
+        "demo@swimiqapp.com",  # Coach demo master
+    }
+)
+
+
 def _assert_allowlisted(user: AuthUser, settings: Settings) -> None:
     """Mirror Flutter VIDEO_ENGINE_V2_ALLOWLIST when set on the backend."""
+    email = (user.email or "").strip().lower()
+    if email in _BUILT_IN_V2_EMAILS:
+        return
     raw = (settings.video_engine_v2_allowlist or "").strip()
     if not raw:
         return
     allowed = {part.strip().lower() for part in raw.split(",") if part.strip()}
-    email = (user.email or "").strip().lower()
     if email not in allowed:
         raise HTTPException(
             status_code=403,
