@@ -119,6 +119,38 @@ class _VideoEngineV2SetupSheetState
       );
     } on VideoEngineV2Exception catch (e) {
       if (!mounted) return;
+      final unavailable = e.errorCode == 'SERVER_UNAVAILABLE' ||
+          e.errorCode == 'SERVICE_UNAVAILABLE' ||
+          e.message.toLowerCase().contains('unavailable');
+      if (unavailable && widget.onFallbackLegacy != null) {
+        final useLegacy = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Elite analysis server is offline'),
+            content: const Text(
+              'The new Elite Video Lab server is not running on this computer, '
+              'so Confirm & Analyze cannot finish.\n\n'
+              'You can run the working Video Lab analysis instead '
+              '(includes the AI consent / legality step).',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Run working analysis'),
+              ),
+            ],
+          ),
+        );
+        if (useLegacy == true && mounted) {
+          Navigator.of(context).pop();
+          widget.onFallbackLegacy!();
+        }
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
       );

@@ -201,6 +201,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         video: video,
         swimmerKey: swimmer ?? video.swimmer,
         displayName: swimmer ?? video.swimmer,
+        onFallbackLegacy: () {
+          // Ignore async gap: user explicitly chose legacy from the offline dialog.
+          // ignore: discarded_futures
+          _runAnalysis(video, forceLegacy: true);
+        },
       );
       return;
     }
