@@ -137,6 +137,14 @@ if (Test-Path -LiteralPath $loginIcon) {
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 
+Write-Host ''
+Write-Host '############################################' -ForegroundColor Yellow
+Write-Host ' CLOSE every swimiqapp.com tab first.' -ForegroundColor Yellow
+Write-Host ' Fixed app address must be localhost' -ForegroundColor Yellow
+Write-Host ' or 127.0.0.1 - NEVER swimiqapp.com' -ForegroundColor Yellow
+Write-Host ' Black workstation banner = OLD website.' -ForegroundColor Yellow
+Write-Host '############################################' -ForegroundColor Yellow
+Write-Host ''
 Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
@@ -146,7 +154,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+# Force a clean localhost URL so Chrome does not reopen swimiqapp.com.
 & $paths.FlutterBat run -d chrome `
+    --web-hostname=127.0.0.1 `
+    --web-port=7357 `
     --dart-define-from-file=$envFile
 
 $code = $LASTEXITCODE

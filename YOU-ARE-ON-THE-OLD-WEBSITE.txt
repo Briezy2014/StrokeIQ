@@ -1,0 +1,55 @@
+============================================================
+  THAT BLACK BANNER = OLD WEBSITE
+============================================================
+
+I checked the live site. https://swimiqapp.com still contains:
+  "Elite stroke analysis runs on the SwimIQ workstation..."
+
+The FIXED app in Desktop\StrokeIQ does NOT have that message.
+
+So if you see that black banner, Chrome is on the OLD site.
+Close every swimiqapp.com tab.
+
+============================================================
+  DO THIS NOW (analysis that works)
+============================================================
+
+1. Close ALL Chrome tabs that say swimiqapp.com
+2. Open Desktop\StrokeIQ
+3. Double-click:  OPEN-WORKING-APP-NOW.bat
+4. Wait for Chrome
+5. LOOK AT THE ADDRESS BAR
+   It MUST say:  localhost   or   127.0.0.1
+   If it says swimiqapp.com, CLOSE IT and go back to step 3
+
+6. Sign in: briezy682014@gmail.com
+7. Elite tab
+8. You should see a green/orange Elite SERVER banner
+   (NOT the black workstation banner)
+9. Run Elite Analysis
+
+============================================================
+  HOW TO KNOW YOU HAVE THE FIXED APP
+============================================================
+
+PASS:
+- Address: localhost or 127.0.0.1
+- Elite subtitle does NOT say workstation
+- Passport shows: build Jul18-c - left Athlete Passport card removed
+- No light-blue Athlete Passport card on the left
+
+FAIL (still old):
+- Address: swimiqapp.com
+- Black banner about workstation / live Elite analysis demo
+
+============================================================
+  OPTIONAL: update swimiqapp.com later
+============================================================
+
+Only after localhost works:
+  Double-click DO-THIS-ONE-THING.bat
+  Upload/extract the zip in GoDaddy public_html
+  Then open swimiqapp.com in Incognito
+
+Until you do that, swimiqapp.com stays OLD on purpose.
+============================================================
