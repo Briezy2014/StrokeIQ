@@ -1,0 +1,22 @@
+============================================================
+  WHERE IS THE GODADDY FILE?
+============================================================
+
+There is NO folder named "GoDaddy".
+
+The file is a ZIP named:
+
+  swimiq-web-godaddy.zip
+
+Full path:
+
+  Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+
+It sits NEXT TO the "web" folder (not inside web).
+
+If you only see the "web" folder:
+
+1) Open:  Desktop\StrokeIQ\swimiq
+2) Double-click:  MAKE-GODADDY-ZIP-NOW.bat
+3) File Explorer will jump to the zip and highlight it
+4) Upload that zip in GoDaddy File Manager → public_html → Extract

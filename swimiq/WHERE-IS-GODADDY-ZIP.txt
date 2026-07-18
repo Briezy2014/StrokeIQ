@@ -1,0 +1,9 @@
+The GoDaddy upload file is NOT a folder.
+
+Look for this ZIP next to the web folder:
+
+  Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+
+If missing, double-click in THIS folder:
+
+  MAKE-GODADDY-ZIP-NOW.bat
