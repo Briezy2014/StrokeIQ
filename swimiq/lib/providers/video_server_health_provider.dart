@@ -1,19 +1,41 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/env.dart';
 import '../config/feature_flags.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/video_engine_v2_service.dart';
 import 'app_providers.dart';
 
 /// Live check against Elite `/health` when V2 is on; otherwise legacy Gemini.
+///
+/// Auto-refreshes every few seconds while not ready so a late-starting Elite
+/// server turns the banner green without a manual Recheck click.
 final videoServerHealthProvider =
-    FutureProvider<VideoAnalysisServerHealth>((ref) async {
+    FutureProvider.autoDispose<VideoAnalysisServerHealth>((ref) async {
+  // Public website cannot reach Kara's local Elite server — skip noisy polling.
+  if (FeatureFlags.videoEngineV2Enabled && Env.isPublicHostedWeb) {
+    return const VideoAnalysisServerHealth(
+      ok: false,
+      message:
+          'Elite stroke analysis runs on the SwimIQ workstation (not this public website).',
+    );
+  }
+
   if (FeatureFlags.videoEngineV2Enabled) {
     final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
+    final ready = elite.reachable &&
+        elite.mediaToolsReady &&
+        elite.storageConfigured;
+    if (!ready) {
+      final timer = Timer(const Duration(seconds: 3), () {
+        if (ref.mounted) ref.invalidateSelf();
+      });
+      ref.onDispose(timer.cancel);
+    }
     return VideoAnalysisServerHealth(
-      ok: elite.reachable &&
-          elite.mediaToolsReady &&
-          elite.storageConfigured,
+      ok: ready,
       message: elite.message,
       functionVersion: elite.engineVersion,
       modelProbeOk: elite.mediaToolsReady,
@@ -24,8 +46,18 @@ final videoServerHealthProvider =
 
 /// Pollable Elite-only health for banners / setup.
 final eliteServerHealthProvider =
-    FutureProvider<EliteServerHealth>((ref) async {
-  return ref.read(videoEngineV2ServiceProvider).checkHealth();
+    FutureProvider.autoDispose<EliteServerHealth>((ref) async {
+  final health = await ref.read(videoEngineV2ServiceProvider).checkHealth();
+  final ready = health.reachable &&
+      health.mediaToolsReady &&
+      health.storageConfigured;
+  if (!ready && !Env.isPublicHostedWeb) {
+    final timer = Timer(const Duration(seconds: 3), () {
+      if (ref.mounted) ref.invalidateSelf();
+    });
+    ref.onDispose(timer.cancel);
+  }
+  return health;
 });
 
 bool isVideoServerStreamReady(VideoAnalysisServerHealth? health) {

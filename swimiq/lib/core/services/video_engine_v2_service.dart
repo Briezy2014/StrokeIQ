@@ -118,10 +118,8 @@ class VideoEngineV2Service {
       return EliteServerHealth(
         reachable: false,
         message:
-            'Cannot reach Elite server at $baseUrl. '
-            'Double-click START-SWIMIQ-WITH-ELITE.bat (starts the server, waits, then opens the app). '
-            'Or start START-ELITE-ANALYSIS-SERVER.bat and leave that window open, '
-            'then open $baseUrl/health in Chrome. ($e)',
+            'Elite server is not answering yet at $baseUrl. '
+            'Keep the Elite server window open — this banner refreshes automatically.',
       );
     }
   }
