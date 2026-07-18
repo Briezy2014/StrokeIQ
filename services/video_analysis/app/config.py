@@ -55,7 +55,11 @@ class Settings(BaseSettings):
     min_detection_confidence: float = 0.35
     tracking_confidence_threshold: float = 0.40
     max_lost_frames: int = 15
-    max_target_lost_frames: int = 45
+    # Phone swim clips often lose the body under splash / underwater / pan.
+    # Default allows ~4s at 30fps before marking an extended gap (soft limitation).
+    max_target_lost_frames: int = 120
+    # After an extended gap, still succeed when enough of the clip was tracked.
+    min_usable_target_coverage: float = 0.20
     frame_processing_interval: int = 1
     inference_resolution: int = 320
     max_active_tracks: int = 12

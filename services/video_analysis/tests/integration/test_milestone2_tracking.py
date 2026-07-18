@@ -141,6 +141,51 @@ def test_detector_no_results_fails(settings, valid_video):
     assert exc.value.error_code == "NO_DETECTIONS"
 
 
+def test_extended_gap_completes_when_coverage_usable(settings, valid_video):
+    """Brief mid-clip disappearance must not hard-fail if enough track remains."""
+    settings.max_target_lost_frames = 5
+    settings.min_usable_target_coverage = 0.20
+    # valid_short is 30 frames: track most of the clip, leave a mid gap > 5 frames.
+    script = {
+        i: [([80.0, 80.0, 220.0, 320.0], 0.9)]
+        for i in list(range(0, 12)) + list(range(20, 30))
+    }
+    detector = ScriptedDetectorAdapter(script)
+    art = settings.artifact_root / "gap_ok"
+    result = run_detection_and_tracking(
+        settings=settings,
+        job_id="gap-ok",
+        video_id="gap-ok",
+        video_path=valid_video,
+        artifact_root=art,
+        detector=detector,
+    )
+    assert result.lost_extended is True
+    assert result.completed_with_limitations is True
+    assert result.tracks
+    assert any("hard to see" in note.lower() for note in result.limitations)
+
+
+def test_extended_gap_fails_only_when_coverage_unusable(settings, valid_video):
+    """Fail TARGET_LOST_EXTENDED only when almost none of the clip was tracked."""
+    settings.max_target_lost_frames = 3
+    settings.min_usable_target_coverage = 0.20
+    script = {i: [([80.0, 80.0, 220.0, 320.0], 0.9)] for i in range(0, 3)}
+    detector = ScriptedDetectorAdapter(script)
+    art = settings.artifact_root / "gap_bad"
+    with pytest.raises(DetectionError) as exc:
+        run_detection_and_tracking(
+            settings=settings,
+            job_id="gap-bad",
+            video_id="gap-bad",
+            video_path=valid_video,
+            artifact_root=art,
+            detector=detector,
+        )
+    assert exc.value.error_code == "TARGET_LOST_EXTENDED"
+    assert exc.value.retriable is False
+
+
 def test_low_confidence_all_filtered(settings, valid_video):
     script = {i: [([10, 10, 40, 40], 0.1)] for i in range(30)}
     detector = ScriptedDetectorAdapter(script)

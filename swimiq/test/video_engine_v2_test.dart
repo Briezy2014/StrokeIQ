@@ -111,6 +111,14 @@ void main() {
         contains('target swimmer'),
       );
       expect(
+        VideoEngineV2Service.userMessageForErrorCode('TARGET_LOST_EXTENDED'),
+        contains('lost sight'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('NO_DETECTIONS'),
+        contains('detect a swimmer'),
+      );
+      expect(
         VideoEngineV2Service.userMessageForErrorCode('INSUFFICIENT_POSE'),
         contains('pose'),
       );

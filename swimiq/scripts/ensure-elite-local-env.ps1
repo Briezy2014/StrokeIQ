@@ -82,6 +82,9 @@ $map['ENGINE_VERSION'] = 'elite-0.9.0'
 $map['SUPABASE_AUTH_REQUIRED'] = 'false'
 $map['CORS_ALLOW_ORIGINS'] = '*'
 $map['VIDEO_ENGINE_NAME'] = 'video_engine_v2'
+# Phone swim clips lose the body under splash/underwater — keep defaults current.
+$map['MAX_TARGET_LOST_FRAMES'] = '120'
+$map['MIN_USABLE_TARGET_COVERAGE'] = '0.20'
 
 if (-not $map.ContainsKey('FFMPEG_PATH') -or [string]::IsNullOrWhiteSpace([string]$map['FFMPEG_PATH'])) {
     $map['FFMPEG_PATH'] = 'ffmpeg'

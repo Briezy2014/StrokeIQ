@@ -49,6 +49,24 @@ class AnalysisResults {
   bool get reportFailed =>
       isCompleted && (!hasReport || report?.geminiSucceeded == false);
 
+  /// Failures caused by the clip itself (retrying the same file usually fails again).
+  bool get isClipQualityFailure {
+    switch ((errorCode ?? '').toUpperCase()) {
+      case 'TARGET_LOST_EXTENDED':
+      case 'TARGET_SWIMMER_NOT_FOUND':
+      case 'NO_DETECTIONS':
+      case 'INSUFFICIENT_POSE':
+      case 'POSE_FAILED':
+      case 'INSUFFICIENT_POSE_EVIDENCE':
+      case 'INVALID_VIDEO':
+      case 'UNSUPPORTED_CODEC':
+      case 'VIDEO_TOO_LARGE':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   String get stageLabel => AnalysisJob.stageDisplayLabel(status);
 
   factory AnalysisResults.fromJson(Map<String, dynamic> json) {

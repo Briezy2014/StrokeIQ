@@ -274,6 +274,10 @@ class VideoEngineV2Service {
         return 'This video format is not supported. Please upload an MP4 (H.264) file.';
       case 'TARGET_SWIMMER_NOT_FOUND':
         return 'We could not find the target swimmer in this video. Try a clearer side view or pick the swimmer track.';
+      case 'TARGET_LOST_EXTENDED':
+        return 'We lost sight of the swimmer for too much of this clip. Use a steadier side view with the full body in frame.';
+      case 'NO_DETECTIONS':
+        return 'We could not detect a swimmer in this video. Film from the side with good light and the full body visible.';
       case 'INSUFFICIENT_POSE':
       case 'POSE_FAILED':
       case 'INSUFFICIENT_POSE_EVIDENCE':

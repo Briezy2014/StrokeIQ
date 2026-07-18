@@ -140,24 +140,37 @@ class _VideoAnalysisResultsScreenState
     }
 
     if (results.isFailed && !results.hasDeterministicMetrics) {
+      final friendly = VideoEngineV2Service.userMessageForErrorCode(
+        results.errorCode,
+        fallback: results.errorMessage,
+      );
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwimIqScreenHeader(
             title: 'Analysis failed',
-            subtitle: results.errorMessage ??
-                VideoEngineV2Service.userMessageForErrorCode(
-                  results.errorCode,
-                ),
+            subtitle: friendly,
           ),
           const SizedBox(height: 16),
           if (results.limitations.isNotEmpty)
             LimitationsPanel(limitations: results.limitations),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _retrying ? null : _retry,
-            child: Text(_retrying ? 'Retrying…' : 'Retry analysis'),
-          ),
+          if (results.isClipQualityFailure) ...[
+            Text(
+              'A new clip usually works better than retrying the same one. '
+              'Film from the side, keep the full body in frame, and avoid heavy splash or shaking.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('Back to Video Lab'),
+            ),
+          ] else
+            FilledButton(
+              onPressed: _retrying ? null : _retry,
+              child: Text(_retrying ? 'Retrying…' : 'Retry analysis'),
+            ),
         ],
       );
     }
@@ -287,7 +300,7 @@ class _SummaryTab extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
-        if (results.isFailed) ...[
+        if (results.isFailed && !results.isClipQualityFailure) ...[
           const SizedBox(height: 16),
           FilledButton(
             onPressed: retrying ? null : onRetry,

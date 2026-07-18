@@ -189,14 +189,11 @@ def run_detection_and_tracking(
         elif had_target:
             consecutive_target_misses += 1
 
+        # Mark extended loss, but keep reading the clip. Splash, underwater
+        # phases, and phone pans routinely hide the body for longer than a
+        # short threshold; aborting mid-video threw away usable track data.
         if had_target and consecutive_target_misses > settings.max_target_lost_frames:
             lost_extended = True
-            cap.release()
-            raise DetectionError(
-                "TARGET_LOST_EXTENDED",
-                "Target swimmer lost for an extended period; refusing silent continuation",
-                retriable=False,
-            )
 
         frame_idx += 1
 
@@ -240,6 +237,19 @@ def run_detection_and_tracking(
             "Detector returned no person/swimmer detections for the video",
             retriable=False,
         )
+    if lost_extended:
+        limitations.append(
+            "Swimmer was hard to see for part of the clip (splash, underwater, "
+            "or camera movement). Analysis used the clearest portions."
+        )
+        completed_with_limitations = True
+        min_coverage = float(settings.min_usable_target_coverage)
+        if target_track is None or coverage < min_coverage:
+            raise DetectionError(
+                "TARGET_LOST_EXTENDED",
+                "The swimmer was not visible clearly enough for a reliable analysis",
+                retriable=False,
+            )
     if any(e.get("type") == "lost_track" for e in tracker.events):
         limitations.append("One or more tracks were lost during the clip")
         completed_with_limitations = True
@@ -341,6 +351,7 @@ def _config_snapshot(settings: Settings) -> dict[str, Any]:
         "tracking_confidence_threshold": settings.tracking_confidence_threshold,
         "max_lost_frames": settings.max_lost_frames,
         "max_target_lost_frames": settings.max_target_lost_frames,
+        "min_usable_target_coverage": settings.min_usable_target_coverage,
         "frame_processing_interval": settings.frame_processing_interval,
         "inference_resolution": settings.inference_resolution,
         "max_active_tracks": settings.max_active_tracks,

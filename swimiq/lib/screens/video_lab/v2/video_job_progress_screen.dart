@@ -120,7 +120,7 @@ class _VideoJobProgressScreenState
                   const SwimIqScreenHeader(
                     title: 'Elite Video Lab',
                     subtitle:
-                        'Analysis in progress — stage updates as work completes.',
+                        'We\'re analyzing your swim. The step below shows what we\'re working on right now.',
                   ),
                   const SizedBox(height: 28),
                   Center(
