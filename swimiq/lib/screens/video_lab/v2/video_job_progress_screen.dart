@@ -120,7 +120,7 @@ class _VideoJobProgressScreenState
                   const SwimIqScreenHeader(
                     title: 'Elite Video Lab',
                     subtitle:
-                        'We\'re analyzing your swim. The step below shows what we\'re working on right now.',
+                        'Analyzing your swim (usually 1–3 minutes for a short clip). The step below updates as we go.',
                   ),
                   const SizedBox(height: 28),
                   Center(

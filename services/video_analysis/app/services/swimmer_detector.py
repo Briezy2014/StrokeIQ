@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -92,6 +93,7 @@ def run_detection_and_tracking(
     artifact_root: Path,
     options: dict[str, Any] | None = None,
     detector: DetectorAdapter | None = None,
+    on_progress: Callable[[float], None] | None = None,
 ) -> DetectionTrackingResult:
     options = options or {}
     det = build_detector(settings, override=detector)
@@ -107,6 +109,13 @@ def run_detection_and_tracking(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     interval = max(1, int(settings.frame_processing_interval))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    max_duration_s = float(getattr(settings, "max_analysis_duration_s", 0) or 0)
+    max_frame_exclusive: int | None = None
+    if max_duration_s > 0 and fps > 0:
+        max_frame_exclusive = max(1, int(max_duration_s * fps))
+        if total_frames > 0:
+            max_frame_exclusive = min(max_frame_exclusive, total_frames)
 
     tracker = SwimmerTracker(
         max_lost_frames=settings.max_lost_frames,
@@ -121,7 +130,9 @@ def run_detection_and_tracking(
     consecutive_target_misses = 0
     lost_extended = False
     had_target = False
+    truncated_for_speed = False
     selected_track_id: str | None = options.get("target_track_id")
+    last_progress_emit = -1
 
     log_stage(
         logger,
@@ -131,10 +142,14 @@ def run_detection_and_tracking(
         message="Starting detection/tracking loop",
         detector=det.model_name,
         interval=interval,
+        max_analysis_duration_s=max_duration_s or None,
     )
 
     frame_idx = 0
     while True:
+        if max_frame_exclusive is not None and frame_idx >= max_frame_exclusive:
+            truncated_for_speed = True
+            break
         ok, frame = cap.read()
         if not ok:
             break
@@ -195,6 +210,15 @@ def run_detection_and_tracking(
         if had_target and consecutive_target_misses > settings.max_target_lost_frames:
             lost_extended = True
 
+        if on_progress is not None:
+            denom = max_frame_exclusive or total_frames or max(frame_idx + 1, 1)
+            pct = min(0.98, (frame_idx + 1) / float(denom))
+            bucket = int(pct * 20)  # emit ~every 5%
+            if bucket != last_progress_emit:
+                last_progress_emit = bucket
+                # Map into detecting_swimmer band 0.45–0.72
+                on_progress(0.45 + (0.27 * pct))
+
         frame_idx += 1
 
     cap.release()
@@ -223,6 +247,11 @@ def run_detection_and_tracking(
 
     limitations: list[str] = []
     completed_with_limitations = False
+    if truncated_for_speed and max_duration_s > 0:
+        limitations.append(
+            f"Analyzed the first {max_duration_s:.0f}s of the clip for speed"
+        )
+        completed_with_limitations = True
     if target.uncertain:
         limitations.append(f"Target selection uncertain: {target.reason}")
         completed_with_limitations = True
@@ -300,13 +329,15 @@ def run_detection_and_tracking(
     }, "config": _config_snapshot(settings)})
     write_json(events_path, {"events": tracker.events})
 
+    annotate_interval = interval * max(1, int(getattr(settings, "annotated_frame_stride", 1)))
     annotated = write_annotated_tracking_video(
         video_path=video_path,
         out_path=annotated_path,
         tracks=tracker.tracks,
         target_track_id=target.track_id,
-        frame_interval=interval,
+        frame_interval=annotate_interval,
         fps=fps,
+        max_frames=max_frame_exclusive,
     )
     target_frame_paths = save_target_frames(
         video_path=video_path,
@@ -353,6 +384,8 @@ def _config_snapshot(settings: Settings) -> dict[str, Any]:
         "max_target_lost_frames": settings.max_target_lost_frames,
         "min_usable_target_coverage": settings.min_usable_target_coverage,
         "frame_processing_interval": settings.frame_processing_interval,
+        "max_analysis_duration_s": settings.max_analysis_duration_s,
+        "annotated_frame_stride": settings.annotated_frame_stride,
         "inference_resolution": settings.inference_resolution,
         "max_active_tracks": settings.max_active_tracks,
         "detector_backend": settings.detector_backend,

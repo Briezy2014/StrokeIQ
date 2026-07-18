@@ -163,6 +163,13 @@ def run_analysis_pipeline(
         )
 
         art = artifact_dir(settings, job_id)
+
+        def _detection_progress(progress: float) -> None:
+            if job.cancelled:
+                return
+            job.transition(JobStatus.detecting_swimmer, progress=progress)
+            store.save(job)
+
         tracking = run_detection_and_tracking(
             settings=settings,
             job_id=job_id,
@@ -171,6 +178,7 @@ def run_analysis_pipeline(
             artifact_root=art,
             options=options,
             detector=detector,
+            on_progress=_detection_progress,
         )
 
         job.tracking = {

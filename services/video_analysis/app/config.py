@@ -60,9 +60,14 @@ class Settings(BaseSettings):
     max_target_lost_frames: int = 120
     # After an extended gap, still succeed when enough of the clip was tracked.
     min_usable_target_coverage: float = 0.20
-    frame_processing_interval: int = 1
+    # Process every Nth frame. 1 is far too slow on CPU phone clips.
+    frame_processing_interval: int = 3
     inference_resolution: int = 320
     max_active_tracks: int = 12
+    # Only analyze the first N seconds of source video (keeps Elite responsive).
+    max_analysis_duration_s: float = 45.0
+    # Write a lighter annotated preview (skip more frames than detection).
+    annotated_frame_stride: int = 2
 
     # Milestone 3 — RTMPose WholeBody
     pose_enabled: bool = False

@@ -172,7 +172,7 @@ def test_extended_gap_fails_only_when_coverage_unusable(settings, valid_video):
     settings.min_usable_target_coverage = 0.20
     script = {i: [([80.0, 80.0, 220.0, 320.0], 0.9)] for i in range(0, 3)}
     detector = ScriptedDetectorAdapter(script)
-    art = settings.artifact_root / "gap_bad"
+    art = settings.artifact_root / "gap-bad"
     with pytest.raises(DetectionError) as exc:
         run_detection_and_tracking(
             settings=settings,
@@ -184,6 +184,28 @@ def test_extended_gap_fails_only_when_coverage_unusable(settings, valid_video):
         )
     assert exc.value.error_code == "TARGET_LOST_EXTENDED"
     assert exc.value.retriable is False
+
+
+def test_max_analysis_duration_truncates(settings, valid_video):
+    """Long clips are truncated so CPU detection stays responsive."""
+    settings.frame_processing_interval = 1
+    settings.max_analysis_duration_s = 0.2  # ~6 frames at 30fps
+    script = {i: [([80.0, 80.0, 220.0, 320.0], 0.9)] for i in range(0, 30)}
+    detector = ScriptedDetectorAdapter(script)
+    art = settings.artifact_root / "truncate"
+    progress_vals: list[float] = []
+    result = run_detection_and_tracking(
+        settings=settings,
+        job_id="truncate",
+        video_id="truncate",
+        video_path=valid_video,
+        artifact_root=art,
+        detector=detector,
+        on_progress=progress_vals.append,
+    )
+    assert any("first" in note.lower() for note in result.limitations)
+    assert result.quality_summary["processed_frames"] <= 8
+    assert progress_vals
 
 
 def test_low_confidence_all_filtered(settings, valid_video):

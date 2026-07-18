@@ -85,6 +85,10 @@ $map['VIDEO_ENGINE_NAME'] = 'video_engine_v2'
 # Phone swim clips lose the body under splash/underwater — keep defaults current.
 $map['MAX_TARGET_LOST_FRAMES'] = '120'
 $map['MIN_USABLE_TARGET_COVERAGE'] = '0.20'
+# CPU detection speed: every 3rd frame, first 45s only.
+$map['FRAME_PROCESSING_INTERVAL'] = '3'
+$map['MAX_ANALYSIS_DURATION_S'] = '45'
+$map['ANNOTATED_FRAME_STRIDE'] = '2'
 
 if (-not $map.ContainsKey('FFMPEG_PATH') -or [string]::IsNullOrWhiteSpace([string]$map['FFMPEG_PATH'])) {
     $map['FFMPEG_PATH'] = 'ffmpeg'
