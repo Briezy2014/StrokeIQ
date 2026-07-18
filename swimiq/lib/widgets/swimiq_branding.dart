@@ -12,6 +12,8 @@ abstract final class SwimIqBranding {
   /// Login, splash, signup — square app icon only ([iconAsset]).
   static const loginIconCandidates = [
     iconAsset,
+    'assets/branding/logo.png',
+    'assets/branding/swimiq_logo.png',
     'web/icons/Icon-512.png',
     'web/icons/Icon-192.png',
     'web/favicon.png',
@@ -130,19 +132,19 @@ class _SwimIqBrandedImageState extends State<SwimIqBrandedImage> {
         _resolvedPath != null &&
         SwimIqBranding.fullLockupCandidates.contains(_resolvedPath);
 
+    // Never flash the painted-triangle fallback while assets are still loading.
     if (!_resolved) {
-      return widget.fallback ??
-          SizedBox(
-            width: w,
-            height: h,
-            child: const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
+      return SizedBox(
+        width: w,
+        height: h,
+        child: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
     }
 
     if (_resolvedPath == null) {

@@ -38,36 +38,25 @@ class SwimIqCompactMark extends StatelessWidget {
 
 /// Login / signup: full square app icon (icon.png) — contain, never zoom/crop.
 class SwimIqLoginBrand extends StatelessWidget {
-  const SwimIqLoginBrand({super.key, this.size = 200});
+  const SwimIqLoginBrand({super.key, this.size = 168});
 
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    // icon.png already includes the black lockup — do not wrap in a second
+    // black frame, and do not show the old triangle placeholder while loading.
     return Center(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SwimIqBrandedImage(
-            candidates: SwimIqBranding.loginIconCandidates,
-            width: size - 24,
-            height: size - 24,
-            fit: BoxFit.contain,
-            fallback: SwimIqPaintedMark(size: size - 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SwimIqBrandedImage(
+          candidates: SwimIqBranding.loginIconCandidates,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          fallback: ColoredBox(
+            color: Colors.black,
+            child: Center(child: SwimIqPaintedMark(size: size * 0.72)),
           ),
         ),
       ),
