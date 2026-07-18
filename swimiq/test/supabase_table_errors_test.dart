@@ -10,4 +10,18 @@ void main() {
       isTrue,
     );
   });
+
+  test('detects missing swim_videos.user_id column', () {
+    const error =
+        "PostgresException(message: Could not find the 'user_id' column of "
+        "'swim_videos' in the schema cache, code: PGRST204, details: , hint: null)";
+    expect(
+      SupabaseTableErrors.isMissingColumn(
+        error,
+        columnName: 'user_id',
+        tableName: 'swim_videos',
+      ),
+      isTrue,
+    );
+  });
 }

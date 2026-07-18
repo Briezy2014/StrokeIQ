@@ -193,9 +193,35 @@ class SwimIqRepository {
   }
 
   Future<SwimVideo> insertSwimVideo(SwimVideo video) async {
+    try {
+      return await _insertSwimVideoRow(video.toInsertJson(), fallback: video);
+    } catch (error) {
+      // Live DB may not have swim_videos.user_id yet (migration 005 not applied).
+      if (SupabaseTableErrors.isMissingColumn(
+            error,
+            columnName: 'user_id',
+            tableName: 'swim_videos',
+          ) &&
+          video.userId != null) {
+        final legacy = Map<String, dynamic>.from(video.toInsertJson())
+          ..remove('user_id');
+        try {
+          return await _insertSwimVideoRow(legacy, fallback: video);
+        } catch (_) {
+          throw Exception(SupabaseTableErrors.missingSwimVideosUserIdMessage());
+        }
+      }
+      rethrow;
+    }
+  }
+
+  Future<SwimVideo> _insertSwimVideoRow(
+    Map<String, dynamic> payload, {
+    required SwimVideo fallback,
+  }) async {
     final response = await _client
         .from('swim_videos')
-        .insert(video.toInsertJson())
+        .insert(payload)
         .select()
         .single();
 
@@ -203,10 +229,11 @@ class SwimIqRepository {
     try {
       return SwimVideo.fromJson(row);
     } catch (_) {
-      return video.copyWith(
+      return fallback.copyWith(
         id: parseUuid(row['id']),
-        swimmer: swimmerFromJson(row).isEmpty ? video.swimmer : swimmerFromJson(row),
-        videoUrl: parseOptionalText(row['video_url']) ?? video.videoUrl,
+        swimmer:
+            swimmerFromJson(row).isEmpty ? fallback.swimmer : swimmerFromJson(row),
+        videoUrl: parseOptionalText(row['video_url']) ?? fallback.videoUrl,
       );
     }
   }

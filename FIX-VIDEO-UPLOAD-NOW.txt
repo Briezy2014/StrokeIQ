@@ -1,0 +1,55 @@
+============================================================
+  FIX VIDEO UPLOAD (user_id column missing)
+============================================================
+
+ERROR YOU SAW:
+  Could not find the 'user_id' column of 'swim_videos' in the schema cache
+  (PGRST204)
+
+CAUSE:
+  The app expects swim_videos.user_id. Your Supabase database does not have
+  that column yet.
+
+DO THIS NOW (2 minutes, website only):
+
+1) Open: https://supabase.com/dashboard
+2) Open your SwimIQ project
+3) Left menu → SQL Editor → New query
+4) Copy EVERYTHING between START SQL and END SQL below
+5) Paste into the SQL editor
+6) Click RUN (green)
+7) Must say Success
+8) Go back to SwimIQ → upload the video again
+   (hard refresh Incognito if you are on swimiqapp.com: Ctrl+Shift+R)
+
+============================================================
+---- START SQL ----
+-- Adds swim_videos.user_id so Video Lab uploads work again.
+
+ALTER TABLE public.swim_videos
+  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS swim_videos_user_id_idx
+  ON public.swim_videos (user_id);
+
+-- Keep uploads working for both legacy rows and owned rows.
+DROP POLICY IF EXISTS swim_videos_select_owner_or_legacy ON public.swim_videos;
+CREATE POLICY swim_videos_select_owner_or_legacy ON public.swim_videos
+  FOR SELECT TO authenticated
+  USING (user_id IS NULL OR user_id = auth.uid());
+
+DROP POLICY IF EXISTS swim_videos_insert_owner ON public.swim_videos;
+CREATE POLICY swim_videos_insert_owner ON public.swim_videos
+  FOR INSERT TO authenticated
+  WITH CHECK (user_id IS NULL OR user_id = auth.uid());
+
+DROP POLICY IF EXISTS swim_videos_update_owner ON public.swim_videos;
+CREATE POLICY swim_videos_update_owner ON public.swim_videos
+  FOR UPDATE TO authenticated
+  USING (user_id IS NULL OR user_id = auth.uid())
+  WITH CHECK (user_id IS NULL OR user_id = auth.uid());
+
+-- Refresh PostgREST so the new column is visible immediately.
+NOTIFY pgrst, 'reload schema';
+---- END SQL ----
+============================================================
