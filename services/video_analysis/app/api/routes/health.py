@@ -54,6 +54,7 @@ def health() -> HealthResponse:
     if media_ok and storage_ok and not model_available:
         status = "ok"
 
+    gemini_ok = _configured(settings.gemini_api_key)
     return HealthResponse(
         status=status,
         engine_version=settings.engine_version,
@@ -65,6 +66,7 @@ def health() -> HealthResponse:
         supabase_anon_configured=anon_ok,
         supabase_service_role_configured=service_ok,
         storage_download_configured=storage_ok,
+        gemini_api_key_configured=gemini_ok,
     )
 
 

@@ -181,8 +181,21 @@ def run_analysis_pipeline(
             on_progress=_detection_progress,
         )
 
+        # Attach a compact observation sample so coaching/events can cite frames.
+        target_payload = dict(tracking.target or {})
+        if "observations" not in target_payload:
+            tid = target_payload.get("track_id")
+            for tr in tracking.tracks or []:
+                if str(tr.get("track_id")) == str(tid):
+                    obs = list(tr.get("observations") or [])
+                    # Keep payload small — first/mid/last up to 12 samples.
+                    if len(obs) > 12:
+                        step = max(1, len(obs) // 12)
+                        obs = obs[::step][:12]
+                    target_payload["observations"] = obs
+                    break
         job.tracking = {
-            "target": tracking.target,
+            "target": target_payload,
             "quality_summary": tracking.quality_summary,
             "artifact_paths": tracking.artifact_paths,
             "config": tracking.config_versions,

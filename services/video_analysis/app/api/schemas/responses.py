@@ -37,6 +37,7 @@ class HealthResponse(BaseModel):
     supabase_anon_configured: bool = False
     supabase_service_role_configured: bool = False
     storage_download_configured: bool = False
+    gemini_api_key_configured: bool = False
 
 
 class JobError(BaseModel):
