@@ -8,8 +8,7 @@ echo   Download latest SwimIQ fixed files
 echo   Folder: %CD%
 echo ============================================
 echo.
-echo This updates YOUR Desktop\StrokeIQ folder from GitHub
-echo so START-ELITE-ANALYSIS-SERVER.bat appears.
+echo This updates YOUR Desktop\StrokeIQ folder from GitHub.
 echo.
 
 if not exist ".git" (
@@ -36,28 +35,37 @@ if errorlevel 1 (
 )
 
 echo.
-echo Checking for Elite server starter...
-if exist "START-ELITE-ANALYSIS-SERVER.bat" (
-  echo [OK] Found: START-ELITE-ANALYSIS-SERVER.bat
+echo Checking important files...
+if exist "FIX-ELITE-STORAGE-NOW.bat" (
+  echo [OK] FIX-ELITE-STORAGE-NOW.bat
 ) else (
-  echo [BAD] Still missing START-ELITE-ANALYSIS-SERVER.bat
+  echo [BAD] Missing FIX-ELITE-STORAGE-NOW.bat
 )
-if exist "swimiq\START-ELITE-ANALYSIS-SERVER.bat" (
-  echo [OK] Found: swimiq\START-ELITE-ANALYSIS-SERVER.bat
+if exist "FIX-STORAGE.bat" (
+  echo [OK] FIX-STORAGE.bat
 ) else (
-  echo [BAD] Still missing swimiq\START-ELITE-ANALYSIS-SERVER.bat
+  echo [BAD] Missing FIX-STORAGE.bat
 )
-if exist "swimiq\LAUNCH-CHROME.bat" (
-  echo [OK] Found: swimiq\LAUNCH-CHROME.bat
+if exist "PUBLISH-SWIMIQAPP-COM.bat" (
+  echo [OK] PUBLISH-SWIMIQAPP-COM.bat
 ) else (
-  echo [BAD] Missing swimiq\LAUNCH-CHROME.bat
+  echo [BAD] Missing PUBLISH-SWIMIQAPP-COM.bat
+)
+if exist "START-SWIMIQ-WITH-ELITE.bat" (
+  echo [OK] START-SWIMIQ-WITH-ELITE.bat
+) else (
+  echo [BAD] Missing START-SWIMIQ-WITH-ELITE.bat
 )
 
 echo.
 echo ============================================
-echo NEXT — two double-clicks:
-echo   1. START-ELITE-ANALYSIS-SERVER.bat  ^(leave open^)
-echo   2. swimiq\LAUNCH-CHROME.bat
+echo NEXT — pick ONE:
+echo.
+echo   Elite analysis broken / storage error:
+echo     Double-click  FIX-STORAGE.bat
+echo.
+echo   Put real Flutter app on swimiqapp.com:
+echo     Double-click  PUBLISH-SWIMIQAPP-COM.bat
 echo ============================================
 echo.
 pause

@@ -95,5 +95,5 @@ Write-Host ''
 Write-Host '========================================' -ForegroundColor Green
 Write-Host 'DONE. Flutter app is in build\web\' -ForegroundColor Green
 Write-Host 'Upload THAT folder to GoDaddy public_html' -ForegroundColor Green
-Write-Host '(Replace old index.html — do NOT upload website\ alone)' -ForegroundColor Yellow
+Write-Host '(Replace old index.html - do NOT upload website\ alone)' -ForegroundColor Yellow
 Write-Host '========================================' -ForegroundColor Green
