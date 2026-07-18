@@ -33,12 +33,6 @@ from app.utils.logging import get_logger
 
 logger = get_logger("video_analysis.report")
 
-_MODEL_FALLBACKS = (
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-flash-latest",
-    "gemini-2.5-flash-lite",
-)
 
 
 class ReportGenerator:
@@ -240,7 +234,6 @@ class ReportGenerator:
             f"gemini_report_failed:{last_gemini_code}",
             "local_coaching_fallback",
         ]
-        _ = last_model  # kept for logs above
         return local_ready
 
     def _local_fallback_result(
