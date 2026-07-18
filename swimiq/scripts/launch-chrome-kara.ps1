@@ -86,7 +86,7 @@ try {
             $out += 'VIDEO_ENGINE_V2=true'
             $foundV2 = $true
         } elseif ($line -match '^\s*ANALYSIS_API_BASE_URL\s*=') {
-            $out += 'ANALYSIS_API_BASE_URL=http://localhost:8080'
+            $out += 'ANALYSIS_API_BASE_URL=http://127.0.0.1:8080'
             $foundApi = $true
         } elseif ($line -match '^\s*VIDEO_ENGINE_V2_DUAL_RUN\s*=') {
             $out += 'VIDEO_ENGINE_V2_DUAL_RUN=false'
@@ -96,14 +96,29 @@ try {
         }
     }
     if (-not $foundV2) { $out += 'VIDEO_ENGINE_V2=true' }
-    if (-not $foundApi) { $out += 'ANALYSIS_API_BASE_URL=http://localhost:8080' }
+    if (-not $foundApi) { $out += 'ANALYSIS_API_BASE_URL=http://127.0.0.1:8080' }
     if (-not $foundDual) { $out += 'VIDEO_ENGINE_V2_DUAL_RUN=false' }
     # ASCII avoids UTF-8 BOM, which breaks --dart-define-from-file parsing.
     Set-Content -LiteralPath $envFile -Value $out -Encoding ascii
     Write-Host '[OK] VIDEO_ENGINE_V2=true (Elite Video Lab)' -ForegroundColor Green
-    Write-Host '     Start Elite server with START-ELITE-ANALYSIS-SERVER.bat before Analyze.' -ForegroundColor Yellow
+    Write-Host '     ANALYSIS_API_BASE_URL=http://127.0.0.1:8080' -ForegroundColor Green
 } catch {
     Write-Host '[WARN] Could not update VIDEO_ENGINE_V2 in .env' -ForegroundColor Yellow
+}
+
+# Refuse to open the app until Elite /health answers (prevents "Failed to fetch").
+$eliteWait = Join-Path $PSScriptRoot 'start-elite-and-wait.ps1'
+if (Test-Path -LiteralPath $eliteWait) {
+    Write-Host ''
+    Write-Host 'Ensuring Elite analysis server is running...' -ForegroundColor Cyan
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $eliteWait
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ''
+        Write-Host 'ERROR: Elite server is not reachable at http://127.0.0.1:8080/health' -ForegroundColor Red
+        Write-Host 'Fix the Elite server window, then run START-SWIMIQ-WITH-ELITE.bat' -ForegroundColor Red
+        Read-Host 'Press Enter to close'
+        exit 1
+    }
 }
 
 Write-Host 'Checking branding PNG...' -ForegroundColor Cyan

@@ -57,8 +57,14 @@ class Env {
   /// Base URL for the Video Engine V2 FastAPI service (no trailing slash).
   static String get analysisApiBaseUrl {
     final raw = _preferNonEmpty(_analysisApiFromDotenv, _analysisApiDefine);
-    if (raw.isEmpty) return 'http://localhost:8080';
-    return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
+    // 127.0.0.1 avoids Windows localhost → IPv6 (::1) misses when uvicorn is IPv4-only.
+    if (raw.isEmpty) return 'http://127.0.0.1:8080';
+    final normalized = raw
+        .replaceAll('http://localhost:', 'http://127.0.0.1:')
+        .replaceAll('https://localhost:', 'https://127.0.0.1:');
+    return normalized.endsWith('/')
+        ? normalized.substring(0, normalized.length - 1)
+        : normalized;
   }
 
   static bool get videoEngineV2 {

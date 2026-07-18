@@ -9,7 +9,7 @@ echo   Elite Video Lab analysis server
 echo ============================================
 echo.
 echo This window must stay OPEN while you analyze videos.
-echo App expects: http://localhost:8080
+echo App expects: http://127.0.0.1:8080
 echo.
 
 REM Reload PATH from the registry so a just-installed FFmpeg is found
@@ -40,8 +40,8 @@ if "!ALREADY_RUNNING!"=="1" (
   echo.
   echo [OK] Elite analysis server is ALREADY running on port 8080.
   echo Leave the other Elite server window open.
-  echo Opening http://localhost:8080/health ...
-  start "" "http://localhost:8080/health"
+  echo Opening http://127.0.0.1:8080/health ...
+  start "" "http://127.0.0.1:8080/health"
   echo.
   echo Next: in SwimIQ tap Confirm ^& Analyze again.
   echo Do NOT start a second server.
@@ -94,19 +94,20 @@ if "!FFMPEG_OK!"=="0" (
   echo [WARN] FFmpeg not found on PATH yet.
   echo Install with:
   echo   winget install --id Gyan.FFmpeg -e --accept-package-agreements --accept-source-agreements
-  echo Then CLOSE this window and run this bat again.
-  echo Health will show degraded until FFmpeg is available.
+  echo Then CLOSE this window and run RESTART-ELITE-AFTER-FFMPEG.bat
   echo.
 )
 
 echo.
-echo Starting server on port 8080...
+echo Starting server on http://127.0.0.1:8080 ...
 echo Leave this window open.
-echo When you see "Uvicorn running on http://0.0.0.0:8080" it is ready.
+echo When you see "Uvicorn running on http://127.0.0.1:8080" it is ready.
 echo Then in SwimIQ tap Confirm ^& Analyze again.
 echo.
-start "" "http://localhost:8080/health"
-"%VENV_PY%" -m uvicorn app.main:app --host 0.0.0.0 --port 8080
+REM Bind IPv4 loopback explicitly. Flutter web "localhost" can hit ::1 on Windows
+REM and miss a server that only listens on IPv4.
+start "" "http://127.0.0.1:8080/health"
+"%VENV_PY%" -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 set "ERR=%ERRORLEVEL%"
 echo.
 if not "%ERR%"=="0" (
@@ -136,7 +137,6 @@ if defined SYSPATH (
 ) else if defined USRPATH (
   set "PATH=%USRPATH%"
 )
-REM Common WinGet / Gyan FFmpeg locations
 if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;%PATH%"
 if exist "%ProgramFiles%\ffmpeg\bin" set "PATH=%ProgramFiles%\ffmpeg\bin;%PATH%"
 if exist "%ProgramFiles%\Gyan\FFmpeg\bin" set "PATH=%ProgramFiles%\Gyan\FFmpeg\bin;%PATH%"
@@ -166,12 +166,10 @@ if not exist ".env" (
   echo Created services\video_analysis\.env
 )
 
-REM Force local Windows defaults that unblock Flutter → API.
 powershell -NoProfile -Command ^
   "$envFile = '.env'; ^
   if (-not (Test-Path -LiteralPath $envFile)) { exit 0 }; ^
   $flutterEnv = Join-Path (Split-Path (Split-Path $PWD -Parent) -Parent) 'swimiq\.env'; ^
-  if (-not (Test-Path -LiteralPath $flutterEnv)) { $flutterEnv = Join-Path (Split-Path $PWD -Parent) '..\swimiq\.env' }; ^
   $map = @{}; ^
   Get-Content -LiteralPath $envFile | ForEach-Object { if ($_ -match '^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$') { $map[$matches[1]] = $matches[2] } }; ^
   if (Test-Path -LiteralPath $flutterEnv) { ^

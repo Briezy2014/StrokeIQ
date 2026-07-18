@@ -61,10 +61,8 @@ class VideoEngineV2Service {
   Future<EliteServerHealth> checkHealth() async {
     final uri = Uri.parse('$baseUrl/health');
     try {
-      final response = await _client.get(
-        uri,
-        headers: const {'Accept': 'application/json'},
-      );
+      // No custom headers — keeps this a simple CORS request from Flutter web.
+      final response = await _client.get(uri);
       if (response.statusCode != 200 || response.body.isEmpty) {
         return EliteServerHealth(
           reachable: false,
@@ -102,7 +100,10 @@ class VideoEngineV2Service {
       return EliteServerHealth(
         reachable: false,
         message:
-            'Cannot reach Elite server at $baseUrl. Start START-ELITE-ANALYSIS-SERVER.bat and leave it open. ($e)',
+            'Cannot reach Elite server at $baseUrl. '
+            'Double-click START-SWIMIQ-WITH-ELITE.bat (starts the server, waits, then opens the app). '
+            'Or start START-ELITE-ANALYSIS-SERVER.bat and leave that window open, '
+            'then open $baseUrl/health in Chrome. ($e)',
       );
     }
   }
@@ -337,8 +338,8 @@ class VideoEngineV2Service {
       if (e is VideoEngineV2Exception) rethrow;
       throw VideoEngineV2Exception(
         'Cannot reach Elite server at $baseUrl$path. '
-        'Start START-ELITE-ANALYSIS-SERVER.bat, leave that window open, '
-        'confirm http://localhost:8080/health loads, then try again. ($e)',
+        'Double-click START-SWIMIQ-WITH-ELITE.bat, or leave START-ELITE-ANALYSIS-SERVER.bat open, '
+        'confirm http://127.0.0.1:8080/health loads, then try again. ($e)',
         errorCode: 'SERVER_UNAVAILABLE',
       );
     }

@@ -1,75 +1,46 @@
 # Windows — Start SwimIQ (Elite Video Lab)
 
-Use this on the **Kara Williams** Windows PC.
+Use the folder: `Desktop\StrokeIQ`  
+(not `StrokeIQ-Elite`).
 
-## One-time folder setup
+## Every launch (recommended)
 
-1. Use the clean clone folder: `Desktop\StrokeIQ-Elite`
-2. In File Explorer open: `StrokeIQ-Elite\swimiq\scripts`
-3. Double-click `setup-short-path.bat` (creates drive `S:`)
+1. Double-click:
 
-## Every time you want the app
+   `Desktop\StrokeIQ\START-SWIMIQ-WITH-ELITE.bat`
 
-### A) Make sure `.env` exists
+2. Keep **both** windows open:
+   - Elite analysis server (`Uvicorn running on http://127.0.0.1:8080`)
+   - SwimIQ Chrome launch window
 
-In File Explorer open `StrokeIQ-Elite\swimiq` and double-click:
+3. Sign in → **Elite** tab → green **Elite server connected** → **Confirm & Analyze**
 
-`make-env.bat`
+That one bat:
+- updates the branch
+- starts the Elite server if needed
+- waits until `http://127.0.0.1:8080/health` works
+- then launches Chrome
 
-Put real Supabase values:
+## Health check
+
+Open: http://127.0.0.1:8080/health
+
+You want `"ffmpeg_available":true`. If false, run `RESTART-ELITE-AFTER-FFMPEG.bat` after installing FFmpeg.
+
+## `.env` (Flutter)
+
+In `swimiq\.env`:
 
 ```env
 SUPABASE_URL=https://YOURPROJECT.supabase.co
 SUPABASE_ANON_KEY=eyJ...your_anon_key...
-ANALYSIS_API_BASE_URL=http://localhost:8080
-VIDEO_ENGINE_V2=false
+ANALYSIS_API_BASE_URL=http://127.0.0.1:8080
+VIDEO_ENGINE_V2=true
 VIDEO_ENGINE_V2_ALLOWLIST=
 VIDEO_ENGINE_V2_DUAL_RUN=false
 ```
 
-Keep `VIDEO_ENGINE_V2=false` until the Python Elite analysis server is running.  
-With V2 off, Video Lab uses the working path + AI consent dialog.
-
-If you already turned V2 on and see “analysis service is temporarily unavailable”, double-click:
-
-`USE-WORKING-VIDEO-LAB.bat`
-
-then restart with `START-SWIMIQ.bat`.
-
-Save and close Notepad.
-
-### B) Launch
-
-Double-click:
-
-`START-SWIMIQ.bat`
-
-Or in PowerShell:
-
-```powershell
-S:
-cd swimiq
-.\START-SWIMIQ.bat
-```
-
-### C) What “good” looks like
-
-In the black/PowerShell window you must see:
-
-1. `[OK] .env looks usable`
-2. `Got dependencies!` ← this is only halfway
-3. `Starting Chrome NOW with dart-defines...`
-4. `Launching lib\main.dart on Chrome...`
-5. Browser shows **login**, not the gray gear
-
-Then sign in as `briezy682014@gmail.com` → Video tab → **Elite Video Lab**
-
-## Important
-
-- `Got dependencies!` alone means packages installed. It is **not** the app.
-- Do **not** run only `flutter pub get`.
-- Do **not** run plain `flutter run -d chrome` without the launcher (keys won’t load on web).
-- Ignore “31 packages have newer versions…” — that is a notice, not a failure.
+Use `127.0.0.1` (not `localhost`) so Windows IPv6 does not miss the server.
 
 ## Accounts
 
@@ -78,3 +49,7 @@ Then sign in as `briezy682014@gmail.com` → Video tab → **Elite Video Lab**
 | Master | `briezy682014@gmail.com` |
 | Demo | `demo@swimiqapp.com` / `SwimIQ` |
 | Coach | Redeem `COACH-EVAL-14` (or `COACH-TRIAL-30`) in Settings → Plans |
+
+## If Chrome says Failed to fetch / server not ready
+
+The Elite server window is closed or crashed. Run `START-SWIMIQ-WITH-ELITE.bat` again and leave the Elite window open.

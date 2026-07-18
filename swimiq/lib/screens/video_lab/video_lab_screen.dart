@@ -483,7 +483,7 @@ class _EliteServerStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final ready = health?.ok == true;
     final message = health?.message ??
-        'Checking Elite analysis server at http://localhost:8080 …';
+        'Checking Elite analysis server at http://127.0.0.1:8080 …';
     final bg = ready ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
     final fg = ready ? const Color(0xFF1B5E20) : const Color(0xFFE65100);
     return Material(

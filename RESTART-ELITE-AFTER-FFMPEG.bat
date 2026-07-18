@@ -36,9 +36,18 @@ where ffmpeg
 where ffprobe
 echo.
 
-echo Step 3: Starting Elite server...
-call "%~dp0START-ELITE-ANALYSIS-SERVER.bat"
-exit /b %ERRORLEVEL%
+echo Step 3: Starting Elite server and verifying health...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0swimiq\scripts\start-elite-and-wait.ps1"
+if errorlevel 1 (
+  echo [FAIL] Elite did not become healthy. Read the Elite server window.
+  pause
+  exit /b 1
+)
+echo.
+echo [OK] Open SwimIQ with START-SWIMIQ-WITH-ELITE.bat  (or LAUNCH-CHROME.bat)
+echo Health: http://127.0.0.1:8080/health
+pause
+exit /b 0
 
 :RefreshPath
 set "SYSPATH="
