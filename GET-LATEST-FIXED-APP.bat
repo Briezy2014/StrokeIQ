@@ -35,6 +35,8 @@ call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
 call :CheckFile "FINAL-TRY-THIS-ONLY.bat"
 call :CheckFile "FINAL-TRY-THIS-ONLY.txt"
+call :CheckFile "OPEN-WORKING-APP-NOW.bat"
+call :CheckFile "ADD-GEMINI-KEY-FOR-COACHING.txt"
 call :CheckFile "swimiq\scripts\final-try-preflight.ps1"
 call :CheckFile "swimiq\scripts\kill-elite-port.ps1"
 
@@ -42,12 +44,11 @@ echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo NEXT for analysis (ONE path only):
+echo NEXT (ONE path only):
 echo.
-echo   Double-click   FINAL-TRY-THIS-ONLY.bat
+echo   Double-click   OPEN-WORKING-APP-NOW.bat
 echo.
-echo   Read steps in   FINAL-TRY-THIS-ONLY.txt
-echo.
+echo That file updates, checks the coaching key, and starts localhost.
 echo Do NOT use swimiqapp.com for this try.
 echo ============================================
 echo.
