@@ -156,36 +156,25 @@ exit /b 0
 
 :CheckAlreadyRunning
 set "ALREADY_RUNNING=0"
-powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8080/health' -TimeoutSec 2; if ($r.StatusCode -eq 200 -and $r.Content -match 'engine_version') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
-if not errorlevel 1 set "ALREADY_RUNNING=1"
+set "HEALTH_PS1=%~dp0scripts\check-elite-health.ps1"
+if exist "%HEALTH_PS1%" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%HEALTH_PS1%" >nul 2>&1
+  if not errorlevel 1 set "ALREADY_RUNNING=1"
+)
 exit /b 0
 
 :EnsureLocalEnv
-if not exist ".env" (
-  if exist ".env.example" copy /Y ".env.example" ".env" >nul
-  echo Created services\video_analysis\.env
+REM Use a .ps1 file — inline PowerShell with ^ breaks on Windows (caret / Test-Path).
+set "ENSURE_PS1=%~dp0scripts\ensure-elite-local-env.ps1"
+if not exist "%ENSURE_PS1%" (
+  echo [WARN] Missing %ENSURE_PS1%
+  if not exist ".env" (
+    if exist ".env.example" copy /Y ".env.example" ".env" >nul
+  )
+  exit /b 0
 )
-
-powershell -NoProfile -Command ^
-  "$envFile = '.env'; ^
-  if (-not (Test-Path -LiteralPath $envFile)) { exit 0 }; ^
-  $flutterEnv = Join-Path (Split-Path (Split-Path $PWD -Parent) -Parent) 'swimiq\.env'; ^
-  $map = @{}; ^
-  Get-Content -LiteralPath $envFile | ForEach-Object { if ($_ -match '^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$') { $map[$matches[1]] = $matches[2] } }; ^
-  if (Test-Path -LiteralPath $flutterEnv) { ^
-    Get-Content -LiteralPath $flutterEnv | ForEach-Object { ^
-      if ($_ -match '^\s*SUPABASE_URL\s*=\s*(.+)\s*$') { $map['SUPABASE_URL'] = $matches[1].Trim() } ^
-      if ($_ -match '^\s*SUPABASE_ANON_KEY\s*=\s*(.+)\s*$') { $map['SUPABASE_ANON_KEY'] = $matches[1].Trim() } ^
-    } ^
-  }; ^
-  $map['ENGINE_VERSION'] = 'elite-0.9.0'; ^
-  $map['SUPABASE_AUTH_REQUIRED'] = 'false'; ^
-  $map['CORS_ALLOW_ORIGINS'] = '*'; ^
-  $map['VIDEO_ENGINE_NAME'] = 'video_engine_v2'; ^
-  if (-not $map.ContainsKey('FFMPEG_PATH') -or [string]::IsNullOrWhiteSpace($map['FFMPEG_PATH'])) { $map['FFMPEG_PATH'] = 'ffmpeg' }; ^
-  if (-not $map.ContainsKey('FFPROBE_PATH') -or [string]::IsNullOrWhiteSpace($map['FFPROBE_PATH'])) { $map['FFPROBE_PATH'] = 'ffprobe' }; ^
-  $lines = @(); ^
-  foreach ($k in ($map.Keys | Sort-Object)) { $lines += ($k + '=' + $map[$k]) }; ^
-  Set-Content -LiteralPath $envFile -Value $lines -Encoding ascii; ^
-  Write-Host '[OK] Local analysis .env ready (auth off for Windows desktop).' -ForegroundColor Green"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ENSURE_PS1%" "%CD%"
+if errorlevel 1 (
+  echo [WARN] Could not fully prepare .env — continuing with defaults.
+)
 exit /b 0
