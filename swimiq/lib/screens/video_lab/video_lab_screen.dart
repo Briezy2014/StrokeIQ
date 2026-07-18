@@ -412,7 +412,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = v2Allowed
             ? (hosted
-                ? 'Elite Video Lab · cloud analysis · build Jul18-b'
+                ? 'Elite Video Lab - cloud analysis - build Jul18-c'
                 : 'Elite stroke analysis from your race footage')
             : canRunAi
             ? 'AI coaching from your race footage'

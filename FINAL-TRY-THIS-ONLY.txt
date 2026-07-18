@@ -1,8 +1,21 @@
 ============================================================
-  SWIMIQ ANALYSIS - FINAL TRY (ONE PATH ONLY)
+  SWIMIQ ANALYSIS + FIXED PASSPORT
 ============================================================
 
-Use THIS COMPUTER only. Do NOT use swimiqapp.com for this try.
+STOP - if Chrome says swimiqapp.com, that is the OLD site.
+The left Athlete Passport card is already gone in the new app.
+You will only see the fix when the address bar says:
+  localhost
+  or
+  127.0.0.1
+
+On the fixed Passport tab you must see:
+  Exportable Recruiting Card
+  build Jul18-c - left Athlete Passport card removed
+  ONE big recruiting card (NO light-blue card on the left)
+
+If you still see a light-blue Athlete Passport card on the left,
+close that tab and run OPEN-FIXED-PASSPORT-NOW.bat instead.
 
 ------------------------------------------------------------
 BEFORE YOU START
@@ -11,7 +24,6 @@ BEFORE YOU START
 - Close any old Elite / SwimIQ black windows
 - Stay on Wi-Fi
 - Folder must be: Desktop\StrokeIQ
-  (If you only have StrokeIQ-Elite, open StrokeIQ instead)
 
 ------------------------------------------------------------
 STEP 1 - Get the latest files
@@ -22,86 +34,44 @@ STEP 1 - Get the latest files
 4. Close that window
 
 ------------------------------------------------------------
-STEP 2 - Start analysis (ONE click)
+STEP 2 - Start the fixed app (ONE click)
 ------------------------------------------------------------
 1. Still in Desktop\StrokeIQ
-2. Double-click:  FINAL-TRY-THIS-ONLY.bat
-3. Leave BOTH windows open:
-   - Elite analysis server (black window)
-   - SwimIQ Chrome launcher
+2. Double-click:  OPEN-FIXED-PASSPORT-NOW.bat
+   (or FINAL-TRY-THIS-ONLY.bat)
+3. Leave BOTH windows open
 4. Wait until Chrome opens SwimIQ
-   (first time can take 2-3 minutes)
 
-PASS check before you click anything in the app:
-- A browser tab opens http://127.0.0.1:8080/health
-- You must see ALL of these:
-    "status":"ok"
-    "ffmpeg_available":true
-    "ffprobe_available":true
-    "storage_download_configured":true
-- Address bar must be localhost / 127.0.0.1
-  (NOT swimiqapp.com)
-
-If health is missing or any value is false -> STOP.
-Read the Elite black window error and fix that first.
-Do not continue.
+PASS check:
+- Address bar is localhost / 127.0.0.1 (NOT swimiqapp.com)
+- Health page shows storage_download_configured:true
+- Passport tab shows: build Jul18-c - left Athlete Passport card removed
 
 ------------------------------------------------------------
 STEP 3 - Sign in
 ------------------------------------------------------------
-1. In the Chrome SwimIQ window, sign in with:
-   briezy682014@gmail.com
-2. Confirm the address bar is still localhost / 127.0.0.1
+1. Sign in: briezy682014@gmail.com
+2. Confirm address is still localhost / 127.0.0.1
 
 ------------------------------------------------------------
-STEP 4 - Upload one short clip
+STEP 4 - Passport photo + recruiting card
 ------------------------------------------------------------
-1. Open the Elite tab (or Video / Elite Video Lab)
-2. Upload ONE short phone clip (under ~45 seconds is best)
-3. Wait until the video appears in the list
-
-If upload fails with a database / user_id error:
-1. Double-click OPEN-UPLOAD-SQL.bat
-2. Follow FIX-VIDEO-UPLOAD-NOW.txt exactly
-3. Paste the SQL in Supabase -> Run -> Success
-4. Upload the clip again
-5. Continue below
+1. Open Passport tab
+2. Confirm there is NO light-blue Athlete Passport card on the left
+3. Use Upload photo on the big recruiting card
+4. Export PDF / Print if needed
 
 ------------------------------------------------------------
 STEP 5 - Run analysis
 ------------------------------------------------------------
-1. Tap the uploaded video
-2. Tap Run Elite Analysis / Confirm & Analyze
-3. Keep Chrome open
-4. Wait for the progress screen to finish
-5. You should get results (or "completed with limitations"
-   - that still means analysis worked)
-
-SUCCESS looks like:
-- Progress moves past detecting / tracking
-- You land on a results screen
-- No "Failed to fetch" / "Elite server not answering"
+1. Open Elite tab
+2. Upload one short clip
+3. Run Elite Analysis / Confirm & Analyze
+4. Keep Chrome open until results show
 
 ------------------------------------------------------------
-IF IT FAILS - read only this
+TO UPDATE swimiqapp.com LATER (optional)
 ------------------------------------------------------------
-A) Address bar says swimiqapp.com
-   -> Wrong. Close it. Use FINAL-TRY-THIS-ONLY.bat only.
-
-B) Health page false / missing storage_download_configured
-   -> Elite server .env keys missing.
-   -> Double-click FIX-STORAGE.bat, then FINAL-TRY-THIS-ONLY.bat again.
-
-C) Upload fails
-   -> OPEN-UPLOAD-SQL.bat + FIX-VIDEO-UPLOAD-NOW.txt
-
-D) Analysis says FFmpeg missing
-   -> Install FFmpeg, then RESTART-ELITE-AFTER-FFMPEG.bat
-   -> Then FINAL-TRY-THIS-ONLY.bat again
-
-E) Banner never turns ready
-   -> Keep Elite window open; wait up to 2 minutes
-   -> Refresh http://127.0.0.1:8080/health
-
-Do not open other .bat files unless A-E above says to.
+Double-click DO-THIS-ONE-THING.bat, then upload/extract the zip
+in GoDaddy public_html. Until then, swimiqapp.com stays OLD.
 ============================================================
