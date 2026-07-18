@@ -59,6 +59,11 @@ if (Test-EliteHealth) {
             Write-Host '[WARN] Server is up but FFmpeg is not detected.' -ForegroundColor Yellow
             Write-Host 'Close Elite server windows, then run RESTART-ELITE-AFTER-FFMPEG.bat' -ForegroundColor Yellow
         }
+        if ($body -match '"storage_download_configured"\s*:\s*false') {
+            Write-Host ''
+            Write-Host '[WARN] Supabase storage keys missing on Elite server.' -ForegroundColor Yellow
+            Write-Host 'Confirm swimiq\.env has SUPABASE_URL + SUPABASE_ANON_KEY, then restart Elite.' -ForegroundColor Yellow
+        }
     } catch {}
     exit 0
 }

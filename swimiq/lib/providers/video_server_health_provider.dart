@@ -11,7 +11,9 @@ final videoServerHealthProvider =
   if (FeatureFlags.videoEngineV2Enabled) {
     final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
     return VideoAnalysisServerHealth(
-      ok: elite.reachable && elite.mediaToolsReady,
+      ok: elite.reachable &&
+          elite.mediaToolsReady &&
+          elite.storageConfigured,
       message: elite.message,
       functionVersion: elite.engineVersion,
       modelProbeOk: elite.mediaToolsReady,

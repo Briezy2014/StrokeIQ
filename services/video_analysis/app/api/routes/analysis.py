@@ -69,6 +69,26 @@ async def create_analysis(
             },
         )
 
+    access_token = getattr(request.state, "access_token", None)
+    if body.storage_path:
+        from app.services.supabase_bridge import SupabaseBridge
+
+        bridge = SupabaseBridge(settings)
+        if not bridge.can_download(access_token):
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error_code": "SERVER_UNAVAILABLE",
+                    "message": (
+                        "Supabase storage download is not configured on the Elite server. "
+                        "Ensure services/video_analysis/.env has SUPABASE_URL and "
+                        "SUPABASE_ANON_KEY (copied from swimiq/.env), restart "
+                        "START-SWIMIQ-WITH-ELITE.bat, and stay signed in."
+                    ),
+                    "retriable": True,
+                },
+            )
+
     # Production / Flutter mode: never accept arbitrary server filesystem paths.
     if settings.supabase_auth_required and body.local_path:
         raise HTTPException(
@@ -109,7 +129,7 @@ async def create_analysis(
     attach_owner(job, user, athlete_key)
     job.model_versions["engine_name"] = settings.video_engine_name
     # Keep Flutter session token for storage download when service-role is unset.
-    job.download_access_token = getattr(request.state, "access_token", None)
+    job.download_access_token = access_token
     store.save(job)
     log_stage(
         logger,

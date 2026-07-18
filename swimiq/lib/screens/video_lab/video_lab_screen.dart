@@ -24,9 +24,10 @@ import '../../widgets/swimiq_media_picker.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/video_analysis_report.dart';
+import '../../core/services/video_engine_v2_service.dart';
 import '../membership/membership_screen.dart';
 import 'v2/video_analysis_results_screen.dart';
-import 'v2/video_engine_v2_setup_sheet.dart';
+import 'v2/video_job_progress_screen.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
   const VideoLabScreen({super.key});
@@ -179,6 +180,86 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     ).showSnackBar(SnackBar(content: Text(error ?? 'Video deleted.')));
   }
 
+  Future<void> _startEliteAnalysis(SwimVideo video) async {
+    final videoId = video.id;
+    if (videoId == null || videoId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Video must be saved before analysis.')),
+      );
+      return;
+    }
+
+    setState(() => _analyzingVideoId = videoId);
+    final analytics = ref.read(videoAnalyticsServiceProvider);
+    final swimmer = ref.read(activeSwimmerProvider);
+    try {
+      final service = ref.read(videoEngineV2ServiceProvider);
+      final health = await service.checkHealth();
+      if (!health.reachable || !health.mediaToolsReady) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(health.message),
+            duration: const Duration(seconds: 12),
+          ),
+        );
+        return;
+      }
+      if (!health.storageConfigured) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(health.message),
+            duration: const Duration(seconds: 14),
+          ),
+        );
+        return;
+      }
+
+      final job = await service.createJob(
+        videoId: videoId,
+        storagePath: video.storagePath,
+        swimmerKey: swimmer ?? video.swimmer,
+        displayName: swimmer ?? video.swimmer,
+        stroke: video.stroke ?? _strokeController.text.trim(),
+        distanceM: video.distanceMeters ??
+            int.tryParse(_distanceController.text.trim()),
+        course: video.course ?? _courseController.text.trim(),
+        title: video.title,
+        notes: video.notes,
+        generateGeminiReport: true,
+      );
+      analytics.logEvent(VideoAnalyticsService.analysisJobCreated, {
+        'job_id': job.jobId,
+        'video_id': videoId,
+        'stage': job.stage,
+      });
+
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => VideoJobProgressScreen(jobId: job.jobId),
+        ),
+      );
+    } on VideoEngineV2Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          duration: const Duration(seconds: 12),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => _analyzingVideoId = null);
+    }
+  }
+
   Future<void> _runAnalysis(SwimVideo video, {bool forceLegacy = false}) async {
     final videoId = video.id;
     if (videoId == null) return;
@@ -191,18 +272,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     );
 
     // Elite Video Lab is the only analysis path when V2 is enabled (unless dual-run).
+    // After AI consent, start analysis immediately (no extra confirm-setup screen).
     if (v2Allowed && !forceLegacy) {
       final consented = await AiDataConsentDialog.ensureGranted(context);
       if (!consented || !mounted) return;
-
-      final swimmer = ref.read(activeSwimmerProvider);
-      if (!mounted) return;
-      await VideoEngineV2SetupSheet.open(
-        context,
-        video: video,
-        swimmerKey: swimmer ?? video.swimmer,
-        displayName: swimmer ?? video.swimmer,
-      );
+      await _startEliteAnalysis(video);
       return;
     }
 

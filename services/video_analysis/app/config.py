@@ -2,8 +2,21 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _strip_env_str(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    if len(text) >= 2 and (
+        (text[0] == text[-1] == '"') or (text[0] == text[-1] == "'")
+    ):
+        return text[1:-1].strip()
+    return text
 
 
 class Settings(BaseSettings):
@@ -12,6 +25,17 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator(
+        "supabase_url",
+        "supabase_anon_key",
+        "supabase_service_role_key",
+        "gemini_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _clean_secret_strings(cls, value: Any) -> Any:
+        return _strip_env_str(value)
 
     engine_version: str = "elite-0.9.0"
     artifact_root: Path = Path("./analysis_artifacts")

@@ -32,6 +32,11 @@ class HealthResponse(BaseModel):
     ffprobe_available: bool
     ffmpeg_path: str
     ffprobe_path: str
+    # Booleans only — never expose secret values.
+    supabase_url_configured: bool = False
+    supabase_anon_configured: bool = False
+    supabase_service_role_configured: bool = False
+    storage_download_configured: bool = False
 
 
 class JobError(BaseModel):

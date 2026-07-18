@@ -36,6 +36,12 @@ class SupabaseBridge:
     def enabled(self) -> bool:
         return bool(self.base and self.service_key)
 
+    def can_download(self, user_access_token: str | None = None) -> bool:
+        """True when service-role OR (url + anon + user session) is available."""
+        if self.enabled:
+            return True
+        return bool(self.base and self.anon_key and user_access_token)
+
     def _headers(self) -> dict[str, str]:
         if not self.service_key:
             raise SupabaseBridgeError("SERVER_UNAVAILABLE", "SUPABASE_SERVICE_ROLE_KEY missing")

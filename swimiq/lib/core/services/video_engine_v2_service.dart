@@ -81,20 +81,33 @@ class VideoEngineV2Service {
       final status = map['status']?.toString() ?? 'unknown';
       final ffmpeg = map['ffmpeg_available'] == true;
       final ffprobe = map['ffprobe_available'] == true;
+      final storageConfigured = map['storage_download_configured'] == true ||
+          // Older servers before this field — assume OK only when status ok.
+          (map['storage_download_configured'] == null && status == 'ok');
       final version = map['engine_version']?.toString();
       final ok = status == 'ok' || status == 'degraded';
       final missingMedia = !ffmpeg || !ffprobe;
+      String message;
+      if (!ok) {
+        message = 'Elite server health failed at $baseUrl';
+      } else if (missingMedia) {
+        message =
+            'Elite server is up, but FFmpeg is missing. Restart START-ELITE-ANALYSIS-SERVER.bat after installing FFmpeg.';
+      } else if (!storageConfigured) {
+        message =
+            'Elite server is up, but Supabase storage keys are missing in services/video_analysis/.env. '
+            'Run START-SWIMIQ-WITH-ELITE.bat again so it copies SUPABASE_URL + SUPABASE_ANON_KEY from swimiq/.env.';
+      } else {
+        message = 'Elite server ready at $baseUrl';
+      }
       return EliteServerHealth(
         reachable: ok,
         status: status,
         engineVersion: version,
         ffmpegAvailable: ffmpeg,
         ffprobeAvailable: ffprobe,
-        message: !ok
-            ? 'Elite server health failed at $baseUrl'
-            : missingMedia
-                ? 'Elite server is up, but FFmpeg is missing. Restart START-ELITE-ANALYSIS-SERVER.bat after installing FFmpeg.'
-                : 'Elite server ready at $baseUrl',
+        storageConfigured: storageConfigured,
+        message: message,
       );
     } catch (e) {
       return EliteServerHealth(
@@ -427,6 +440,7 @@ class EliteServerHealth {
     this.engineVersion,
     this.ffmpegAvailable,
     this.ffprobeAvailable,
+    this.storageConfigured = true,
   });
 
   final bool reachable;
@@ -435,6 +449,7 @@ class EliteServerHealth {
   final String? engineVersion;
   final bool? ffmpegAvailable;
   final bool? ffprobeAvailable;
+  final bool storageConfigured;
 
   bool get mediaToolsReady =>
       ffmpegAvailable == true && ffprobeAvailable == true;

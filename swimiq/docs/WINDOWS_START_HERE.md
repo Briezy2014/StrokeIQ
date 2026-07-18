@@ -50,6 +50,11 @@ Use `127.0.0.1` (not `localhost`) so Windows IPv6 does not miss the server.
 | Demo | `demo@swimiqapp.com` / `SwimIQ` |
 | Coach | Redeem `COACH-EVAL-14` (or `COACH-TRIAL-30`) in Settings → Plans |
 
+## Coach share link
+
+Send coaches: **https://swimiqapp.com**  
+Full paste text is in repo root `COACH-ACCESS.md`.
+
 ## If Chrome says Failed to fetch / server not ready
 
 The Elite server window is closed or crashed. Run `START-SWIMIQ-WITH-ELITE.bat` again and leave the Elite window open.

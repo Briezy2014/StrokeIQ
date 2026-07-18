@@ -216,6 +216,7 @@ void main() {
             'engine_version': 'elite-0.9.0',
             'ffmpeg_available': true,
             'ffprobe_available': true,
+            'storage_download_configured': true,
           }),
           200,
         );
@@ -223,6 +224,7 @@ void main() {
       final health = await service.checkHealth();
       expect(health.reachable, isTrue);
       expect(health.mediaToolsReady, isTrue);
+      expect(health.storageConfigured, isTrue);
       expect(health.engineVersion, 'elite-0.9.0');
     });
 

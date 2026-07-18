@@ -86,7 +86,9 @@ class _VideoEngineV2SetupSheetState
     try {
       final service = ref.read(videoEngineV2ServiceProvider);
       final health = await service.checkHealth();
-      if (!health.reachable || !health.mediaToolsReady) {
+      if (!health.reachable ||
+          !health.mediaToolsReady ||
+          !health.storageConfigured) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

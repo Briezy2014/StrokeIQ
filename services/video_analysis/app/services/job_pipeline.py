@@ -44,7 +44,14 @@ def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
                 user_access_token=getattr(job, "download_access_token", None),
             )
         except SupabaseBridgeError as exc:
-            raise VideoValidationError(exc.code, exc.message, retriable=False) from exc
+            retriable = exc.code in {
+                "SERVER_UNAVAILABLE",
+                "UPLOAD_FAILED",
+                "SERVICE_UNAVAILABLE",
+            }
+            raise VideoValidationError(
+                exc.code, exc.message, retriable=retriable
+            ) from exc
         job.local_path = str(dest.resolve())
         return dest.resolve()
     raise VideoValidationError(

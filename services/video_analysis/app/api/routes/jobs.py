@@ -121,16 +121,44 @@ async def retry_job(
     job.status = JobStatus.queued
     job.stage = JobStatus.queued.value
     job.progress = 0.0
+    # Refresh session token so retries work after a storage-config fix.
+    job.download_access_token = getattr(request.state, "access_token", None) or (
+        job.download_access_token
+    )
     store.save(job)
 
+    if job.storage_path:
+        from app.services.supabase_bridge import SupabaseBridge
+
+        bridge = SupabaseBridge(settings)
+        if not bridge.can_download(job.download_access_token):
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error_code": "SERVER_UNAVAILABLE",
+                    "message": (
+                        "Supabase storage download is not configured on the Elite server. "
+                        "Fix services/video_analysis/.env (SUPABASE_URL + SUPABASE_ANON_KEY), "
+                        "restart the Elite server, stay signed in, then retry."
+                    ),
+                    "retriable": True,
+                },
+            )
+
     detector = getattr(request.app.state, "detector", None)
-    background_tasks.add_task(
-        run_analysis_pipeline,
-        job,
-        settings=settings,
-        store=store,
-        detector=detector,
-    )
+
+    def _run_retry(job_id: str) -> None:
+        fresh = store.get(job_id)
+        if fresh is None:
+            return
+        run_analysis_pipeline(
+            fresh,
+            settings=settings,
+            store=store,
+            detector=detector,
+        )
+
+    background_tasks.add_task(_run_retry, job.job_id)
     log_stage(
         logger,
         stage=job.stage,
