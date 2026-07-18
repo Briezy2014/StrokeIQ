@@ -46,8 +46,8 @@ class AnalysisResults {
   bool get isCompleted => status == 'completed' || isPartialSuccess;
   bool get hasDeterministicMetrics => metrics.isNotEmpty;
   bool get hasReport => report != null && report!.isAvailable;
-  bool get reportFailed =>
-      isCompleted && (!hasReport || report?.geminiSucceeded == false);
+  /// Yellow "coaching failed" only when there is no usable report body.
+  bool get reportFailed => isCompleted && !hasReport;
 
   /// Failures caused by the clip itself (retrying the same file usually fails again).
   bool get isClipQualityFailure {
@@ -241,14 +241,31 @@ class AnalysisReport {
       priorityImprovements.isNotEmpty;
 
   factory AnalysisReport.fromJson(Map<String, dynamic> json) {
+    // Accept flat Flutter shape OR nested StoredCoachingReport { report: body }.
+    var data = json;
+    final nested = json['report'];
+    if (nested is Map &&
+        json['summary'] == null &&
+        (nested['summary'] != null || nested['strengths'] != null)) {
+      data = Map<String, dynamic>.from(nested);
+      data['gemini_succeeded'] =
+          json['gemini_succeeded'] ?? data['gemini_succeeded'];
+      data['model'] = json['model'] ?? json['model_name'] ?? data['model'];
+      data['failure_code'] = json['failure_code'] ?? data['failure_code'];
+    }
+
     final improvements = <PriorityImprovement>[];
-    final raw = json['priority_improvements'] ?? json['priorityImprovements'];
+    final raw =
+        data['priority_improvements'] ?? data['priorityImprovements'];
     if (raw is List) {
       for (final item in raw) {
         if (item is Map) {
-          improvements.add(
-            PriorityImprovement.fromJson(Map<String, dynamic>.from(item)),
-          );
+          final map = Map<String, dynamic>.from(item);
+          final obs = map['observation'];
+          if (obs is Map && (map['title'] == null || '${map['title']}'.isEmpty)) {
+            map['title'] = obs['text']?.toString() ?? 'Improvement';
+          }
+          improvements.add(PriorityImprovement.fromJson(map));
         } else if (item != null) {
           improvements.add(
             PriorityImprovement(title: item.toString()),
@@ -261,20 +278,20 @@ class AnalysisReport {
     for (final improvement in improvements) {
       drills.addAll(improvement.drills);
     }
-    final drillsRaw = json['drills'];
+    final drillsRaw = data['drills'];
     if (drillsRaw is List) {
       drills.addAll(drillsRaw.map((e) => e.toString()));
     }
 
     return AnalysisReport(
-      summary: json['summary']?.toString(),
-      strengths: _stringList(json['strengths']),
+      summary: data['summary']?.toString(),
+      strengths: _strengthStrings(data['strengths']),
       priorityImprovements: improvements,
-      raceRecommendations: _stringList(json['race_recommendations']),
-      limitationsStatement: json['limitations_statement']?.toString(),
-      model: json['model']?.toString(),
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
-      geminiSucceeded: json['gemini_succeeded'] as bool?,
+      raceRecommendations: _stringList(data['race_recommendations']),
+      limitationsStatement: data['limitations_statement']?.toString(),
+      model: data['model']?.toString() ?? data['model_name']?.toString(),
+      createdAt: DateTime.tryParse(data['created_at']?.toString() ?? ''),
+      geminiSucceeded: data['gemini_succeeded'] as bool?,
       drills: drills.toSet().toList(growable: false),
     );
   }
@@ -282,6 +299,23 @@ class AnalysisReport {
   static List<String> _stringList(dynamic raw) {
     if (raw is! List) return const [];
     return raw.map((e) => e.toString()).toList(growable: false);
+  }
+
+  static List<String> _strengthStrings(dynamic raw) {
+    if (raw is! List) return const [];
+    final out = <String>[];
+    for (final item in raw) {
+      if (item is Map) {
+        final text = item['text']?.toString().trim();
+        if (text != null && text.isNotEmpty) {
+          out.add(text);
+        }
+      } else if (item != null) {
+        final text = item.toString().trim();
+        if (text.isNotEmpty) out.add(text);
+      }
+    }
+    return out;
   }
 }
 

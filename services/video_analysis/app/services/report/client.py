@@ -175,7 +175,21 @@ def _map_sdk_exception(exc: Exception) -> GeminiClientError:
         return GeminiClientError("MISSING_API_KEY", msg, retriable=False)
     if "timeout" in low or "timed out" in low or "deadline" in low:
         return GeminiClientError("API_TIMEOUT", msg, retriable=True)
-    if "429" in low or "rate" in low or "resource_exhausted" in low:
+    if (
+        "404" in low
+        or "not_found" in low
+        or "is not found" in low
+        or "model_not_found" in low
+    ):
+        return GeminiClientError("MODEL_UNAVAILABLE", msg, retriable=False)
+    # Do NOT match bare "rate" — it false-positives on "generateContent".
+    if (
+        "429" in low
+        or "rate limit" in low
+        or "rate_limit" in low
+        or "quota" in low
+        or "resource_exhausted" in low
+    ):
         return GeminiClientError("RATE_LIMIT", msg, retriable=True)
     if "503" in low or "unavailable" in low or "outage" in low:
         return GeminiClientError("SERVICE_OUTAGE", msg, retriable=True)

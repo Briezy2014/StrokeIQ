@@ -341,8 +341,89 @@ async def get_job_results(
         limitations=job.limitations,
         evidence_frames=evidence,
         model_versions=model_versions,
-        report=(job.report or {}).get("report") if job.report else None,
+        report=_flutter_facing_report(job.report),
         error=job.error,
         created_at=job.created_at,
         metadata_artifact_path=job.metadata_artifact_path,
     )
+
+
+def _flutter_facing_report(job_report: dict | None) -> dict | None:
+    """Flatten StoredCoachingReport into the shape Flutter AnalysisReport expects.
+
+    Pipeline stores: {gemini_succeeded, report: StoredCoachingReport{report: body}}.
+    Flutter reads top-level summary/strengths/priority_improvements strings.
+    """
+    if not isinstance(job_report, dict):
+        return None
+    gemini_ok = bool(job_report.get("gemini_succeeded"))
+    stored = job_report.get("report")
+    if not isinstance(stored, dict):
+        return None
+
+    # Real pipeline shape: StoredCoachingReport with nested CoachingReportBody.
+    body = stored.get("report")
+    if isinstance(body, dict) and (
+        body.get("summary") is not None or body.get("strengths") is not None
+    ):
+        strengths_out: list[str] = []
+        for item in body.get("strengths") or []:
+            if isinstance(item, dict):
+                text = str(item.get("text") or "").strip()
+                if text:
+                    strengths_out.append(text)
+            elif item is not None:
+                strengths_out.append(str(item))
+
+        improvements_out: list[dict] = []
+        for item in body.get("priority_improvements") or []:
+            if not isinstance(item, dict):
+                continue
+            obs = item.get("observation") if isinstance(item.get("observation"), dict) else {}
+            title = str(obs.get("text") or item.get("title") or "").strip()
+            drills = [str(d) for d in (item.get("drills") or []) if str(d).strip()]
+            if title:
+                improvements_out.append({"title": title, "drills": drills})
+
+        limitations = body.get("limitations") or []
+        limitations_statement = None
+        if isinstance(limitations, list) and limitations:
+            limitations_statement = "; ".join(str(x) for x in limitations if str(x).strip())
+        elif isinstance(limitations, str):
+            limitations_statement = limitations
+
+        return {
+            "summary": body.get("summary"),
+            "strengths": strengths_out,
+            "priority_improvements": improvements_out,
+            "race_recommendations": list(body.get("race_recommendations") or []),
+            "drills": [
+                d
+                for imp in improvements_out
+                for d in (imp.get("drills") or [])
+            ],
+            "limitations_statement": limitations_statement
+            or body.get("limitations_statement"),
+            "confidence_statement": body.get("confidence_statement"),
+            "model": stored.get("model_name") or body.get("model"),
+            "gemini_succeeded": gemini_ok,
+            "failure_code": stored.get("failure_code"),
+            "status": stored.get("status"),
+            "created_at": stored.get("generation_timestamp"),
+        }
+
+    # Already-flat / test shape: summary on the stored dict itself.
+    if stored.get("summary") is not None or stored.get("strengths") is not None:
+        out = dict(stored)
+        out["gemini_succeeded"] = gemini_ok
+        return out
+
+    # Failed report with no body — still pass failure_code for UI messaging.
+    if stored.get("failure_code") or stored.get("status") == "failed":
+        return {
+            "gemini_succeeded": False,
+            "failure_code": stored.get("failure_code"),
+            "status": stored.get("status") or "failed",
+            "model": stored.get("model_name"),
+        }
+    return None

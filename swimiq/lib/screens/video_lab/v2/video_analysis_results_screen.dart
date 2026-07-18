@@ -372,7 +372,8 @@ class _SummaryTab extends StatelessWidget {
         lower.contains('skipped_no_smoothed') ||
         lower.contains('supabase_persist') ||
         lower.contains('first 45') ||
-        lower.contains('gemini_report_failed');
+        lower.contains('gemini_report_failed') ||
+        lower.contains('local_coaching_fallback');
   }
 
 }

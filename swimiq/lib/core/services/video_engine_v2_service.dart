@@ -165,7 +165,8 @@ class VideoEngineV2Service {
         // Coaching report first. Pose/mmpose extras are optional and soft-fail
         // on PCs without torch — do not block the coach-facing report.
         'generate_gemini_report': generateGeminiReport,
-        'generate_overlay': true,
+        // Overlay rewrite is a second full video pass — off by default for speed.
+        'generate_overlay': false,
         'run_pose_stage': false,
         'run_butterfly_analysis': false,
         'run_underwater_analysis': false,

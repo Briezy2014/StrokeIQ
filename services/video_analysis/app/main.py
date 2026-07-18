@@ -26,6 +26,19 @@ async def lifespan(app: FastAPI):
     url_ok = bool((settings.supabase_url or "").strip())
     anon_ok = bool((settings.supabase_anon_key or "").strip())
     service_ok = bool((settings.supabase_service_role_key or "").strip())
+    # Warm-load RTMDet once so the first analyze is not paying cold ONNX startup.
+    detector = None
+    try:
+        from app.services.swimmer_detector import build_detector
+
+        detector = build_detector(settings)
+        app.state.detector = detector
+        logger.info("Detector warm-loaded: %s", getattr(detector, "model_name", "ok"))
+    except Exception as exc:  # noqa: BLE001
+        app.state.detector = None
+        logger.warning("Detector warm-load skipped: %s", exc)
+
+    gemini_ok = bool((settings.gemini_api_key or "").strip())
     log_stage(
         logger,
         stage="startup",
@@ -36,6 +49,8 @@ async def lifespan(app: FastAPI):
         supabase_anon_configured=anon_ok,
         supabase_service_role_configured=service_ok,
         storage_download_configured=service_ok or (url_ok and anon_ok),
+        gemini_api_key_configured=gemini_ok,
+        detector_warm_loaded=detector is not None,
     )
     if not (service_ok or (url_ok and anon_ok)):
         logger.error(

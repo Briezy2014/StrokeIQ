@@ -152,12 +152,15 @@ def run_detection_and_tracking(
             if total_frames <= 0 or max_frame_exclusive < total_frames:
                 truncated_for_speed = True
             break
+        # Skip decode work on frames we will not infer — much faster on phone clips.
+        if frame_idx % interval != 0:
+            if not cap.grab():
+                break
+            frame_idx += 1
+            continue
         ok, frame = cap.read()
         if not ok:
             break
-        if frame_idx % interval != 0:
-            frame_idx += 1
-            continue
 
         # Optional inference resize for speed; keep coords in original space via scale.
         infer_frame = frame
@@ -360,25 +363,32 @@ def run_detection_and_tracking(
     }, "config": _config_snapshot(settings)})
     write_json(events_path, {"events": tracker.events})
 
-    annotate_interval = interval * max(1, int(getattr(settings, "annotated_frame_stride", 1)))
-    annotated = write_annotated_tracking_video(
-        video_path=video_path,
-        out_path=annotated_path,
-        tracks=tracker.tracks,
-        target_track_id=target.track_id,
-        frame_interval=annotate_interval,
-        fps=fps,
-        max_frames=max_frame_exclusive,
-    )
+    # Overlay rewrite is a full second video pass — skip unless explicitly requested.
+    want_overlay = bool(options.get("generate_overlay", False))
+    annotated = None
+    if want_overlay:
+        if on_progress is not None:
+            on_progress(0.70)
+        annotate_interval = interval * max(
+            1, int(getattr(settings, "annotated_frame_stride", 1))
+        )
+        annotated = write_annotated_tracking_video(
+            video_path=video_path,
+            out_path=annotated_path,
+            tracks=tracker.tracks,
+            target_track_id=target.track_id,
+            frame_interval=annotate_interval,
+            fps=fps,
+            max_frames=max_frame_exclusive,
+        )
+        if annotated is None:
+            limitations.append("Annotated tracking video could not be written")
+            completed_with_limitations = True
     target_frame_paths = save_target_frames(
         video_path=video_path,
         out_dir=target_frames_dir,
         target_track=target_track,
     )
-
-    if annotated is None:
-        limitations.append("Annotated tracking video could not be written")
-        completed_with_limitations = True
 
     return DetectionTrackingResult(
         detections=detections_payload["detections"],

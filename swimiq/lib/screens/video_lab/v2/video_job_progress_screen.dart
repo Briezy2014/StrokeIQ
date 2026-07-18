@@ -120,7 +120,7 @@ class _VideoJobProgressScreenState
                   const SwimIqScreenHeader(
                     title: 'Elite Video Lab',
                     subtitle:
-                        'Analyzing your swim (usually 1–3 minutes for a short clip). The step below updates as we go.',
+                        'Analyzing your swim. Short clips usually finish in under 2 minutes on this PC.',
                   ),
                   const SizedBox(height: 28),
                   Center(
@@ -145,7 +145,8 @@ class _VideoJobProgressScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Status: ${job.status.replaceAll('_', ' ')}',
+                          'Status: ${job.status.replaceAll('_', ' ')}'
+                          '${job.progress != null ? ' · ${(job.progress! * 100).clamp(0, 100).round()}%' : ''}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         if (job.errorMessage != null) ...[

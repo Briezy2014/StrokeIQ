@@ -61,7 +61,7 @@ class AnalysisOptions(BaseModel):
         description="User-selected bbox [x1,y1,x2,y2] in pixel coordinates",
     )
     view_hint: ViewHint = "unknown"
-    generate_overlay: bool = True
+    generate_overlay: bool = False
     generate_gemini_report: bool = False
     report_options: dict | None = Field(
         default=None,

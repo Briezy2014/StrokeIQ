@@ -292,31 +292,32 @@ def test_generator_success_with_mock(tmp_path: Path):
     assert any(m.get("name") == "stroke_rate" for m in result.deterministic_metrics)
 
 
-def test_generator_rejects_hallucination_and_keeps_metrics(tmp_path: Path):
+def test_generator_rejects_hallucination_and_falls_back_locally(tmp_path: Path):
     transport = MockGeminiTransport(response_text=json.dumps(_hallucinated_report_dict()))
-    gen = ReportGenerator(transport=transport)
-    # Force single attempt so rejection is final
+    # Force single attempt so rejection is final for each model candidate
     from app.config import Settings
 
     settings = Settings(gemini_max_regenerate_attempts=1, gemini_api_key="test-key")
     gen = ReportGenerator(settings=settings, transport=transport)
     result = gen.generate_for_job(_job_with_metrics(), output_dir=tmp_path / "report")
-    assert result.gemini_succeeded is False
     assert result.report is not None
-    assert result.report.failure_code == "REPORT_VALIDATION_REJECTED"
-    assert any("invented" in e for e in result.report.validation_errors)
+    assert result.report.status == "validated"
+    assert result.report.model_name == "local-tracking-fallback"
+    assert any("REPORT_VALIDATION_REJECTED" in x for x in result.limitations)
     assert result.deterministic_metrics  # survive failure
 
 
-def test_missing_api_key_graceful(tmp_path: Path):
+def test_missing_api_key_uses_local_coaching_fallback(tmp_path: Path):
     from app.config import Settings
 
     settings = Settings(gemini_api_key=None, gemini_report_enabled=True)
     gen = ReportGenerator(settings=settings, transport=None)
     result = gen.generate_for_job(_job_with_metrics(), output_dir=tmp_path / "report")
-    assert result.gemini_succeeded is False
     assert result.report is not None
-    assert result.report.failure_code == "MISSING_API_KEY"
+    assert result.report.status == "validated"
+    assert result.report.report is not None
+    assert result.report.report.summary
+    assert any("MISSING_API_KEY" in x for x in result.limitations)
     assert result.deterministic_metrics
 
 
@@ -330,12 +331,14 @@ def test_missing_api_key_graceful(tmp_path: Path):
         "MALFORMED_RESPONSE",
     ],
 )
-def test_gemini_transport_errors_are_graceful(tmp_path: Path, code: str):
+def test_gemini_transport_errors_use_local_fallback(tmp_path: Path, code: str):
     transport = MockGeminiTransport(error=GeminiClientError(code, f"simulated {code}", retriable=True))
     gen = ReportGenerator(transport=transport)
     result = gen.generate_for_job(_job_with_metrics(), output_dir=tmp_path / code)
-    assert result.gemini_succeeded is False
-    assert result.report.failure_code == code
+    assert result.report is not None
+    assert result.report.status == "validated"
+    assert result.report.report is not None
+    assert any(code in x for x in result.limitations)
     assert len(result.deterministic_metrics) >= 1
 
 
