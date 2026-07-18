@@ -89,8 +89,8 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                 children: [
                     Row(
                       children: [
-                        _PhotoMark(photoUrl: profilePhotoUrl),
-                        const SizedBox(width: 10),
+                        _PhotoMark(photoUrl: profilePhotoUrl, size: 58),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,26 +238,52 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
 }
 
 class _PhotoMark extends StatelessWidget {
-  const _PhotoMark({this.photoUrl});
+  const _PhotoMark({
+    this.photoUrl,
+    this.size = 44,
+    this.onLight = false,
+  });
 
   final String? photoUrl;
+  final double size;
+  final bool onLight;
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = onLight
+        ? AppColors.primary.withValues(alpha: 0.35)
+        : Colors.white.withValues(alpha: 0.5);
+    final fillColor = onLight
+        ? AppColors.primary.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.12);
+    final iconColor = onLight ? AppColors.primaryDeep : Colors.white70;
+
     return Container(
-      width: 44,
-      height: 44,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+        color: fillColor,
+        border: Border.all(color: borderColor, width: size >= 72 ? 2.5 : 1.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: photoUrl != null && photoUrl!.isNotEmpty
-          ? Image.network(photoUrl!, fit: BoxFit.cover)
-          : const Icon(
+          ? Image.network(
+              photoUrl!,
+              fit: BoxFit.cover,
+              width: size,
+              height: size,
+              alignment: const Alignment(0, -0.15),
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.person_outline,
+                color: iconColor,
+                size: size * 0.5,
+              ),
+            )
+          : Icon(
               Icons.person_outline,
-              color: Colors.white70,
-              size: 28,
+              color: iconColor,
+              size: size * 0.48,
             ),
     );
   }
@@ -419,10 +445,36 @@ class AthletePassportIdentityCard extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _PhotoMark(photoUrl: profilePhotoUrl),
-          const SizedBox(width: 12),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PhotoMark(
+                photoUrl: profilePhotoUrl,
+                size: 108,
+                onLight: true,
+              ),
+              if (onUploadPhoto != null) ...[
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: isUploadingPhoto ? null : onUploadPhoto,
+                  icon: isUploadingPhoto
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.photo_camera_outlined, size: 16),
+                  label: Text(
+                    isUploadingPhoto ? 'Uploading…' : 'Profile photo',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,23 +515,6 @@ class AthletePassportIdentityCard extends StatelessWidget {
                         height: 1.35,
                       ),
                 ),
-                if (onUploadPhoto != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: isUploadingPhoto ? null : onUploadPhoto,
-                    icon: isUploadingPhoto
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.photo_camera_outlined, size: 16),
-                    label: Text(
-                      isUploadingPhoto ? 'Uploading…' : 'Profile photo',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
