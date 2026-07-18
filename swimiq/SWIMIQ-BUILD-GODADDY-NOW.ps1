@@ -1,96 +1,53 @@
-# SwimIQ - ONE FILE GoDaddy web build (Kara Williams / Windows)
+# SwimIQ - ONE FILE GoDaddy Flutter web build (Kara Williams / Windows)
 $ErrorActionPreference = 'Stop'
 
+$buildScript = Join-Path $PSScriptRoot 'scripts\build-web-godaddy.ps1'
+$zipScript = Join-Path $PSScriptRoot 'scripts\zip-web-godaddy.ps1'
+
+Write-Host ''
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host ' SwimIQ - Publish Flutter to GoDaddy' -ForegroundColor Cyan
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host ''
+Write-Host 'This builds the REAL Flutter app (login, dashboard, passport).' -ForegroundColor Yellow
+Write-Host 'It does NOT upload the old marketing website\ folder.' -ForegroundColor Yellow
+Write-Host ''
+
+& powershell -NoProfile -ExecutionPolicy Bypass -File $buildScript
+if ($LASTEXITCODE -ne 0) {
+    Read-Host 'Press Enter to close'
+    exit $LASTEXITCODE
+}
+
 . (Join-Path $PSScriptRoot 'scripts\swimiq-windows-paths.ps1')
-
-Write-Host ''
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ' SwimIQ - Build for GoDaddy' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
 try {
     $paths = Initialize-SwimIqWindowsPaths -ScriptsRoot (Join-Path $PSScriptRoot 'scripts')
 } catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
-    Read-Host 'Press Enter'; exit 1
+    Read-Host 'Press Enter'
+    exit 1
 }
-
-$envFile = Join-Path $paths.WorkDir '.env'
-if (-not (Test-Path -LiteralPath $envFile)) {
-    Write-Host 'ERROR: Missing .env' -ForegroundColor Red
-    Read-Host 'Press Enter'; exit 1
-}
-
-$url = $null; $key = $null
-Get-Content $envFile | ForEach-Object {
-    if ($_ -match '^\s*SUPABASE_URL\s*=\s*(.+)\s*$') { $url = $matches[1].Trim() }
-    if ($_ -match '^\s*SUPABASE_ANON_KEY\s*=\s*(.+)\s*$') { $key = $matches[1].Trim() }
-}
-$url = $url -replace 'https:https//','https://' -replace 'https//','https://'
-if ($url -and $url -notmatch '^https://') { $url = "https://$url" }
-if (-not $url -or -not $key -or $url -match 'your-project') {
-    Write-Host 'ERROR: .env needs SUPABASE_URL and SUPABASE_ANON_KEY' -ForegroundColor Red
-    Read-Host 'Press Enter'; exit 1
-}
-
-Write-Host 'Building release web app (3-5 minutes)...' -ForegroundColor Cyan
-Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
-& $paths.FlutterBat pub get
-if ($LASTEXITCODE -ne 0) { Read-Host 'Press Enter'; exit $LASTEXITCODE }
-
-& $paths.FlutterBat build web --release `
-    --dart-define=SUPABASE_URL=$url `
-    --dart-define=SUPABASE_ANON_KEY=$key
 
 $webOut = Join-Path $paths.WorkDir 'build\web'
-if ($LASTEXITCODE -ne 0) {
-    Write-Host 'BUILD FAILED - do not upload to GoDaddy' -ForegroundColor Red
-    Read-Host 'Press Enter'; exit 1
-}
-
-if (-not (Test-Path (Join-Path $webOut 'main.dart.js'))) {
-    Write-Host 'BUILD FAILED - missing main.dart.js' -ForegroundColor Red
-    Read-Host 'Press Enter'; exit 1
-}
-
-$brandDir = Join-Path $paths.WorkDir 'assets\branding'
-$hasLogo = @(
-    'swimiq_icon.png',
-    'swimiq_logo.png',
-    'swimiq_logo_square.png',
-    'icon.png'
-) | Where-Object { Test-Path (Join-Path $brandDir $_) }
-if (-not $hasLogo) {
-    Write-Host ''
-    Write-Host 'WARNING: No logo PNG in assets\branding\' -ForegroundColor Yellow
-    Write-Host '  Login will show fallback until you add swimiq_logo.png' -ForegroundColor Yellow
-    Write-Host '  Copy your 512x512 PNG, rebuild, then re-upload to GoDaddy.' -ForegroundColor Yellow
-    Write-Host ''
-} else {
-    Write-Host "OK  Logo bundled: $($hasLogo[0])" -ForegroundColor Green
-}
-
-$htaccess = Join-Path $paths.WorkDir 'web\.htaccess'
-if (Test-Path $htaccess) {
-    Copy-Item $htaccess (Join-Path $webOut '.htaccess') -Force
-    Write-Host 'OK  Added .htaccess for GoDaddy' -ForegroundColor Green
-}
-
-$zipScript = Join-Path $PSScriptRoot 'scripts\zip-web-godaddy.ps1'
 $zipPath = Join-Path $paths.WorkDir 'build\swimiq-web-godaddy.zip'
-if (Test-Path $zipScript) {
-    & $zipScript -WebDir $webOut -ZipPath $zipPath
-}
+& powershell -NoProfile -ExecutionPolicy Bypass -File $zipScript -WebDir $webOut -ZipPath $zipPath
 
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Green
-Write-Host ' BUILD DONE' -ForegroundColor Green
+Write-Host ' BUILD DONE — next upload to GoDaddy' -ForegroundColor Green
 Write-Host '========================================' -ForegroundColor Green
-Write-Host " Option A - ZIP (easiest on GoDaddy):" -ForegroundColor Green
-Write-Host "   Upload ONE file:`n   $zipPath" -ForegroundColor Green
-Write-Host '   Then Extract in File Manager (see below)' -ForegroundColor Green
 Write-Host ''
-Write-Host " Option B - upload folder:`n   $webOut" -ForegroundColor Green
-Write-Host ' to GoDaddy public_html (keep cgi-bin)' -ForegroundColor Green
+Write-Host '1. GoDaddy → My Products → swimiqapp.com → Hosting → File Manager' -ForegroundColor Cyan
+Write-Host '2. Open public_html' -ForegroundColor Cyan
+Write-Host '3. DELETE or rename old index.html (the marketing homepage)' -ForegroundColor Cyan
+Write-Host '4. Upload ONE file:' -ForegroundColor Cyan
+Write-Host "   $zipPath" -ForegroundColor Green
+Write-Host '5. Right-click zip → Extract → overwrite everything' -ForegroundColor Cyan
+Write-Host '6. Confirm public_html contains main.dart.js and SWIMIQ-FLUTTER-BUILD.txt' -ForegroundColor Cyan
+Write-Host '7. Open https://swimiqapp.com in Incognito — you should see LOGIN' -ForegroundColor Cyan
+Write-Host ''
+Write-Host 'If you still see the old brochure site: wrong files were uploaded, or cache.' -ForegroundColor Yellow
+Write-Host 'Hard refresh Ctrl+F5. public_html must have main.dart.js (Flutter), not only css/site.css.' -ForegroundColor Yellow
+Write-Host ''
+try { explorer.exe /select,$zipPath } catch {}
 Read-Host 'Press Enter to close'

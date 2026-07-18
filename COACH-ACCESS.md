@@ -1,10 +1,17 @@
 # Coach access link (share this)
 
-## App link
+## App link (after Flutter is published to GoDaddy)
 
 **https://swimiqapp.com**
 
-That is the coach-facing SwimIQ web app (login, dashboard, passport, video library).
+Coaches should see the **SwimIQ login screen**, not a “coming soon” brochure.
+
+If the brochure/old marketing page still shows, the Flutter app has **not** been uploaded yet.  
+On the Windows PC run:
+
+`Desktop\StrokeIQ\PUBLISH-SWIMIQAPP-COM.bat`
+
+then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_UPLOAD.md`).
 
 ## Demo login (for coaches to try)
 
@@ -26,8 +33,8 @@ That is the coach-facing SwimIQ web app (login, dashboard, passport, video libra
 
 ## Important note about Elite Video Lab
 
-- **https://swimiqapp.com** = full SwimIQ product for coaches/athletes in the browser
-- **Elite Video Lab stroke analysis** on Windows currently uses a **local analysis server** on your PC (`START-SWIMIQ-WITH-ELITE.bat`). Coaches on swimiqapp.com can use the app; hosted Elite CV analysis is a separate deploy step.
+- **https://swimiqapp.com** = full SwimIQ web app for coaches/athletes (after Flutter publish)
+- **Elite Video Lab local CV analysis** still runs on the Windows PC via `START-SWIMIQ-WITH-ELITE.bat` until a hosted analysis API is deployed
 
 ## Short text you can paste to a coach
 
@@ -36,3 +43,5 @@ Try SwimIQ here: https://swimiqapp.com
 Demo login: demo@swimiqapp.com / SwimIQ
 In Settings → Plans, redeem coach code: COACH-EVAL-14
 ```
+
+(Only send after you confirm the site shows the **login** screen in Incognito.)

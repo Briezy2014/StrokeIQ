@@ -23,4 +23,6 @@ restart the bat.
 
 ## Coach share link
 
-See **COACH-ACCESS.md** → https://swimiqapp.com
+1. Publish Flutter to GoDaddy: double-click **`PUBLISH-SWIMIQAPP-COM.bat`**, upload the zip (see `swimiq/docs/GODADDY_WEBSITE_UPLOAD.md`)
+2. Confirm https://swimiqapp.com shows **login** (not the old brochure)
+3. Share paste text from **COACH-ACCESS.md**
