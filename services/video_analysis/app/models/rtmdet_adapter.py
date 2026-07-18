@@ -33,8 +33,17 @@ class RTMDetOnnxAdapter(DetectorAdapter):
                 "Run scripts/download_rtmdet.py"
             )
         self._input_size = input_size
+        session_options = ort.SessionOptions()
+        session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        # Keep CPU inference snappy on coach laptops without oversubscribing.
+        try:
+            session_options.intra_op_num_threads = 4
+            session_options.inter_op_num_threads = 1
+        except Exception:  # noqa: BLE001
+            pass
         self._session = ort.InferenceSession(
             str(self._model_path),
+            sess_options=session_options,
             providers=providers or ["CPUExecutionProvider"],
         )
         self._input_name = self._session.get_inputs()[0].name

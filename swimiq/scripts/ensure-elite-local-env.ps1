@@ -127,11 +127,13 @@ $map['MIN_USABLE_TARGET_COVERAGE'] = '0.08'
 $map['MIN_DETECTION_CONFIDENCE'] = '0.25'
 $map['TRACKING_CONFIDENCE_THRESHOLD'] = '0.30'
 $map['MAX_LOST_FRAMES'] = '30'
-# CPU detection speed for coach PCs / short phone clips.
-# Interval 6 + skip overlay (Flutter default) keeps 15s clips near 30-90s wall time.
-$map['FRAME_PROCESSING_INTERVAL'] = '6'
-$map['MAX_ANALYSIS_DURATION_S'] = '20'
+# CPU detection speed for coach PCs / short phone clips (~30-60s wall target).
+$map['FRAME_PROCESSING_INTERVAL'] = '8'
+$map['MAX_ANALYSIS_DURATION_S'] = '15'
 $map['ANNOTATED_FRAME_STRIDE'] = '4'
+$map['MAX_ACTIVE_TRACKS'] = '8'
+$map['GEMINI_TIMEOUT_S'] = '12'
+$map['GEMINI_MAX_REGENERATE_ATTEMPTS'] = '1'
 
 if (-not $map.ContainsKey('FFMPEG_PATH') -or [string]::IsNullOrWhiteSpace([string]$map['FFMPEG_PATH'])) {
     $map['FFMPEG_PATH'] = 'ffmpeg'

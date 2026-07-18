@@ -82,30 +82,42 @@ class ReportGenerator:
         configured_model = (
             (self.settings.gemini_model_name if self.settings else None) or DEFAULT_MODEL_NAME
         )
-        model_candidates = [configured_model] + [
-            m for m in _MODEL_FALLBACKS if m != configured_model
-        ]
-        max_attempts = (
-            self.settings.gemini_max_regenerate_attempts if self.settings else 2
+        # Speed path for coach PCs: one model, one attempt, then rich local coaching.
+        # Walking every fallback model can add minutes and break the 30-60s goal.
+        model_candidates = [configured_model]
+        max_attempts = min(
+            1,
+            max(1, self.settings.gemini_max_regenerate_attempts if self.settings else 1),
+        )
+        timeout_s = float(
+            min(15.0, self.settings.gemini_timeout_s if self.settings else 15.0)
+        )
+
+        # Always prepare a rich local coach report first so short clips never
+        # end with an empty yellow box if Gemini is slow or rejects the key.
+        local_ready = self._local_fallback_result(
+            job,
+            context=context,
+            metrics=metrics,
+            events=events,
+            output_dir=output_dir,
+            model_name=configured_model,
+            gemini_code="LOCAL_PRIMARY",
         )
 
         try:
             transport = self._get_transport()
         except GeminiClientError as exc:
             logger.warning(
-                "Gemini unavailable job=%s code=%s — using local coaching fallback",
+                "Gemini unavailable job=%s code=%s — using rich local coaching",
                 job.job_id,
                 exc.code,
             )
-            return self._local_fallback_result(
-                job,
-                context=context,
-                metrics=metrics,
-                events=events,
-                output_dir=output_dir,
-                model_name=configured_model,
-                gemini_code=exc.code,
-            )
+            local_ready.limitations = [
+                f"gemini_report_failed:{exc.code}",
+                "local_coaching_fallback",
+            ]
+            return local_ready
 
         user_prompt = build_user_prompt(context)
         evidence_images = (
@@ -134,9 +146,7 @@ class ReportGenerator:
                         ),
                         response_schema=CoachingReportBody,
                         evidence_images=evidence_images or None,
-                        timeout_s=float(
-                            self.settings.gemini_timeout_s if self.settings else 45.0
-                        ),
+                        timeout_s=timeout_s,
                     )
                 except GeminiClientError as exc:
                     last_gemini_code = exc.code
@@ -146,7 +156,7 @@ class ReportGenerator:
                         model_name,
                         exc.code,
                     )
-                    # Fall back quickly — do not burn minutes walking every model.
+                    # Fall back quickly to the prepared local coach report.
                     if exc.code in {
                         "MODEL_UNAVAILABLE",
                         "INVALID_API_KEY",
@@ -156,15 +166,11 @@ class ReportGenerator:
                         "RATE_LIMIT",
                         "SERVICE_OUTAGE",
                     }:
-                        return self._local_fallback_result(
-                            job,
-                            context=context,
-                            metrics=metrics,
-                            events=events,
-                            output_dir=output_dir,
-                            model_name=model_name,
-                            gemini_code=exc.code,
-                        )
+                        local_ready.limitations = [
+                            f"gemini_report_failed:{exc.code}",
+                            "local_coaching_fallback",
+                        ]
+                        return local_ready
                     if attempt >= max_attempts:
                         model_dead = True
                         break
@@ -226,19 +232,16 @@ class ReportGenerator:
                 continue
 
         logger.warning(
-            "Gemini exhausted job=%s code=%s — using local coaching fallback",
+            "Gemini exhausted job=%s code=%s — using rich local coaching",
             job.job_id,
             last_gemini_code,
         )
-        return self._local_fallback_result(
-            job,
-            context=context,
-            metrics=metrics,
-            events=events,
-            output_dir=output_dir,
-            model_name=last_model,
-            gemini_code=last_gemini_code,
-        )
+        local_ready.limitations = [
+            f"gemini_report_failed:{last_gemini_code}",
+            "local_coaching_fallback",
+        ]
+        _ = last_model  # kept for logs above
+        return local_ready
 
     def _local_fallback_result(
         self,

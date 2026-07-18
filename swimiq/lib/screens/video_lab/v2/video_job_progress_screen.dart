@@ -126,7 +126,7 @@ class _VideoJobProgressScreenState
                   const SwimIqScreenHeader(
                     title: 'Elite Video Lab',
                     subtitle:
-                        'Analyzing your swim. Short clips usually finish in under 2 minutes on this PC.',
+                        'Analyzing your swim. Short clips usually finish in about 30–60 seconds on this PC.',
                   ),
                   const SizedBox(height: 28),
                   Center(

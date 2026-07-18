@@ -384,15 +384,17 @@ def run_detection_and_tracking(
         if annotated is None:
             limitations.append("Annotated tracking video could not be written")
             completed_with_limitations = True
-    if on_progress is not None:
-        on_progress(0.71)
-    # Keep target stills cheap — a few frames is enough for evidence thumbnails.
-    target_frame_paths = save_target_frames(
-        video_path=video_path,
-        out_dir=target_frames_dir,
-        target_track=target_track,
-        max_frames=4,
-    )
+    # Skip still extraction on the fast path (no overlay) — big win on short clips.
+    target_frame_paths: list[str] = []
+    if want_overlay:
+        if on_progress is not None:
+            on_progress(0.71)
+        target_frame_paths = save_target_frames(
+            video_path=video_path,
+            out_dir=target_frames_dir,
+            target_track=target_track,
+            max_frames=4,
+        )
     if on_progress is not None:
         on_progress(0.72)
 

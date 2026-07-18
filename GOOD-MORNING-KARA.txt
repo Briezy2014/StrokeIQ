@@ -2,22 +2,24 @@
   GOOD MORNING — Elite analysis (ONE path)
 ============================================================
 
+Goal for short clips: about 30-60 seconds, then a full coaching
+breakdown (strengths, what to fix, drills, next-race cues).
+
 Do this only:
 
   1. Double-click   START-SWIMIQ-WITH-ELITE.bat
   2. Leave the Elite black window OPEN
   3. Sign in on localhost (127.0.0.1) — NOT swimiqapp.com
   4. Elite tab → Run Elite Analysis on a short clip
-  5. Wait for results (progress % should move)
-  6. Open the Coaching tab for tips
+  5. Watch the progress % move
+  6. Open Summary + Coaching tabs for the full breakdown
 
 If the black banner about 127.0.0.1:8080 appears:
   Elite window was closed. Run START-SWIMIQ-WITH-ELITE.bat again.
 
-Gemini key (optional for tips quality):
-  Keep GEMINI_API_KEY=... in Desktop\StrokeIQ\swimiq\.env
-  Then restart with START-SWIMIQ-WITH-ELITE.bat
-  Even if Gemini hiccups, you should still get coaching tips.
+You should get coaching tips even if Gemini has a hiccup.
+Gemini key (optional upgrade): GEMINI_API_KEY=... in swimiq\.env
+then restart with START-SWIMIQ-WITH-ELITE.bat.
 
 Do NOT hunt for other .bat files first.
 ============================================================

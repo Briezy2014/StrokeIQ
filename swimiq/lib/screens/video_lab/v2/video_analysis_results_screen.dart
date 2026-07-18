@@ -304,7 +304,7 @@ class _SummaryTab extends StatelessWidget {
         ],
         if (hasImprovements) ...[
           Text(
-            'Priority improvements',
+            'What to fix next',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -318,10 +318,26 @@ class _SummaryTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'See the Coaching tab for drills and dryland suggestions.',
+            'Open the Coaching tab for drills and next-race cues.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (report?.raceRecommendations.isNotEmpty == true) ...[
+          Text(
+            'Next race',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 6),
+          ...report!.raceRecommendations.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text('• $r'),
+            ),
           ),
           const SizedBox(height: 16),
         ],
@@ -501,7 +517,7 @@ class _CoachingTab extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (report.priorityImprovements.isNotEmpty) ...[
-          Text('Priority improvements', style: _h(context)),
+          Text('What to fix next', style: _h(context)),
           const SizedBox(height: 6),
           ...report.priorityImprovements.map((p) {
             return Padding(
@@ -527,18 +543,17 @@ class _CoachingTab extends StatelessWidget {
           ...report.drills.map(_bullet),
           const SizedBox(height: 16),
         ],
+        if (report.raceRecommendations.isNotEmpty) ...[
+          Text('Next race', style: _h(context)),
+          const SizedBox(height: 6),
+          ...report.raceRecommendations.map(_bullet),
+          const SizedBox(height: 16),
+        ],
         if (report.limitationsStatement?.trim().isNotEmpty == true) ...[
-          Text('Report limitations', style: _h(context)),
+          Text('Notes', style: _h(context)),
           const SizedBox(height: 6),
           Text(report.limitationsStatement!),
         ],
-        const SizedBox(height: 12),
-        Text(
-          'Coaching narrative is generated separately from measured metrics.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontStyle: FontStyle.italic,
-              ),
-        ),
       ],
     );
   }
