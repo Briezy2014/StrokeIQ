@@ -85,6 +85,18 @@ class _VideoEngineV2SetupSheetState
     final analytics = ref.read(videoAnalyticsServiceProvider);
     try {
       final service = ref.read(videoEngineV2ServiceProvider);
+      final health = await service.checkHealth();
+      if (!health.reachable || !health.mediaToolsReady) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(health.message),
+            duration: const Duration(seconds: 12),
+          ),
+        );
+        return;
+      }
+
       final targetTrack = _targetTrackController.text.trim();
       final job = await service.createJob(
         videoId: videoId,
@@ -113,19 +125,10 @@ class _VideoEngineV2SetupSheetState
       );
     } on VideoEngineV2Exception catch (e) {
       if (!mounted) return;
-      final unavailable = e.errorCode == 'SERVER_UNAVAILABLE' ||
-          e.errorCode == 'SERVICE_UNAVAILABLE' ||
-          e.message.toLowerCase().contains('unavailable');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            unavailable
-                ? 'Elite analysis server is offline. Double-click '
-                    'START-ELITE-ANALYSIS-SERVER.bat, wait for it to say running, '
-                    'then tap Confirm & Analyze again.'
-                : e.message,
-          ),
-          duration: const Duration(seconds: 10),
+          content: Text(e.message),
+          duration: const Duration(seconds: 12),
         ),
       );
     } catch (e) {

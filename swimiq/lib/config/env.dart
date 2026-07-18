@@ -35,7 +35,7 @@ class Env {
   }
 
   static String get supabaseUrl {
-    final value = _urlFromDotenv ?? _urlDefine;
+    final value = _preferNonEmpty(_urlFromDotenv, _urlDefine);
     if (value.isEmpty) {
       throw StateError(
         'SUPABASE_URL is not set. Copy .env.example to .env or use --dart-define.',
@@ -45,7 +45,7 @@ class Env {
   }
 
   static String get supabaseAnonKey {
-    final value = _keyFromDotenv ?? _keyDefine;
+    final value = _preferNonEmpty(_keyFromDotenv, _keyDefine);
     if (value.isEmpty) {
       throw StateError(
         'SUPABASE_ANON_KEY is not set. Copy .env.example to .env or use --dart-define.',
@@ -56,20 +56,23 @@ class Env {
 
   /// Base URL for the Video Engine V2 FastAPI service (no trailing slash).
   static String get analysisApiBaseUrl {
-    final raw = (_analysisApiFromDotenv ?? _analysisApiDefine).trim();
-    if (raw.isEmpty) return '';
+    final raw = _preferNonEmpty(_analysisApiFromDotenv, _analysisApiDefine);
+    if (raw.isEmpty) return 'http://localhost:8080';
     return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
   }
 
   static bool get videoEngineV2 {
-    return _parseBool(_videoEngineV2FromDotenv ?? _videoEngineV2Define);
+    return _parseBool(
+      _preferNonEmpty(_videoEngineV2FromDotenv, _videoEngineV2Define),
+    );
   }
 
   /// Comma-separated emails allowed to use V2 when set. Empty = all users when V2 on.
   static List<String> get videoEngineV2Allowlist {
-    final raw =
-        (_videoEngineV2AllowlistFromDotenv ?? _videoEngineV2AllowlistDefine)
-            .trim();
+    final raw = _preferNonEmpty(
+      _videoEngineV2AllowlistFromDotenv,
+      _videoEngineV2AllowlistDefine,
+    );
     if (raw.isEmpty) return const [];
     return raw
         .split(',')
@@ -81,14 +84,24 @@ class Env {
   /// When true, legacy Gemini path remains available alongside V2.
   static bool get videoEngineV2DualRun {
     return _parseBool(
-      _videoEngineV2DualRunFromDotenv ?? _videoEngineV2DualRunDefine,
+      _preferNonEmpty(
+        _videoEngineV2DualRunFromDotenv,
+        _videoEngineV2DualRunDefine,
+      ),
     );
   }
 
   static bool get isConfigured {
-    final url = _urlFromDotenv ?? _urlDefine;
-    final key = _keyFromDotenv ?? _keyDefine;
+    final url = _preferNonEmpty(_urlFromDotenv, _urlDefine);
+    final key = _preferNonEmpty(_keyFromDotenv, _keyDefine);
     return url.isNotEmpty && key.isNotEmpty;
+  }
+
+  /// Prefer a non-empty dotenv value; otherwise fall back to dart-define.
+  static String _preferNonEmpty(String? fromDotenv, String fromDefine) {
+    final a = fromDotenv?.trim() ?? '';
+    if (a.isNotEmpty) return a;
+    return fromDefine.trim();
   }
 
   static bool _parseBool(String? raw) {

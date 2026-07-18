@@ -45,12 +45,16 @@ app = FastAPI(
 
 _settings = get_settings()
 _origins = [o.strip() for o in (_settings.cors_allow_origins or "*").split(",") if o.strip()]
+# Bearer tokens use the Authorization header (not cookies). Keep credentials
+# off when origins are "*", so Flutter web browsers accept ACAO: *.
+_allow_all = _origins == ["*"] or not _origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins if _origins != ["*"] else ["*"],
-    allow_credentials=True,
+    allow_origins=["*"] if _allow_all else _origins,
+    allow_credentials=not _allow_all,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(health.router)

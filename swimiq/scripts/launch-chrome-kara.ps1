@@ -98,7 +98,8 @@ try {
     if (-not $foundV2) { $out += 'VIDEO_ENGINE_V2=true' }
     if (-not $foundApi) { $out += 'ANALYSIS_API_BASE_URL=http://localhost:8080' }
     if (-not $foundDual) { $out += 'VIDEO_ENGINE_V2_DUAL_RUN=false' }
-    Set-Content -LiteralPath $envFile -Value $out -Encoding UTF8
+    # ASCII avoids UTF-8 BOM, which breaks --dart-define-from-file parsing.
+    Set-Content -LiteralPath $envFile -Value $out -Encoding ascii
     Write-Host '[OK] VIDEO_ENGINE_V2=true (Elite Video Lab)' -ForegroundColor Green
     Write-Host '     Start Elite server with START-ELITE-ANALYSIS-SERVER.bat before Analyze.' -ForegroundColor Yellow
 } catch {

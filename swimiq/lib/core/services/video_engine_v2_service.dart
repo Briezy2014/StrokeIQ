@@ -57,6 +57,56 @@ class VideoEngineV2Service {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
 
+  /// Unauthenticated ping of Elite `/health` (used before Confirm & Analyze).
+  Future<EliteServerHealth> checkHealth() async {
+    final uri = Uri.parse('$baseUrl/health');
+    try {
+      final response = await _client.get(
+        uri,
+        headers: const {'Accept': 'application/json'},
+      );
+      if (response.statusCode != 200 || response.body.isEmpty) {
+        return EliteServerHealth(
+          reachable: false,
+          message:
+              'Elite server responded ${response.statusCode} at $baseUrl/health',
+        );
+      }
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) {
+        return EliteServerHealth(
+          reachable: false,
+          message: 'Elite /health returned an unexpected response.',
+        );
+      }
+      final map = Map<String, dynamic>.from(decoded);
+      final status = map['status']?.toString() ?? 'unknown';
+      final ffmpeg = map['ffmpeg_available'] == true;
+      final ffprobe = map['ffprobe_available'] == true;
+      final version = map['engine_version']?.toString();
+      final ok = status == 'ok' || status == 'degraded';
+      final missingMedia = !ffmpeg || !ffprobe;
+      return EliteServerHealth(
+        reachable: ok,
+        status: status,
+        engineVersion: version,
+        ffmpegAvailable: ffmpeg,
+        ffprobeAvailable: ffprobe,
+        message: !ok
+            ? 'Elite server health failed at $baseUrl'
+            : missingMedia
+                ? 'Elite server is up, but FFmpeg is missing. Restart START-ELITE-ANALYSIS-SERVER.bat after installing FFmpeg.'
+                : 'Elite server ready at $baseUrl',
+      );
+    } catch (e) {
+      return EliteServerHealth(
+        reachable: false,
+        message:
+            'Cannot reach Elite server at $baseUrl. Start START-ELITE-ANALYSIS-SERVER.bat and leave it open. ($e)',
+      );
+    }
+  }
+
   Future<AnalysisJob> createJob({
     required String videoId,
     required String storagePath,
@@ -286,7 +336,9 @@ class VideoEngineV2Service {
     } catch (e) {
       if (e is VideoEngineV2Exception) rethrow;
       throw VideoEngineV2Exception(
-        userMessageForErrorCode('SERVER_UNAVAILABLE'),
+        'Cannot reach Elite server at $baseUrl$path. '
+        'Start START-ELITE-ANALYSIS-SERVER.bat, leave that window open, '
+        'confirm http://localhost:8080/health loads, then try again. ($e)',
         errorCode: 'SERVER_UNAVAILABLE',
       );
     }
@@ -363,4 +415,26 @@ class VideoEngineV2Service {
         return 'unknown';
     }
   }
+}
+
+/// Result of pinging the local Elite Video Lab FastAPI `/health` endpoint.
+class EliteServerHealth {
+  const EliteServerHealth({
+    required this.reachable,
+    required this.message,
+    this.status,
+    this.engineVersion,
+    this.ffmpegAvailable,
+    this.ffprobeAvailable,
+  });
+
+  final bool reachable;
+  final String message;
+  final String? status;
+  final String? engineVersion;
+  final bool? ffmpegAvailable;
+  final bool? ffprobeAvailable;
+
+  bool get mediaToolsReady =>
+      ffmpegAvailable == true && ffprobeAvailable == true;
 }

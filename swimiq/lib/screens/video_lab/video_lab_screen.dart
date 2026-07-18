@@ -342,6 +342,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             ),
             if (v2Allowed) ...[
               const SizedBox(height: 12),
+              _EliteServerStatusBanner(
+                health: serverHealth,
+                onRetry: () => ref.invalidate(videoServerHealthProvider),
+              ),
+              const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
@@ -461,6 +466,56 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+class _EliteServerStatusBanner extends StatelessWidget {
+  const _EliteServerStatusBanner({
+    required this.health,
+    required this.onRetry,
+  });
+
+  final VideoAnalysisServerHealth? health;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = health?.ok == true;
+    final message = health?.message ??
+        'Checking Elite analysis server at http://localhost:8080 …';
+    final bg = ready ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
+    final fg = ready ? const Color(0xFF1B5E20) : const Color(0xFFE65100);
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              ready ? Icons.check_circle_outline : Icons.wifi_off_outlined,
+              color: fg,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                ready
+                    ? 'Elite server connected. $message'
+                    : 'Elite server not ready. $message',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text('Recheck'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

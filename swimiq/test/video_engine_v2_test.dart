@@ -206,6 +206,37 @@ void main() {
       );
     });
 
+    test('checkHealth reports reachable Elite server', () async {
+      final service = serviceWith((request) async {
+        expect(request.method, 'GET');
+        expect(request.url.path, '/health');
+        return http.Response(
+          jsonEncode({
+            'status': 'ok',
+            'engine_version': 'elite-0.9.0',
+            'ffmpeg_available': true,
+            'ffprobe_available': true,
+          }),
+          200,
+        );
+      });
+      final health = await service.checkHealth();
+      expect(health.reachable, isTrue);
+      expect(health.mediaToolsReady, isTrue);
+      expect(health.engineVersion, 'elite-0.9.0');
+    });
+
+    test('checkHealth reports unreachable server', () async {
+      final service = VideoEngineV2Service(
+        client: MockClient((_) async => throw Exception('connection refused')),
+        accessTokenGetter: () async => 'test-token',
+        baseUrl: 'http://analysis.test',
+      );
+      final health = await service.checkHealth();
+      expect(health.reachable, isFalse);
+      expect(health.message, contains('Cannot reach Elite server'));
+    });
+
     test('unauthorized result access error mapping', () async {
       final service = serviceWith(
         (_) async => http.Response('{"detail":"forbidden"}', 403),
