@@ -2,17 +2,12 @@ SwimIQ — ONE path only (Desktop\StrokeIQ)
 
 Black banner about 127.0.0.1:8080 = Elite is OFF.
 
-Use a file that is ALREADY in your folder:
-
   Double-click:  START-SWIMIQ-WITH-ELITE.bat
-
-OR if you want to download latest first:
-
-  Double-click:  GET-LATEST-FIXED-APP.bat
-  (that file updates, then starts START-SWIMIQ-WITH-ELITE.bat for you)
 
 Leave the Elite black window OPEN.
 Address bar must be 127.0.0.1 / localhost — not swimiqapp.com.
 
-Do NOT look for FIX-ANALYSIS-NOW.bat unless you already ran GET-LATEST.
-That name is only an alias. The real file is START-SWIMIQ-WITH-ELITE.bat.
+Then: Elite tab → Run Elite Analysis again.
+
+Short clips should finish much faster now.
+Coaching tips should still appear even if Gemini has a key hiccup.
