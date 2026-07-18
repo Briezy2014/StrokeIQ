@@ -121,18 +121,47 @@ if (Test-Path -LiteralPath $eliteWait) {
     }
 }
 
-Write-Host 'Checking branding PNG...' -ForegroundColor Cyan
+Write-Host 'Checking Aspyn login icon (assets\branding\icon.png)...' -ForegroundColor Cyan
 $brandDir = Join-Path $paths.WorkDir 'assets\branding'
 $loginIcon = Join-Path $brandDir 'icon.png'
+$logoIcon = Join-Path $brandDir 'logo.png'
 $legacyIcon = Join-Path $brandDir 'swimiq_icon.png'
-if (Test-Path -LiteralPath $loginIcon) {
-    Write-Host "OK  Login uses assets\branding\icon.png" -ForegroundColor Green
-} elseif (Test-Path -LiteralPath $legacyIcon) {
-    Write-Host 'WARN Found swimiq_icon.png only - copying to icon.png for login...' -ForegroundColor Yellow
-    Copy-Item -LiteralPath $legacyIcon -Destination $loginIcon -Force
-} else {
-    Write-Host 'WARN No icon.png - drag your 512x512 icon onto COPY-LOGO.bat' -ForegroundColor Yellow
+$webFav = Join-Path $paths.WorkDir 'web\favicon.png'
+$web512 = Join-Path $paths.WorkDir 'web\icons\Icon-512.png'
+$web192 = Join-Path $paths.WorkDir 'web\icons\Icon-192.png'
+New-Item -ItemType Directory -Force -Path $brandDir | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $paths.WorkDir 'web\icons') | Out-Null
+
+# Prefer a real PNG (>= 20KB). Tiny/corrupt files cause the triangle fallback.
+function Test-GoodPng([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return $false }
+    return ((Get-Item -LiteralPath $path).Length -ge 20000)
 }
+
+if (-not (Test-GoodPng $loginIcon)) {
+    if (Test-GoodPng $logoIcon) {
+        Copy-Item -LiteralPath $logoIcon -Destination $loginIcon -Force
+        Write-Host 'OK  Copied logo.png -> icon.png for login' -ForegroundColor Green
+    } elseif (Test-GoodPng $legacyIcon) {
+        Copy-Item -LiteralPath $legacyIcon -Destination $loginIcon -Force
+        Copy-Item -LiteralPath $legacyIcon -Destination $logoIcon -Force
+        Write-Host 'OK  Copied swimiq_icon.png -> icon.png for login' -ForegroundColor Green
+    } else {
+        Write-Host '[FAIL] Aspyn login icon missing or too small.' -ForegroundColor Red
+        Write-Host "Expected: $loginIcon (at least 20KB PNG)" -ForegroundColor Red
+        Write-Host 'Drag your 512x512 SwimIQ/Aspyn icon onto COPY-LOGO.bat, then run this again.' -ForegroundColor Yellow
+        Read-Host 'Press Enter to close'
+        exit 1
+    }
+}
+
+# Keep web favicons in sync so Chrome never shows a stale triangle tab icon.
+Copy-Item -LiteralPath $loginIcon -Destination $logoIcon -Force
+Copy-Item -LiteralPath $loginIcon -Destination $webFav -Force
+Copy-Item -LiteralPath $loginIcon -Destination $web512 -Force
+Copy-Item -LiteralPath $loginIcon -Destination $web192 -Force
+$iconBytes = (Get-Item -LiteralPath $loginIcon).Length
+Write-Host ("OK  Login icon ready ({0} bytes): {1}" -f $iconBytes, $loginIcon) -ForegroundColor Green
 
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
@@ -155,9 +184,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Force a clean localhost URL so Chrome does not reopen swimiqapp.com.
+# Disable HTTP cache so an old triangle/favicon cannot stick.
 & $paths.FlutterBat run -d chrome `
     --web-hostname=127.0.0.1 `
     --web-port=7357 `
+    --web-browser-flag=--disable-http-cache `
     --dart-define-from-file=$envFile
 
 $code = $LASTEXITCODE

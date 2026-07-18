@@ -36,7 +36,8 @@ class SwimIqCompactMark extends StatelessWidget {
   }
 }
 
-/// Login / signup: full square app icon (icon.png) — contain, never zoom/crop.
+/// Login / signup: Aspyn SwimIQ lockup from assets/branding/icon.png only.
+/// Never show the old painted-triangle placeholder on login.
 class SwimIqLoginBrand extends StatelessWidget {
   const SwimIqLoginBrand({super.key, this.size = 168});
 
@@ -44,19 +45,44 @@ class SwimIqLoginBrand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // icon.png already includes the black lockup — do not wrap in a second
-    // black frame, and do not show the old triangle placeholder while loading.
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SwimIqBrandedImage(
-          candidates: SwimIqBranding.loginIconCandidates,
+        child: Image.asset(
+          SwimIqBranding.iconAsset,
           width: size,
           height: size,
           fit: BoxFit.contain,
-          fallback: ColoredBox(
-            color: Colors.black,
-            child: Center(child: SwimIqPaintedMark(size: size * 0.72)),
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => Image.asset(
+            'assets/branding/logo.png',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (_, __, ___) => SizedBox(
+              width: size,
+              height: size,
+              child: const ColoredBox(
+                color: Colors.black,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Text(
+                      'Missing Aspyn logo.\nRun COPY-LOGO.bat',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

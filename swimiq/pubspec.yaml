@@ -36,6 +36,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # Explicit login icon first so Windows/OneDrive never drops the folder entry.
+    - assets/branding/icon.png
+    - assets/branding/logo.png
+    - assets/branding/banner.png
+    - assets/branding/mark.png
     - assets/branding/
     - assets/images/
     - assets/legal/
