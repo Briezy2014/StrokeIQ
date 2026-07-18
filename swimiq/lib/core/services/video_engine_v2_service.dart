@@ -81,18 +81,23 @@ class VideoEngineV2Service {
       final status = map['status']?.toString() ?? 'unknown';
       final ffmpeg = map['ffmpeg_available'] == true;
       final ffprobe = map['ffprobe_available'] == true;
-      final storageConfigured = map['storage_download_configured'] == true ||
-          // Older servers before this field — assume OK only when status ok.
-          (map['storage_download_configured'] == null && status == 'ok');
+      // Require the new health field. Missing = stale Elite server still running.
+      final storageConfigured = map['storage_download_configured'] == true;
       final version = map['engine_version']?.toString();
       final ok = status == 'ok' || status == 'degraded';
       final missingMedia = !ffmpeg || !ffprobe;
+      final staleServer = map['storage_download_configured'] == null;
       String message;
       if (!ok) {
         message = 'Elite server health failed at $baseUrl';
       } else if (missingMedia) {
         message =
             'Elite server is up, but FFmpeg is missing. Restart START-ELITE-ANALYSIS-SERVER.bat after installing FFmpeg.';
+      } else if (staleServer) {
+        message =
+            'Elite server is OUT OF DATE (old process still running). '
+            'Close every Elite window, run START-SWIMIQ-WITH-ELITE.bat, '
+            'then confirm /health includes storage_download_configured.';
       } else if (!storageConfigured) {
         message =
             'Elite server is up, but Supabase storage keys are missing in services/video_analysis/.env. '

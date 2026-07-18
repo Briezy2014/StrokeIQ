@@ -34,21 +34,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM If something is already serving Elite health on 8080, reuse it.
-call :CheckAlreadyRunning
-if "!ALREADY_RUNNING!"=="1" (
-  echo.
-  echo [OK] Elite analysis server is ALREADY running on port 8080.
-  echo Leave the other Elite server window open.
-  echo Opening http://127.0.0.1:8080/health ...
-  start "" "http://127.0.0.1:8080/health"
-  echo.
-  echo Next: in SwimIQ tap Confirm ^& Analyze again.
-  echo Do NOT start a second server.
-  echo.
-  pause
-  exit /b 0
-)
+REM Never reuse a stale Elite process — old code keeps the storage-download bug.
+echo Clearing any old server on port 8080...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\kill-elite-port.ps1"
+echo.
 
 if not exist ".venv\Scripts\python.exe" (
   echo Creating Python venv...

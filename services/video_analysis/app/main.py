@@ -23,13 +23,25 @@ async def lifespan(app: FastAPI):
     store = ResultStore(settings.job_store_path)
     app.state.settings = settings
     app.state.store = store
+    url_ok = bool((settings.supabase_url or "").strip())
+    anon_ok = bool((settings.supabase_anon_key or "").strip())
+    service_ok = bool((settings.supabase_service_role_key or "").strip())
     log_stage(
         logger,
         stage="startup",
         message="Elite Video Lab analysis service started",
         engine_version=settings.engine_version,
         engine_name=settings.video_engine_name,
+        supabase_url_configured=url_ok,
+        supabase_anon_configured=anon_ok,
+        supabase_service_role_configured=service_ok,
+        storage_download_configured=service_ok or (url_ok and anon_ok),
     )
+    if not (service_ok or (url_ok and anon_ok)):
+        logger.error(
+            "STORAGE NOT CONFIGURED: set SUPABASE_URL + SUPABASE_ANON_KEY in "
+            "services/video_analysis/.env (copied from swimiq/.env) and restart."
+        )
     yield
 
 

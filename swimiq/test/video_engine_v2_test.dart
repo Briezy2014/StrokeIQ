@@ -228,6 +228,23 @@ void main() {
       expect(health.engineVersion, 'elite-0.9.0');
     });
 
+    test('checkHealth rejects stale Elite server without storage field', () async {
+      final service = serviceWith((request) async {
+        return http.Response(
+          jsonEncode({
+            'status': 'ok',
+            'engine_version': 'elite-0.9.0',
+            'ffmpeg_available': true,
+            'ffprobe_available': true,
+          }),
+          200,
+        );
+      });
+      final health = await service.checkHealth();
+      expect(health.storageConfigured, isFalse);
+      expect(health.message, contains('OUT OF DATE'));
+    });
+
     test('checkHealth reports unreachable server', () async {
       final service = VideoEngineV2Service(
         client: MockClient((_) async => throw Exception('connection refused')),

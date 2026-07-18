@@ -67,12 +67,27 @@ class SupabaseBridge:
         fall back to the signed-in Flutter user's JWT + anon key so analysis
         works without putting SUPABASE_SERVICE_ROLE_KEY on the machine.
         """
-        headers = self._download_headers(user_access_token=user_access_token)
+        mode, headers = self._download_auth(user_access_token=user_access_token)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        url = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
+        # Service role uses /object/... ; user JWT must use /object/authenticated/...
+        if mode == "service":
+            url = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
+        else:
+            url = (
+                f"{self.base}/storage/v1/object/authenticated/"
+                f"{bucket}/{storage_path}"
+            )
         try:
             with httpx.Client(timeout=120.0) as client:
                 resp = client.get(url, headers=headers)
+                # Some projects still allow /object/ with a user JWT — try once.
+                if (
+                    mode == "user"
+                    and resp.status_code in {400, 401, 403}
+                    and user_access_token
+                ):
+                    fallback = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
+                    resp = client.get(fallback, headers=headers)
         except httpx.HTTPError as exc:
             raise SupabaseBridgeError("UPLOAD_FAILED", f"Storage download failed: {exc}") from exc
         if resp.status_code == 404:
@@ -80,26 +95,40 @@ class SupabaseBridge:
         if resp.status_code >= 400:
             raise SupabaseBridgeError(
                 "UPLOAD_FAILED",
-                f"Storage download HTTP {resp.status_code}",
+                f"Storage download HTTP {resp.status_code}: {resp.text[:180]}",
             )
         dest.write_bytes(resp.content)
         return dest
 
-    def _download_headers(self, *, user_access_token: str | None) -> dict[str, str]:
+    def _download_auth(
+        self, *, user_access_token: str | None
+    ) -> tuple[str, dict[str, str]]:
         if self.enabled:
-            return self._headers()
+            return "service", self._headers()
         if self.base and self.anon_key and user_access_token:
-            return {
+            return "user", {
                 "apikey": self.anon_key,
                 "Authorization": f"Bearer {user_access_token}",
             }
+        missing = []
+        if not self.base:
+            missing.append("SUPABASE_URL")
+        if not self.anon_key:
+            missing.append("SUPABASE_ANON_KEY")
+        if not user_access_token:
+            missing.append("signed-in session token")
         raise SupabaseBridgeError(
             "SERVER_UNAVAILABLE",
-            "Supabase is not configured for storage download. "
-            "Set SUPABASE_URL + SUPABASE_ANON_KEY in services/video_analysis/.env "
-            "(copied from swimiq/.env), restart the Elite server, and stay signed in. "
-            "Optional: add SUPABASE_SERVICE_ROLE_KEY for service-role downloads.",
+            "Elite cannot download your video from Supabase storage. "
+            f"Missing: {', '.join(missing)}. "
+            "Close ALL Elite server windows, run START-SWIMIQ-WITH-ELITE.bat, "
+            "confirm /health has storage_download_configured:true, stay signed in, "
+            "then Run Elite Analysis again (do not retry an old failed job).",
         )
+
+    def _download_headers(self, *, user_access_token: str | None) -> dict[str, str]:
+        _mode, headers = self._download_auth(user_access_token=user_access_token)
+        return headers
 
     def create_signed_url(
         self,

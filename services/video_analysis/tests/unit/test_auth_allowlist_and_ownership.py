@@ -88,4 +88,4 @@ def test_download_headers_error_when_unconfigured() -> None:
     )
     with pytest.raises(SupabaseBridgeError) as exc:
         bridge._download_headers(user_access_token=None)
-    assert "storage download" in exc.value.message.lower()
+    assert "cannot download" in exc.value.message.lower()
