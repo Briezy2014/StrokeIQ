@@ -1,0 +1,58 @@
+============================================================
+  UPLOAD THIS ZIP TO GODADDY  (only these steps)
+============================================================
+
+File Explorer should already be open with this file highlighted:
+
+  Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+
+That ZIP is the whole website. There is NO folder named GoDaddy.
+
+------------------------------------------------------------
+STEPS
+------------------------------------------------------------
+
+1) In GoDaddy (browser should open):
+   Find Web Hosting → Manage → File Manager
+   (NOT the Domain page)
+
+2) Double-click folder:  public_html
+
+3) Click Upload
+
+4) Upload this ONE file:
+     swimiq-web-godaddy.zip
+   (from Desktop\StrokeIQ\swimiq\build\)
+
+5) When upload hits 100%, go back to the public_html file list
+
+6) Click the zip once → Extract / Unzip
+   Choose overwrite / replace when asked
+
+7) In public_html you must see:
+     main.dart.js
+     index.html
+   (directly in public_html, not only inside a subfolder)
+
+8) Open Incognito and go to:
+     https://swimiqapp.com
+   Hard refresh: Ctrl + Shift + R
+
+9) You should see SwimIQ LOGIN.
+   Sign in → Elite tab → no blue workstation banner.
+   Run Elite Analysis should start.
+
+------------------------------------------------------------
+IF THE ZIP IS NOT HIGHLIGHTED
+------------------------------------------------------------
+Open this path in File Explorer:
+
+  Desktop\StrokeIQ\swimiq\build
+
+Look for:  swimiq-web-godaddy.zip
+(next to the web folder)
+
+If it is still missing, run again:
+
+  Desktop\StrokeIQ\DO-THIS-ONE-THING.bat
+============================================================
