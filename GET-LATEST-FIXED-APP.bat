@@ -33,7 +33,9 @@ call :CheckFile "FIX-STORAGE.bat"
 call :CheckFile "FIX-ELITE-STORAGE-NOW.bat"
 call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
-call :CheckFile "swimiq\scripts\zip-web-godaddy.ps1"
+call :CheckFile "FINAL-TRY-THIS-ONLY.bat"
+call :CheckFile "FINAL-TRY-THIS-ONLY.txt"
+call :CheckFile "swimiq\scripts\final-try-preflight.ps1"
 call :CheckFile "swimiq\scripts\kill-elite-port.ps1"
 
 echo.
