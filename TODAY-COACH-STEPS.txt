@@ -26,8 +26,33 @@ PART A — Put the real app on the coach link (do this first)
    ZIP should be:
      Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
 
-4) GoDaddy → My Products → swimiqapp.com → Hosting → File Manager
-   Open folder:  public_html
+4) Find File Manager in GoDaddy (you will NOT see it on the Domain page)
+
+   You are on Domain Overview right now — that is the wrong screen.
+
+   Do ONE of these:
+
+   PATH A (from the left SwimIQ menu you already see):
+     1. Click  Website  (left sidebar — under Domain)
+     2. Open whatever shows for swimiqapp.com
+     3. Look for  Hosting  /  Manage  /  cPanel  /  File Manager
+
+   PATH B (products list — most reliable):
+     1. Open a new tab:  https://account.godaddy.com/products
+     2. Scroll to section  Web Hosting  (or  Hosting)
+     3. Next to the hosting plan, click  Manage
+     4. Click  File Manager
+     5. Open folder  public_html
+
+   PATH C (if Website opens a site builder only):
+     That means the site may be on GoDaddy Website Builder, not cPanel.
+     Call GoDaddy chat and say:
+       "I need Web Hosting File Manager / public_html for swimiqapp.com
+        so I can upload my own website files."
+
+   If there is NO Web Hosting section at all on My Products,
+   hosting is not on this account yet — stop and use GoDaddy chat
+   (do not keep clicking Domain).
 
 5) In public_html:
    - Rename old index.html to index-OLD-MARKETING.html
