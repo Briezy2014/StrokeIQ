@@ -174,6 +174,12 @@ Write-Host ' or 127.0.0.1 - NEVER swimiqapp.com' -ForegroundColor Yellow
 Write-Host ' Black workstation banner = OLD website.' -ForegroundColor Yellow
 Write-Host '############################################' -ForegroundColor Yellow
 Write-Host ''
+Write-Host 'Clearing old Flutter web ports (fixes errno 10048)...' -ForegroundColor Cyan
+$killWeb = Join-Path $PSScriptRoot 'kill-flutter-web-port.ps1'
+if (Test-Path -LiteralPath $killWeb) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
+}
+
 Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
@@ -185,13 +191,25 @@ if ($LASTEXITCODE -ne 0) {
 
 # Force a clean localhost URL so Chrome does not reopen swimiqapp.com.
 # Disable HTTP cache so an old triangle/favicon cannot stick.
-& $paths.FlutterBat run -d chrome `
-    --web-hostname=127.0.0.1 `
-    --web-port=7357 `
-    --web-browser-flag=--disable-http-cache `
-    --dart-define-from-file=$envFile
-
-$code = $LASTEXITCODE
+# Try a few ports if Windows still holds the last one.
+$webPorts = @(7357, 7358, 7359, 7360)
+$code = 1
+foreach ($webPort in $webPorts) {
+    Write-Host ("Trying http://127.0.0.1:{0} ..." -f $webPort) -ForegroundColor Cyan
+    & $paths.FlutterBat run -d chrome `
+        --web-hostname=127.0.0.1 `
+        --web-port=$webPort `
+        --web-browser-flag=--disable-http-cache `
+        --dart-define-from-file=$envFile
+    $code = $LASTEXITCODE
+    if ($code -eq 0) { break }
+    # 10048 / bind failure: clear again and try next port
+    Write-Host ("Port {0} failed (code {1}). Trying next..." -f $webPort, $code) -ForegroundColor Yellow
+    if (Test-Path -LiteralPath $killWeb) {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
+    }
+    Start-Sleep -Seconds 1
+}
 Write-Host ''
 if ($code -ne 0) {
     Write-Host "Launch failed (code $code)" -ForegroundColor Red
