@@ -1,19 +1,18 @@
-SwimIQ — what to do (Desktop\StrokeIQ)
+SwimIQ — ONE path only (Desktop\StrokeIQ)
 
-IF YOU SEE THE BLACK BANNER ABOUT 127.0.0.1:8080:
-  Double-click FIX-ANALYSIS-NOW.bat
-  Leave the Elite black window OPEN
-  Then click Run Elite Analysis again
+Black banner about 127.0.0.1:8080 = Elite is OFF.
 
-NORMAL START:
-  Double-click OPEN-WORKING-APP-NOW.bat
-  Address bar must say 127.0.0.1 or localhost
-  Do NOT use swimiqapp.com for Elite analysis
+Use a file that is ALREADY in your folder:
 
-If storage/health fails:
-  FIX-STORAGE.bat, then FIX-ANALYSIS-NOW.bat
+  Double-click:  START-SWIMIQ-WITH-ELITE.bat
 
-If FFmpeg missing:
-  RESTART-ELITE-AFTER-FFMPEG.bat, then FIX-ANALYSIS-NOW.bat
+OR if you want to download latest first:
 
-Gemini key is ONLY for coaching tips AFTER analysis works.
+  Double-click:  GET-LATEST-FIXED-APP.bat
+  (that file updates, then starts START-SWIMIQ-WITH-ELITE.bat for you)
+
+Leave the Elite black window OPEN.
+Address bar must be 127.0.0.1 / localhost — not swimiqapp.com.
+
+Do NOT look for FIX-ANALYSIS-NOW.bat unless you already ran GET-LATEST.
+That name is only an alias. The real file is START-SWIMIQ-WITH-ELITE.bat.

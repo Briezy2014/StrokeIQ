@@ -28,35 +28,30 @@ echo   File check after update
 echo ============================================
 set MISSING=0
 
-call :CheckFile "CLICK-ME-FIRST.bat"
-call :CheckFile "FIX-STORAGE.bat"
-call :CheckFile "FIX-ELITE-STORAGE-NOW.bat"
-call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
-call :CheckFile "FINAL-TRY-THIS-ONLY.bat"
-call :CheckFile "FINAL-TRY-THIS-ONLY.txt"
-call :CheckFile "OPEN-WORKING-APP-NOW.bat"
-call :CheckFile "ADD-GEMINI-KEY-FOR-COACHING.txt"
-call :CheckFile "swimiq\scripts\final-try-preflight.ps1"
+call :CheckFile "FIX-STORAGE.bat"
+call :CheckFile "swimiq\scripts\start-elite-and-wait.ps1"
 call :CheckFile "swimiq\scripts\kill-elite-port.ps1"
+call :CheckFile "swimiq\START-ELITE-ANALYSIS-SERVER.bat"
+call :CheckFile "swimiq\LAUNCH-CHROME.bat"
 
 echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo NEXT (ONE path only):
+echo NEXT (this file will start it for you):
 echo.
-echo   Double-click   OPEN-WORKING-APP-NOW.bat
+echo   START-SWIMIQ-WITH-ELITE.bat
 echo.
-echo That file updates, checks the coaching key, and starts localhost.
-echo Do NOT use swimiqapp.com for this try.
+echo That starts Elite + Chrome on THIS PC.
+echo Leave the Elite black window OPEN.
+echo Do NOT use swimiqapp.com.
 echo ============================================
 echo.
-echo Opening this folder...
-explorer.exe "%CD%"
-if exist "%CD%\FINAL-TRY-THIS-ONLY.txt" start "" notepad "%CD%\FINAL-TRY-THIS-ONLY.txt"
-pause
-exit /b 0
+echo Starting START-SWIMIQ-WITH-ELITE.bat now...
+echo.
+call "%CD%\START-SWIMIQ-WITH-ELITE.bat"
+exit /b %ERRORLEVEL%
 
 :CheckFile
 if exist "%~1" (
@@ -75,8 +70,6 @@ exit /b 1
 
 :FetchFail
 echo [FAIL] git fetch failed. Check internet / Wi-Fi.
-echo If Wi-Fi is OK, try again in 1 minute.
-echo You can still use FIX-STORAGE.bat if it is already in this folder.
 pause
 exit /b 1
 
