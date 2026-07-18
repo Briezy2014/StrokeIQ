@@ -1,20 +1,36 @@
 ============================================================
-  ADD GEMINI KEY so coaching tips come back
+  GEMINI KEY — where it goes (simple)
 ============================================================
 
-Elite analysis on this PC needs the Google Gemini key to write
-pros / cons / drills / dryland-style coaching tips.
+You only edit ONE Notepad file:
 
-1) Open Desktop\StrokeIQ\swimiq\.env in Notepad
-2) Add this line (use your real Google AI Studio key):
+  Desktop\StrokeIQ\swimiq\.env
 
-GEMINI_API_KEY=AIza...your_key_here...
+Add or keep this line (one key, no spaces around =):
 
-3) Save Notepad
-4) Close every Elite black window
-5) Double-click OPEN-WORKING-APP-NOW.bat
-6) Elite tab -> Run Elite Analysis again
-7) Open the Coaching tab on results
+  GEMINI_API_KEY=paste_the_full_key_here
 
-You should see strengths, priority improvements, and drills.
+WHICH KEY from Google AI Studio?
+  Use EITHER one — both are Gemini keys:
+    1) "Gemini API KEY"           (the one you already put in)
+    2) "SwimIQ Video Analysis"    (also fine — try this if #1 fails)
+
+  Keys can start with AIza... OR AQ....  Both are OK.
+
+You do NOT need to open services\video_analysis\.env yourself.
+When Elite starts, it COPIES the key from swimiq\.env into that file.
+
+THEN:
+  1) Save and close Notepad
+  2) Close EVERY black Elite / SwimIQ server window
+  3) Double-click OPEN-WORKING-APP-NOW.bat
+  4) In the Elite black window, look for:
+       GEMINI_API_KEY: set (coaching report enabled)
+  5) Run Elite Analysis again
+  6) Open the Coaching tab
+
+If coaching still fails after that, swap in the OTHER AI Studio key
+(SwimIQ Video Analysis), save, restart Elite the same way, analyze again.
+
+Do NOT use swimiqapp.com for this test — only localhost / 127.0.0.1
 ============================================================

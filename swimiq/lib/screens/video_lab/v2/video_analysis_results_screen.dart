@@ -336,7 +336,8 @@ class _SummaryTab extends StatelessWidget {
             ),
             child: Text(
               VideoEngineV2Service.userMessageForErrorCode(
-                'GEMINI_REPORT_UNAVAILABLE',
+                _geminiFailureCodeFromResults(results) ??
+                    'GEMINI_REPORT_UNAVAILABLE',
               ),
             ),
           ),
@@ -370,8 +371,21 @@ class _SummaryTab extends StatelessWidget {
         lower.contains('mmengine') ||
         lower.contains('skipped_no_smoothed') ||
         lower.contains('supabase_persist') ||
-        lower.contains('first 45');
+        lower.contains('first 45') ||
+        lower.contains('gemini_report_failed');
   }
+
+}
+
+String? _geminiFailureCodeFromResults(AnalysisResults results) {
+  for (final raw in results.limitations) {
+    final lower = raw.toLowerCase();
+    const prefix = 'gemini_report_failed:';
+    if (!lower.startsWith(prefix)) continue;
+    final code = raw.substring(prefix.length).trim();
+    if (code.isNotEmpty) return code.toUpperCase();
+  }
+  return null;
 }
 
 class _MetricsTab extends StatelessWidget {
@@ -456,7 +470,8 @@ class _CoachingTab extends StatelessWidget {
         children: [
           Text(
             VideoEngineV2Service.userMessageForErrorCode(
-              'GEMINI_REPORT_UNAVAILABLE',
+              _geminiFailureCodeFromResults(results) ??
+                  'GEMINI_REPORT_UNAVAILABLE',
             ),
           ),
           if (results.hasDeterministicMetrics) ...[

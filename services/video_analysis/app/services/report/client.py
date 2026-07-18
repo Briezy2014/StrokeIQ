@@ -47,8 +47,18 @@ class GoogleGenAITransport:
         if not api_key:
             raise GeminiClientError("MISSING_API_KEY", "GEMINI_API_KEY is not configured")
         from google import genai
+        from google.genai import types
 
-        self._client = genai.Client(api_key=api_key)
+        # Newer AI Studio keys use AQ.… auth-key format. Prefer explicit
+        # x-goog-api-key so the SDK does not treat the value like an OAuth token.
+        http_options = types.HttpOptions(
+            headers={"x-goog-api-key": api_key},
+        )
+        try:
+            self._client = genai.Client(api_key=api_key, http_options=http_options)
+        except TypeError:
+            # Older google-genai builds may not accept http_options here.
+            self._client = genai.Client(api_key=api_key)
 
     def generate_json(
         self,
@@ -148,7 +158,20 @@ def _map_sdk_exception(exc: Exception) -> GeminiClientError:
     msg = str(exc)
     low = msg.lower()
     name = type(exc).__name__.lower()
-    if "api key" in low or "api_key" in low or "unauthenticated" in low:
+    if (
+        "access_token_type_unsupported" in low
+        or "invalid api key" in low
+        or "api key not valid" in low
+        or "permission_denied" in low
+        or ("403" in low and "key" in low)
+    ):
+        return GeminiClientError("INVALID_API_KEY", msg, retriable=False)
+    if (
+        "api key" in low
+        or "api_key" in low
+        or "unauthenticated" in low
+        or "401" in low
+    ):
         return GeminiClientError("MISSING_API_KEY", msg, retriable=False)
     if "timeout" in low or "timed out" in low or "deadline" in low:
         return GeminiClientError("API_TIMEOUT", msg, retriable=True)

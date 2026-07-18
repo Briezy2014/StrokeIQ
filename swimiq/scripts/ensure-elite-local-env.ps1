@@ -78,25 +78,33 @@ foreach ($candidate in $flutterCandidates) {
 if ($flutterUrl) { $map['SUPABASE_URL'] = $flutterUrl }
 if ($flutterAnon) { $map['SUPABASE_ANON_KEY'] = $flutterAnon }
 
-# Coaching report key: Flutter .env, process env, or already in video .env.
+# Coaching report key: always prefer Flutter swimiq\.env, then process env, then existing.
 $geminiKey = $null
+$geminiSource = $null
+$geminiBad = @('paste_', 'your-', 'changeme', 'your_key', 'xxx')
 foreach ($candidate in $flutterCandidates) {
     if (-not (Test-Path -LiteralPath $candidate)) { continue }
     $flutterMap = Read-EnvMap $candidate
-    if (Is-Configured ([string]$flutterMap['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme')) {
-        $geminiKey = [string]$flutterMap['GEMINI_API_KEY']
+    $candidateKey = [string]$flutterMap['GEMINI_API_KEY']
+    if (Is-Configured $candidateKey $geminiBad) {
+        $geminiKey = $candidateKey
+        $geminiSource = $candidate
         break
     }
 }
-if (-not $geminiKey -and (Is-Configured ([string]$env:GEMINI_API_KEY) @('paste_', 'your-', 'changeme'))) {
+if (-not $geminiKey -and (Is-Configured ([string]$env:GEMINI_API_KEY) $geminiBad)) {
     $geminiKey = [string]$env:GEMINI_API_KEY
+    $geminiSource = 'process environment'
 }
-if (-not $geminiKey -and (Is-Configured ([string]$map['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme'))) {
+if (-not $geminiKey -and (Is-Configured ([string]$map['GEMINI_API_KEY']) $geminiBad)) {
     $geminiKey = [string]$map['GEMINI_API_KEY']
+    $geminiSource = $envFile
 }
 if ($geminiKey) {
     $map['GEMINI_API_KEY'] = $geminiKey
     $map['GEMINI_REPORT_ENABLED'] = 'true'
+} else {
+    $map['GEMINI_REPORT_ENABLED'] = 'false'
 }
 
 $map['ENGINE_VERSION'] = 'elite-0.9.0'
@@ -158,12 +166,17 @@ if ($serviceOk) {
 } else {
     Write-Host '     SUPABASE_SERVICE_ROLE_KEY: not set (OK - uses signed-in session token)' -ForegroundColor Yellow
 }
-$geminiOk = Is-Configured ([string]$map['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme')
+$geminiOk = Is-Configured ([string]$map['GEMINI_API_KEY']) $geminiBad
 if ($geminiOk) {
-    Write-Host '     GEMINI_API_KEY: set (coaching report enabled)' -ForegroundColor Green
+    $prefix = if ($geminiKey.StartsWith('AQ.')) { 'AQ.' } elseif ($geminiKey.StartsWith('AIza')) { 'AIza' } else { 'custom' }
+    Write-Host "     GEMINI_API_KEY: set ($prefix… coaching report enabled)" -ForegroundColor Green
+    if ($geminiSource) {
+        Write-Host "     Copied coaching key from: $geminiSource" -ForegroundColor Green
+    }
+    Write-Host "     Wrote into: $envFile" -ForegroundColor Green
 } else {
     Write-Host '     GEMINI_API_KEY: missing' -ForegroundColor Yellow
-    Write-Host '     Add GEMINI_API_KEY=... to swimiq\.env OR services\video_analysis\.env' -ForegroundColor Yellow
-    Write-Host '     (same Google AI Studio key used for SwimIQ video coaching)' -ForegroundColor Yellow
+    Write-Host '     Put GEMINI_API_KEY=... in Desktop\StrokeIQ\swimiq\.env' -ForegroundColor Yellow
+    Write-Host '     (Google AI Studio key — AIza... or AQ.... both OK), then restart Elite' -ForegroundColor Yellow
 }
 exit 0

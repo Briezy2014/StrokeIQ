@@ -290,8 +290,18 @@ class VideoEngineV2Service {
       case 'GEMINI_UNAVAILABLE':
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
-        return 'Coaching tips need GEMINI_API_KEY in services\\video_analysis\\.env '
-            '(same Google AI Studio key as SwimIQ). Restart Elite, then analyze again.';
+      case 'MISSING_API_KEY':
+        return 'Coaching report needs your Google AI Studio key in '
+            'swimiq\\.env as GEMINI_API_KEY=... '
+            '(either "Gemini API KEY" or "SwimIQ Video Analysis" is fine). '
+            'Save Notepad, close every Elite window, run OPEN-WORKING-APP-NOW.bat, '
+            'then analyze again.';
+      case 'GEMINI_ERROR':
+      case 'INVALID_API_KEY':
+        return 'Google rejected the Gemini key for the coaching report. '
+            'In AI Studio, copy the full "SwimIQ Video Analysis" key into '
+            'swimiq\\.env as GEMINI_API_KEY=..., save, restart Elite with '
+            'OPEN-WORKING-APP-NOW.bat, then analyze again.';
       case 'UPLOAD_FAILED':
         return 'Video upload failed. Check your connection and try again.';
       case 'AUTHENTICATION_EXPIRED':

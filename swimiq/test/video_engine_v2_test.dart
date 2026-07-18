@@ -132,7 +132,11 @@ void main() {
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('GEMINI_REPORT_UNAVAILABLE'),
-        contains('report'),
+        contains('GEMINI_API_KEY'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('GEMINI_ERROR'),
+        contains('rejected'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('UPLOAD_FAILED'),

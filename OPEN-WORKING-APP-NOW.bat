@@ -39,23 +39,37 @@ if not exist "%CD%\swimiq\.env" (
 
 echo [2/3] Checking coaching key (GEMINI_API_KEY)...
 set "HAS_GEMINI=0"
-findstr /I /R /C:"^GEMINI_API_KEY=AIza" "%CD%\swimiq\.env" >nul 2>&1 && set "HAS_GEMINI=1"
-findstr /I /R /C:"^GEMINI_API_KEY=AI" "%CD%\swimiq\.env" >nul 2>&1 && set "HAS_GEMINI=1"
+REM Accept Google AI Studio keys: older AIza... and newer AQ.... formats.
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$p='%~dp0swimiq\.env'; if (-not (Test-Path -LiteralPath $p)) { exit 1 };" ^
+  "$line=(Get-Content -LiteralPath $p | Where-Object { $_ -match '^\s*GEMINI_API_KEY\s*=' } | Select-Object -First 1);" ^
+  "if (-not $line) { exit 1 };" ^
+  "$v=($line -replace '^\s*GEMINI_API_KEY\s*=\s*','').Trim().Trim('\"').Trim(\"'\");" ^
+  "if ([string]::IsNullOrWhiteSpace($v)) { exit 1 };" ^
+  "$bad=@('paste_','your-','changeme','your_key','xxx');" ^
+  "foreach ($b in $bad) { if ($v.ToLower().Contains($b)) { exit 1 } };" ^
+  "if ($v.Length -lt 20) { exit 1 }; exit 0"
+if not errorlevel 1 set "HAS_GEMINI=1"
 if "%HAS_GEMINI%"=="0" (
   echo.
   echo [NEED KEY] Coaching tips need GEMINI_API_KEY in swimiq\.env
   echo.
   echo Notepad will open swimiq\.env
-  echo Add this line, then save and close Notepad:
+  echo Add this ONE line, then save and close Notepad:
   echo.
-  echo   GEMINI_API_KEY=AIza...your_google_ai_studio_key...
+  echo   GEMINI_API_KEY=paste_your_key_here
   echo.
-  echo Use the same Google AI Studio key SwimIQ already uses.
+  echo Either Google AI Studio key is fine:
+  echo   - "Gemini API KEY"  OR  "SwimIQ Video Analysis"
+  echo Keys may start with AIza... or AQ.... — both are OK.
   echo.
   if exist "%CD%\ADD-GEMINI-KEY-FOR-COACHING.txt" start "" notepad "%CD%\ADD-GEMINI-KEY-FOR-COACHING.txt"
   start "" notepad "%CD%\swimiq\.env"
   echo After you SAVE the key in Notepad, press any key here to continue...
   pause >nul
+) else (
+  echo [OK] GEMINI_API_KEY found in swimiq\.env
+  echo      Elite will copy it into services\video_analysis\.env on start.
 )
 
 echo [3/3] Starting Elite + Chrome localhost...
