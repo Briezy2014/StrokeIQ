@@ -83,10 +83,14 @@ if (-not (Test-Path -LiteralPath $EliteBat)) {
     exit 1
 }
 
-Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', "`"$EliteBat`"" -WorkingDirectory (Split-Path $EliteBat -Parent)
+Write-Host ''
+Write-Host '>>> Opening Elite black window. DO NOT CLOSE IT. <<<' -ForegroundColor Yellow
+$eliteProc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', "`"$EliteBat`"" -WorkingDirectory (Split-Path $EliteBat -Parent) -PassThru
 
 $deadline = (Get-Date).AddSeconds(420)
+$startedAt = Get-Date
 Write-Host 'Waiting for full Elite health (up to 7 minutes)...'
+Write-Host 'You should see a window titled: Elite Video Lab - Analysis Server'
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 2
     $body = Get-EliteHealthBody
@@ -94,17 +98,29 @@ while ((Get-Date) -lt $deadline) {
         Write-Host ''
         Write-Host '[OK] Elite server is fully ready.' -ForegroundColor Green
         Write-Host $body
-        Start-Process $HealthUrl
+        try { Start-Process $HealthUrl } catch {}
         exit 0
+    }
+    # If the starter window died quickly, fail fast with a clear message.
+    if ($eliteProc -and $eliteProc.HasExited -and ((Get-Date) - $startedAt).TotalSeconds -gt 20) {
+        $partial = Get-EliteHealthBody
+        if (-not (Test-EliteFullyReady $partial)) {
+            Write-Host ''
+            Write-Host '[FAIL] Elite window closed or crashed before becoming ready.' -ForegroundColor Red
+            Write-Host 'Open FIX-ANALYSIS-NOW.bat again and leave the Elite window open.' -ForegroundColor Yellow
+            if ($partial) { Write-Host $partial }
+            exit 1
+        }
     }
     Write-Host -NoNewline '.'
 }
 
 Write-Host ''
 Write-Host '[FAIL] Elite server did not become fully ready in time.' -ForegroundColor Red
-Write-Host 'Look at the Elite server window for errors.' -ForegroundColor Red
+Write-Host 'Look at the Elite server window for errors. Do not close it.' -ForegroundColor Red
 $body = Get-EliteHealthBody
-if ($body) { Write-Host $body }
+if ($body) { Write-Host $body } else { Write-Host '(no response on /health yet)' }
 Write-Host "Video dir: $VideoDir"
 Write-Host 'Need BOTH: ffmpeg_available:true AND storage_download_configured:true'
+Write-Host 'Then run: FIX-ANALYSIS-NOW.bat'
 exit 1

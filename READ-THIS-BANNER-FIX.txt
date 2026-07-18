@@ -1,0 +1,28 @@
+============================================================
+  BLACK BANNER = Elite server is OFF
+============================================================
+
+That banner:
+
+  Elite server is not answering yet at http://127.0.0.1:8080
+
+means the analysis engine on YOUR PC is not running.
+It is NOT a Gemini key problem.
+
+FIX (one file):
+
+  Double-click:  FIX-ANALYSIS-NOW.bat
+
+What you should see:
+  1) A NEW black window titled "Elite Video Lab"
+  2) Text like: Uvicorn running on http://127.0.0.1:8080
+  3) Chrome opens on 127.0.0.1 (NOT swimiqapp.com)
+  4) Black banner goes away
+  5) Then click Run Elite Analysis
+
+RULE:
+  Keep the Elite black window OPEN the whole time.
+  If you close it, the banner comes back and Analyze stops.
+
+Gemini key is ONLY for coaching tips AFTER analysis finishes.
+============================================================

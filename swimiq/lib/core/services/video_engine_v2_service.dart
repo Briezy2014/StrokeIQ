@@ -118,8 +118,9 @@ class VideoEngineV2Service {
       return EliteServerHealth(
         reachable: false,
         message:
-            'Elite server is not answering yet at $baseUrl. '
-            'Keep the Elite server window open — this banner refreshes automatically.',
+            'Elite server is OFF at $baseUrl. '
+            'Double-click FIX-ANALYSIS-NOW.bat on your Desktop\\StrokeIQ folder, '
+            'leave the Elite black window open, then come back here — this banner refreshes automatically.',
       );
     }
   }
