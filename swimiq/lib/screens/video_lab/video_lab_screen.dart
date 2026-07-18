@@ -191,21 +191,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       return;
     }
 
-    if (Env.isPublicHostedWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Elite stroke analysis runs on the SwimIQ workstation. '
-            'On this website you can explore the app, upload videos, and use coach preview. '
-            'Ask for a live Elite analysis demo.',
-          ),
-          duration: Duration(seconds: 14),
-        ),
-      );
-      return;
-    }
-
     setState(() => _analyzingVideoId = videoId);
     final analytics = ref.read(videoAnalyticsServiceProvider);
     final swimmer = ref.read(activeSwimmerProvider);
@@ -287,38 +272,27 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       subscription: subscription,
     );
 
-    // Elite Video Lab is the only analysis path when V2 is enabled (unless dual-run).
-    // After AI consent, start analysis immediately (no extra confirm-setup screen).
-    if (v2Allowed && !forceLegacy) {
+    // Local Elite CV when V2 is on and this is NOT the public website.
+    // swimiqapp.com has no local analysis server — use cloud analysis there.
+    final useLocalElite =
+        v2Allowed && !forceLegacy && !Env.isPublicHostedWeb;
+    if (useLocalElite) {
       final consented = await AiDataConsentDialog.ensureGranted(context);
       if (!consented || !mounted) return;
       await _startEliteAnalysis(video);
       return;
     }
 
-    // Legacy path only when Elite V2 is off, or dual-run + forceLegacy.
-    if (v2Allowed && !FeatureFlags.videoEngineLegacyEnabled) {
+    // Local-only Elite lock (skipped on the public website).
+    if (v2Allowed &&
+        !FeatureFlags.videoEngineLegacyEnabled &&
+        !Env.isPublicHostedWeb) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Elite Video Lab is required. Start the analysis server, then try again.',
           ),
-        ),
-      );
-      return;
-    }
-
-    // Never send public-website coaches into the old Gemini edge-function path.
-    if (Env.isPublicHostedWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'AI stroke analysis on the public site uses Elite on the SwimIQ workstation. '
-            'Gemini cloud analysis is not used here.',
-          ),
-          duration: Duration(seconds: 12),
         ),
       );
       return;
@@ -424,9 +398,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final serverHealth = serverHealthAsync.valueOrNull;
         final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = v2Allowed
-            ? (hosted
-                ? 'Upload, organize, and explore Elite Video Lab. Live stroke analysis is run on the SwimIQ workstation.'
-                : 'Elite stroke analysis, signed playback, and dual-run validation.')
+            ? 'Elite stroke analysis from your race footage'
             : canRunAi
             ? 'AI coaching from your race footage'
             : hasPro
@@ -450,14 +422,12 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             ),
             if (v2Allowed) ...[
               const SizedBox(height: 12),
-              if (hosted)
-                const _HostedEliteInfoBanner()
-              else
+              if (!hosted)
                 _EliteServerStatusBanner(
                   health: serverHealth,
                   onRetry: () => ref.invalidate(videoServerHealthProvider),
                 ),
-              const SizedBox(height: 8),
+              if (!hosted) const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
@@ -577,41 +547,6 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ],
         );
       },
-    );
-  }
-}
-
-class _HostedEliteInfoBanner extends StatelessWidget {
-  const _HostedEliteInfoBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFE3F2FD),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.info_outline, color: Color(0xFF0D47A1)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'You are on the public SwimIQ site. Explore Elite Video Lab, '
-                'upload clips, and use coach preview here. Live Elite stroke '
-                'analysis is demonstrated from the SwimIQ workstation '
-                '(not through Gemini on this website).',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF0D47A1),
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
-                    ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

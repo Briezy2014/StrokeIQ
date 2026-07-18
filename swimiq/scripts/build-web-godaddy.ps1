@@ -36,9 +36,8 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
-# Hosted site shows Elite Video Lab UI. Live CV analysis still needs the
-# local Elite server (localhost) — the app detects public hosts and does
-# NOT fall back to the broken Gemini path for coaches on swimiqapp.com.
+# Hosted site shows Elite Video Lab UI. Public swimiqapp.com runs cloud
+# analysis (no local Elite server). Local Chrome still uses Elite CV.
 $prodEnv = Join-Path $env:TEMP 'swimiq-godaddy-defines.env'
 @(
     "SUPABASE_URL=$url"
