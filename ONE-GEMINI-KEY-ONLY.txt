@@ -1,0 +1,24 @@
+============================================================
+  ONLY ONE Gemini key — not both
+============================================================
+
+Wrong:
+  GEMINI_API_KEY=first_key...
+  GEMINI_API_KEY=second_key...
+
+Right (exactly one line):
+  GEMINI_API_KEY=paste_one_key_here
+
+Which key?
+  Use the "SwimIQ Video Analysis" key from AI Studio
+  (or whichever one you want — but ONLY that one line).
+
+Easiest fix:
+  Double-click FIX-ONE-GEMINI-KEY.bat
+
+It keeps the last key, deletes the duplicate line, restarts Elite.
+Then run Elite Analysis again and open the Coaching tab.
+
+Coaching tips should still show even if Google rejects a key,
+AFTER you restart with the latest START-SWIMIQ-WITH-ELITE.bat.
+============================================================

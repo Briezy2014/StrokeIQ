@@ -83,11 +83,17 @@ if ($flutterUrl) { $map['SUPABASE_URL'] = $flutterUrl }
 if ($flutterAnon) { $map['SUPABASE_ANON_KEY'] = $flutterAnon }
 
 # Coaching report key: always prefer Flutter swimiq\.env, then process env, then existing.
+# If someone pasted TWO GEMINI_API_KEY lines, Read-EnvMap keeps the LAST one.
 $geminiKey = $null
 $geminiSource = $null
 $geminiBad = @('paste_', 'your-', 'changeme', 'your_key', 'xxx')
 foreach ($candidate in $flutterCandidates) {
     if (-not (Test-Path -LiteralPath $candidate)) { continue }
+    $dupCount = @(Get-Content -LiteralPath $candidate | Where-Object { $_ -match '^\s*GEMINI_API_KEY\s*=' }).Count
+    if ($dupCount -gt 1) {
+        Write-Host "[WARN] $candidate has $dupCount GEMINI_API_KEY lines — using the LAST one only." -ForegroundColor Yellow
+        Write-Host '       Run FIX-ONE-GEMINI-KEY.bat so the file keeps a single line.' -ForegroundColor Yellow
+    }
     $flutterMap = Read-EnvMap $candidate
     $candidateKey = [string]$flutterMap['GEMINI_API_KEY']
     if (Is-Configured $candidateKey $geminiBad) {

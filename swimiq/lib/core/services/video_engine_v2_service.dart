@@ -297,9 +297,10 @@ class VideoEngineV2Service {
             'then analyze again.';
       case 'GEMINI_ERROR':
       case 'INVALID_API_KEY':
-        return 'Google rejected the Gemini key. Paste the full AI Studio key into '
-            'swimiq\\.env as GEMINI_API_KEY=..., save, run START-SWIMIQ-WITH-ELITE.bat, '
-            'then analyze again.';
+        return 'Google rejected the Gemini key. In swimiq\\.env keep ONLY ONE line: '
+            'GEMINI_API_KEY=... (delete the extra key line). '
+            'Then run FIX-ONE-GEMINI-KEY.bat or START-SWIMIQ-WITH-ELITE.bat and analyze again. '
+            'Coaching tips should still appear after that restart.';
       case 'UPLOAD_FAILED':
         return 'Video upload failed. Check your connection and try again.';
       case 'AUTHENTICATION_EXPIRED':

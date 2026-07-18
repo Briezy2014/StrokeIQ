@@ -32,6 +32,16 @@ if errorlevel 1 (
 echo [OK] Ready to start Elite.
 echo.
 
+REM If .env has two GEMINI_API_KEY lines, keep only one (last wins).
+if exist "%CD%\swimiq\scripts\fix-one-gemini-key.ps1" (
+  findstr /R /C:"^GEMINI_API_KEY=" "%CD%\swimiq\.env" 2>nul | find /C /V "" > "%TEMP%\swimiq_gemini_count.txt"
+  set /p GEMINI_LINES=<"%TEMP%\swimiq_gemini_count.txt"
+  if not "%GEMINI_LINES%"=="" if not "%GEMINI_LINES%"=="0" if not "%GEMINI_LINES%"=="1" (
+    echo [FIX] Multiple GEMINI_API_KEY lines found — keeping only one...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\fix-one-gemini-key.ps1"
+  )
+)
+
 if not exist "%CD%\swimiq\scripts\start-elite-and-wait.ps1" (
   echo [FAIL] Missing swimiq\scripts\start-elite-and-wait.ps1
   echo Run GET-LATEST-FIXED-APP.bat on Wi-Fi, then run this file again.
