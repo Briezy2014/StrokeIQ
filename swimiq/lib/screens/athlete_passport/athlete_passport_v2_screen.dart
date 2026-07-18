@@ -338,22 +338,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
           children: [
             const SwimIqPageHero(
               title: 'Athlete Passport',
-              subtitle: 'Recruiting profile, SwimDNA hub & college tools',
+              subtitle: 'Exportable recruiting card, SwimDNA hub & college tools',
             ),
             const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 720;
-                final identity = AthletePassportIdentityCard(
-                  displayName: displayName,
-                  team: profile?.team,
-                  coach: profile?.coachName,
-                  primaryStroke: profile?.primaryStroke,
-                  graduationYear: profile?.graduationYear,
-                  profilePhotoUrl: profile?.profilePhotoUrl,
-                  isUploadingPhoto: _isUploadingPhoto,
-                  onUploadPhoto: _uploadProfilePhoto,
-                );
+            Builder(
+              builder: (context) {
                 final topEvents = AthleteRecruitingBusinessCard.topEventLines(
                   data.personalBests,
                 ).isNotEmpty
@@ -361,7 +350,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         data.personalBests,
                       )
                     : snapshot.personalBests.take(2).toList();
-                final recruitingPanel = Column(
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     RecruitingCardExportBar(
@@ -375,10 +364,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         topEvents: topEvents,
                         graduationYear: profile?.graduationYear,
                         usaSwimmingId: profile?.usaSwimmingId,
-                        fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
+                        fileSafeName:
+                            swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     AthleteRecruitingBusinessCard(
                       displayName: displayName,
                       swimIqScore: snapshot.swimIqScore,
@@ -390,27 +380,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                       profilePhotoUrl: profile?.profilePhotoUrl,
                       usaSwimmingId: profile?.usaSwimmingId,
                       topEvents: topEvents,
+                      isUploadingPhoto: _isUploadingPhoto,
+                      onUploadPhoto: _uploadProfilePhoto,
                     ),
-                  ],
-                );
-
-                if (wide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 5, child: identity),
-                      const SizedBox(width: 12),
-                      Expanded(flex: 4, child: recruitingPanel),
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    identity,
-                    const SizedBox(height: 12),
-                    recruitingPanel,
                   ],
                 );
               },

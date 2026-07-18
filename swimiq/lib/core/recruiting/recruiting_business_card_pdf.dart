@@ -120,49 +120,68 @@ class RecruitingBusinessCardPdf {
                                 font: pw.Font.helveticaBold(),
                               ),
                             ),
+                          pw.SizedBox(height: 4),
+                          pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            children: [
+                              pw.Text(
+                                swimIqScore > 0 ? '$swimIqScore' : '-',
+                                style: pw.TextStyle(
+                                  color: PdfColors.white,
+                                  fontSize: 22,
+                                  font: pw.Font.helveticaBold(),
+                                  height: 1,
+                                ),
+                              ),
+                              pw.SizedBox(width: 4),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.only(bottom: 2),
+                                child: pw.Text(
+                                  'SwimIQ Score',
+                                  style: pw.TextStyle(
+                                    color: PdfColors.white,
+                                    fontSize: 7,
+                                    font: pw.Font.helveticaBold(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.SizedBox(height: 3),
+                          pw.Text(
+                            'Highest cut: $cutLine  ·  USA: $idLine',
+                            maxLines: 1,
+                            style: pw.TextStyle(
+                              color: _statLabel,
+                              fontSize: 6,
+                              font: pw.Font.helveticaBold(),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        pw.Text(
-                          'USA Swimming',
-                          style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontSize: 7,
-                            font: pw.Font.helveticaBold(),
-                          ),
+                    pw.SizedBox(width: 6),
+                    pw.Container(
+                      width: 42,
+                      height: 42,
+                      decoration: pw.BoxDecoration(
+                        shape: pw.BoxShape.circle,
+                        color: _statFill,
+                        border: pw.Border.all(color: PdfColors.white, width: 1),
+                      ),
+                      alignment: pw.Alignment.center,
+                      child: pw.Text(
+                        'PHOTO',
+                        style: pw.TextStyle(
+                          color: _statLabel,
+                          fontSize: 5,
+                          font: pw.Font.helveticaBold(),
                         ),
-                        pw.Text(
-                          idLine,
-                          style: pw.TextStyle(
-                            color: _accent,
-                            fontSize: 7,
-                            font: pw.Font.helveticaBold(),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
                 pw.SizedBox(height: 4),
-                pw.Row(
-                  children: [
-                    pw.Expanded(
-                      child: _statBox(
-                        'SwimIQ Score',
-                        swimIqScore > 0 ? '$swimIqScore' : '-',
-                        highlight: true,
-                      ),
-                    ),
-                    pw.SizedBox(width: 4),
-                    pw.Expanded(
-                      child: _statBox('Highest Cut', cutLine),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 3),
                 pw.Row(
                   children: [
                     pw.Expanded(child: _statBox('Top event', eventOne, compact: true)),

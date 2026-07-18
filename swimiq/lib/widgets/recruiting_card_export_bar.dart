@@ -96,11 +96,11 @@ class RecruitingCardExportBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Recruiting Card',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          'Exportable Recruiting Card',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: AppColors.primaryDeep,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 0.6,
+                letterSpacing: 0.3,
               ),
         ),
         const SizedBox(height: 8),
@@ -125,7 +125,7 @@ class RecruitingCardExportBar extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Wallet-sized card (3.5″ × 2″) — print for meets, mail to coaches, or save as PDF.',
+          'Print or save a wallet-sized card (3.5″ × 2″) for meets and coaches. Upload a profile photo on the card below.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey.shade700,
                 height: 1.3,

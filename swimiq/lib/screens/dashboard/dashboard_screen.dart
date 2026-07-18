@@ -65,6 +65,7 @@ class DashboardScreen extends ConsumerWidget {
                   ? snapshot.highestCut
                   : (logs.isEmpty ? 'Log swims to score' : 'Upgrade for cuts'),
               climbPercent: daily.scoreRopeClimbPercent,
+              profilePhotoUrl: data.profile?.profilePhotoUrl,
             ),
             const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
@@ -97,12 +98,14 @@ class _DashboardHero extends StatelessWidget {
     required this.swimIqScore,
     required this.highestCut,
     required this.climbPercent,
+    this.profilePhotoUrl,
   });
 
   final String displayName;
   final int swimIqScore;
   final String highestCut;
   final int climbPercent;
+  final String? profilePhotoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -128,13 +131,14 @@ class _DashboardHero extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   displayName,
                   style: const TextStyle(
                     color: Colors.white,
@@ -142,46 +146,87 @@ class _DashboardHero extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$swimIqScore',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$swimIqScore',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'SwimIQ Score',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 6),
-                child: Text(
-                  'SwimIQ Score',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _HeroChip(label: 'Highest cut: $highestCut'),
+                    _HeroChip(label: '$climbPercent% up the rope'),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _HeroChip(label: 'Highest cut: $highestCut'),
-              _HeroChip(label: '$climbPercent% up the rope'),
-            ],
-          ),
+          const SizedBox(width: 16),
+          _DashboardPhotoMark(photoUrl: profilePhotoUrl),
         ],
       ),
+    );
+  }
+}
+
+class _DashboardPhotoMark extends StatelessWidget {
+  const _DashboardPhotoMark({this.photoUrl});
+
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 112.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 3),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: photoUrl != null && photoUrl!.isNotEmpty
+          ? Image.network(
+              photoUrl!,
+              fit: BoxFit.cover,
+              width: size,
+              height: size,
+              alignment: const Alignment(0, -0.15),
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.person_outline,
+                color: Colors.white70,
+                size: 48,
+              ),
+            )
+          : const Icon(
+              Icons.person_outline,
+              color: Colors.white70,
+              size: 48,
+            ),
     );
   }
 }
