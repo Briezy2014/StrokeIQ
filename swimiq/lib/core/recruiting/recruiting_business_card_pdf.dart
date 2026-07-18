@@ -81,9 +81,10 @@ class RecruitingBusinessCardPdf {
                 width: 0.5,
               ),
             ),
-            padding: const pw.EdgeInsets.all(8),
+            padding: const pw.EdgeInsets.fromLTRB(7, 6, 7, 5),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -97,17 +98,16 @@ class RecruitingBusinessCardPdf {
                             maxLines: 1,
                             style: pw.TextStyle(
                               color: PdfColors.white,
-                              fontSize: 12,
+                              fontSize: 11,
                               font: pw.Font.helveticaBold(),
                             ),
                           ),
-                          pw.SizedBox(height: 2),
                           pw.Text(
                             teamLine,
                             maxLines: 1,
                             style: pw.TextStyle(
                               color: PdfColors.white,
-                              fontSize: 8,
+                              fontSize: 7,
                               font: pw.Font.helvetica(),
                             ),
                           ),
@@ -116,11 +116,11 @@ class RecruitingBusinessCardPdf {
                               'Class of $graduationYear',
                               style: pw.TextStyle(
                                 color: _accent,
-                                fontSize: 7,
+                                fontSize: 6.5,
                                 font: pw.Font.helveticaBold(),
                               ),
                             ),
-                          pw.SizedBox(height: 4),
+                          pw.SizedBox(height: 2),
                           pw.Row(
                             crossAxisAlignment: pw.CrossAxisAlignment.end,
                             children: [
@@ -128,72 +128,70 @@ class RecruitingBusinessCardPdf {
                                 swimIqScore > 0 ? '$swimIqScore' : '-',
                                 style: pw.TextStyle(
                                   color: PdfColors.white,
-                                  fontSize: 22,
+                                  fontSize: 18,
                                   font: pw.Font.helveticaBold(),
                                   height: 1,
                                 ),
                               ),
-                              pw.SizedBox(width: 4),
+                              pw.SizedBox(width: 3),
                               pw.Padding(
-                                padding: const pw.EdgeInsets.only(bottom: 2),
+                                padding: const pw.EdgeInsets.only(bottom: 1),
                                 child: pw.Text(
                                   'SwimIQ Score',
                                   style: pw.TextStyle(
                                     color: PdfColors.white,
-                                    fontSize: 7,
+                                    fontSize: 6.5,
                                     font: pw.Font.helveticaBold(),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          pw.SizedBox(height: 3),
+                          pw.SizedBox(height: 1),
                           pw.Text(
-                            'Highest cut: $cutLine  ·  USA: $idLine',
+                            'Highest cut: $cutLine  |  USA: $idLine',
                             maxLines: 1,
                             style: pw.TextStyle(
                               color: _statLabel,
-                              fontSize: 6,
+                              fontSize: 5.5,
                               font: pw.Font.helveticaBold(),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    pw.SizedBox(width: 6),
+                    pw.SizedBox(width: 5),
                     pw.Container(
-                      width: 42,
-                      height: 42,
+                      width: 34,
+                      height: 34,
                       decoration: pw.BoxDecoration(
                         shape: pw.BoxShape.circle,
                         color: _statFill,
-                        border: pw.Border.all(color: PdfColors.white, width: 1),
+                        border: pw.Border.all(color: PdfColors.white, width: 0.8),
                       ),
                       alignment: pw.Alignment.center,
                       child: pw.Text(
                         'PHOTO',
                         style: pw.TextStyle(
                           color: _statLabel,
-                          fontSize: 5,
+                          fontSize: 4.5,
                           font: pw.Font.helveticaBold(),
                         ),
                       ),
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 4),
                 pw.Row(
                   children: [
                     pw.Expanded(child: _statBox('Top event', eventOne, compact: true)),
-                    pw.SizedBox(width: 4),
+                    pw.SizedBox(width: 3),
                     pw.Expanded(child: _statBox('2nd event', eventTwo, compact: true)),
                   ],
                 ),
-                pw.SizedBox(height: 3),
                 pw.Row(
                   children: [
                     pw.Expanded(child: _statBox('GPA', gpaLine, compact: true)),
-                    pw.SizedBox(width: 4),
+                    pw.SizedBox(width: 3),
                     pw.Expanded(
                       child: _statBox('Recruiting site', siteLine, compact: true),
                     ),
