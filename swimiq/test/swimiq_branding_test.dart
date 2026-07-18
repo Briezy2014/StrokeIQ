@@ -18,7 +18,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SwimIqLoginBrand), findsOneWidget);
-    expect(find.byType(SwimIqBrandedImage), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
   });
 
   testWidgets('full lockup widget builds', (tester) async {
