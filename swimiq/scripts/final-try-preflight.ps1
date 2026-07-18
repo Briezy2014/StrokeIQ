@@ -1,4 +1,5 @@
-# Preflight for FINAL-TRY-THIS-ONLY.bat — clear PASS/FAIL gates only.
+# Preflight for FINAL-TRY-THIS-ONLY.bat - clear PASS/FAIL gates only.
+# ASCII-only on purpose. Windows PowerShell 5.1 misreads UTF-8 dashes as quotes.
 $ErrorActionPreference = 'Stop'
 
 function Write-Pass([string]$msg) { Write-Host "[PASS] $msg" -ForegroundColor Green }
@@ -15,9 +16,9 @@ $failed = $false
 
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ' FINAL TRY — preflight checks' -ForegroundColor Cyan
+Write-Host ' FINAL TRY - preflight checks' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host "Folder: $RepoRoot"
+Write-Host ("Folder: {0}" -f $RepoRoot)
 Write-Host ''
 
 if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot '.git'))) {
@@ -27,7 +28,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot '.git'))) {
 Write-Pass 'StrokeIQ git folder found'
 
 if (-not (Test-Path -LiteralPath $EnvFile)) {
-    Write-Fail "Missing $EnvFile — add SUPABASE_URL and SUPABASE_ANON_KEY, then run again."
+    Write-Fail ("Missing {0} - add SUPABASE_URL and SUPABASE_ANON_KEY, then run again." -f $EnvFile)
     if (Test-Path -LiteralPath (Join-Path $SwimIqDir '.env.example')) {
         Copy-Item (Join-Path $SwimIqDir '.env.example') $EnvFile -Force
         notepad $EnvFile
@@ -73,23 +74,23 @@ if (-not $ffmpeg -or -not $ffprobe) {
     Write-Host 'Install FFmpeg (winget install Gyan.FFmpeg), then run RESTART-ELITE-AFTER-FFMPEG.bat' -ForegroundColor Yellow
     $failed = $true
 } else {
-    Write-Pass "FFmpeg found: $($ffmpeg.Source)"
+    Write-Pass ("FFmpeg found: {0}" -f $ffmpeg.Source)
 }
 
 if (-not (Test-Path -LiteralPath $EliteBat)) {
-    Write-Fail "Missing $EliteBat"
+    Write-Fail ("Missing {0}" -f $EliteBat)
     $failed = $true
 } else {
     Write-Pass 'Elite server starter found'
 }
 
 if (-not (Test-Path -LiteralPath $WaitScript)) {
-    Write-Fail "Missing $WaitScript"
+    Write-Fail ("Missing {0}" -f $WaitScript)
     $failed = $true
 }
 
 if (-not (Test-Path -LiteralPath $LaunchBat)) {
-    Write-Fail "Missing $LaunchBat"
+    Write-Fail ("Missing {0}" -f $LaunchBat)
     $failed = $true
 }
 
@@ -117,7 +118,7 @@ Write-Host ''
 Write-Info 'Next in Chrome (after it opens):'
 Write-Host '  1) Sign in as briezy682014@gmail.com'
 Write-Host '  2) Confirm address bar is localhost / 127.0.0.1'
-Write-Host '  3) Elite tab → upload one short clip'
+Write-Host '  3) Elite tab -> upload one short clip'
 Write-Host '  4) Run Elite Analysis / Confirm & Analyze'
 Write-Host '  5) Keep Chrome + Elite windows open until results appear'
 Write-Host ''

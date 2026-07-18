@@ -1,11 +1,11 @@
 @echo off
 setlocal EnableDelayedExpansion
-title SwimIQ FINAL TRY — analysis on this PC
+title SwimIQ FINAL TRY - analysis on this PC
 cd /d "%~dp0"
 
 echo.
 echo ############################################################
-echo #  FINAL TRY — Elite analysis on THIS computer            #
+echo #  FINAL TRY - Elite analysis on THIS computer            #
 echo #  Do NOT use swimiqapp.com for this try                  #
 echo ############################################################
 echo.
@@ -34,6 +34,15 @@ if not exist "%CD%\swimiq\scripts\final-try-preflight.ps1" (
   pause
   exit /b 1
 )
+
+echo Checking preflight script syntax...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\parse-check-preflight.ps1"
+if errorlevel 1 (
+  echo [FAIL] Preflight script has a syntax error.
+  pause
+  exit /b 1
+)
+echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\final-try-preflight.ps1"
 if errorlevel 1 (
