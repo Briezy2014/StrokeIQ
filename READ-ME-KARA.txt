@@ -1,15 +1,24 @@
 SwimIQ - what to double-click (Desktop\StrokeIQ)
 
-1) FIRST (always when something is missing / outdated):
+IMPORTANT: Double-click the .bat file (gear/window icon), NOT an Edge/browser icon.
+If Windows opens Edge, right-click the file -> Open with -> Command Prompt,
+or right-click -> Run as administrator is not needed - just Open.
+
+1) FIRST (when files are missing):
    CLICK-ME-FIRST.bat
-   (same as GET-LATEST-FIXED-APP.bat)
+   or GET-LATEST-FIXED-APP.bat
 
-2) Elite analysis error ("Supabase is not configured for storage download"):
+2) Elite analysis / "storage download" error:
    FIX-STORAGE.bat
+   Leave the Elite server window OPEN.
+   Health page must show storage_download_configured: true
 
-3) Put the REAL Flutter app on https://swimiqapp.com:
+3) Put Flutter app on https://swimiqapp.com:
    PUBLISH-SWIMIQAPP-COM.bat
-   Then upload swimiq\build\swimiq-web-godaddy.zip to GoDaddy public_html and Extract.
+   Then upload the zip to GoDaddy public_html and Extract.
 
-Do NOT upload the old website\ brochure folder as the homepage.
+If pip shows getaddrinfo failed / cannot reach pypi.org:
+   That is Wi-Fi/DNS. The Elite starter now skips pip when packages
+   are already installed, so you can still start the server offline.
+
 Do NOT use Streamlit for coaches.
