@@ -3,11 +3,15 @@ title SwimIQ - CLICK ME FIRST
 cd /d "%~dp0"
 echo.
 echo ============================================
-echo   CLICK ME FIRST - update StrokeIQ folder
+echo   Update files, then run the FINAL TRY
 echo ============================================
 echo.
-echo Your PC may be missing newer fix files.
-echo This downloads them from GitHub now.
-echo.
 call "%~dp0GET-LATEST-FIXED-APP.bat"
-exit /b %ERRORLEVEL%
+if errorlevel 1 exit /b %ERRORLEVEL%
+echo.
+echo Next: double-click FINAL-TRY-THIS-ONLY.bat
+echo Opening the step sheet...
+start "" notepad "%~dp0FINAL-TRY-THIS-ONLY.txt"
+explorer.exe "%CD%"
+pause
+exit /b 0

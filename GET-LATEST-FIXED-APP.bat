@@ -40,17 +40,18 @@ echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo NEXT - pick ONE:
+echo NEXT for analysis (ONE path only):
 echo.
-echo   A) Elite analysis / storage error:
-echo      Double-click   FIX-STORAGE.bat
+echo   Double-click   FINAL-TRY-THIS-ONLY.bat
 echo.
-echo   B) Put Flutter app on swimiqapp.com:
-echo      Double-click   PUBLISH-SWIMIQAPP-COM.bat
+echo   Read steps in   FINAL-TRY-THIS-ONLY.txt
+echo.
+echo Do NOT use swimiqapp.com for this try.
 echo ============================================
 echo.
-echo Opening this folder so you can see FIX-STORAGE.bat ...
+echo Opening this folder...
 explorer.exe "%CD%"
+if exist "%CD%\FINAL-TRY-THIS-ONLY.txt" start "" notepad "%CD%\FINAL-TRY-THIS-ONLY.txt"
 pause
 exit /b 0
 

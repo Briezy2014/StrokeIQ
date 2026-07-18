@@ -190,6 +190,19 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       );
       return;
     }
+    if (video.storagePath.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This video did not finish uploading. Upload again, wait until it '
+            'appears in the list, then run analysis.',
+          ),
+          duration: Duration(seconds: 12),
+        ),
+      );
+      return;
+    }
 
     setState(() => _analyzingVideoId = videoId);
     final analytics = ref.read(videoAnalyticsServiceProvider);

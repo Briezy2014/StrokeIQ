@@ -1,24 +1,19 @@
-SwimIQ - what to double-click (Desktop\StrokeIQ)
+SwimIQ — what to do (Desktop\StrokeIQ)
 
-IMPORTANT: Double-click the .bat file (gear/window icon), NOT an Edge/browser icon.
-If Windows opens Edge, right-click the file -> Open with -> Command Prompt,
-or right-click -> Run as administrator is not needed - just Open.
+FOR ANALYSIS RIGHT NOW (one path only):
+  1) Double-click GET-LATEST-FIXED-APP.bat
+  2) Double-click FINAL-TRY-THIS-ONLY.bat
+  3) Follow FINAL-TRY-THIS-ONLY.txt
 
-1) FIRST (when files are missing):
-   CLICK-ME-FIRST.bat
-   or GET-LATEST-FIXED-APP.bat
+Do NOT use swimiqapp.com for Elite analysis on this try.
+Use the Chrome window that FINAL-TRY-THIS-ONLY.bat opens
+(address bar must say localhost or 127.0.0.1).
 
-2) Elite analysis / "storage download" error:
-   FIX-STORAGE.bat
-   Leave the Elite server window OPEN.
-   Health page must show storage_download_configured: true
+If upload fails:
+  OPEN-UPLOAD-SQL.bat + FIX-VIDEO-UPLOAD-NOW.txt
 
-3) Put Flutter app on https://swimiqapp.com:
-   PUBLISH-SWIMIQAPP-COM.bat
-   Then upload the zip to GoDaddy public_html and Extract.
+If storage/health fails:
+  FIX-STORAGE.bat, then FINAL-TRY-THIS-ONLY.bat again
 
-If pip shows getaddrinfo failed / cannot reach pypi.org:
-   That is Wi-Fi/DNS. The Elite starter now skips pip when packages
-   are already installed, so you can still start the server offline.
-
-Do NOT use Streamlit for coaches.
+If FFmpeg missing:
+  RESTART-ELITE-AFTER-FFMPEG.bat, then FINAL-TRY-THIS-ONLY.bat again
