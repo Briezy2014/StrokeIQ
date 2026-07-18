@@ -203,7 +203,8 @@ void main() {
         find.textContaining(_fixture['displayName'] as String),
         findsWidgets,
       );
-      expect(find.text('USA Swimming'), findsOneWidget);
+      expect(find.textContaining('USA:'), findsWidgets);
+      expect(find.textContaining('Upload photo'), findsWidgets);
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
 
       await tester.scrollUntilVisible(
