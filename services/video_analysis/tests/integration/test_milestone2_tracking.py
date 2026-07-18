@@ -166,11 +166,35 @@ def test_extended_gap_completes_when_coverage_usable(settings, valid_video):
     assert any("hard to see" in note.lower() for note in result.limitations)
 
 
-def test_extended_gap_fails_only_when_coverage_unusable(settings, valid_video):
-    """Fail TARGET_LOST_EXTENDED only when almost none of the clip was tracked."""
+def test_brief_track_still_completes_with_limitations(settings, valid_video):
+    """Sparse phone-clip tracks should complete, not hard-fail TARGET_LOST."""
     settings.max_target_lost_frames = 3
     settings.min_usable_target_coverage = 0.20
-    script = {i: [([80.0, 80.0, 220.0, 320.0], 0.9)] for i in range(0, 3)}
+    settings.frame_processing_interval = 1
+    # Enough hits to form a usable track, then a long gap.
+    script = {i: [([80.0, 80.0, 220.0, 320.0], 0.9)] for i in range(0, 5)}
+    detector = ScriptedDetectorAdapter(script)
+    art = settings.artifact_root / "gap-soft"
+    result = run_detection_and_tracking(
+        settings=settings,
+        job_id="gap-soft",
+        video_id="gap-soft",
+        video_path=valid_video,
+        artifact_root=art,
+        detector=detector,
+    )
+    assert result.completed_with_limitations is True
+    assert result.tracks
+    assert result.lost_extended is True
+
+
+def test_extended_gap_fails_only_without_usable_track(settings, valid_video):
+    """Fail TARGET_LOST_EXTENDED only when no usable track exists."""
+    settings.max_target_lost_frames = 1
+    settings.min_usable_target_coverage = 0.20
+    settings.frame_processing_interval = 1
+    # Single detection — not enough hits for a usable track.
+    script = {0: [([80.0, 80.0, 220.0, 320.0], 0.9)]}
     detector = ScriptedDetectorAdapter(script)
     art = settings.artifact_root / "gap-bad"
     with pytest.raises(DetectionError) as exc:

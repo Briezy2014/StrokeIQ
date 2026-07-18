@@ -52,14 +52,16 @@ class Settings(BaseSettings):
     # Milestone 2 — detection / tracking
     detector_backend: str = "rtmdet_onnx"
     detector_model_path: Path = Path("models/rtmdet-n-person.onnx")
-    min_detection_confidence: float = 0.35
-    tracking_confidence_threshold: float = 0.40
-    max_lost_frames: int = 15
+    # Lower threshold helps splash / distant phone swim footage.
+    min_detection_confidence: float = 0.25
+    tracking_confidence_threshold: float = 0.30
+    max_lost_frames: int = 30
     # Phone swim clips often lose the body under splash / underwater / pan.
     # Default allows ~4s at 30fps before marking an extended gap (soft limitation).
     max_target_lost_frames: int = 120
-    # After an extended gap, still succeed when enough of the clip was tracked.
-    min_usable_target_coverage: float = 0.20
+    # Soft floor only — below this we still complete with limitations when any
+    # track exists (hard-fail only when there is no usable track at all).
+    min_usable_target_coverage: float = 0.08
     # Process every Nth frame. 1 is far too slow on CPU phone clips.
     frame_processing_interval: int = 3
     inference_resolution: int = 320

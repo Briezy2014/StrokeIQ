@@ -266,19 +266,51 @@ def run_detection_and_tracking(
             "Detector returned no person/swimmer detections for the video",
             retriable=False,
         )
-    if lost_extended:
+
+    # Prefer completing with limitations over hard-fail on messy phone clips.
+    # Only refuse when there is no usable target track at all.
+    min_hits = 3
+    usable_track = (
+        target_track is not None and len(target_track.observations) >= min_hits
+    )
+    if not usable_track:
+        # Fall back to any track with enough hits (target selection may be empty).
+        best = max(
+            (t for t in tracker.tracks if t.observations),
+            key=lambda t: len(t.observations),
+            default=None,
+        )
+        if best is not None and len(best.observations) >= min_hits:
+            target_track = best
+            coverage = compute_target_coverage(target_track, processed_frames)
+            target = select_target(
+                tracker.tracks,
+                mode="track_id",
+                track_id=best.track_id,
+                frame_width=width,
+                frame_height=height,
+                min_confidence=0.0,
+            )
+            usable_track = True
+            limitations.append(
+                "Automatic target was weak; used the strongest available track"
+            )
+            completed_with_limitations = True
+
+    if lost_extended or coverage < float(settings.min_usable_target_coverage):
         limitations.append(
             "Swimmer was hard to see for part of the clip (splash, underwater, "
             "or camera movement). Analysis used the clearest portions."
         )
         completed_with_limitations = True
-        min_coverage = float(settings.min_usable_target_coverage)
-        if target_track is None or coverage < min_coverage:
-            raise DetectionError(
-                "TARGET_LOST_EXTENDED",
-                "The swimmer was not visible clearly enough for a reliable analysis",
-                retriable=False,
-            )
+
+    if not usable_track:
+        raise DetectionError(
+            "TARGET_LOST_EXTENDED",
+            "The swimmer was not visible clearly enough for a reliable analysis",
+            retriable=False,
+        )
+
     if any(e.get("type") == "lost_track" for e in tracker.events):
         limitations.append("One or more tracks were lost during the clip")
         completed_with_limitations = True

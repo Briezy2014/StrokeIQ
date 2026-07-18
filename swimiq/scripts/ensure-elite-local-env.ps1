@@ -84,7 +84,10 @@ $map['CORS_ALLOW_ORIGINS'] = '*'
 $map['VIDEO_ENGINE_NAME'] = 'video_engine_v2'
 # Phone swim clips lose the body under splash/underwater — keep defaults current.
 $map['MAX_TARGET_LOST_FRAMES'] = '120'
-$map['MIN_USABLE_TARGET_COVERAGE'] = '0.20'
+$map['MIN_USABLE_TARGET_COVERAGE'] = '0.08'
+$map['MIN_DETECTION_CONFIDENCE'] = '0.25'
+$map['TRACKING_CONFIDENCE_THRESHOLD'] = '0.30'
+$map['MAX_LOST_FRAMES'] = '30'
 # CPU detection speed: every 3rd frame, first 45s only.
 $map['FRAME_PROCESSING_INTERVAL'] = '3'
 $map['MAX_ANALYSIS_DURATION_S'] = '45'
