@@ -1,5 +1,5 @@
 # Zip build\web for single-file GoDaddy upload (extract into public_html).
-# ASCII-only strings — Windows PowerShell 5.x breaks on fancy quotes / ($sizeMb MB).
+# Use ASCII-only Write-Host strings for Windows PowerShell 5.x.
 param(
     [string]$WebDir = '',
     [string]$ZipPath = ''

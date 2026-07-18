@@ -24,7 +24,7 @@ function Test-EliteFullyReady([string]$body) {
     if ($body -notmatch 'engine_version') { return $false }
     if ($body -notmatch '"ffmpeg_available"\s*:\s*true') { return $false }
     if ($body -notmatch '"ffprobe_available"\s*:\s*true') { return $false }
-    # Must include the new field set to true — rejects stale Elite processes.
+    # Must include the new field set to true (rejects stale Elite processes).
     if ($body -notmatch '"storage_download_configured"\s*:\s*true') { return $false }
     return $true
 }

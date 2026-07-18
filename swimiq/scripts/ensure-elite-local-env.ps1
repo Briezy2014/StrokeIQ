@@ -34,7 +34,7 @@ $videoDir = (Resolve-Path -LiteralPath $videoDir).Path
 $envFile = Join-Path $videoDir '.env'
 $exampleFile = Join-Path $videoDir '.env.example'
 
-# repo/services/video_analysis → repo root
+# repo/services/video_analysis -> repo root
 $repoRoot = Split-Path (Split-Path $videoDir -Parent) -Parent
 
 # Flutter .env can live in several path-safe locations on Kara's PC.
@@ -119,6 +119,6 @@ Write-Host '     SUPABASE_ANON_KEY: set' -ForegroundColor Green
 if ($serviceOk) {
     Write-Host '     SUPABASE_SERVICE_ROLE_KEY: set' -ForegroundColor Green
 } else {
-    Write-Host '     SUPABASE_SERVICE_ROLE_KEY: not set (OK — uses signed-in session token)' -ForegroundColor Yellow
+    Write-Host '     SUPABASE_SERVICE_ROLE_KEY: not set (OK - uses signed-in session token)' -ForegroundColor Yellow
 }
 exit 0
