@@ -11,19 +11,53 @@ import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/dashboard_membership_plans_card.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
+import '../../widgets/swimiq_media_picker.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../core/gamification/swimiq_badges.dart';
 import '../../core/gamification/swimiq_daily_progress.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _isUploadingPhoto = false;
+
+  Future<void> _uploadProfilePhoto() async {
+    final picked = await pickSwimIqMedia(
+      context,
+      kind: SwimIqMediaKind.image,
+    );
+    if (picked == null) return;
+
+    setState(() => _isUploadingPhoto = true);
+    final error = await ref.read(swimmerDataProvider.notifier).uploadProfilePhoto(
+          fileName: picked.fileName,
+          bytes: picked.bytes,
+        );
+    if (!mounted) return;
+    setState(() => _isUploadingPhoto = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error == null
+              ? 'Profile photo updated.'
+              : 'Could not upload profile photo: $error',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
@@ -66,6 +100,8 @@ class DashboardScreen extends ConsumerWidget {
                   : (logs.isEmpty ? 'Log swims to score' : 'Upgrade for cuts'),
               climbPercent: daily.scoreRopeClimbPercent,
               profilePhotoUrl: data.profile?.profilePhotoUrl,
+              isUploadingPhoto: _isUploadingPhoto,
+              onUploadPhoto: _uploadProfilePhoto,
             ),
             const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
@@ -99,6 +135,8 @@ class _DashboardHero extends StatelessWidget {
     required this.highestCut,
     required this.climbPercent,
     this.profilePhotoUrl,
+    this.isUploadingPhoto = false,
+    this.onUploadPhoto,
   });
 
   final String displayName;
@@ -106,6 +144,8 @@ class _DashboardHero extends StatelessWidget {
   final String highestCut;
   final int climbPercent;
   final String? profilePhotoUrl;
+  final bool isUploadingPhoto;
+  final VoidCallback? onUploadPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -185,48 +225,128 @@ class _DashboardHero extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          _DashboardPhotoMark(photoUrl: profilePhotoUrl),
+          _DashboardPhotoUpload(
+            photoUrl: profilePhotoUrl,
+            isUploading: isUploadingPhoto,
+            onUpload: onUploadPhoto,
+          ),
         ],
       ),
     );
   }
 }
 
-class _DashboardPhotoMark extends StatelessWidget {
-  const _DashboardPhotoMark({this.photoUrl});
+class _DashboardPhotoUpload extends StatelessWidget {
+  const _DashboardPhotoUpload({
+    this.photoUrl,
+    this.isUploading = false,
+    this.onUpload,
+  });
 
   final String? photoUrl;
+  final bool isUploading;
+  final VoidCallback? onUpload;
 
   @override
   Widget build(BuildContext context) {
-    const size = 112.0;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 3),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: photoUrl != null && photoUrl!.isNotEmpty
-          ? Image.network(
-              photoUrl!,
-              fit: BoxFit.cover,
+    const size = 120.0;
+    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isUploading ? null : onUpload,
+            customBorder: const CircleBorder(),
+            child: Ink(
               width: size,
               height: size,
-              alignment: const Alignment(0, -0.15),
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.person_outline,
-                color: Colors.white70,
-                size: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  width: 3,
+                ),
               ),
-            )
-          : const Icon(
-              Icons.person_outline,
-              color: Colors.white70,
-              size: 48,
+              child: ClipOval(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (hasPhoto)
+                      Image.network(
+                        photoUrl!,
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(0, -0.15),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.person_outline,
+                          color: Colors.white70,
+                          size: 52,
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.person_outline,
+                        color: Colors.white70,
+                        size: 52,
+                      ),
+                    if (isUploading)
+                      Container(
+                        color: Colors.black45,
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: double.infinity,
+                          color: Colors.black54,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Icon(
+                            hasPhoto
+                                ? Icons.photo_camera_outlined
+                                : Icons.add_a_photo_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: isUploading ? null : onUpload,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            isUploading
+                ? 'Uploading...'
+                : (hasPhoto ? 'Change photo' : 'Upload photo'),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

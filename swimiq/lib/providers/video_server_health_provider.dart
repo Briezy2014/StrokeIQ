@@ -31,8 +31,9 @@ final videoServerHealthProvider =
         elite.storageConfigured;
     if (!ready) {
       final timer = Timer(const Duration(seconds: 3), () {
-        if (ref.mounted) ref.invalidateSelf();
+        ref.invalidateSelf();
       });
+      // Cancel on dispose so we never invalidate after teardown (Riverpod 2.x).
       ref.onDispose(timer.cancel);
     }
     return VideoAnalysisServerHealth(
@@ -54,7 +55,7 @@ final eliteServerHealthProvider =
       health.storageConfigured;
   if (!ready && !Env.isPublicHostedWeb) {
     final timer = Timer(const Duration(seconds: 3), () {
-      if (ref.mounted) ref.invalidateSelf();
+      ref.invalidateSelf();
     });
     ref.onDispose(timer.cancel);
   }
