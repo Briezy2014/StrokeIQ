@@ -309,6 +309,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       return;
     }
 
+    // Never send public-website coaches into the old Gemini edge-function path.
+    if (Env.isPublicHostedWeb) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'AI stroke analysis on the public site uses Elite on the SwimIQ workstation. '
+            'Gemini cloud analysis is not used here.',
+          ),
+          duration: Duration(seconds: 12),
+        ),
+      );
+      return;
+    }
+
     if (subscription != null &&
         !SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription)) {
       if (!mounted) return;
