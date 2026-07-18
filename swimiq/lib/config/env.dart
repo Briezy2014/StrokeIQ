@@ -103,6 +103,20 @@ class Env {
     return url.isNotEmpty && key.isNotEmpty;
   }
 
+  /// True when the Flutter web app is served from a real public host
+  /// (e.g. swimiqapp.com), not local Chrome / 127.0.0.1.
+  ///
+  /// Public hosts cannot reach Kara's Elite analysis server on this PC.
+  static bool get isPublicHostedWeb {
+    final host = Uri.base.host.trim().toLowerCase();
+    if (host.isEmpty) return false;
+    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
+      return false;
+    }
+    if (host.endsWith('.local')) return false;
+    return true;
+  }
+
   /// Prefer a non-empty dotenv value; otherwise fall back to dart-define.
   static String _preferNonEmpty(String? fromDotenv, String fromDefine) {
     final a = fromDotenv?.trim() ?? '';

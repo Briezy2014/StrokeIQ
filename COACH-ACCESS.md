@@ -33,8 +33,11 @@ then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_U
 
 ## Important note about Elite Video Lab
 
-- **https://swimiqapp.com** = full SwimIQ web app for coaches/athletes (after Flutter publish)
-- **Elite Video Lab local CV analysis** still runs on the Windows PC via `START-SWIMIQ-WITH-ELITE.bat` until a hosted analysis API is deployed
+- **https://swimiqapp.com** = full SwimIQ web app (login, dashboard, passport, **Elite** tab)
+- After the latest publish, the nav tab says **Elite** (not “Video”)
+- Coaches can explore the app and upload videos on the public site
+- **Live Elite stroke analysis** still runs on the Windows PC via `START-SWIMIQ-WITH-ELITE.bat` (screen-share for a live demo)
+- The public site does **not** use the old Gemini analyze path anymore
 
 ## Short text you can paste to a coach
 
@@ -42,6 +45,7 @@ then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_U
 Try SwimIQ here: https://swimiqapp.com
 Demo login: demo@swimiqapp.com / SwimIQ
 In Settings → Plans, redeem coach code: COACH-EVAL-14
+Open the Elite tab to explore Video Lab. Live stroke analysis is shown in a screen-share demo.
 ```
 
-(Only send after you confirm the site shows the **login** screen in Incognito.)
+(Only send after you confirm Incognito shows **login**, and after login the bottom/side tab says **Elite**.)

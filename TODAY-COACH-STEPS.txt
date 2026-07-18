@@ -6,9 +6,10 @@ Do these in order. Stay in:  Desktop\StrokeIQ
 (Not StrokeIQ-Elite.)
 
 WHAT THE COACH LINK SHOWS
-  https://swimiqapp.com = full SwimIQ app (login, dashboard, passport, Video Lab UI)
-  Elite computer-vision analysis still runs on YOUR PC only (Part B below).
-  Do NOT promise the coach that "Run Elite Analysis" works from the public link yet.
+  https://swimiqapp.com = full SwimIQ app (login, dashboard, passport, Elite tab)
+  After you re-publish with the latest fix, the tab must say ELITE (not Video).
+  Live Elite stroke analysis still runs on YOUR PC only (Part B / screen-share).
+  Public site no longer uses the broken Gemini analyze path.
 
 ------------------------------------------------------------
 PART A — Put the real app on the coach link (do this first)

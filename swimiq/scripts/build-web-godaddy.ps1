@@ -36,12 +36,14 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
-# Hosted coaches must not depend on Kara's local Elite server.
+# Hosted site shows Elite Video Lab UI. Live CV analysis still needs the
+# local Elite server (localhost) — the app detects public hosts and does
+# NOT fall back to the broken Gemini path for coaches on swimiqapp.com.
 $prodEnv = Join-Path $env:TEMP 'swimiq-godaddy-defines.env'
 @(
     "SUPABASE_URL=$url"
     "SUPABASE_ANON_KEY=$key"
-    'VIDEO_ENGINE_V2=false'
+    'VIDEO_ENGINE_V2=true'
     'VIDEO_ENGINE_V2_DUAL_RUN=false'
     'ANALYSIS_API_BASE_URL='
 ) | Set-Content -LiteralPath $prodEnv -Encoding ascii

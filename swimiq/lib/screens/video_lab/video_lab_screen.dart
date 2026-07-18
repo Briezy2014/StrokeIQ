@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../config/env.dart';
 import '../../config/feature_flags.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/gemini_swim_analysis_service.dart';
@@ -186,6 +187,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Video must be saved before analysis.')),
+      );
+      return;
+    }
+
+    if (Env.isPublicHostedWeb) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Elite stroke analysis runs on the SwimIQ workstation. '
+            'On this website you can explore the app, upload videos, and use coach preview. '
+            'Ask for a live Elite analysis demo.',
+          ),
+          duration: Duration(seconds: 14),
+        ),
       );
       return;
     }
@@ -391,8 +407,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final dualRun = v2Allowed && FeatureFlags.videoEngineLegacyEnabled;
         final serverHealthAsync = ref.watch(videoServerHealthProvider);
         final serverHealth = serverHealthAsync.valueOrNull;
+        final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = v2Allowed
-            ? 'Elite stroke analysis, signed playback, and dual-run validation.'
+            ? (hosted
+                ? 'Upload, organize, and explore Elite Video Lab. Live stroke analysis is run on the SwimIQ workstation.'
+                : 'Elite stroke analysis, signed playback, and dual-run validation.')
             : canRunAi
             ? 'AI coaching from your race footage'
             : hasPro
@@ -416,10 +435,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             ),
             if (v2Allowed) ...[
               const SizedBox(height: 12),
-              _EliteServerStatusBanner(
-                health: serverHealth,
-                onRetry: () => ref.invalidate(videoServerHealthProvider),
-              ),
+              if (hosted)
+                const _HostedEliteInfoBanner()
+              else
+                _EliteServerStatusBanner(
+                  health: serverHealth,
+                  onRetry: () => ref.invalidate(videoServerHealthProvider),
+                ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
@@ -540,6 +562,41 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+class _HostedEliteInfoBanner extends StatelessWidget {
+  const _HostedEliteInfoBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFE3F2FD),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline, color: Color(0xFF0D47A1)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'You are on the public SwimIQ site. Explore Elite Video Lab, '
+                'upload clips, and use coach preview here. Live Elite stroke '
+                'analysis is demonstrated from the SwimIQ workstation '
+                '(not through Gemini on this website).',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF0D47A1),
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
