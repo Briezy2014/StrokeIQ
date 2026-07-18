@@ -34,12 +34,25 @@ async def require_user(
     """
     Require a valid Supabase user JWT.
 
-    When auth is disabled (local M1–M8 tests), returns a synthetic user.
+    When auth is disabled (local Windows / M1–M8 tests), returns a synthetic
+    user but still captures the Flutter bearer token so storage download can
+    use the signed-in session (no service-role key required).
     """
-    if not settings.supabase_auth_required:
-        return AuthUser(user_id="local-dev-user", email="dev@localhost", role="authenticated")
+    token: str | None = None
+    if credentials is not None and credentials.scheme.lower() == "bearer":
+        token = credentials.credentials
+        request.state.access_token = token
 
-    if credentials is None or credentials.scheme.lower() != "bearer":
+    if not settings.supabase_auth_required:
+        user = AuthUser(
+            user_id="local-dev-user",
+            email="dev@localhost",
+            role="authenticated",
+        )
+        request.state.auth_user = user
+        return user
+
+    if token is None:
         raise HTTPException(
             status_code=401,
             detail={
@@ -48,7 +61,6 @@ async def require_user(
             },
         )
 
-    token = credentials.credentials
     user = await _verify_supabase_jwt(token, settings)
     _assert_allowlisted(user, settings)
     request.state.auth_user = user

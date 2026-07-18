@@ -108,6 +108,8 @@ async def create_analysis(
     )
     attach_owner(job, user, athlete_key)
     job.model_versions["engine_name"] = settings.video_engine_name
+    # Keep Flutter session token for storage download when service-role is unset.
+    job.download_access_token = getattr(request.state, "access_token", None)
     store.save(job)
     log_stage(
         logger,

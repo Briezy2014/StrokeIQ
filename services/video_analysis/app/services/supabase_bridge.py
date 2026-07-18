@@ -52,17 +52,21 @@ class SupabaseBridge:
         bucket: str,
         storage_path: str,
         dest: Path,
+        user_access_token: str | None = None,
     ) -> Path:
-        if not self.enabled:
-            raise SupabaseBridgeError(
-                "SERVER_UNAVAILABLE",
-                "Supabase is not configured for storage download",
-            )
+        """
+        Download a private storage object.
+
+        Prefer the service-role key when configured. For local Windows Elite,
+        fall back to the signed-in Flutter user's JWT + anon key so analysis
+        works without putting SUPABASE_SERVICE_ROLE_KEY on the machine.
+        """
+        headers = self._download_headers(user_access_token=user_access_token)
         dest.parent.mkdir(parents=True, exist_ok=True)
         url = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
         try:
             with httpx.Client(timeout=120.0) as client:
-                resp = client.get(url, headers=self._headers())
+                resp = client.get(url, headers=headers)
         except httpx.HTTPError as exc:
             raise SupabaseBridgeError("UPLOAD_FAILED", f"Storage download failed: {exc}") from exc
         if resp.status_code == 404:
@@ -74,6 +78,22 @@ class SupabaseBridge:
             )
         dest.write_bytes(resp.content)
         return dest
+
+    def _download_headers(self, *, user_access_token: str | None) -> dict[str, str]:
+        if self.enabled:
+            return self._headers()
+        if self.base and self.anon_key and user_access_token:
+            return {
+                "apikey": self.anon_key,
+                "Authorization": f"Bearer {user_access_token}",
+            }
+        raise SupabaseBridgeError(
+            "SERVER_UNAVAILABLE",
+            "Supabase is not configured for storage download. "
+            "Set SUPABASE_URL + SUPABASE_ANON_KEY in services/video_analysis/.env "
+            "(copied from swimiq/.env), restart the Elite server, and stay signed in. "
+            "Optional: add SUPABASE_SERVICE_ROLE_KEY for service-role downloads.",
+        )
 
     def create_signed_url(
         self,

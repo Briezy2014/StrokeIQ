@@ -30,16 +30,21 @@ Get-Content -LiteralPath $envFile | ForEach-Object {
     }
 }
 
+$flutterUrl = $null
+$flutterAnon = $null
 if (Test-Path -LiteralPath $flutterEnv) {
     Get-Content -LiteralPath $flutterEnv | ForEach-Object {
         if ($_ -match '^\s*SUPABASE_URL\s*=\s*(.+)\s*$') {
-            $map['SUPABASE_URL'] = $matches[1].Trim()
+            $flutterUrl = $matches[1].Trim()
         }
         if ($_ -match '^\s*SUPABASE_ANON_KEY\s*=\s*(.+)\s*$') {
-            $map['SUPABASE_ANON_KEY'] = $matches[1].Trim()
+            $flutterAnon = $matches[1].Trim()
         }
     }
 }
+
+if ($flutterUrl) { $map['SUPABASE_URL'] = $flutterUrl }
+if ($flutterAnon) { $map['SUPABASE_ANON_KEY'] = $flutterAnon }
 
 $map['ENGINE_VERSION'] = 'elite-0.9.0'
 $map['SUPABASE_AUTH_REQUIRED'] = 'false'
@@ -57,4 +62,30 @@ $lines = foreach ($k in ($map.Keys | Sort-Object)) {
     "$k=$($map[$k])"
 }
 Set-Content -LiteralPath $envFile -Value $lines -Encoding ascii
-Write-Host '[OK] Local analysis .env ready (auth off for Windows desktop).' -ForegroundColor Green
+
+$url = [string]$map['SUPABASE_URL']
+$anon = [string]$map['SUPABASE_ANON_KEY']
+$service = [string]$map['SUPABASE_SERVICE_ROLE_KEY']
+
+$urlOk = -not [string]::IsNullOrWhiteSpace($url) -and $url -notmatch 'your-project'
+$anonOk = -not [string]::IsNullOrWhiteSpace($anon) -and $anon -notmatch 'your-supabase|your_anon|paste_'
+
+if (-not $urlOk -or -not $anonOk) {
+    Write-Host ''
+    Write-Host '[FAIL] Elite server needs Supabase URL + anon key to download videos.' -ForegroundColor Red
+    Write-Host "Copy them from: $flutterEnv" -ForegroundColor Yellow
+    Write-Host "into:           $envFile" -ForegroundColor Yellow
+    Write-Host 'Then save, close Notepad, and re-run START-SWIMIQ-WITH-ELITE.bat' -ForegroundColor Yellow
+    if (Test-Path -LiteralPath $envFile) { notepad $envFile }
+    exit 2
+}
+
+Write-Host '[OK] Local analysis .env ready (auth off; video download via signed-in session).' -ForegroundColor Green
+Write-Host "     SUPABASE_URL set: yes" -ForegroundColor Green
+Write-Host "     SUPABASE_ANON_KEY set: yes" -ForegroundColor Green
+if ([string]::IsNullOrWhiteSpace($service)) {
+    Write-Host '     SUPABASE_SERVICE_ROLE_KEY: not set (OK for local — uses your login token)' -ForegroundColor Yellow
+} else {
+    Write-Host '     SUPABASE_SERVICE_ROLE_KEY: set' -ForegroundColor Green
+}
+exit 0

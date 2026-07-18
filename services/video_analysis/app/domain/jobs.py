@@ -122,6 +122,8 @@ class AnalysisJob:
         self.model_versions: dict[str, str] = {}
         self.owner_user_id: str | None = None
         self.swimmer_key: str | None = None
+        # Transient Flutter session token for local storage download (not API-exposed).
+        self.download_access_token: str | None = None
         self.created_at = now
         self.updated_at = now
         self.cancelled = False
@@ -189,6 +191,7 @@ class AnalysisJob:
             "model_versions": self.model_versions,
             "owner_user_id": self.owner_user_id,
             "swimmer_key": self.swimmer_key,
+            "download_access_token": self.download_access_token,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "cancelled": self.cancelled,
@@ -224,6 +227,7 @@ class AnalysisJob:
         job.model_versions = dict(data.get("model_versions") or {})
         job.owner_user_id = data.get("owner_user_id")
         job.swimmer_key = data.get("swimmer_key")
+        job.download_access_token = data.get("download_access_token")
         job.created_at = datetime.fromisoformat(data["created_at"])
         job.updated_at = datetime.fromisoformat(data["updated_at"])
         job.cancelled = bool(data.get("cancelled", False))

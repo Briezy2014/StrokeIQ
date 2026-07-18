@@ -53,3 +53,39 @@ def test_user_owns_storage_path_by_prefix() -> None:
         user_id="user-123",
         storage_path="other-user/clip.mp4",
     )
+
+
+def test_download_headers_prefer_service_role() -> None:
+    bridge = SupabaseBridge(
+        Settings(
+            supabase_url="https://example.supabase.co",
+            supabase_anon_key="anon",
+            supabase_service_role_key="service",
+        )
+    )
+    headers = bridge._download_headers(user_access_token="user-jwt")
+    assert headers["Authorization"] == "Bearer service"
+
+
+def test_download_headers_fall_back_to_user_token() -> None:
+    bridge = SupabaseBridge(
+        Settings(
+            supabase_url="https://example.supabase.co",
+            supabase_anon_key="anon",
+            supabase_service_role_key=None,
+        )
+    )
+    headers = bridge._download_headers(user_access_token="user-jwt")
+    assert headers["Authorization"] == "Bearer user-jwt"
+    assert headers["apikey"] == "anon"
+
+
+def test_download_headers_error_when_unconfigured() -> None:
+    from app.services.supabase_bridge import SupabaseBridgeError
+
+    bridge = SupabaseBridge(
+        Settings(supabase_url=None, supabase_anon_key=None, supabase_service_role_key=None)
+    )
+    with pytest.raises(SupabaseBridgeError) as exc:
+        bridge._download_headers(user_access_token=None)
+    assert "storage download" in exc.value.message.lower()

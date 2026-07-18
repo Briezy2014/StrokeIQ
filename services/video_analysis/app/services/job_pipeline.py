@@ -41,6 +41,7 @@ def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
                 bucket=job.storage_bucket or "swim-videos",
                 storage_path=job.storage_path,
                 dest=dest,
+                user_access_token=getattr(job, "download_access_token", None),
             )
         except SupabaseBridgeError as exc:
             raise VideoValidationError(exc.code, exc.message, retriable=False) from exc
