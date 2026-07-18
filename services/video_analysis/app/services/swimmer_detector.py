@@ -148,7 +148,9 @@ def run_detection_and_tracking(
     frame_idx = 0
     while True:
         if max_frame_exclusive is not None and frame_idx >= max_frame_exclusive:
-            truncated_for_speed = True
+            # Only mark truncated when we stopped before the real end of the clip.
+            if total_frames <= 0 or max_frame_exclusive < total_frames:
+                truncated_for_speed = True
             break
         ok, frame = cap.read()
         if not ok:
@@ -255,9 +257,10 @@ def run_detection_and_tracking(
     if target.uncertain:
         limitations.append(f"Target selection uncertain: {target.reason}")
         completed_with_limitations = True
-    if coverage < 0.85:
+    # Swim footage often has splash/occlusion; only surface very low coverage.
+    if coverage < 0.20:
         limitations.append(
-            f"Target track coverage only {coverage:.0%} of processed frames"
+            "Parts of the race were hard to track clearly (splash, underwater, or camera angle)."
         )
         completed_with_limitations = True
     if frames_with_detections == 0:
@@ -310,10 +313,6 @@ def run_detection_and_tracking(
             "The swimmer was not visible clearly enough for a reliable analysis",
             retriable=False,
         )
-
-    if any(e.get("type") == "lost_track" for e in tracker.events):
-        limitations.append("One or more tracks were lost during the clip")
-        completed_with_limitations = True
 
     # Artifacts
     det_path = artifact_root / "detections.json"

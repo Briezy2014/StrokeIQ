@@ -1,0 +1,20 @@
+============================================================
+  ADD GEMINI KEY so coaching tips come back
+============================================================
+
+Elite analysis on this PC needs the Google Gemini key to write
+pros / cons / drills / dryland-style coaching tips.
+
+1) Open Desktop\StrokeIQ\swimiq\.env in Notepad
+2) Add this line (use your real Google AI Studio key):
+
+GEMINI_API_KEY=AIza...your_key_here...
+
+3) Save Notepad
+4) Close every Elite black window
+5) Double-click OPEN-WORKING-APP-NOW.bat
+6) Elite tab -> Run Elite Analysis again
+7) Open the Coaching tab on results
+
+You should see strengths, priority improvements, and drills.
+============================================================

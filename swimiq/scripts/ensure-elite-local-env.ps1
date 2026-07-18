@@ -78,11 +78,38 @@ foreach ($candidate in $flutterCandidates) {
 if ($flutterUrl) { $map['SUPABASE_URL'] = $flutterUrl }
 if ($flutterAnon) { $map['SUPABASE_ANON_KEY'] = $flutterAnon }
 
+# Coaching report key: Flutter .env, process env, or already in video .env.
+$geminiKey = $null
+foreach ($candidate in $flutterCandidates) {
+    if (-not (Test-Path -LiteralPath $candidate)) { continue }
+    $flutterMap = Read-EnvMap $candidate
+    if (Is-Configured ([string]$flutterMap['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme')) {
+        $geminiKey = [string]$flutterMap['GEMINI_API_KEY']
+        break
+    }
+}
+if (-not $geminiKey -and (Is-Configured ([string]$env:GEMINI_API_KEY) @('paste_', 'your-', 'changeme'))) {
+    $geminiKey = [string]$env:GEMINI_API_KEY
+}
+if (-not $geminiKey -and (Is-Configured ([string]$map['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme'))) {
+    $geminiKey = [string]$map['GEMINI_API_KEY']
+}
+if ($geminiKey) {
+    $map['GEMINI_API_KEY'] = $geminiKey
+    $map['GEMINI_REPORT_ENABLED'] = 'true'
+}
+
 $map['ENGINE_VERSION'] = 'elite-0.9.0'
 $map['SUPABASE_AUTH_REQUIRED'] = 'false'
 $map['CORS_ALLOW_ORIGINS'] = '*'
 $map['VIDEO_ENGINE_NAME'] = 'video_engine_v2'
-# Phone swim clips lose the body under splash/underwater — keep defaults current.
+# Pose/mmpose stack is optional on Windows coach PCs.
+$map['POSE_ENABLED'] = 'false'
+$map['BUTTERFLY_ANALYSIS_ENABLED'] = 'false'
+$map['UNDERWATER_ANALYSIS_ENABLED'] = 'false'
+$map['TURN_ANALYSIS_ENABLED'] = 'false'
+$map['FINISH_ANALYSIS_ENABLED'] = 'false'
+# Phone swim clips lose the body under splash/underwater - keep defaults current.
 $map['MAX_TARGET_LOST_FRAMES'] = '120'
 $map['MIN_USABLE_TARGET_COVERAGE'] = '0.08'
 $map['MIN_DETECTION_CONFIDENCE'] = '0.25'
@@ -130,5 +157,13 @@ if ($serviceOk) {
     Write-Host '     SUPABASE_SERVICE_ROLE_KEY: set' -ForegroundColor Green
 } else {
     Write-Host '     SUPABASE_SERVICE_ROLE_KEY: not set (OK - uses signed-in session token)' -ForegroundColor Yellow
+}
+$geminiOk = Is-Configured ([string]$map['GEMINI_API_KEY']) @('paste_', 'your-', 'changeme')
+if ($geminiOk) {
+    Write-Host '     GEMINI_API_KEY: set (coaching report enabled)' -ForegroundColor Green
+} else {
+    Write-Host '     GEMINI_API_KEY: missing' -ForegroundColor Yellow
+    Write-Host '     Add GEMINI_API_KEY=... to swimiq\.env OR services\video_analysis\.env' -ForegroundColor Yellow
+    Write-Host '     (same Google AI Studio key used for SwimIQ video coaching)' -ForegroundColor Yellow
 }
 exit 0

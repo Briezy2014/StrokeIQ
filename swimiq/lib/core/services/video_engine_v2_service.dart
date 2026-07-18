@@ -161,13 +161,15 @@ class VideoEngineV2Service {
         'target_selection_mode':
             targetTrackId != null ? 'track_id' : 'automatic',
         if (targetTrackId != null) 'target_track_id': targetTrackId,
+        // Coaching report first. Pose/mmpose extras are optional and soft-fail
+        // on PCs without torch — do not block the coach-facing report.
         'generate_gemini_report': generateGeminiReport,
         'generate_overlay': true,
-        'run_pose_stage': true,
-        'run_butterfly_analysis': true,
-        'run_underwater_analysis': true,
-        'run_turn_analysis': true,
-        'run_finish_analysis': true,
+        'run_pose_stage': false,
+        'run_butterfly_analysis': false,
+        'run_underwater_analysis': false,
+        'run_turn_analysis': false,
+        'run_finish_analysis': false,
         ...?options,
       },
     };
@@ -288,7 +290,8 @@ class VideoEngineV2Service {
       case 'GEMINI_UNAVAILABLE':
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
-        return 'Coaching report is unavailable right now. Measured metrics are still shown when present.';
+        return 'Coaching tips need GEMINI_API_KEY in services\\video_analysis\\.env '
+            '(same Google AI Studio key as SwimIQ). Restart Elite, then analyze again.';
       case 'UPLOAD_FAILED':
         return 'Video upload failed. Check your connection and try again.';
       case 'AUTHENTICATION_EXPIRED':

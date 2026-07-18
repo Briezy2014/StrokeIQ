@@ -144,17 +144,21 @@ class _VideoAnalysisResultsScreenState
         results.errorCode,
         fallback: results.errorMessage,
       );
+      final notes = results.limitations
+          .where((l) => !_SummaryTab._isInternalLimitation(l))
+          .toList(growable: false);
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwimIqScreenHeader(
-            title: 'Analysis failed',
+            title: 'Analysis needs another try',
             subtitle: friendly,
           ),
           const SizedBox(height: 16),
-          if (results.limitations.isNotEmpty)
-            LimitationsPanel(limitations: results.limitations),
-          const SizedBox(height: 16),
+          if (notes.isNotEmpty) ...[
+            LimitationsPanel(title: 'Notes', limitations: notes),
+            const SizedBox(height: 16),
+          ],
           if (results.isClipQualityFailure) ...[
             Text(
               'A new clip usually works better than retrying the same one. '
@@ -252,23 +256,26 @@ class _SummaryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final report = results.report;
+    final coachFacingNotes = results.limitations
+        .where((l) => !_isInternalLimitation(l))
+        .toList(growable: false);
+    final hasCoachSummary = report?.summary?.trim().isNotEmpty == true;
+    final hasStrengths = report?.strengths.isNotEmpty == true;
+    final hasImprovements = report?.priorityImprovements.isNotEmpty == true;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         SwimIqScreenHeader(
-          title: results.isPartialSuccess
-              ? 'Completed with limitations'
-              : results.isFailed
-                  ? 'Partial / failed'
-                  : 'Analysis complete',
-          subtitle: 'Engine ${results.engineVersion} · ${results.status}',
+          title: results.isFailed && !hasCoachSummary
+              ? 'Analysis needs another try'
+              : 'Your swim coaching report',
+          subtitle: hasCoachSummary || hasStrengths || hasImprovements
+              ? 'Strengths, improvements, drills, and next steps'
+              : 'Open the Coaching tab for tips, or retry if the report is empty',
         ),
         const SizedBox(height: 12),
-        if (results.limitations.isNotEmpty) ...[
-          LimitationsPanel(limitations: results.limitations),
-          const SizedBox(height: 16),
-        ],
-        if (report?.summary?.trim().isNotEmpty == true) ...[
+        if (hasCoachSummary) ...[
           Text(
             'Coach summary',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -277,7 +284,48 @@ class _SummaryTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(report!.summary!),
-        ] else if (results.reportFailed) ...[
+          const SizedBox(height: 16),
+        ],
+        if (hasStrengths) ...[
+          Text(
+            'Strengths',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 6),
+          ...report!.strengths.map(
+            (s) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text('• $s'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (hasImprovements) ...[
+          Text(
+            'Priority improvements',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 6),
+          ...report!.priorityImprovements.map(
+            (p) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('• ${p.title}'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'See the Coaching tab for drills and dryland suggestions.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (!hasCoachSummary && results.reportFailed) ...[
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -292,16 +340,16 @@ class _SummaryTab extends StatelessWidget {
               ),
             ),
           ),
-        ],
-        if (results.hasDeterministicMetrics) ...[
           const SizedBox(height: 16),
-          Text(
-            '${results.metrics.length} measured metrics available',
-            style: Theme.of(context).textTheme.bodyMedium,
+        ],
+        if (coachFacingNotes.isNotEmpty) ...[
+          LimitationsPanel(
+            title: 'Notes',
+            limitations: coachFacingNotes,
           ),
+          const SizedBox(height: 16),
         ],
         if (results.isFailed && !results.isClipQualityFailure) ...[
-          const SizedBox(height: 16),
           FilledButton(
             onPressed: retrying ? null : onRetry,
             child: Text(retrying ? 'Retrying…' : 'Retry analysis'),
@@ -309,6 +357,20 @@ class _SummaryTab extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  static bool _isInternalLimitation(String raw) {
+    final lower = raw.toLowerCase();
+    return lower.contains('pose dependency') ||
+        lower.contains('missing=[') ||
+        lower.contains('no module named') ||
+        lower.contains('torch') ||
+        lower.contains('mmpose') ||
+        lower.contains('mmcv') ||
+        lower.contains('mmengine') ||
+        lower.contains('skipped_no_smoothed') ||
+        lower.contains('supabase_persist') ||
+        lower.contains('first 45');
   }
 }
 

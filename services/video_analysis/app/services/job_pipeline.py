@@ -192,7 +192,9 @@ def run_analysis_pipeline(
         job.model_versions = tracking.model_versions
         job.limitations = list(dict.fromkeys([*job.limitations, *tracking.limitations]))
 
-        # Milestone 3: optional single pose stage (A/B/C). Never auto-advances stages.
+        # Milestone 3: optional pose stage. Soft-fail when torch/mmpose are not
+        # installed so tracking + Gemini coaching still complete for coaches.
+        pose_result = None
         if settings.pose_enabled or bool(options.get("run_pose_stage")):
             stage = str(options.get("pose_stage") or settings.pose_stage or "A").upper()
             if stage not in {"A", "B", "C"}:
@@ -202,16 +204,43 @@ def run_analysis_pipeline(
             pose_source = Path(
                 options.get("pose_source_path") or video_for_detection
             )
-            pose_result = run_pose_stage(
-                settings=settings,
-                stage=stage,  # type: ignore[arg-type]
-                job_id=job_id,
-                video_id=video_id,
-                source_path=pose_source,
-                output_root=art / "pose" / f"stage_{stage}",
-                detector=detector,
-                write_acceptance=bool(options.get("write_pose_acceptance", True)),
-            )
+            try:
+                pose_result = run_pose_stage(
+                    settings=settings,
+                    stage=stage,  # type: ignore[arg-type]
+                    job_id=job_id,
+                    video_id=video_id,
+                    source_path=pose_source,
+                    output_root=art / "pose" / f"stage_{stage}",
+                    detector=detector,
+                    write_acceptance=bool(options.get("write_pose_acceptance", True)),
+                )
+            except PoseStageError as pose_exc:
+                log_exception(
+                    logger,
+                    stage=job.stage,
+                    job_id=job_id,
+                    video_id=video_id,
+                    error=pose_exc,
+                )
+                job.pose = {
+                    "stage": stage,
+                    "status": "skipped",
+                    "skip_reason": pose_exc.error_code,
+                    "skip_message": pose_exc.message,
+                }
+                job.limitations = list(
+                    dict.fromkeys(
+                        [
+                            *job.limitations,
+                            "Detailed pose tools are not installed on this PC yet; "
+                            "continuing with tracking and coaching report.",
+                        ]
+                    )
+                )
+                pose_result = None
+
+        if pose_result is not None:
             summary_path = pose_result.artifact_paths.get("pose_stage_summary")
             coverage = {}
             if summary_path:
@@ -507,6 +536,7 @@ def run_analysis_pipeline(
         return job
 
     except PoseStageError as exc:
+        # Belt-and-suspenders: pose must never hard-fail coach-facing analysis.
         log_exception(
             logger,
             stage=job.stage,
@@ -514,12 +544,52 @@ def run_analysis_pipeline(
             video_id=video_id,
             error=exc,
         )
-        job.mark_failed(
-            error_code=exc.error_code,
-            message=exc.message,
-            stage=job.stage,
-            retriable=False,
+        job.pose = {
+            "status": "skipped",
+            "skip_reason": exc.error_code,
+            "skip_message": exc.message,
+        }
+        job.limitations = list(
+            dict.fromkeys(
+                [
+                    *job.limitations,
+                    "Detailed pose tools are not installed on this PC yet; "
+                    "continuing with tracking and coaching report.",
+                ]
+            )
         )
+        run_report = settings.gemini_report_enabled or bool(
+            ((job.request_payload or {}).get("options") or {}).get(
+                "generate_gemini_report"
+            )
+        )
+        if run_report:
+            try:
+                job.transition(JobStatus.generating_report, progress=0.98)
+                store.save(job)
+                art = artifact_dir(settings, job_id)
+                report_result = ReportGenerator(settings=settings).generate_for_job(
+                    job,
+                    output_dir=art / "report",
+                )
+                job.report = result_to_job_payload(report_result)
+                job.limitations = list(
+                    dict.fromkeys([*job.limitations, *report_result.limitations])
+                )
+            except Exception as report_exc:  # noqa: BLE001
+                log_exception(
+                    logger,
+                    stage=job.stage,
+                    job_id=job_id,
+                    video_id=video_id,
+                    error=report_exc,
+                )
+                job.limitations.append("coaching_report_unavailable")
+        if job.limitations:
+            job.transition(JobStatus.completed_with_limitations, progress=1.0)
+        else:
+            job.transition(JobStatus.completed, progress=1.0)
+        job.error = None
         store.save(job)
         _persist_job_to_supabase(job, settings=settings)
         return job
