@@ -6,11 +6,18 @@ echo SwimIQ Flutter web launcher
 echo Folder: %CD%
 echo.
 
+if exist "%~dp0scripts\swimiq-windows-paths.ps1" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0run-chrome.ps1"
+  if errorlevel 1 pause
+  exit /b %ERRORLEVEL%
+)
+
 flutter pub get
 if errorlevel 1 (
   echo.
-  echo pub get failed. If your Windows username has a space ^(e.g. Kara Williams^),
-  echo run setup-short-path.bat from the StrokeIQ folder first, then try again.
+  echo pub get failed. Your path has a space ^(Kara Williams^).
+  echo 1. Double-click FIX-KARA-PATHS.bat once
+  echo 2. Then double-click KARA-CLICK-THIS.bat
   echo See docs\WINDOWS_SETUP.md
   pause
   exit /b 1

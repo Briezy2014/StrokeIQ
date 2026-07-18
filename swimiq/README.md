@@ -28,13 +28,10 @@ Cross-platform swim performance tracker for **Android** and **iOS**, connected t
 If your folder is under `C:\Users\Kara Williams\...`, Flutter may fail with
 `'C:\Users\Kara' is not recognized`. See **[docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md)**.
 
-Quick start after running `scripts\setup-short-path.bat`:
+Quick start:
 
-```powershell
-S:
-cd swimiq
-.\run-chrome.ps1
-```
+1. Double-click **`FIX-KARA-PATHS.bat`** once
+2. Double-click **`KARA-CLICK-THIS.bat`**
 
 See **[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)** for inviting parents via **TestFlight** (iOS beta).
 
