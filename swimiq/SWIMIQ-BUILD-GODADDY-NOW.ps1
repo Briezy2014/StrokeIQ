@@ -31,11 +31,15 @@ try {
 
 $webOut = Join-Path $paths.WorkDir 'build\web'
 $zipPath = Join-Path $paths.WorkDir 'build\swimiq-web-godaddy.zip'
+Write-Host ''
+Write-Host 'Creating GoDaddy zip...' -ForegroundColor Cyan
 & powershell -NoProfile -ExecutionPolicy Bypass -File $zipScript -WebDir $webOut -ZipPath $zipPath
-if ($LASTEXITCODE -ne 0) {
+$zipCode = $LASTEXITCODE
+if ($zipCode -ne 0) {
     Write-Host 'ZIP FAILED - do not upload to GoDaddy yet.' -ForegroundColor Red
+    Write-Host 'First run GET-LATEST-FIXED-APP.bat / CLICK-ME-FIRST.bat, then publish again.' -ForegroundColor Yellow
     Read-Host 'Press Enter to close'
-    exit $LASTEXITCODE
+    exit $zipCode
 }
 
 if (-not (Test-Path -LiteralPath $zipPath)) {

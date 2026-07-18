@@ -52,8 +52,7 @@ Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host 'flutter build web --release (3-8 minutes)...' -ForegroundColor Cyan
-& $paths.FlutterBat build web --release --base-href=/ `
-    --dart-define-from-file=$prodEnv
+& $paths.FlutterBat build web --release --base-href=/ --dart-define-from-file=$prodEnv
 if ($LASTEXITCODE -ne 0) {
     Write-Host 'BUILD FAILED - do not upload to GoDaddy yet.' -ForegroundColor Red
     exit $LASTEXITCODE

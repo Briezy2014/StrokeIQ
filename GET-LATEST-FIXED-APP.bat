@@ -8,8 +8,6 @@ echo   Download latest SwimIQ fixed files
 echo   Folder: %CD%
 echo ============================================
 echo.
-echo This updates YOUR Desktop\StrokeIQ folder from GitHub.
-echo.
 
 if not exist ".git" (
   echo [FAIL] This is not the StrokeIQ git folder.
@@ -18,6 +16,7 @@ if not exist ".git" (
   exit /b 1
 )
 
+echo Updating from GitHub...
 git fetch origin
 if errorlevel 1 (
   echo [FAIL] git fetch failed. Check internet.
@@ -35,37 +34,37 @@ if errorlevel 1 (
 )
 
 echo.
-echo Checking important files...
-if exist "FIX-ELITE-STORAGE-NOW.bat" (
-  echo [OK] FIX-ELITE-STORAGE-NOW.bat
-) else (
-  echo [BAD] Missing FIX-ELITE-STORAGE-NOW.bat
-)
-if exist "FIX-STORAGE.bat" (
-  echo [OK] FIX-STORAGE.bat
-) else (
-  echo [BAD] Missing FIX-STORAGE.bat
-)
-if exist "PUBLISH-SWIMIQAPP-COM.bat" (
-  echo [OK] PUBLISH-SWIMIQAPP-COM.bat
-) else (
-  echo [BAD] Missing PUBLISH-SWIMIQAPP-COM.bat
-)
-if exist "START-SWIMIQ-WITH-ELITE.bat" (
-  echo [OK] START-SWIMIQ-WITH-ELITE.bat
-) else (
-  echo [BAD] Missing START-SWIMIQ-WITH-ELITE.bat
-)
+echo ============================================
+echo   File check after update
+echo ============================================
+set "MISSING=0"
+
+if exist "CLICK-ME-FIRST.bat" (echo [OK] CLICK-ME-FIRST.bat) else (echo [BAD] CLICK-ME-FIRST.bat & set MISSING=1)
+if exist "FIX-STORAGE.bat" (echo [OK] FIX-STORAGE.bat) else (echo [BAD] FIX-STORAGE.bat & set MISSING=1)
+if exist "FIX-ELITE-STORAGE-NOW.bat" (echo [OK] FIX-ELITE-STORAGE-NOW.bat) else (echo [BAD] FIX-ELITE-STORAGE-NOW.bat & set MISSING=1)
+if exist "PUBLISH-SWIMIQAPP-COM.bat" (echo [OK] PUBLISH-SWIMIQAPP-COM.bat) else (echo [BAD] PUBLISH-SWIMIQAPP-COM.bat & set MISSING=1)
+if exist "START-SWIMIQ-WITH-ELITE.bat" (echo [OK] START-SWIMIQ-WITH-ELITE.bat) else (echo [BAD] START-SWIMIQ-WITH-ELITE.bat & set MISSING=1)
+if exist "swimiq\scripts\zip-web-godaddy.ps1" (echo [OK] zip-web-godaddy.ps1) else (echo [BAD] zip-web-godaddy.ps1 & set MISSING=1)
+if exist "swimiq\scripts\kill-elite-port.ps1" (echo [OK] kill-elite-port.ps1) else (echo [BAD] kill-elite-port.ps1 & set MISSING=1)
 
 echo.
+if "%MISSING%"=="1" (
+  echo [FAIL] Some files are still missing. Internet/git problem.
+  pause
+  exit /b 1
+)
+
 echo ============================================
-echo NEXT — pick ONE:
+echo NEXT - pick ONE:
 echo.
-echo   Elite analysis broken / storage error:
-echo     Double-click  FIX-STORAGE.bat
+echo   A) Elite analysis / storage error:
+echo      Double-click   FIX-STORAGE.bat
 echo.
-echo   Put real Flutter app on swimiqapp.com:
-echo     Double-click  PUBLISH-SWIMIQAPP-COM.bat
+echo   B) Put Flutter app on swimiqapp.com:
+echo      Double-click   PUBLISH-SWIMIQAPP-COM.bat
 echo ============================================
 echo.
+echo Opening this folder so you can see FIX-STORAGE.bat ...
+explorer.exe "%CD%"
 pause
+exit /b 0

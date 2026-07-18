@@ -69,7 +69,7 @@ try {
     git reset --hard origin/cursor/elite-video-on-dashboard-b7ef 2>$null
     Write-Host '[OK] On cursor/elite-video-on-dashboard-b7ef' -ForegroundColor Green
 } catch {
-    Write-Host '[WARN] Git update skipped — using local copy.' -ForegroundColor Yellow
+    Write-Host '[WARN] Git update skipped - using local copy.' -ForegroundColor Yellow
 } finally {
     Pop-Location
 }
@@ -128,10 +128,10 @@ $legacyIcon = Join-Path $brandDir 'swimiq_icon.png'
 if (Test-Path -LiteralPath $loginIcon) {
     Write-Host "OK  Login uses assets\branding\icon.png" -ForegroundColor Green
 } elseif (Test-Path -LiteralPath $legacyIcon) {
-    Write-Host 'WARN Found swimiq_icon.png only — copying to icon.png for login...' -ForegroundColor Yellow
+    Write-Host 'WARN Found swimiq_icon.png only - copying to icon.png for login...' -ForegroundColor Yellow
     Copy-Item -LiteralPath $legacyIcon -Destination $loginIcon -Force
 } else {
-    Write-Host 'WARN No icon.png — drag your 512x512 icon onto COPY-LOGO.bat' -ForegroundColor Yellow
+    Write-Host 'WARN No icon.png - drag your 512x512 icon onto COPY-LOGO.bat' -ForegroundColor Yellow
 }
 
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow

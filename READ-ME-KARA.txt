@@ -1,0 +1,15 @@
+SwimIQ - what to double-click (Desktop\StrokeIQ)
+
+1) FIRST (always when something is missing / outdated):
+   CLICK-ME-FIRST.bat
+   (same as GET-LATEST-FIXED-APP.bat)
+
+2) Elite analysis error ("Supabase is not configured for storage download"):
+   FIX-STORAGE.bat
+
+3) Put the REAL Flutter app on https://swimiqapp.com:
+   PUBLISH-SWIMIQAPP-COM.bat
+   Then upload swimiq\build\swimiq-web-godaddy.zip to GoDaddy public_html and Extract.
+
+Do NOT upload the old website\ brochure folder as the homepage.
+Do NOT use Streamlit for coaches.
