@@ -182,14 +182,4 @@ if not exist "%ENSURE_PS1%" (
   exit /b 0
 )
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ENSURE_PS1%" "%CD%"
-set "ENSURE_ERR=%ERRORLEVEL%"
-if "%ENSURE_ERR%"=="2" (
-  echo.
-  echo [FAIL] Fix services\video_analysis\.env Supabase keys, then run again.
-  pause
-  exit /b 2
-)
-if not "%ENSURE_ERR%"=="0" (
-  echo [WARN] Could not fully prepare .env — continuing with defaults.
-)
-exit /b 0
+exit /b %ERRORLEVEL%
