@@ -197,7 +197,13 @@ function Initialize-SwimIqWindowsPaths {
     Write-Host ''
 
     $strokeLink = Ensure-DirectoryJunction -LinkPath 'C:\SwimIQWork' -TargetPath $strokeRoot
-    $workDir = Join-Path $strokeLink 'swimiq'
+    # StrokeIQ root + \swimiq. If junction was wrongly pointed at swimiq already, don't nest.
+    if ((Split-Path -Leaf $strokeRoot) -ieq 'swimiq') {
+        $workDir = $strokeLink
+    } else {
+        $workDir = Join-Path $strokeLink 'swimiq'
+    }
+    $workDir = (Get-PhysicalRootPath $workDir).TrimEnd('\')
 
     $flutterRootPhysical = Find-FlutterRoot
     if (-not $flutterRootPhysical) {
@@ -226,6 +232,9 @@ function Initialize-SwimIqWindowsPaths {
     }
     if (-not (Test-Path -LiteralPath $workDir)) {
         throw "SwimIQ folder not found at $workDir"
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $workDir 'pubspec.yaml'))) {
+        throw "SwimIQ folder looks wrong (no pubspec.yaml): $workDir"
     }
 
     if ($CleanDartTool) {
