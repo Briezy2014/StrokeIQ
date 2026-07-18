@@ -1,17 +1,3 @@
-============================================================
-  FIX VIDEO UPLOAD — read this, then paste ONLY the SQL
-============================================================
-
-1) https://supabase.com/dashboard → your SwimIQ project
-2) SQL Editor → New query
-3) DELETE everything already in the editor box (Ctrl+A, Delete)
-4) Copy ONLY the lines between the two ##### lines below
-   (do NOT copy these instructions, do NOT copy the ##### lines)
-5) Paste into Supabase → click RUN
-6) Must say Success
-7) Upload your video again in SwimIQ
-
-##### COPY ONLY BELOW THIS LINE #####
 ALTER TABLE public.swim_videos
   ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
 
@@ -35,4 +21,3 @@ CREATE POLICY swim_videos_update_owner ON public.swim_videos
   WITH CHECK (user_id IS NULL OR user_id = auth.uid());
 
 NOTIFY pgrst, 'reload schema';
-##### COPY ONLY ABOVE THIS LINE #####
