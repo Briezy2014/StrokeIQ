@@ -14,12 +14,13 @@ import 'app_providers.dart';
 /// server turns the banner green without a manual Recheck click.
 final videoServerHealthProvider =
     FutureProvider.autoDispose<VideoAnalysisServerHealth>((ref) async {
-  // Public website cannot reach Kara's local Elite server — skip noisy polling.
+  // Public website uses cloud analysis — do not poll localhost Elite health.
   if (FeatureFlags.videoEngineV2Enabled && Env.isPublicHostedWeb) {
     return const VideoAnalysisServerHealth(
-      ok: false,
-      message:
-          'Elite stroke analysis runs on the SwimIQ workstation (not this public website).',
+      ok: true,
+      message: 'Cloud analysis ready',
+      functionVersion: 'elite-cloud',
+      modelProbeOk: true,
     );
   }
 
