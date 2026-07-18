@@ -106,16 +106,16 @@ try {
     Write-Host '[WARN] Could not update VIDEO_ENGINE_V2 in .env' -ForegroundColor Yellow
 }
 
-# Refuse to open the app until Elite /health answers (prevents "Failed to fetch").
+# START-SWIMIQ-WITH-ELITE already started Elite. Only ping health here — never kill/restart.
 $eliteWait = Join-Path $PSScriptRoot 'start-elite-and-wait.ps1'
 if (Test-Path -LiteralPath $eliteWait) {
     Write-Host ''
-    Write-Host 'Ensuring Elite analysis server is running...' -ForegroundColor Cyan
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $eliteWait
+    Write-Host 'Confirming Elite analysis server is still up...' -ForegroundColor Cyan
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $eliteWait -CheckOnly
     if ($LASTEXITCODE -ne 0) {
         Write-Host ''
         Write-Host 'ERROR: Elite server is not reachable at http://127.0.0.1:8080/health' -ForegroundColor Red
-        Write-Host 'Fix the Elite server window, then run START-SWIMIQ-WITH-ELITE.bat' -ForegroundColor Red
+        Write-Host 'Run START-SWIMIQ-WITH-ELITE.bat and leave the Elite window open.' -ForegroundColor Red
         Read-Host 'Press Enter to close'
         exit 1
     }

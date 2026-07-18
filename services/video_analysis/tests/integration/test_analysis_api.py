@@ -43,7 +43,11 @@ def test_create_and_complete_with_scripted_detector(client, settings):
             "local_path": str(FIX / "multi_swimmer_synth.mp4"),
             "athlete": {"swimmer_key": "aspyn", "display_name": "Aspyn"},
             "event": {"stroke": "butterfly", "distance_m": 50, "course": "LCM"},
-            "options": {"target_selection_mode": "automatic", "generate_gemini_report": False},
+            "options": {
+                "target_selection_mode": "automatic",
+                "generate_gemini_report": False,
+                "generate_overlay": True,
+            },
         },
     )
     assert create.status_code == 202, create.text
@@ -58,7 +62,8 @@ def test_create_and_complete_with_scripted_detector(client, settings):
     assert results.status_code == 200
     body = results.json()
     assert body["report"] is None
-    assert body["metrics"] == []
+    # Tracking-only metrics are exposed for coach PCs (pose/M5–M7 off).
+    assert isinstance(body["metrics"], list)
     assert body["tracking"] is not None
     assert body["tracking"]["target"]["track_id"]
     assert body["model_versions"]["milestone"] == "2"

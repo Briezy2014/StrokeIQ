@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -119,7 +120,7 @@ class VideoEngineV2Service {
         reachable: false,
         message:
             'Elite server is OFF at $baseUrl. '
-            'Double-click FIX-ANALYSIS-NOW.bat on your Desktop\\StrokeIQ folder, '
+            'Double-click START-SWIMIQ-WITH-ELITE.bat, '
             'leave the Elite black window open, then come back here — this banner refreshes automatically.',
       );
     }
@@ -159,20 +160,18 @@ class VideoEngineV2Service {
         if (notes != null) 'notes': notes,
       },
       'options': {
+        ...?options,
         'target_selection_mode':
             targetTrackId != null ? 'track_id' : 'automatic',
         if (targetTrackId != null) 'target_track_id': targetTrackId,
-        // Coaching report first. Pose/mmpose extras are optional and soft-fail
-        // on PCs without torch — do not block the coach-facing report.
+        // Protected Elite defaults win over any caller options map.
         'generate_gemini_report': generateGeminiReport,
-        // Overlay rewrite is a second full video pass — off by default for speed.
         'generate_overlay': false,
         'run_pose_stage': false,
         'run_butterfly_analysis': false,
         'run_underwater_analysis': false,
         'run_turn_analysis': false,
         'run_finish_analysis': false,
-        ...?options,
       },
     };
 
@@ -293,17 +292,14 @@ class VideoEngineV2Service {
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
       case 'MISSING_API_KEY':
-        return 'Coaching report needs your Google AI Studio key in '
-            'swimiq\\.env as GEMINI_API_KEY=... '
-            '(either "Gemini API KEY" or "SwimIQ Video Analysis" is fine). '
-            'Save Notepad, close every Elite window, run OPEN-WORKING-APP-NOW.bat, '
+        return 'Coaching tips need GEMINI_API_KEY in swimiq\\.env. '
+            'Save Notepad, close Elite windows, run START-SWIMIQ-WITH-ELITE.bat, '
             'then analyze again.';
       case 'GEMINI_ERROR':
       case 'INVALID_API_KEY':
-        return 'Google rejected the Gemini key for the coaching report. '
-            'In AI Studio, copy the full "SwimIQ Video Analysis" key into '
-            'swimiq\\.env as GEMINI_API_KEY=..., save, restart Elite with '
-            'OPEN-WORKING-APP-NOW.bat, then analyze again.';
+        return 'Google rejected the Gemini key. Paste the full AI Studio key into '
+            'swimiq\\.env as GEMINI_API_KEY=..., save, run START-SWIMIQ-WITH-ELITE.bat, '
+            'then analyze again.';
       case 'UPLOAD_FAILED':
         return 'Video upload failed. Check your connection and try again.';
       case 'AUTHENTICATION_EXPIRED':
@@ -352,30 +348,33 @@ class VideoEngineV2Service {
 
     http.Response response;
     try {
+      final Future<http.Response> pending;
       switch (method) {
         case 'GET':
-          response = await _client.get(uri, headers: headers);
+          pending = _client.get(uri, headers: headers);
         case 'POST':
-          response = await _client.post(
+          pending = _client.post(
             uri,
             headers: headers,
             body: body == null ? null : jsonEncode(body),
           );
         case 'DELETE':
-          response = await _client.delete(uri, headers: headers);
+          pending = _client.delete(uri, headers: headers);
         default:
           throw VideoEngineV2Exception(
             'Unsupported HTTP method $method',
             errorCode: 'ANALYSIS_FAILED',
           );
       }
+      response = await pending.timeout(const Duration(seconds: 30));
     } catch (e) {
       if (e is VideoEngineV2Exception) rethrow;
       throw VideoEngineV2Exception(
         'Cannot reach Elite server at $baseUrl$path. '
-        'Double-click START-SWIMIQ-WITH-ELITE.bat, or leave START-ELITE-ANALYSIS-SERVER.bat open, '
-        'confirm http://127.0.0.1:8080/health loads, then try again. ($e)',
+        'Double-click START-SWIMIQ-WITH-ELITE.bat, leave the Elite window open, '
+        'confirm $baseUrl/health loads, then try again. ($e)',
         errorCode: 'SERVER_UNAVAILABLE',
+        retriable: true,
       );
     }
 

@@ -1,4 +1,13 @@
 # Starts a FRESH Elite analysis server and waits until /health is fully ready.
+# Usage:
+#   start-elite-and-wait.ps1              # start if needed
+#   start-elite-and-wait.ps1 -CheckOnly   # never kill/restart; ping health only
+#   start-elite-and-wait.ps1 -ForceRestart
+param(
+    [switch]$CheckOnly,
+    [switch]$ForceRestart
+)
+
 $ErrorActionPreference = 'Stop'
 
 $ApiBase = 'http://127.0.0.1:8080'
@@ -7,7 +16,10 @@ $SwimIqDir = Split-Path $PSScriptRoot -Parent
 $RepoRoot = Split-Path $SwimIqDir -Parent
 $EliteBat = Join-Path $SwimIqDir 'START-ELITE-ANALYSIS-SERVER.bat'
 $KillScript = Join-Path $PSScriptRoot 'kill-elite-port.ps1'
+$EnsureScript = Join-Path $PSScriptRoot 'ensure-elite-local-env.ps1'
 $VideoDir = Join-Path $RepoRoot 'services\video_analysis'
+$FlutterEnv = Join-Path $SwimIqDir '.env'
+$EliteEnv = Join-Path $VideoDir '.env'
 
 function Get-EliteHealthBody {
     try {
@@ -24,9 +36,27 @@ function Test-EliteFullyReady([string]$body) {
     if ($body -notmatch 'engine_version') { return $false }
     if ($body -notmatch '"ffmpeg_available"\s*:\s*true') { return $false }
     if ($body -notmatch '"ffprobe_available"\s*:\s*true') { return $false }
-    # Must include the new field set to true (rejects stale Elite processes).
     if ($body -notmatch '"storage_download_configured"\s*:\s*true') { return $false }
     return $true
+}
+
+function Get-EnvValue([string]$path, [string]$key) {
+    if (-not (Test-Path -LiteralPath $path)) { return '' }
+    $line = Get-Content -LiteralPath $path | Where-Object { $_ -match ("^\s*" + [regex]::Escape($key) + "\s*=") } | Select-Object -First 1
+    if (-not $line) { return '' }
+    $v = ($line -replace ("^\s*" + [regex]::Escape($key) + "\s*="), '').Trim().Trim('"').Trim("'")
+    if ($v -notmatch '^\s*["'']' -and $v.Contains('#')) {
+        $v = ($v -split '#', 2)[0].Trim()
+    }
+    return $v
+}
+
+function Test-GeminiNeedsRestart {
+    $flutterKey = Get-EnvValue $FlutterEnv 'GEMINI_API_KEY'
+    $eliteKey = Get-EnvValue $EliteEnv 'GEMINI_API_KEY'
+    if ([string]::IsNullOrWhiteSpace($flutterKey)) { return $false }
+    if ($flutterKey -ne $eliteKey) { return $true }
+    return $false
 }
 
 function Refresh-PathFromRegistry {
@@ -55,23 +85,51 @@ Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ' Elite analysis server check' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host "Health URL: $HealthUrl"
+if ($CheckOnly) { Write-Host 'Mode: CheckOnly (will not restart Elite)' -ForegroundColor Yellow }
 Write-Host ''
 
 Refresh-PathFromRegistry
 
 $body = Get-EliteHealthBody
-if (Test-EliteFullyReady $body) {
+$needsKeyRestart = Test-GeminiNeedsRestart
+
+if ($CheckOnly) {
+    if (Test-EliteFullyReady $body) {
+        Write-Host '[OK] Elite server already fully ready (ffmpeg + storage).' -ForegroundColor Green
+        Write-Host $body
+        exit 0
+    }
+    Write-Host '[FAIL] Elite is not fully ready (CheckOnly — not restarting).' -ForegroundColor Red
+    if ($body) { Write-Host $body }
+    exit 1
+}
+
+if ((Test-EliteFullyReady $body) -and (-not $ForceRestart) -and (-not $needsKeyRestart)) {
     Write-Host '[OK] Elite server already fully ready (ffmpeg + storage).' -ForegroundColor Green
     Write-Host $body
     exit 0
 }
 
-if ($body) {
+if ($needsKeyRestart -and (Test-EliteFullyReady $body)) {
+    Write-Host '[WARN] GEMINI_API_KEY in swimiq\.env differs from Elite .env — restarting Elite to load it.' -ForegroundColor Yellow
+}
+
+if ($body -and -not (Test-EliteFullyReady $body)) {
     Write-Host '[WARN] Something is on :8080 but it is NOT fully ready (likely OLD Elite code).' -ForegroundColor Yellow
     Write-Host $body
     Write-Host 'Killing it and starting a fresh Elite server...' -ForegroundColor Yellow
-} else {
+} elseif (-not $body) {
     Write-Host 'Elite server not running. Starting a fresh one...' -ForegroundColor Yellow
+}
+
+# Refresh Elite .env from Flutter before start (keys, intervals, etc.).
+if (Test-Path -LiteralPath $EnsureScript) {
+    Write-Host 'Refreshing services\video_analysis\.env from swimiq\.env ...' -ForegroundColor Cyan
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $EnsureScript $VideoDir
+    if ($LASTEXITCODE -eq 2) {
+        Write-Host '[FAIL] Elite .env missing Supabase URL/anon key.' -ForegroundColor Red
+        exit 2
+    }
 }
 
 if (Test-Path -LiteralPath $KillScript) {
@@ -101,13 +159,12 @@ while ((Get-Date) -lt $deadline) {
         try { Start-Process $HealthUrl } catch {}
         exit 0
     }
-    # If the starter window died quickly, fail fast with a clear message.
     if ($eliteProc -and $eliteProc.HasExited -and ((Get-Date) - $startedAt).TotalSeconds -gt 20) {
         $partial = Get-EliteHealthBody
         if (-not (Test-EliteFullyReady $partial)) {
             Write-Host ''
             Write-Host '[FAIL] Elite window closed or crashed before becoming ready.' -ForegroundColor Red
-            Write-Host 'Open FIX-ANALYSIS-NOW.bat again and leave the Elite window open.' -ForegroundColor Yellow
+            Write-Host 'Run START-SWIMIQ-WITH-ELITE.bat again and leave the Elite window open.' -ForegroundColor Yellow
             if ($partial) { Write-Host $partial }
             exit 1
         }
@@ -122,5 +179,5 @@ $body = Get-EliteHealthBody
 if ($body) { Write-Host $body } else { Write-Host '(no response on /health yet)' }
 Write-Host "Video dir: $VideoDir"
 Write-Host 'Need BOTH: ffmpeg_available:true AND storage_download_configured:true'
-Write-Host 'Then run: FIX-ANALYSIS-NOW.bat'
+Write-Host 'Then run: START-SWIMIQ-WITH-ELITE.bat'
 exit 1

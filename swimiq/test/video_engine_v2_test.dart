@@ -265,7 +265,8 @@ void main() {
       );
       final health = await service.checkHealth();
       expect(health.reachable, isFalse);
-      expect(health.message, contains('Cannot reach Elite server'));
+      expect(health.message, contains('Elite server is OFF'));
+      expect(health.message, contains('START-SWIMIQ-WITH-ELITE.bat'));
     });
 
     test('unauthorized result access error mapping', () async {

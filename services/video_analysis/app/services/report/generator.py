@@ -146,14 +146,25 @@ class ReportGenerator:
                         model_name,
                         exc.code,
                     )
+                    # Fall back quickly — do not burn minutes walking every model.
                     if exc.code in {
                         "MODEL_UNAVAILABLE",
                         "INVALID_API_KEY",
                         "MISSING_API_KEY",
                         "GEMINI_ERROR",
+                        "API_TIMEOUT",
+                        "RATE_LIMIT",
+                        "SERVICE_OUTAGE",
                     }:
-                        model_dead = True
-                        break
+                        return self._local_fallback_result(
+                            job,
+                            context=context,
+                            metrics=metrics,
+                            events=events,
+                            output_dir=output_dir,
+                            model_name=model_name,
+                            gemini_code=exc.code,
+                        )
                     if attempt >= max_attempts:
                         model_dead = True
                         break
@@ -286,7 +297,16 @@ class ReportGenerator:
                 "MISSING_API_KEY",
                 "GEMINI_API_KEY is not set in backend environment",
             )
-        return GoogleGenAITransport(api_key=key)
+        try:
+            return GoogleGenAITransport(api_key=key)
+        except GeminiClientError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            raise GeminiClientError(
+                "GEMINI_ERROR",
+                f"Gemini client could not start: {exc}",
+                retriable=False,
+            ) from exc
 
     def _failed_store(
         self,

@@ -29,7 +29,7 @@ echo ============================================
 set MISSING=0
 
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
-call :CheckFile "FIX-STORAGE.bat"
+call :CheckFile "GOOD-MORNING-KARA.txt"
 call :CheckFile "swimiq\scripts\start-elite-and-wait.ps1"
 call :CheckFile "swimiq\scripts\kill-elite-port.ps1"
 call :CheckFile "swimiq\START-ELITE-ANALYSIS-SERVER.bat"
@@ -39,17 +39,10 @@ echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo NEXT (this file will start it for you):
-echo.
-echo   START-SWIMIQ-WITH-ELITE.bat
-echo.
-echo That starts Elite + Chrome on THIS PC.
-echo Leave the Elite black window OPEN.
-echo Do NOT use swimiqapp.com.
+echo NEXT: starting Elite + Chrome for you now
 echo ============================================
 echo.
-echo Starting START-SWIMIQ-WITH-ELITE.bat now...
-echo.
+if exist "%CD%\GOOD-MORNING-KARA.txt" start "" notepad "%CD%\GOOD-MORNING-KARA.txt"
 call "%CD%\START-SWIMIQ-WITH-ELITE.bat"
 exit /b %ERRORLEVEL%
 

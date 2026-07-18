@@ -261,7 +261,12 @@ def test_rtmdet_person_clip_real_detector(settings):
         job_id=new_job_id(),
         video_id="person-rtmdet",
         engine_version=settings.engine_version,
-        request_payload={"options": {"target_selection_mode": "automatic"}},
+        request_payload={
+            "options": {
+                "target_selection_mode": "automatic",
+                "generate_overlay": True,
+            }
+        },
         local_path=str(FIX / "person_clip.mp4"),
     )
     finished = run_analysis_pipeline(job, settings=settings, store=store)
@@ -308,7 +313,12 @@ def test_rotated_phone_video_scripted_or_real(settings):
         job_id=new_job_id(),
         video_id="rotated",
         engine_version=settings.engine_version,
-        request_payload={"options": {"target_selection_mode": "automatic"}},
+        request_payload={
+            "options": {
+                "target_selection_mode": "automatic",
+                "generate_overlay": True,
+            }
+        },
         local_path=str(FIX / "person_clip_rotated.mp4"),
     )
     finished = run_analysis_pipeline(

@@ -256,6 +256,21 @@ async def get_job_results(
 
     metrics = []
     phases = []
+    # Tracking-only Elite runs (pose/M5–M7 off) still expose usable metrics.
+    try:
+        from app.services.report.context import collect_deterministic_payloads
+
+        tracking_metrics, _tracking_events = collect_deterministic_payloads(job)
+        for m in tracking_metrics:
+            name = str(m.get("name") or "")
+            if name.startswith("target_") or name in {
+                "target_coverage",
+                "processed_frames",
+                "frames_with_detections",
+            } or str(m.get("metric_id") or "").startswith("tracking:"):
+                metrics.append(m)
+    except Exception:  # noqa: BLE001
+        pass
     if job.butterfly:
         metrics = list(job.butterfly.get("metrics") or [])
         for c in job.butterfly.get("cycles") or []:

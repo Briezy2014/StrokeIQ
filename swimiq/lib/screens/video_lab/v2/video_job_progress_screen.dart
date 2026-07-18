@@ -114,6 +114,12 @@ class _VideoJobProgressScreenState
               if (job == null) {
                 return const Center(child: CircularProgressIndicator());
               }
+              // Safety net if listen() missed a terminal transition.
+              if (job.isTerminal) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _goToResults(job);
+                });
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

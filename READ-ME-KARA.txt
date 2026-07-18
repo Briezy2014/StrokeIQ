@@ -1,13 +1,8 @@
-SwimIQ — ONE path only (Desktop\StrokeIQ)
+SwimIQ — morning path (Desktop\StrokeIQ)
 
-Black banner about 127.0.0.1:8080 = Elite is OFF.
-
-  Double-click:  START-SWIMIQ-WITH-ELITE.bat
+Double-click:  START-SWIMIQ-WITH-ELITE.bat
 
 Leave the Elite black window OPEN.
-Address bar must be 127.0.0.1 / localhost — not swimiqapp.com.
+Use localhost / 127.0.0.1 — not swimiqapp.com.
 
-Then: Elite tab → Run Elite Analysis again.
-
-Short clips should finish much faster now.
-Coaching tips should still appear even if Gemini has a key hiccup.
+Read: GOOD-MORNING-KARA.txt

@@ -11,6 +11,10 @@ function Read-EnvMap([string]$path) {
             if (($val.StartsWith('"') -and $val.EndsWith('"')) -or ($val.StartsWith("'") -and $val.EndsWith("'"))) {
                 $val = $val.Substring(1, $val.Length - 2)
             }
+            # Strip unquoted trailing comments: KEY=value # note
+            if ($val -notmatch '^\s*["'']' -and $val.Contains('#')) {
+                $val = ($val -split '#', 2)[0].Trim()
+            }
             $map[$matches[1]] = $val
         }
     }
@@ -40,7 +44,7 @@ $repoRoot = Split-Path (Split-Path $videoDir -Parent) -Parent
 # Flutter .env can live in several path-safe locations on Kara's PC.
 $flutterCandidates = @(
     (Join-Path $repoRoot 'swimiq\.env'),
-    'C:\SwimIQWork\.env',
+    'C:\SwimIQWork\swimiq\.env',
     (Join-Path $env:USERPROFILE 'OneDrive\Desktop\StrokeIQ\swimiq\.env'),
     (Join-Path $env:USERPROFILE 'Desktop\StrokeIQ\swimiq\.env')
 )

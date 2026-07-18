@@ -15,6 +15,9 @@ class VideoEngineV2JobNotifier extends StateNotifier<AsyncValue<AnalysisJob?>> {
   Timer? _pollTimer;
   String? _activeJobId;
   String? _lastStage;
+  bool _tickInFlight = false;
+  int _consecutivePollFailures = 0;
+  static const int _maxTransientFailures = 8;
 
   VideoEngineV2Service get _service => _ref.read(videoEngineV2ServiceProvider);
   VideoAnalyticsService get _analytics =>
@@ -23,9 +26,12 @@ class VideoEngineV2JobNotifier extends StateNotifier<AsyncValue<AnalysisJob?>> {
   Future<AnalysisJob> startPolling(String jobId) async {
     await stopPolling();
     _activeJobId = jobId;
+    _consecutivePollFailures = 0;
+    _tickInFlight = false;
     state = const AsyncLoading();
     try {
       final job = await _service.getStatus(jobId);
+      if (_activeJobId != jobId) return job;
       _lastStage = job.stage;
       state = AsyncData(job);
       if (!job.isTerminal) {
@@ -37,16 +43,22 @@ class VideoEngineV2JobNotifier extends StateNotifier<AsyncValue<AnalysisJob?>> {
       }
       return job;
     } catch (e, st) {
-      state = AsyncError(e, st);
+      if (_activeJobId == jobId) {
+        state = AsyncError(e, st);
+      }
       rethrow;
     }
   }
 
   Future<void> _tick() async {
     final jobId = _activeJobId;
-    if (jobId == null) return;
+    if (jobId == null || _tickInFlight) return;
+    _tickInFlight = true;
     try {
       final job = await _service.getStatus(jobId);
+      // Drop stale responses after stop/restart/navigation.
+      if (_activeJobId != jobId) return;
+      _consecutivePollFailures = 0;
       if (_lastStage != job.stage) {
         _analytics.logEvent(VideoAnalyticsService.analysisStageChanged, {
           'job_id': job.jobId,
@@ -61,8 +73,31 @@ class VideoEngineV2JobNotifier extends StateNotifier<AsyncValue<AnalysisJob?>> {
         _emitTerminalAnalytics(job);
       }
     } catch (e, st) {
-      state = AsyncError(e, st);
-      await stopPolling(keepState: true);
+      if (_activeJobId != jobId) return;
+      _consecutivePollFailures += 1;
+      final fatal = e is VideoEngineV2Exception &&
+          _isFatalPollError(e.errorCode);
+      if (fatal || _consecutivePollFailures >= _maxTransientFailures) {
+        state = AsyncError(e, st);
+        await stopPolling(keepState: true);
+      }
+      // Transient blip: keep last good job state and keep polling.
+    } finally {
+      _tickInFlight = false;
+    }
+  }
+
+  bool _isFatalPollError(String? code) {
+    switch ((code ?? '').toUpperCase()) {
+      case 'UNAUTHORIZED':
+      case 'AUTHENTICATION_EXPIRED':
+      case 'AUTH_REQUIRED':
+      case 'FORBIDDEN':
+      case 'NOT_OWNER':
+      case 'NOT_FOUND':
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -116,6 +151,8 @@ class VideoEngineV2JobNotifier extends StateNotifier<AsyncValue<AnalysisJob?>> {
     _pollTimer?.cancel();
     _pollTimer = null;
     _activeJobId = null;
+    _tickInFlight = false;
+    _consecutivePollFailures = 0;
     if (!keepState) {
       state = const AsyncData(null);
     }
