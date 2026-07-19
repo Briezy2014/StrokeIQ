@@ -412,11 +412,9 @@ def _flutter_facing_report(job_report: dict | None) -> dict | None:
             "strengths": strengths_out,
             "priority_improvements": improvements_out,
             "race_recommendations": list(body.get("race_recommendations") or []),
-            "drills": [
-                d
-                for imp in improvements_out
-                for d in (imp.get("drills") or [])
-            ],
+            # Do not duplicate improvement drills into a top-level list
+            # (that made the Coaching tab show the same drills twice).
+            "drills": [],
             "limitations_statement": limitations_statement
             or body.get("limitations_statement"),
             "confidence_statement": body.get("confidence_statement"),

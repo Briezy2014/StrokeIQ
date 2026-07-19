@@ -1,4 +1,8 @@
-"""Rich local coaching report when Gemini is unavailable or too slow."""
+"""Clear local coaching report when Gemini is unavailable or too slow.
+
+Written for swimmers, parents, and coaches - not engineers.
+Dryland drills only. No hedge-spam prefixes.
+"""
 
 from __future__ import annotations
 
@@ -11,101 +15,86 @@ from app.services.report.schemas import (
 
 
 def build_local_tracking_report(context: ReportContext) -> CoachingReportBody:
-    """Full coach-facing breakdown from tracking + stroke context (no Gemini)."""
+    """Coach-facing breakdown from tracking + stroke context (no Gemini)."""
     metric_ids = sorted(context.available_metric_ids()) or sorted(context.all_metric_ids())
     event_ids = sorted(context.available_event_ids()) or sorted(context.all_event_ids())
     cite_m = metric_ids[:3] or ["tracking:target_coverage"]
     cite_e = event_ids[:2]
 
     coverage = _metric_value(context, "tracking:target_coverage")
-    processed = _metric_value(context, "tracking:processed_frames")
-    detected = _metric_value(context, "tracking:frames_with_detections")
     stroke_key = _normalize_stroke(context.stroke_type)
     stroke = stroke_key.replace("_", " ")
     distance = context.race_distance_m
     distance_bit = f"{distance}m " if distance else ""
+    athlete = (context.athlete_display_name or "the swimmer").strip() or "the swimmer"
 
-    visibility = "solid" if (coverage is not None and coverage >= 0.45) else (
-        "usable" if (coverage is not None and coverage >= 0.25) else "limited"
+    visibility = "clear" if (coverage is not None and coverage >= 0.45) else (
+        "okay" if (coverage is not None and coverage >= 0.25) else "limited"
     )
-    band: str = "moderate" if visibility in {"solid", "usable"} else "low"
-    low = band == "low"
 
     pack = _stroke_pack(stroke_key)
     strengths = [
-        _obs(pack["strengths"][0], cite_m, cite_e, band, low),
-        _obs(pack["strengths"][1], cite_m, cite_e, band, low),
+        _obs(pack["strengths"][0], cite_m, cite_e),
+        _obs(pack["strengths"][1], cite_m, cite_e),
     ]
-    if visibility == "solid":
-        strengths.append(
-            _obs(
-                f"The analysis suggests the swimmer stayed findable through most of this "
-                f"{stroke} clip, so race-pace review of the middle segment is worthwhile.",
-                cite_m,
-                cite_e,
-                "moderate",
-                False,
-            )
-        )
 
     improvements: list[PriorityImprovement] = []
-    for item in pack["improvements"][:3]:
+    for item in pack["improvements"][:2]:
         improvements.append(
             PriorityImprovement(
-                observation=_obs(item["text"], cite_m, cite_e, band, low),
+                observation=_obs(item["text"], cite_m, cite_e),
                 drills=item["drills"][:2],
             )
         )
 
     if visibility == "limited":
-        improvements = [
-            PriorityImprovement(
-                observation=_obs(
-                    "The available frames may indicate splash, underwater phases, or camera "
-                    "angle hid the body — clearer side video will unlock sharper stroke notes.",
-                    cite_m,
-                    cite_e,
-                    "low",
-                    True,
-                ),
-                drills=[
-                    "Film one length from the side, camera steady, full body in frame.",
-                    "Stand farther back and avoid zooming so the whole stroke cycle stays visible.",
-                ],
+        # Keep stroke cues, but lead with one filming note as a con - not as a "drill".
+        filming_note = PriorityImprovement(
+            observation=_obs(
+                f"Video quality made parts of this {stroke} hard to judge "
+                f"(splash, underwater, or camera angle). A steadier side-view clip "
+                f"will make the next review sharper.",
+                cite_m,
+                cite_e,
             ),
-            *improvements[:2],
-        ]
+            drills=pack["improvements"][0]["drills"][:2],
+        )
+        improvements = [filming_note, *improvements[:1]]
 
-    cov_txt = f"{coverage:.0%}" if coverage is not None else "n/a"
-    det_txt = f"{int(detected)}" if detected is not None else "n/a"
-    proc_txt = f"{int(processed)}" if processed is not None else "n/a"
+    time_drop = pack["time_drop"]
+    summary = (
+        f"Quick coach read on this {distance_bit}{stroke} clip for {athlete}: "
+        f"one clear strength, one main fix, dryland drills, and a next-race cue. "
+        f"Video clarity looked {visibility}."
+    )
 
     return CoachingReportBody(
-        summary=(
-            f"Coach breakdown for this {distance_bit}{stroke} clip: strengths, priority fixes, "
-            f"drills, and next-race focus. Tracking visibility looked {visibility} "
-            f"(coverage {cov_txt}; detections on {det_txt} of {proc_txt} analyzed frames)."
-        ),
-        strengths=strengths[:3],
-        priority_improvements=improvements[:3],
+        summary=summary,
+        strengths=strengths[:2],
+        priority_improvements=improvements[:2],
         supporting_evidence=[
-            f"Stroke context: {stroke}.",
-            f"Swimmer tracking coverage: {cov_txt}.",
-            "Tips are grounded in Elite tracking on this PC plus stroke-specific coaching standards.",
+            f"Stroke: {stroke}.",
+            f"Video clarity for tracking: {visibility}.",
+            "Tips use Elite tracking on this PC plus stroke-specific coaching standards.",
         ],
-        race_recommendations=pack["next_race"][:4],
+        race_recommendations=[
+            pack["next_race_cue"],
+            pack["next_race_plan"],
+            time_drop,
+        ],
         limitations=[
-            "Coaching used the fast local Elite coach path so your report is never empty.",
+            "This report uses SwimIQ local coaching when the Gemini AI model is unavailable.",
             "Estimates depend on video quality and camera angle.",
-            "Splash and underwater segments can hide the body and lower certainty.",
+            "Splash and underwater segments can hide the body.",
         ],
         confidence_statement=(
-            "Confidence follows how clearly the swimmer stayed visible in this clip. "
-            "When visibility is limited, treat timing notes as practice guidance, not exact race splits."
+            "Treat this as practice guidance from the clearest parts of the clip. "
+            "Better side-view video raises confidence on the next review."
         ),
         disclaimer=(
             "These tips depend on video quality and camera angle. "
-            "They are practice guidance for training and racing, not medical advice."
+            "They are practice guidance for training and racing, not medical advice. "
+            "Any time-drop note is an estimate, not a guarantee."
         ),
     )
 
@@ -129,187 +118,222 @@ def _normalize_stroke(raw: str | None) -> str:
         "breast": "breaststroke",
         "im": "individual_medley",
     }
-    return aliases.get(s, s if s in {
-        "butterfly", "freestyle", "backstroke", "breaststroke", "individual_medley"
-    } else "unknown")
+    return aliases.get(
+        s,
+        s
+        if s
+        in {
+            "butterfly",
+            "freestyle",
+            "backstroke",
+            "breaststroke",
+            "individual_medley",
+        }
+        else "unknown",
+    )
 
 
 def _obs(
     text: str,
     metric_ids: list[str],
     event_ids: list[str],
-    band: str,
-    force_low_cue: bool,
 ) -> CoachingObservation:
-    t = text.strip()
-    if force_low_cue or band == "low":
-        if not t.lower().startswith("the available frames may indicate"):
-            t = "The available frames may indicate " + t[0].lower() + t[1:]
-    elif band == "moderate":
-        if "suggests" not in t.lower() and "may indicate" not in t.lower():
-            t = "The analysis suggests " + t[0].lower() + t[1:]
+    """Clear coach language - never prepend hedge spam."""
     return CoachingObservation(
-        text=t,
-        confidence_band=band,  # type: ignore[arg-type]
+        text=text.strip(),
+        confidence_band="moderate",
         metric_ids=metric_ids,
         event_ids=event_ids,
     )
 
 
 def _stroke_pack(stroke: str) -> dict:
-    common_next = [
-        "Pick one cue for the next race warm-up and repeat it on every length.",
-        "Film the same race segment again from the side after the next practice block.",
-    ]
     packs: dict[str, dict] = {
         "butterfly": {
             "strengths": [
-                "Rhythm through the stroke cycle looks reviewable — keep pressing a connected kick and pull timing.",
-                "Body-line moments in the clearer frames are worth copying: long, strong, and forward.",
+                "Pro: stroke rhythm is readable in the clearer frames - keep that connected "
+                "kick-and-pull timing.",
+                "Pro: body-line moments look long and forward when the swimmer is visible - "
+                "copy those frames in practice.",
             ],
             "improvements": [
                 {
-                    "text": "Prioritize a tighter body line into the breath so the hips do not sink when the head lifts.",
+                    "text": (
+                        "Con: hips can sink when the head lifts to breathe. "
+                        "Work a tighter body line into the breath."
+                    ),
                     "drills": [
-                        "3-3-3 butterfly: 3 strokes face down, 3 with breath, 3 face down.",
-                        "Single-arm fly with a strong dolphin kick focus on hip drive.",
+                        "Dryland: 3 x 20s hollow-body holds, then 10 Superman pulses.",
+                        "Dryland: banded pull-aparts 3 x 12 focusing on chest press and long arms.",
                     ],
                 },
                 {
-                    "text": "Keep the second kick timed with hand entry so speed does not die between strokes.",
+                    "text": (
+                        "Con: the second kick can lag hand entry, which costs speed between strokes. "
+                        "Time kick-on-entry as the main fix."
+                    ),
                     "drills": [
-                        "Kickboard-free dolphin kick on stomach, hands at sides, 4 x 25.",
-                        "Fly tempo ladder: easy / race / easy for 3 x 25.",
-                    ],
-                },
-                {
-                    "text": "Shorten the pause at the front of the stroke if the catch feels late in the clearer frames.",
-                    "drills": [
-                        "Right-arm / left-arm / both fly pattern for 4 x 25.",
-                        "Fly with a snorkel to feel continuous forward pressure.",
+                        "Dryland: dolphin kick on your back (floor), arms by ears, 4 x 20s.",
+                        "Dryland: jump-rope single-unders 3 x 45s for rhythm without pausing.",
                     ],
                 },
             ],
-            "next_race": [
-                "Race cue: kick on entry, press the chest, breathe late and low.",
-                "Take the first 15m underwater with tight dolphins, then break out into tempo you can hold.",
-                *common_next,
-            ],
+            "next_race_cue": (
+                "Next race cue: kick on entry, press the chest, breathe late and low."
+            ),
+            "next_race_plan": (
+                "First 15m: tight underwater dolphins, then break out into a tempo you can hold."
+            ),
+            "time_drop": (
+                "If the body-line and kick-on-entry cues stick, many age-group 50 fly swimmers "
+                "can see about 0.3 to 0.8 seconds come off - results vary with race execution."
+            ),
         },
         "freestyle": {
             "strengths": [
-                "Forward swim rhythm is clear enough to coach — protect a long, quiet head position.",
-                "Side-view frames can show a usable catch window; keep that early pressure on race day.",
+                "Pro: forward swim rhythm is clear enough to coach - protect a quiet head.",
+                "Pro: early catch windows show up in the clearer side frames - keep that pressure.",
             ],
             "improvements": [
                 {
-                    "text": "Reduce side-to-side head movement so the hips stay higher and the kick stays thinner.",
+                    "text": (
+                        "Con: side-to-side head movement can drop the hips. "
+                        "Quiet head is the priority fix."
+                    ),
                     "drills": [
-                        "Snorkel freestyle focusing on a still forehead for 4 x 50.",
-                        "6-kick switch freestyle to feel a long side balance.",
+                        "Dryland: wall angels 3 x 10 with ribs down and chin neutral.",
+                        "Dryland: dead-bug 3 x 8/side for a stable core while arms move.",
                     ],
                 },
                 {
-                    "text": "Make the catch earlier and wider before the pull so each stroke travels farther.",
+                    "text": (
+                        "Con: a late catch shortens each stroke. "
+                        "Feel earlier water pressure before the pull."
+                    ),
                     "drills": [
-                        "Scull into freestyle catch for 4 x 25.",
-                        "Fist / open-hand freestyle to feel early pressure.",
-                    ],
-                },
-                {
-                    "text": "Hold a steadier kick tempo through the middle of the race so speed does not fade.",
-                    "drills": [
-                        "12.5m sprint kick + 12.5m easy swim for 8 rounds.",
-                        "Descend 4 x 50 free focusing on kick count consistency.",
+                        "Dryland: band face-pulls 3 x 12 for posture and early catch shape.",
+                        "Dryland: plank shoulder taps 3 x 20 total, hips quiet.",
                     ],
                 },
             ],
-            "next_race": [
-                "Race cue: quiet head, early catch, kick that does not stop in the third 25.",
-                "Breakout: tight streamline, then accelerate into your race stroke rate.",
-                *common_next,
-            ],
+            "next_race_cue": (
+                "Next race cue: quiet head, early catch, kick that does not stop in the third 25."
+            ),
+            "next_race_plan": (
+                "Breakout: tight streamline, then accelerate into your race stroke rate."
+            ),
+            "time_drop": (
+                "If head position and early catch improve, many age-group 50 free swimmers "
+                "can see about 0.2 to 0.6 seconds come off - results vary with race execution."
+            ),
         },
         "backstroke": {
             "strengths": [
-                "Body position looks coachable from the clearer frames — keep the hips high and the kick continuous.",
-                "Arm timing windows are visible enough to rehearse a steady tempo.",
+                "Pro: body position looks coachable - keep hips high and the kick continuous.",
+                "Pro: arm tempo is steady enough to rehearse race rhythm.",
             ],
             "improvements": [
                 {
-                    "text": "Keep the kick smaller and steadier so the hips do not bounce when the arms accelerate.",
+                    "text": (
+                        "Con: a big kick can bounce the hips when arms accelerate. "
+                        "Keep the kick smaller and steadier."
+                    ),
                     "drills": [
-                        "Back kick on your back with arms at sides for 4 x 25.",
-                        "12.5m underwater dolphin + breakout into backstroke tempo.",
+                        "Dryland: flutter-kick on your back (floor) 4 x 20s, toes pointed.",
+                        "Dryland: glute bridges 3 x 12 for hip height support.",
                     ],
                 },
                 {
-                    "text": "Enter cleaner above the shoulder so the catch starts earlier in each stroke.",
+                    "text": (
+                        "Con: hand entry can miss above the shoulder, delaying the catch. "
+                        "Enter cleaner and accelerate the finish."
+                    ),
                     "drills": [
-                        "Single-arm backstroke with the opposite arm at the side.",
-                        "Backstroke with a tempo trainer on a controlled rate.",
+                        "Dryland: band straight-arm pulldowns 3 x 10/side.",
+                        "Dryland: Y-T-W raises 2 x 8 each shape, light weight or no weight.",
                     ],
                 },
             ],
-            "next_race": [
-                "Race cue: hips up, kick steady, enter above the shoulder and accelerate the finish.",
-                "Protect underwater speed off each wall before settling into stroke rate.",
-                *common_next,
-            ],
+            "next_race_cue": (
+                "Next race cue: hips up, kick steady, enter above the shoulder."
+            ),
+            "next_race_plan": (
+                "Protect underwater speed off each wall before settling into stroke rate."
+            ),
+            "time_drop": (
+                "If kick size and entry improve, many age-group 50 back swimmers "
+                "can see about 0.2 to 0.7 seconds come off - results vary with race execution."
+            ),
         },
         "breaststroke": {
             "strengths": [
-                "Timing of pull-breathe-kick can be reviewed from the clearer frames — keep the glide honest, not long.",
-                "Forward line after the kick is a strength to protect when fatigue hits.",
+                "Pro: pull-breathe-kick timing is reviewable - keep the glide honest, not long.",
+                "Pro: forward line after the kick is a strength to protect when tired.",
             ],
             "improvements": [
                 {
-                    "text": "Shoot to a tighter streamline after the kick so the glide stays fast instead of flat.",
+                    "text": (
+                        "Con: a flat shoot after the kick kills speed. "
+                        "Shoot to a tighter streamline."
+                    ),
                     "drills": [
-                        "2-kick / 1-pull breaststroke focusing on a long shoot.",
-                        "Breaststroke with a snorkel to feel a quiet head and fast hands forward.",
+                        "Dryland: streamline holds against a wall 4 x 20s, arms glued to ears.",
+                        "Dryland: frog-stretch ankle mobility 2 x 30s/side.",
                     ],
                 },
                 {
-                    "text": "Accelerate the hands forward after the breath so the next pull starts on time.",
+                    "text": (
+                        "Con: hands can pause after the breath. "
+                        "Accelerate hands forward so the next pull starts on time."
+                    ),
                     "drills": [
-                        "Breaststroke pull with a flutter-kick emphasis on fast recovery.",
-                        "3 strokes fast / 3 strokes easy timing ladder for 4 x 25.",
+                        "Dryland: med-ball chest pass to a partner/wall 3 x 8 (soft ball).",
+                        "Dryland: squat-to-stand with arm shoot 3 x 10 focusing on fast hands forward.",
                     ],
                 },
             ],
-            "next_race": [
-                "Race cue: pull, breathe, kick, shoot — no pause before the hands go forward.",
-                "Off the wall: strong pullout, then break into race timing you can hold.",
-                *common_next,
-            ],
+            "next_race_cue": (
+                "Next race cue: pull, breathe, kick, shoot - no pause before hands go forward."
+            ),
+            "next_race_plan": (
+                "Off the wall: strong pullout, then break into race timing you can hold."
+            ),
+            "time_drop": (
+                "If the shoot and hand-recovery timing improve, many age-group 50 breast swimmers "
+                "can see about 0.3 to 0.9 seconds come off - results vary with race execution."
+            ),
         },
     }
     default = {
         "strengths": [
-            "The swimmer track is clear enough for a useful race review of body line and timing.",
-            "Clearer frames show moments worth repeating: long line, steady rhythm, forward intent.",
+            "Pro: the swimmer track is clear enough for a useful race review of body line and timing.",
+            "Pro: clearer frames show moments worth repeating - long line and forward intent.",
         ],
         "improvements": [
             {
-                "text": "Film the next clip from the true side so stroke phases stay visible start to finish.",
+                "text": (
+                    "Con: pick one timing cue for the next race and ignore everything else under pressure."
+                ),
                 "drills": [
-                    "One length easy focusing on a long body line.",
-                    "Race-pace 25s with a single technique cue only.",
+                    "Dryland: 3 x 30s plank, eyes on one written cue card in front of you.",
+                    "Dryland: jump-rope 3 x 45s while repeating your one race cue out loud.",
                 ],
             },
             {
-                "text": "Choose one timing cue for the next race and ignore everything else under pressure.",
+                "text": (
+                    "Con: film the next clip from true side so stroke phases stay visible start to finish."
+                ),
                 "drills": [
-                    "3 x 25 build: easy / strong / race with the same cue.",
-                    "Broken 50s: 25 race + 10s rest + 25 race, same cue both lengths.",
+                    "Dryland: streamline holds 4 x 20s.",
+                    "Dryland: hollow holds 3 x 20s for a tighter body line.",
                 ],
             },
         ],
-        "next_race": [
-            "Race cue: one technical focus only — write it on your hand if needed.",
-            "Warm up the exact race segment you just filmed before you step up.",
-            *common_next,
-        ],
+        "next_race_cue": "Next race cue: one technical focus only - write it on your hand if needed.",
+        "next_race_plan": "Warm up the exact race segment you just filmed before you step up.",
+        "time_drop": (
+            "If one clear cue sticks through the whole race, many age-group 50 swimmers "
+            "can see about 0.2 to 0.6 seconds come off - results vary with race execution."
+        ),
     }
     return packs.get(stroke, default)

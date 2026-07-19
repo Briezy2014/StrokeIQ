@@ -76,15 +76,23 @@ class ReportGenerator:
         configured_model = (
             (self.settings.gemini_model_name if self.settings else None) or DEFAULT_MODEL_NAME
         )
-        # Speed path for coach PCs: one model, one attempt, then rich local coaching.
-        # Walking every fallback model can add minutes and break the 30-60s goal.
-        model_candidates = [configured_model]
+        # Fast path: try the configured model, then one alternate if the model id
+        # is missing (MODEL_UNAVAILABLE). Then use rich local coaching.
+        model_candidates: list[str] = []
+        for name in (
+            configured_model,
+            "gemini-2.0-flash",
+            "gemini-2.5-flash",
+            "gemini-1.5-flash",
+        ):
+            if name and name not in model_candidates:
+                model_candidates.append(name)
         max_attempts = min(
             1,
             max(1, self.settings.gemini_max_regenerate_attempts if self.settings else 1),
         )
         timeout_s = float(
-            min(15.0, self.settings.gemini_timeout_s if self.settings else 15.0)
+            min(12.0, self.settings.gemini_timeout_s if self.settings else 12.0)
         )
 
         # Always prepare a rich local coach report first so short clips never
@@ -150,21 +158,24 @@ class ReportGenerator:
                         model_name,
                         exc.code,
                     )
-                    # Fall back quickly to the prepared local coach report.
+                    # Bad key / outage / timeout: stop and use local coaching.
                     if exc.code in {
-                        "MODEL_UNAVAILABLE",
                         "INVALID_API_KEY",
                         "MISSING_API_KEY",
-                        "GEMINI_ERROR",
                         "API_TIMEOUT",
                         "RATE_LIMIT",
                         "SERVICE_OUTAGE",
+                        "GEMINI_ERROR",
                     }:
                         local_ready.limitations = [
                             f"gemini_report_failed:{exc.code}",
                             "local_coaching_fallback",
                         ]
                         return local_ready
+                    # Wrong model id: try the next candidate quickly.
+                    if exc.code == "MODEL_UNAVAILABLE":
+                        model_dead = True
+                        break
                     if attempt >= max_attempts:
                         model_dead = True
                         break

@@ -44,6 +44,12 @@ def test_local_fallback_has_full_coach_breakdown():
     assert 1 <= len(body.priority_improvements) <= 3
     assert body.race_recommendations
     assert all(1 <= len(p.drills) <= 2 for p in body.priority_improvements)
+    joined = " ".join(s.text for s in body.strengths).lower()
+    assert "the available frames may indicate" not in joined
+    assert "pro:" in joined
+    drills = " ".join(d for p in body.priority_improvements for d in p.drills).lower()
+    assert "dryland" in drills
+    assert "3-3-3" not in drills  # no pool-only drill strings
     result = validate_coaching_report(body, ctx)
     assert result.ok, result.errors
 
@@ -53,4 +59,19 @@ def test_local_fallback_freestyle_next_race_cues():
     body = build_local_tracking_report(ctx)
     joined = " ".join(body.race_recommendations).lower()
     assert "race cue" in joined or "cue" in joined
+    assert "seconds" in joined  # time-drop estimate present
+    assert validate_coaching_report(body, ctx).ok
+
+
+def test_local_fallback_limited_visibility_stays_readable():
+    job = _tracking_job("butterfly")
+    job.tracking["quality_summary"]["target_coverage"] = 0.1
+    ctx = build_report_context(job)
+    body = build_local_tracking_report(ctx)
+    blob = " ".join(
+        [body.summary]
+        + [s.text for s in body.strengths]
+        + [p.observation.text for p in body.priority_improvements]
+    ).lower()
+    assert "the available frames may indicate" not in blob
     assert validate_coaching_report(body, ctx).ok

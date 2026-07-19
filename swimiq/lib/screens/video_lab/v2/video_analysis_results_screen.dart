@@ -394,6 +394,16 @@ class _SummaryTab extends StatelessWidget {
 
 }
 
+String? _strokeLabel(AnalysisResults results) {
+  final stroke = results.stroke;
+  if (stroke == null || stroke.isEmpty) return null;
+  final predicted = stroke['predicted'] ?? stroke['stroke'] ?? stroke['name'];
+  if (predicted == null) return null;
+  final text = predicted.toString().trim();
+  if (text.isEmpty) return null;
+  return text.replaceAll('_', ' ');
+}
+
 String? _geminiFailureCodeFromResults(AnalysisResults results) {
   for (final raw in results.limitations) {
     final lower = raw.toLowerCase();
@@ -420,11 +430,62 @@ class _MetricsTab extends StatelessWidget {
   final List<AnalysisMetric> turnMetrics;
   final List<AnalysisMetric> otherMetrics;
 
+  AnalysisMetric? _findMetric(List<String> nameBits) {
+    for (final m in results.metrics) {
+      final hay = '${m.name} ${m.displayName}'.toLowerCase();
+      if (nameBits.every((b) => hay.contains(b))) return m;
+    }
+    return null;
+  }
+
+  String _clarityLabel(AnalysisMetric? coverage) {
+    final v = coverage?.value?.toDouble();
+    if (v == null) return 'Not measured';
+    if (v >= 0.45) return 'Clear — good side view for coaching';
+    if (v >= 0.25) return 'Okay — some splash or distance limited the view';
+    return 'Limited — splash, underwater, or camera angle hid the body';
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!results.hasDeterministicMetrics) {
-      return const EmptyStateMessage(
-        message: 'No metrics available for this analysis.',
+    final coverage = _findMetric(['coverage']) ?? _findMetric(['target_coverage']);
+    final processed =
+        _findMetric(['processed']) ?? _findMetric(['frames analyzed']);
+    final detected = _findMetric(['detections']) ??
+        _findMetric(['frames_with_detections']) ??
+        _findMetric(['with swimmer']);
+    final hasRaceMetrics = startMetrics.isNotEmpty ||
+        strokeMetrics.isNotEmpty ||
+        turnMetrics.isNotEmpty;
+
+    Widget coachCard(String title, String value, String help) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                      color: AppColors.primaryDark,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 6),
+              Text(help, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
       );
     }
 
@@ -447,26 +508,58 @@ class _MetricsTab extends StatelessWidget {
       );
     }
 
+    final processedN = processed?.value?.toInt();
+    final detectedN = detected?.value?.toInt();
+    String reviewed;
+    if (processedN != null && detectedN != null && processedN > 0) {
+      final pct = ((detectedN / processedN) * 100).clamp(0, 100).round();
+      reviewed =
+          'We reviewed about $processedN frames and found the swimmer in $pct% of them.';
+    } else if (processedN != null) {
+      reviewed = 'We reviewed about $processedN frames from this clip.';
+    } else {
+      reviewed = 'Frame counts were not available for this clip.';
+    }
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        section('Starts / underwater', startMetrics),
-        section('Stroke', strokeMetrics),
-        section('Turns / finishes', turnMetrics),
-        section('Other metrics', otherMetrics),
-        const SizedBox(height: 8),
         Text(
-          'Confidence explanations',
+          'What this means for coaching',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
+                color: AppColors.primaryDark,
               ),
         ),
         const SizedBox(height: 8),
+        coachCard(
+          'VIDEO CLARITY',
+          _clarityLabel(coverage),
+          'Clearer side-view video = sharper stroke notes next time.',
+        ),
+        coachCard(
+          'HOW MUCH WE REVIEWED',
+          reviewed,
+          'This is not a race split. It tells you how much of the clip Elite could use.',
+        ),
+        if (_strokeLabel(results) != null)
+          coachCard(
+            'STROKE',
+            _strokeLabel(results)!,
+            'Used to pick stroke-specific coaching cues.',
+          ),
+        if (hasRaceMetrics) ...[
+          const SizedBox(height: 8),
+          section('Starts / underwater', startMetrics),
+          section('Stroke', strokeMetrics),
+          section('Turns / finishes', turnMetrics),
+        ],
+        const SizedBox(height: 4),
         Text(
-          'High confidence metrics are measured from clear evidence. '
-          'Low confidence values are estimates and should not be treated as facts. '
-          'Unavailable metrics show a reason instead of inventing a number.',
-          style: Theme.of(context).textTheme.bodySmall,
+          'Open the Coaching tab for the pro, the con, dryland drills, and next-race cue.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ],
     );
@@ -505,19 +598,19 @@ class _CoachingTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         if (report.summary?.trim().isNotEmpty == true) ...[
-          Text('Summary', style: _h(context)),
+          Text('Coach snapshot', style: _h(context)),
           const SizedBox(height: 6),
           Text(report.summary!),
           const SizedBox(height: 16),
         ],
         if (report.strengths.isNotEmpty) ...[
-          Text('Strengths', style: _h(context)),
+          Text('Pro (keep this)', style: _h(context)),
           const SizedBox(height: 6),
           ...report.strengths.map((s) => _bullet(s)),
           const SizedBox(height: 16),
         ],
         if (report.priorityImprovements.isNotEmpty) ...[
-          Text('What to fix next', style: _h(context)),
+          Text('Con + dryland drills', style: _h(context)),
           const SizedBox(height: 6),
           ...report.priorityImprovements.map((p) {
             return Padding(
@@ -526,25 +619,15 @@ class _CoachingTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  if (p.evidenceMetricNames.isNotEmpty)
-                    Text(
-                      'Evidence: ${p.evidenceMetricNames.join(', ')}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                  const SizedBox(height: 4),
                   ...p.drills.map((d) => _bullet(d)),
                 ],
               ),
             );
           }),
         ],
-        if (report.drills.isNotEmpty) ...[
-          Text('Drills', style: _h(context)),
-          const SizedBox(height: 6),
-          ...report.drills.map(_bullet),
-          const SizedBox(height: 16),
-        ],
         if (report.raceRecommendations.isNotEmpty) ...[
-          Text('Next race', style: _h(context)),
+          Text('Next race + time-drop estimate', style: _h(context)),
           const SizedBox(height: 6),
           ...report.raceRecommendations.map(_bullet),
           const SizedBox(height: 16),
@@ -581,59 +664,81 @@ class _DetailsTab extends StatelessWidget {
 
   final AnalysisResults results;
 
+  static bool _isInternalLimitation(String raw) {
+    final lower = raw.toLowerCase();
+    return lower.contains('pose dependency') ||
+        lower.contains('missing=[') ||
+        lower.contains('no module named') ||
+        lower.contains('torch') ||
+        lower.contains('mmpose') ||
+        lower.contains('mmcv') ||
+        lower.contains('mmengine') ||
+        lower.contains('skipped_no_smoothed') ||
+        lower.contains('supabase_persist') ||
+        lower.contains('first 45') ||
+        lower.contains('gemini_report_failed') ||
+        lower.contains('local_coaching_fallback') ||
+        lower.contains('model_unavailable') ||
+        lower.contains('detector_version') ||
+        lower.contains('gemini_prompt');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final coachNotes = results.limitations
+        .where((l) => !_isInternalLimitation(l))
+        .toList(growable: false);
+    final usedLocal = results.limitations.any(
+      (l) => l.toLowerCase().contains('local_coaching_fallback'),
+    );
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (results.limitations.isNotEmpty) ...[
-          LimitationsPanel(limitations: results.limitations),
-          const SizedBox(height: 16),
-        ],
-        Text('Evidence', style: _h(context)),
+        Text('About this analysis', style: _h(context)),
         const SizedBox(height: 8),
-        if (results.evidence.isEmpty)
-          const Text('No evidence frames listed.')
-        else
+        Text(
+          usedLocal
+              ? 'Coaching used SwimIQ local coach tips on this PC '
+                  '(Gemini AI was unavailable for this run). '
+                  'Pros/cons and dryland drills are still for the swimmer to use.'
+              : 'Coaching was generated with Elite analysis on this PC.',
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Status: ${results.isFailed ? 'Needs another try' : 'Complete'}',
+        ),
+        if (_strokeLabel(results) != null) ...[
+          const SizedBox(height: 6),
+          Text('Stroke: ${_strokeLabel(results)}'),
+        ],
+        if (results.engineVersion.trim().isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text('Engine: ${results.engineVersion}'),
+        ],
+        if (coachNotes.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          LimitationsPanel(
+            title: 'Notes for the next film',
+            limitations: coachNotes,
+          ),
+        ],
+        if (results.evidence.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text('Key moments', style: _h(context)),
+          const SizedBox(height: 8),
           ...results.evidence.map(
             (e) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text('• ${e.displayLabel}'),
             ),
           ),
-        const SizedBox(height: 16),
-        Text('Phases', style: _h(context)),
-        const SizedBox(height: 8),
-        if (results.phases.isEmpty)
-          const Text('No phases detected.')
-        else
-          ...results.phases.map(
-            (p) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '${p.displayName}'
-                '${p.startMs != null ? ' · ${p.startMs}–${p.endMs ?? p.startMs} ms' : ''}'
-                '${p.confidence != null ? ' · conf ${p.confidence!.toStringAsFixed(2)}' : ''}',
-              ),
-            ),
-          ),
-        const SizedBox(height: 16),
-        Text('Technical details', style: _h(context)),
-        const SizedBox(height: 8),
-        Text('Job: ${results.jobId}'),
-        Text('Status: ${results.status}'),
-        Text('Engine: ${results.engineVersion}'),
-        if (results.videoId != null) Text('Video: ${results.videoId}'),
-        if (results.modelVersions.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          ...results.modelVersions.entries.map(
-            (e) => Text('${e.key}: ${e.value}'),
-          ),
         ],
-        if (results.stroke != null) ...[
-          const SizedBox(height: 8),
-          Text('Stroke hint: ${results.stroke}'),
-        ],
+        const SizedBox(height: 16),
+        Text(
+          'Support ID (only if you need help): ${results.jobId}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
