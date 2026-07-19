@@ -40,7 +40,7 @@ void main() {
               title: 'District Champs',
               scheduleDate: DateTime.now().add(const Duration(days: 3)),
               startTime: '10:30 AM',
-              eventsLine: '50 Butterfly SCY',
+              eventsLine: '50 Butterfly SCY\n100 Butterfly SCY\n200 IM SCY',
             ),
           ],
           motivationalStandards: testMotivationalCatalog,
@@ -48,6 +48,13 @@ void main() {
         swimmer: 'Aspyn',
       );
 
+      expect(plan.syncedToSchedule, isTrue);
+      expect(plan.meetTitle, 'District Champs');
+      expect(plan.meetEvents.length, greaterThanOrEqualTo(3));
+      expect(plan.meetEvents, contains('50 Butterfly SCY'));
+      expect(plan.meetEvents, contains('100 Butterfly SCY'));
+      expect(plan.timeline.length, greaterThanOrEqualTo(4));
+      expect(plan.warmUpPhases.length, 5);
       expect(plan.middayChecklist.length, greaterThanOrEqualTo(5));
       expect(plan.warmUpPlan, isNotEmpty);
       expect(plan.warmUpPlan.any((line) => line.contains('Dryland')), isTrue);
@@ -71,6 +78,32 @@ void main() {
       expect(plan.engineLabel, contains('SwimIQ AI'));
     });
 
+    test('can retarget plan to a selected meet event', () {
+      final plan = RaceIntelligenceService.build(
+        data: SwimmerData(
+          raceLogs: const [],
+          goals: const [],
+          meetResults: const [],
+          schedules: [
+            SwimScheduleEntry(
+              swimmerName: 'Aspyn',
+              scheduleType: SwimScheduleEntry.typeMeet,
+              title: 'Invite',
+              scheduleDate: DateTime.now().add(const Duration(days: 2)),
+              eventsLine: '50 Free, 100 Butterfly, 200 IM',
+            ),
+          ],
+          motivationalStandards: testMotivationalCatalog,
+        ),
+        swimmer: 'Aspyn',
+        selectedFocusEvent: '200 IM',
+      );
+
+      expect(plan.focusEvent, '200 IM');
+      expect(plan.meetEvents, contains('50 Free'));
+      expect(plan.meetEvents, contains('100 Butterfly'));
+    });
+
     test('uses goals when no schedule events are saved', () {
       final plan = RaceIntelligenceService.build(
         data: SwimmerData(
@@ -91,6 +124,7 @@ void main() {
       );
 
       expect(plan.focusEvent, '200 IM');
+      expect(plan.syncedToSchedule, isFalse);
       expect(plan.nutritionPlan.any((block) => block.mealLabel.contains('Midday')), isTrue);
     });
   });

@@ -9,22 +9,50 @@ class RaceIntelligencePlan {
   const RaceIntelligencePlan({
     required this.headline,
     required this.focusEvent,
+    required this.meetEvents,
     required this.meetDayLabel,
+    required this.syncedToSchedule,
     required this.middayChecklist,
+    required this.warmUpPhases,
     required this.warmUpPlan,
     required this.nutritionPlan,
     required this.hydrationNotes,
+    required this.timeline,
     required this.engineLabel,
+    this.meetTitle,
+    this.meetLocation,
+    this.meetDate,
+    this.meetStartTime,
   });
 
   final String headline;
   final String focusEvent;
+  final List<String> meetEvents;
   final String meetDayLabel;
+  final bool syncedToSchedule;
+  final String? meetTitle;
+  final String? meetLocation;
+  final DateTime? meetDate;
+  final String? meetStartTime;
+  final List<RaceTimelineStep> timeline;
   final List<RaceChecklistItem> middayChecklist;
+  final List<WarmUpPhase> warmUpPhases;
   final List<String> warmUpPlan;
   final List<NutritionBlock> nutritionPlan;
   final String hydrationNotes;
   final String engineLabel;
+}
+
+class RaceTimelineStep {
+  const RaceTimelineStep({
+    required this.label,
+    required this.detail,
+    required this.iconName,
+  });
+
+  final String label;
+  final String detail;
+  final String iconName;
 }
 
 class RaceChecklistItem {
@@ -37,6 +65,22 @@ class RaceChecklistItem {
   final String title;
   final String detail;
   final String timingHint;
+}
+
+class WarmUpPhase {
+  const WarmUpPhase({
+    required this.phaseNumber,
+    required this.title,
+    required this.duration,
+    required this.detail,
+    required this.iconName,
+  });
+
+  final int phaseNumber;
+  final String title;
+  final String duration;
+  final String detail;
+  final String iconName;
 }
 
 class NutritionBlock {
@@ -58,71 +102,158 @@ class RaceIntelligenceService {
   RaceIntelligenceService._();
 
   static const engineLabel =
-      'SwimIQ AI Race Intelligence™ · personalized from your schedule, goals, and coaching data';
+      'SwimIQ AI Race Intelligence™ · synced to your upcoming meet, goals, and coaching data';
 
   static RaceIntelligencePlan build({
     required SwimmerData data,
     required String swimmer,
+    String? selectedFocusEvent,
   }) {
     final snapshot = data.passportSnapshot(swimmer);
-    final upcoming = _upcomingSchedule(data.schedules);
+    final upcoming = _upcomingMeetOrRace(data.schedules);
     final latestAnalysis = _latestAnalysis(data.userFacingVideoAnalyses);
     final priorities = latestAnalysis?.topPriorities ?? const <String>[];
-    final focusEvent = _focusEvent(
+    final meetEvents = candidateEvents(
+      data: data,
+      swimmer: swimmer,
+      upcoming: upcoming,
+      snapshot: snapshot,
+    );
+    final focusEvent = _resolveFocusEvent(
+      selectedFocusEvent: selectedFocusEvent,
+      meetEvents: meetEvents,
       upcoming: upcoming,
       snapshot: snapshot,
       goals: data.goals,
       profile: data.profile,
     );
+    final synced = upcoming != null;
     final meetLabel = upcoming != null
         ? '${upcoming.title} · ${_formatDate(upcoming.scheduleDate)}'
-        : snapshot.nextMeet != 'No meets logged'
-            ? snapshot.nextMeet
-            : 'Add a meet or race in your schedule depot';
+        : 'Next-meet plan (add a meet on Log → Schedule to sync)';
+
+    final phases = _warmUpPhases(
+      focusEvent: focusEvent,
+      profile: data.profile,
+      priorities: priorities,
+      readiness: snapshot.readiness,
+    );
 
     return RaceIntelligencePlan(
-      headline: 'Meet-day plan for ${data.displayName(swimmer)}',
+      headline: synced
+          ? 'Meet-day plan for ${data.displayName(swimmer)}'
+          : 'Race-day plan for ${data.displayName(swimmer)}',
       focusEvent: focusEvent,
+      meetEvents: meetEvents,
       meetDayLabel: meetLabel,
+      syncedToSchedule: synced,
+      meetTitle: upcoming?.title,
+      meetLocation: upcoming?.location,
+      meetDate: upcoming?.scheduleDate,
+      meetStartTime: upcoming?.startTime,
+      timeline: _timeline(
+        upcoming: upcoming,
+        focusEvent: focusEvent,
+        meetEvents: meetEvents,
+      ),
       middayChecklist: _middayChecklist(
         upcoming: upcoming,
         focusEvent: focusEvent,
+        meetEvents: meetEvents,
         priorities: priorities,
       ),
-      warmUpPlan: _warmUpPlan(
-        focusEvent: focusEvent,
-        profile: data.profile,
-        priorities: priorities,
-        readiness: snapshot.readiness,
-      ),
+      warmUpPhases: phases,
+      warmUpPlan: _warmUpPlanLines(phases, focusEvent, data.profile, snapshot.readiness),
       nutritionPlan: _nutritionPlan(
         profile: data.profile,
         focusEvent: focusEvent,
+        meetEvents: meetEvents,
         upcoming: upcoming,
       ),
-      hydrationNotes: _hydrationNotes(focusEvent: focusEvent),
+      hydrationNotes: _hydrationNotes(
+        focusEvent: focusEvent,
+        meetEvents: meetEvents,
+      ),
       engineLabel: engineLabel,
     );
   }
 
-  static SwimScheduleEntry? _upcomingSchedule(List<SwimScheduleEntry> schedules) {
+  /// Events available for this plan — schedule first, then goals / PBs / favorites.
+  static List<String> candidateEvents({
+    required SwimmerData data,
+    required String swimmer,
+    SwimScheduleEntry? upcoming,
+    PassportSnapshot? snapshot,
+  }) {
+    upcoming ??= _upcomingMeetOrRace(data.schedules);
+    snapshot ??= data.passportSnapshot(swimmer);
+    final events = <String>[];
+
+    void add(String? raw) {
+      final text = raw?.trim();
+      if (text == null || text.isEmpty) return;
+      if (events.any((e) => e.toLowerCase() == text.toLowerCase())) return;
+      events.add(text);
+    }
+
+    for (final line in _parseEventsLine(upcoming?.eventsLine)) {
+      add(line);
+    }
+    for (final goal in data.goals) {
+      add(goal.event);
+    }
+    for (final pb in data.personalBests.take(6)) {
+      add('${pb.displayTitle} ${pb.course}'.trim());
+    }
+    add(data.profile?.favoriteEvent);
+    if (events.isEmpty) add(snapshot.currentFocus);
+    if (events.isEmpty) add('100 Freestyle');
+    return events.take(8).toList();
+  }
+
+  static List<String> _parseEventsLine(String? eventsLine) {
+    final text = eventsLine?.trim();
+    if (text == null || text.isEmpty) return const [];
+    final parts = text
+        .split(RegExp(r'[\n,;|/]+'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+    return parts;
+  }
+
+  static SwimScheduleEntry? _upcomingMeetOrRace(
+    List<SwimScheduleEntry> schedules,
+  ) {
     if (schedules.isEmpty) return null;
     final today = DateTime.now();
     final startOfToday = DateTime(today.year, today.month, today.day);
-    final future = schedules.where((entry) {
+
+    bool isFuture(SwimScheduleEntry entry) {
       final day = DateTime(
         entry.scheduleDate.year,
         entry.scheduleDate.month,
         entry.scheduleDate.day,
       );
       return !day.isBefore(startOfToday);
-    }).toList()
-      ..sort((a, b) {
-        final dateCompare = a.scheduleDate.compareTo(b.scheduleDate);
-        if (dateCompare != 0) return dateCompare;
-        return (a.startTime ?? '').compareTo(b.startTime ?? '');
-      });
-    return future.isNotEmpty ? future.first : schedules.last;
+    }
+
+    int compareEntries(SwimScheduleEntry a, SwimScheduleEntry b) {
+      final dateCompare = a.scheduleDate.compareTo(b.scheduleDate);
+      if (dateCompare != 0) return dateCompare;
+      return (a.startTime ?? '').compareTo(b.startTime ?? '');
+    }
+
+    final meetLike = schedules.where((e) => e.isMeet || e.isRace).toList();
+    final futureMeets = meetLike.where(isFuture).toList()..sort(compareEntries);
+    if (futureMeets.isNotEmpty) return futureMeets.first;
+    if (meetLike.isNotEmpty) {
+      meetLike.sort(compareEntries);
+      return meetLike.last;
+    }
+
+    final futureAny = schedules.where(isFuture).toList()..sort(compareEntries);
+    return futureAny.isNotEmpty ? futureAny.first : null;
   }
 
   static SwimVideoAnalysis? _latestAnalysis(List<SwimVideoAnalysis> analyses) {
@@ -136,14 +267,25 @@ class RaceIntelligenceService {
     return sorted.first;
   }
 
-  static String _focusEvent({
+  static String _resolveFocusEvent({
+    required String? selectedFocusEvent,
+    required List<String> meetEvents,
     required SwimScheduleEntry? upcoming,
     required PassportSnapshot snapshot,
     required List<SwimGoal> goals,
     required SwimmerProfile? profile,
   }) {
+    final selected = selectedFocusEvent?.trim();
+    if (selected != null &&
+        selected.isNotEmpty &&
+        meetEvents.any((e) => e.toLowerCase() == selected.toLowerCase())) {
+      return meetEvents.firstWhere(
+        (e) => e.toLowerCase() == selected.toLowerCase(),
+      );
+    }
+    if (meetEvents.isNotEmpty) return meetEvents.first;
     if (upcoming?.eventsLine?.trim().isNotEmpty == true) {
-      return upcoming!.eventsLine!.trim().split('\n').first.trim();
+      return _parseEventsLine(upcoming!.eventsLine).first;
     }
     if (goals.isNotEmpty) return goals.first.event;
     if (profile?.favoriteEvent?.trim().isNotEmpty == true) {
@@ -152,18 +294,72 @@ class RaceIntelligenceService {
     return snapshot.currentFocus;
   }
 
+  static List<RaceTimelineStep> _timeline({
+    required SwimScheduleEntry? upcoming,
+    required String focusEvent,
+    required List<String> meetEvents,
+  }) {
+    final raceTime = upcoming?.startTime?.trim();
+    final eventCount = meetEvents.length;
+    return [
+      RaceTimelineStep(
+        label: 'Morning base',
+        detail: raceTime != null
+            ? 'Breakfast 3–4 hrs before $raceTime'
+            : 'Breakfast 3–4 hrs before first race',
+        iconName: 'breakfast',
+      ),
+      RaceTimelineStep(
+        label: 'Arrive / check-in',
+        detail: upcoming?.location?.trim().isNotEmpty == true
+            ? 'At ${upcoming!.location!.trim()}'
+            : 'Confirm heat sheet & lane assignments',
+        iconName: 'arrive',
+      ),
+      RaceTimelineStep(
+        label: 'Dryland + pool warm-up',
+        detail: eventCount > 1
+            ? 'Prime for $eventCount events · focus $focusEvent'
+            : 'Prime nervous system for $focusEvent',
+        iconName: 'warmup',
+      ),
+      RaceTimelineStep(
+        label: 'Race window',
+        detail: eventCount > 1
+            ? 'Race plan covers: ${meetEvents.take(3).join(' · ')}'
+            : 'Focus race: $focusEvent',
+        iconName: 'race',
+      ),
+      RaceTimelineStep(
+        label: 'Recover & reset',
+        detail: 'Fuel + hydrate between events, cool down after finals',
+        iconName: 'recover',
+      ),
+    ];
+  }
+
   static List<RaceChecklistItem> _middayChecklist({
     required SwimScheduleEntry? upcoming,
     required String focusEvent,
+    required List<String> meetEvents,
     required List<String> priorities,
   }) {
     final raceTime = upcoming?.startTime?.trim();
+    final multi = meetEvents.length > 1;
     return [
       RaceChecklistItem(
         title: 'Gear & suit check',
         detail:
             'Goggles (spare pair), cap, suit, towel, water bottle, snack bag, heat sheet or SwimIQ schedule.',
-        timingHint: raceTime != null ? 'Complete by 90 min before $raceTime' : 'Morning of meet',
+        timingHint:
+            raceTime != null ? 'Complete by 90 min before $raceTime' : 'Morning of meet',
+      ),
+      RaceChecklistItem(
+        title: multi ? 'Event sheet review' : 'Focus event review',
+        detail: multi
+            ? 'Today’s events: ${meetEvents.join(' · ')}. Primary focus for cues & fueling: $focusEvent.'
+            : 'Confirm heat/lane and one technical cue for $focusEvent.',
+        timingHint: 'When you get the heat sheet',
       ),
       RaceChecklistItem(
         title: 'Midday fuel checkpoint',
@@ -195,14 +391,15 @@ class RaceIntelligenceService {
       ),
       RaceChecklistItem(
         title: 'Post-race reset',
-        detail:
-            'Light stretch, hydration, and a small carb snack within 30 min for back-half events.',
+        detail: multi
+            ? 'Light stretch, hydration, and a small carb snack within 30 min — protect later events.'
+            : 'Light stretch, hydration, and a small carb snack within 30 min.',
         timingHint: 'After each race',
       ),
     ];
   }
 
-  static List<String> _warmUpPlan({
+  static List<WarmUpPhase> _warmUpPhases({
     required String focusEvent,
     required SwimmerProfile? profile,
     required List<String> priorities,
@@ -210,46 +407,75 @@ class RaceIntelligenceService {
   }) {
     final stroke = _strokeFromEvent(focusEvent, profile?.primaryStroke);
     final isDistance = _isDistanceEvent(focusEvent);
-    final durationLabel = isDistance ? '10–15 min' : '8–12 min';
+    final phases = <WarmUpPhase>[
+      WarmUpPhase(
+        phaseNumber: 1,
+        title: 'Activate',
+        duration: '2 min',
+        detail:
+            'Light jog or marching, 30 sec jumping jacks (low impact if tired), '
+            '10 arm circles forward/back. Readiness: $readiness.',
+        iconName: 'activate',
+      ),
+      WarmUpPhase(
+        phaseNumber: 2,
+        title: 'Mobility',
+        duration: '3–4 min',
+        detail:
+            '10 cross-body arm swings, 10 overhead reach-and-lean, '
+            '${_mobilityCueForStroke(stroke)}'
+            '10 leg swings each leg, 20 ankle circles each foot.',
+        iconName: 'mobility',
+      ),
+      WarmUpPhase(
+        phaseNumber: 3,
+        title: isDistance ? 'Core & posture' : 'Power primer',
+        duration: isDistance ? '2 min' : '2–3 min',
+        detail: isDistance
+            ? '30 sec dead-bug or hollow hold, 10 bird-dogs each side, '
+                '10 hip hinges with flat back — stay tall for distance pacing.'
+            : '8 bodyweight squats, 6 squat jumps (soft landing), '
+                '4 explosive streamlines from squat — drive through legs like a start.',
+        iconName: 'power',
+      ),
+      WarmUpPhase(
+        phaseNumber: 4,
+        title: 'Race activation',
+        duration: '2–3 min',
+        detail: _raceActivationForStroke(stroke, focusEvent),
+        iconName: 'activation',
+      ),
+      WarmUpPhase(
+        phaseNumber: 5,
+        title: 'Start & mind',
+        duration: '1–2 min',
+        detail: priorities.isNotEmpty
+            ? '2–3 dry starts, visualize $focusEvent, cue: ${priorities.first}. Cap & goggles on.'
+            : '2–3 dry starts (or crouch explode), 10 sec race visualization for $focusEvent, '
+                'cap & goggles on, confirm heat/lane.',
+        iconName: 'mind',
+      ),
+    ];
+    return phases;
+  }
 
-    final lines = <String>[
+  static List<String> _warmUpPlanLines(
+    List<WarmUpPhase> phases,
+    String focusEvent,
+    SwimmerProfile? profile,
+    String readiness,
+  ) {
+    final stroke = _strokeFromEvent(focusEvent, profile?.primaryStroke);
+    final isDistance = _isDistanceEvent(focusEvent);
+    final durationLabel = isDistance ? '10–15 min' : '8–12 min';
+    return [
       'Event focus: $focusEvent · Primary stroke: $stroke · Readiness: $readiness',
       'Dryland warm-up · $durationLabel total (complete before pool warm-up lanes).',
-      'Phase 1 — Activate (2 min): light jog or marching in place, 30 sec jumping jacks '
-          '(low impact if legs are tired), 10 arm circles forward/back.',
-      'Phase 2 — Mobility (3–4 min): 10 cross-body arm swings, 10 overhead reach-and-lean, '
-          '${_mobilityCueForStroke(stroke)} '
-          '10 leg swings each leg (front/back), 20 ankle circles each foot.',
-    ];
-
-    if (isDistance) {
-      lines.add(
-        'Phase 3 — Core & posture (2 min): 30 sec dead-bug or hollow hold, '
-            '10 bird-dogs each side, 10 hip hinges with flat back — stay tall for distance pacing.',
-      );
-    } else {
-      lines.add(
-        'Phase 3 — Power primer (2–3 min): 8 bodyweight squats, 6 squat jumps (soft landing), '
-            '4 explosive streamlines from squat — drive through legs like a start.',
-      );
-    }
-
-    lines.add(
-      'Phase 4 — Race activation (2–3 min): ${_raceActivationForStroke(stroke, focusEvent)}',
-    );
-
-    if (priorities.isNotEmpty) {
-      lines.add('Technique cue carry-in: ${priorities.take(2).join(' · ')}');
-    }
-
-    lines.addAll([
-      'Phase 5 — Start & mind (1–2 min): 2–3 dry block starts (or crouch explode if no blocks), '
-          '10 sec race visualization for $focusEvent, cap & goggles on, confirm heat/lane.',
+      for (final phase in phases)
+        'Phase ${phase.phaseNumber} — ${phase.title} (${phase.duration}): ${phase.detail}',
       'Finish: walk to pool warm-up calm and breathing steady — this dryland block primes the nervous system; '
           'save race pace for the water.',
-    ]);
-
-    return lines;
+    ];
   }
 
   static String _strokeFromEvent(String event, String? primaryStroke) {
@@ -258,7 +484,11 @@ class RaceIntelligenceService {
     if (lower.contains('back') || lower.contains('backstroke')) return 'Backstroke';
     if (lower.contains('breast')) return 'Breaststroke';
     if (lower.contains('free') || lower.contains('freestyle')) return 'Freestyle';
-    if (lower.contains(' im') || lower.contains('individual medley')) return 'IM';
+    if (lower.contains(' im') ||
+        lower.endsWith('im') ||
+        lower.contains('individual medley')) {
+      return 'IM';
+    }
     return primaryStroke ?? 'Freestyle';
   }
 
@@ -300,12 +530,15 @@ class RaceIntelligenceService {
   static List<NutritionBlock> _nutritionPlan({
     required SwimmerProfile? profile,
     required String focusEvent,
+    required List<String> meetEvents,
     required SwimScheduleEntry? upcoming,
   }) {
     final age = profile?.age;
-    final isDistance = _isDistanceEvent(focusEvent);
+    final isDistance = _isDistanceEvent(focusEvent) ||
+        meetEvents.any(_isDistanceEvent);
     final isSprint = !isDistance;
     final caffeineOk = age != null && age >= 14;
+    final multi = meetEvents.length > 1;
 
     final breakfastSuggestions = <String>[
       'Oatmeal with banana and honey (meet-day classic — steady carbs, easy on the stomach)',
@@ -333,6 +566,7 @@ class RaceIntelligenceService {
         'Fig bar or pretzels between prelims and finals'
       else
         'Pretzels or dry cereal alongside fuel for long sessions',
+      if (multi) 'Pack 2–3 snack options — multi-event days need flexible fueling',
       'Electrolyte drink sip (not chug) if racing in heat or long session',
     ];
 
@@ -354,6 +588,7 @@ class RaceIntelligenceService {
       'Banana + honey or half protein bar if racing again within 2 hours',
       'Water + electrolytes if sweating heavily',
       'Organic berry chews for quick carbs before the next heat (small portion)',
+      if (multi) 'Keep snacks staged by event so later races stay fueled',
     ];
 
     final raceTime = upcoming?.startTime;
@@ -371,7 +606,9 @@ class RaceIntelligenceService {
       ),
       NutritionBlock(
         mealLabel: 'Midday meet fuel',
-        timing: '2–3 hours before $focusEvent',
+        timing: multi
+            ? '2–3 hours before primary focus ($focusEvent)'
+            : '2–3 hours before $focusEvent',
         suggestions: snackSuggestions,
         avoid:
             'Skip fried food, soda, giant meals, high-fiber bars, raw/new sushi, and untested supplements on meet day.',
@@ -393,10 +630,18 @@ class RaceIntelligenceService {
     ];
   }
 
-  static String _hydrationNotes({required String focusEvent}) {
-    return 'SwimIQ AI Nutrition for $focusEvent: sip 8–12 oz water each hour on meet day; '
-        'add electrolytes (especially with honey chews or caffeine fuel) in warm pools or long sessions. '
-        'Carbs first (banana, oatmeal, honey, berry gummies), light protein as needed — confirm with your coach or sports dietitian.';
+  static String _hydrationNotes({
+    required String focusEvent,
+    required List<String> meetEvents,
+  }) {
+    final multi = meetEvents.length > 1;
+    return multi
+        ? 'SwimIQ AI Nutrition for a multi-event day (focus $focusEvent): sip 8–12 oz water each hour; '
+            'add electrolytes between races. Carbs first (banana, oatmeal, honey, berry gummies), '
+            'light protein as needed — confirm with your coach or sports dietitian.'
+        : 'SwimIQ AI Nutrition for $focusEvent: sip 8–12 oz water each hour on meet day; '
+            'add electrolytes (especially with honey chews or caffeine fuel) in warm pools or long sessions. '
+            'Carbs first (banana, oatmeal, honey, berry gummies), light protein as needed — confirm with your coach or sports dietitian.';
   }
 
   static bool _isDistanceEvent(String event) {
