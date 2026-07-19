@@ -190,8 +190,8 @@ if (Test-Path -LiteralPath $killWeb) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
 }
 
-Write-Host 'Starting app on 127.0.0.1 - wait 2-3 minutes...' -ForegroundColor Cyan
-Write-Host 'CLOSE any blank Chrome tabs that say 127.0.0.1 if they appear stuck.' -ForegroundColor Yellow
+Write-Host 'Building app on 127.0.0.1 - this can take 2-4 minutes the first time...' -ForegroundColor Cyan
+Write-Host 'Chrome will open ONLY after the app is ready (not a blank page).' -ForegroundColor Yellow
 Write-Host ''
 
 & $paths.FlutterBat pub get
@@ -216,63 +216,125 @@ function Find-ChromeExe {
 
 function Open-LocalApp([string]$url) {
     $chrome = Find-ChromeExe
+    # Cache-bust so an old blank tab does not stick.
+    $stamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $openUrl = $url
+    if ($openUrl -notmatch '\-') { $openUrl = "$openUrl/-v=$stamp" }
     if ($chrome) {
-        # Fresh window on localhost only - do not reuse swimiqapp.com session.
         Start-Process -FilePath $chrome -ArgumentList @(
             '--new-window',
             '--disable-http-cache',
-            $url
+            $openUrl
         )
         return $true
     }
     try {
-        Start-Process $url
+        Start-Process $openUrl
         return $true
     } catch {
         return $false
     }
 }
 
-# Most reliable on Windows: Flutter serves the app, WE open Chrome.
-# Avoid --user-data-dir / debug-attach flags that cause "Failed to launch browser".
+function Test-FlutterWebReady([string]$baseUrl) {
+    $pathsToTry = @(
+        "$baseUrl/main.dart.js",
+        "$baseUrl/flutter_bootstrap.js",
+        "$baseUrl/flutter.js",
+        "$baseUrl/"
+    )
+    foreach ($p in $pathsToTry) {
+        try {
+            $r = Invoke-WebRequest -UseBasicParsing -Uri $p -TimeoutSec 4
+            if ($r.StatusCode -ne 200) { continue }
+            $body = [string]$r.Content
+            if ($p -match 'main\.dart\.js|flutter_bootstrap\.js|flutter\.js') {
+                if ($body.Length -gt 200) { return $true }
+            } elseif ($body -match 'flutter|main\.dart\.js|flutter_bootstrap') {
+                return $true
+            }
+        } catch {}
+    }
+    return $false
+}
+
+# Serve with web-server, WAIT until ready, THEN open Chrome once.
 $chromeExe = Find-ChromeExe
 $webPorts = @(7357, 7358, 7359, 7360)
 $code = 1
+$opened = $false
+
 foreach ($webPort in $webPorts) {
     $url = "http://127.0.0.1:$webPort"
-    Write-Host ("Serving app at {0} ..." -f $url) -ForegroundColor Cyan
+    Write-Host ("Starting app server at {0} ..." -f $url) -ForegroundColor Cyan
     if (Test-Path -LiteralPath $killWeb) {
         & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
     }
 
-    # Open the browser a few seconds after the server starts compiling.
-    $opener = Start-Job -ScriptBlock {
-        param($u, $chromePath)
-        Start-Sleep -Seconds 14
-        if ($chromePath -and (Test-Path -LiteralPath $chromePath)) {
-            Start-Process -FilePath $chromePath -ArgumentList @('--new-window', '--disable-http-cache', $u)
-        } else {
-            Start-Process $u
+    $flutterBatSafe = $paths.FlutterBat.Replace("'", "''")
+    $envFileSafe = $envFile.Replace("'", "''")
+    $argList = @(
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-Command',
+        ("& '{0}' run -d web-server --web-hostname=127.0.0.1 --web-port={1} --dart-define-from-file='{2}'" -f $flutterBatSafe, $webPort, $envFileSafe)
+    )
+    $flutterProc = Start-Process -FilePath 'powershell.exe' `
+        -ArgumentList $argList `
+        -WorkingDirectory $paths.WorkDir `
+        -PassThru `
+        -WindowStyle Normal
+
+    Write-Host 'Waiting for app compile (up to 5 minutes). Dots = still working...' -ForegroundColor Cyan
+    $deadline = (Get-Date).AddMinutes(5)
+    $ready = $false
+    while ((Get-Date) -lt $deadline) {
+        if ($flutterProc.HasExited) {
+            Write-Host ''
+            Write-Host ("[FAIL] App server exited early (code {0})." -f $flutterProc.ExitCode) -ForegroundColor Red
+            break
         }
-    } -ArgumentList $url, $chromeExe
+        if (Test-FlutterWebReady $url) {
+            $ready = $true
+            break
+        }
+        Write-Host -NoNewline '.'
+        Start-Sleep -Seconds 4
+    }
+    Write-Host ''
 
-    & $paths.FlutterBat run -d web-server `
-        --web-hostname=127.0.0.1 `
-        --web-port=$webPort `
-        --dart-define-from-file=$envFile
-    $code = $LASTEXITCODE
+    if (-not $ready) {
+        Write-Host ("Port {0} not ready in time. Trying next..." -f $webPort) -ForegroundColor Yellow
+        try { Stop-Process -Id $flutterProc.Id -Force -ErrorAction SilentlyContinue } catch {}
+        Start-Sleep -Seconds 1
+        continue
+    }
 
-    try { Stop-Job $opener -Force -ErrorAction SilentlyContinue } catch {}
-    try { Remove-Job $opener -Force -ErrorAction SilentlyContinue } catch {}
+    Write-Host '[OK] App is ready. Opening Chrome now...' -ForegroundColor Green
+    Write-Host ("Address must be: {0}" -f $url) -ForegroundColor Green
+    if (Open-LocalApp $url) {
+        $opened = $true
+        Write-Host 'If Chrome shows login - you are good.' -ForegroundColor Green
+        Write-Host 'If Chrome is still blank: press F5 once.' -ForegroundColor Yellow
+    } else {
+        Write-Host "[FAIL] Could not open Chrome. Open this yourself: $url" -ForegroundColor Red
+    }
 
-    if ($code -eq 0) { break }
-    Write-Host ("Port {0} failed (code {1}). Trying next..." -f $webPort, $code) -ForegroundColor Yellow
-    Start-Sleep -Seconds 1
+    Write-Host ''
+    Write-Host 'Leave this window open while you use SwimIQ.' -ForegroundColor Yellow
+    Write-Host 'Press Ctrl+C in the Flutter window to stop the app server later.' -ForegroundColor Yellow
+    try {
+        Wait-Process -Id $flutterProc.Id
+        $code = $flutterProc.ExitCode
+        if ($null -eq $code) { $code = 0 }
+    } catch {
+        $code = 0
+    }
+    break
 }
 
-# Last fallback: let Flutter drive Chrome itself (no custom profile flags).
-if ($code -ne 0) {
-    Write-Host 'Trying Flutter -> Chrome direct launch...' -ForegroundColor Yellow
+if (-not $opened) {
+    Write-Host 'Trying Flutter -> Chrome direct launch as last fallback...' -ForegroundColor Yellow
     if (Test-Path -LiteralPath $killWeb) {
         & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
     }
@@ -284,7 +346,7 @@ if ($code -ne 0) {
 }
 
 Write-Host ''
-if ($code -ne 0) {
+if ($code -ne 0 -and -not $opened) {
     Write-Host 'Launch failed.' -ForegroundColor Red
     Write-Host 'Do this:' -ForegroundColor Yellow
     Write-Host '  1) Close EVERY Chrome window' -ForegroundColor Yellow

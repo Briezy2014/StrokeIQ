@@ -72,7 +72,10 @@ goto :Hold
 
 :Chrome
 echo.
-echo [4/4] Elite is up. Opening Chrome on localhost...
+echo [4/4] Elite is up. Starting SwimIQ app (Chrome opens when ready)...
+echo First compile can take 2-4 minutes. Wait for Chrome - do not rush.
+echo Address must be 127.0.0.1  (not swimiqapp.com)
+echo.
 if not exist "%CD%\swimiq\LAUNCH-CHROME.bat" (
   echo [FAIL] Missing swimiq\LAUNCH-CHROME.bat
   goto :Hold
@@ -81,6 +84,7 @@ call "%CD%\swimiq\LAUNCH-CHROME.bat"
 echo.
 echo ############################################################
 echo #  Keep the Elite black window OPEN while you analyze     #
+echo #  If Chrome was blank, press F5 once                     #
 echo ############################################################
 echo.
 
