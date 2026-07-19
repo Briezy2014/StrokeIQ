@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models/subscription_plan.dart';
 import '../core/services/ai_swim_analysis_service.dart';
+import '../core/services/best_times_extract_service.dart';
 import '../core/services/gemini_college_match_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/pending_coach_code_storage.dart';
@@ -49,6 +50,12 @@ final aiSwimAnalysisServiceProvider = Provider<AiSwimAnalysisService>(
 
 final geminiCollegeMatchServiceProvider = Provider<GeminiCollegeMatchService>(
   (ref) => GeminiCollegeMatchService(ref.watch(supabaseClientProvider)),
+);
+
+final bestTimesExtractServiceProvider = Provider<BestTimesExtractService>(
+  (ref) => BestTimesExtractService(
+    supabase: ref.watch(supabaseClientProvider),
+  ),
 );
 
 final geminiSwimAnalysisServiceProvider = Provider<GeminiSwimAnalysisService>(

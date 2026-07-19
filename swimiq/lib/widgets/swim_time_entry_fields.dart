@@ -71,6 +71,22 @@ class SwimTimeEntryFieldsState extends State<SwimTimeEntryFields> {
     return null;
   }
 
+  /// Prefill fields from a parsed swim time (used after photo extract).
+  void setFromSeconds(double totalSeconds) {
+    if (totalSeconds <= 0) return;
+    final minutes = totalSeconds ~/ 60;
+    final remainder = totalSeconds - (minutes * 60);
+    final wholeSeconds = remainder.floor();
+    final fractional = ((remainder - wholeSeconds) * 100).round().clamp(0, 99);
+    final tenths = fractional ~/ 10;
+    final hundredths = fractional % 10;
+    _minutesController.text = minutes > 0 ? '$minutes' : '';
+    _secondsController.text = '$wholeSeconds';
+    _tenthsController.text = '$tenths';
+    _hundredthsController.text = '$hundredths';
+    _notifyChanged();
+  }
+
   void _notifyChanged() {
     widget.onChanged?.call(tryParseSeconds());
   }
