@@ -1,21 +1,20 @@
 ============================================================
-  GOOD MORNING - Elite analysis (ONE path)
+  GOOD MORNING - Elite analysis
 ============================================================
 
-Only do this:
+RIGHT NOW (works on this PC, no GoDaddy needed):
 
-  1. Double-click   START-SWIMIQ-WITH-ELITE.bat
-  2. Leave the Elite black window OPEN
-  3. Sign in on localhost (127.0.0.1) - NOT swimiqapp.com
-  4. Elite tab -> Run Elite Analysis on a short clip
+  1. CLOSE every swimiqapp.com tab
+  2. Double-click START-SWIMIQ-WITH-ELITE.bat
+  3. Address bar MUST say 127.0.0.1  (not swimiqapp.com)
+  4. Elite tab -> Run Elite Analysis
+  5. Leave the Elite black window OPEN
 
-If it stops with a red [FAIL] message, that message is the real reason.
-Do NOT hunt other .bat files. Read the Elite window + elite-start.log.
+If you see "workstation" text, you are on swimiqapp.com.
+Close that tab. That is the old website.
 
-Known one-time PC setup (only if the starter says so):
-  - Python 3.11 installed
-  - FFmpeg installed:  winget install Gyan.FFmpeg
-  - ONE GEMINI_API_KEY= line in swimiq\.env (optional for coaching upgrade)
-
-Do NOT click FIX-*.bat files. They all redirect here anyway.
+TO UPDATE THE PUBLIC WEBSITE later:
+  Double-click DO-THIS-ONE-THING.bat
+  Upload the zip to GoDaddy (see UPLOAD-THIS-ZIP-TO-GODADDY.txt)
+  Elite subtitle must say: build Jul19-a
 ============================================================

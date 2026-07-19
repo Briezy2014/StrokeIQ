@@ -285,30 +285,62 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       subscription: subscription,
     );
 
-    // Local Elite CV when V2 is on and this is NOT the public website.
-    // swimiqapp.com has no local analysis server — use cloud analysis there.
-    final useLocalElite =
-        v2Allowed && !forceLegacy && !Env.isPublicHostedWeb;
-    if (useLocalElite) {
-      final consented = await AiDataConsentDialog.ensureGranted(context);
-      if (!consented || !mounted) return;
-      await _startEliteAnalysis(video);
-      return;
-    }
+    // Prefer local Elite CV whenever V2 is on - including swimiqapp.com -
+    // as long as Elite is running on this PC at 127.0.0.1:8080.
+    final preferLocalElite = v2Allowed && !forceLegacy;
+    if (preferLocalElite) {
+      final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
+      final eliteReady = elite.reachable &&
+          elite.mediaToolsReady &&
+          elite.storageConfigured;
+      if (eliteReady) {
+        if (!mounted) return;
+        final consented = await AiDataConsentDialog.ensureGranted(context);
+        if (!consented || !mounted) return;
+        await _startEliteAnalysis(video);
+        return;
+      }
 
-    // Local-only Elite lock (skipped on the public website).
-    if (v2Allowed &&
-        !FeatureFlags.videoEngineLegacyEnabled &&
-        !Env.isPublicHostedWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Elite Video Lab is required. Start the analysis server, then try again.',
+      // On the public website, offer a clear choice instead of a dead-end banner.
+      if (Env.isPublicHostedWeb) {
+        if (!mounted) return;
+        final useCloud = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Elite server not running on this PC'),
+            content: const Text(
+              'Full Elite analysis needs the black Elite window on THIS computer.\n\n'
+              '1) Double-click START-SWIMIQ-WITH-ELITE.bat\n'
+              '2) Leave the Elite window open\n'
+              '3) Press Recheck, then Run Elite Analysis again\n\n'
+              'Or use Gemini cloud coaching now (no stroke tracking overlay).',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Use cloud coaching'),
+              ),
+            ],
           ),
-        ),
-      );
-      return;
+        );
+        if (useCloud != true || !mounted) return;
+        // Fall through to Gemini cloud path below.
+      } else if (!FeatureFlags.videoEngineLegacyEnabled) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Elite is not ready. Run START-SWIMIQ-WITH-ELITE.bat and leave the Elite window open.',
+            ),
+            duration: Duration(seconds: 10),
+          ),
+        );
+        return;
+      }
     }
 
     if (subscription != null &&
@@ -412,8 +444,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = v2Allowed
             ? (hosted
-                ? 'Elite Video Lab - cloud analysis - build Jul18-c'
-                : 'Elite stroke analysis from your race footage')
+                ? 'Elite Video Lab - build Jul19-a (uses Elite on this PC when running)'
+                : 'Elite stroke analysis from your race footage - build Jul19-a')
             : canRunAi
             ? 'AI coaching from your race footage'
             : hasPro
@@ -437,12 +469,22 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
             ),
             if (v2Allowed) ...[
               const SizedBox(height: 12),
-              if (!hosted)
-                _EliteServerStatusBanner(
-                  health: serverHealth,
-                  onRetry: () => ref.invalidate(videoServerHealthProvider),
+              _EliteServerStatusBanner(
+                health: serverHealth,
+                onRetry: () => ref.invalidate(videoServerHealthProvider),
+              ),
+              const SizedBox(height: 8),
+              if (hosted)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Tip: for the most reliable Elite run, use the localhost app '
+                    '(127.0.0.1) from START-SWIMIQ-WITH-ELITE.bat — not only this website tab.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF6B7280),
+                        ),
+                  ),
                 ),
-              if (!hosted) const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(

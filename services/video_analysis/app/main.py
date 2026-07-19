@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import analysis, flutter_bridge, health, jobs
@@ -13,6 +13,27 @@ from app.services.result_store import ResultStore
 from app.utils.logging import configure_logging, get_logger, log_stage
 
 logger = get_logger("video_analysis")
+
+
+class PrivateNetworkAccessMiddleware:
+    """Allow swimiqapp.com (public site) to call Elite on 127.0.0.1 (Chrome PNA)."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_pna(message):
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers") or [])
+                headers.append((b"access-control-allow-private-network", b"true"))
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self.app(scope, receive, send_with_pna)
 
 
 @asynccontextmanager
@@ -83,6 +104,34 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+# After CORS so preflight responses also advertise private-network access.
+app.add_middleware(PrivateNetworkAccessMiddleware)
+
+
+@app.middleware("http")
+async def handle_private_network_preflight(request: Request, call_next):
+    # Chrome sends Access-Control-Request-Private-Network: true on preflight
+    # when a public page (swimiqapp.com) calls http://127.0.0.1:8080.
+    if (
+        request.method == "OPTIONS"
+        and request.headers.get("access-control-request-private-network", "").lower()
+        == "true"
+    ):
+        origin = request.headers.get("origin", "*")
+        return Response(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": origin or "*",
+                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Headers": request.headers.get(
+                    "access-control-request-headers", "*"
+                ),
+                "Access-Control-Allow-Private-Network": "true",
+                "Access-Control-Max-Age": "600",
+            },
+        )
+    return await call_next(request)
+
 
 app.include_router(health.router)
 app.include_router(analysis.router)

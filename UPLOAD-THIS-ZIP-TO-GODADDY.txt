@@ -1,58 +1,28 @@
 ============================================================
-  UPLOAD THIS ZIP TO GODADDY  (only these steps)
+  UPDATE swimiqapp.com (kills the old workstation message)
 ============================================================
 
-File Explorer should already be open with this file highlighted:
+On this PC first:
+  1) Double-click GET-LATEST-FIXED-APP.bat
+  2) Double-click DO-THIS-ONE-THING.bat
+     Wait until it says ZIP READY
+  3) Zip path:
+       Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
 
-  Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+GoDaddy File Manager -> public_html:
+  4) Upload that zip
+  5) Extract / overwrite ALL
+  6) Delete flutter_service_worker.js if extract left an old one
+     (or extract with overwrite - same idea)
 
-That ZIP is the whole website. There is NO folder named GoDaddy.
+Then prove it:
+  7) Incognito -> https://swimiqapp.com  (or http://swimiqapp.com)
+  8) Ctrl+Shift+R hard refresh
+  9) Sign in -> Elite tab
+ 10) Subtitle must say: build Jul19-a
+ 11) Keep Elite running via START-SWIMIQ-WITH-ELITE.bat
+ 12) Run Elite Analysis
 
-------------------------------------------------------------
-STEPS
-------------------------------------------------------------
-
-1) In GoDaddy (browser should open):
-   Find Web Hosting → Manage → File Manager
-   (NOT the Domain page)
-
-2) Double-click folder:  public_html
-
-3) Click Upload
-
-4) Upload this ONE file:
-     swimiq-web-godaddy.zip
-   (from Desktop\StrokeIQ\swimiq\build\)
-
-5) When upload hits 100%, go back to the public_html file list
-
-6) Click the zip once → Extract / Unzip
-   Choose overwrite / replace when asked
-
-7) In public_html you must see:
-     main.dart.js
-     index.html
-   (directly in public_html, not only inside a subfolder)
-
-8) Open Incognito and go to:
-     https://swimiqapp.com
-   Hard refresh: Ctrl + Shift + R
-
-9) You should see SwimIQ LOGIN.
-   Sign in → Elite tab → no blue workstation banner.
-   Run Elite Analysis should start.
-
-------------------------------------------------------------
-IF THE ZIP IS NOT HIGHLIGHTED
-------------------------------------------------------------
-Open this path in File Explorer:
-
-  Desktop\StrokeIQ\swimiq\build
-
-Look for:  swimiq-web-godaddy.zip
-(next to the web folder)
-
-If it is still missing, run again:
-
-  Desktop\StrokeIQ\DO-THIS-ONE-THING.bat
+Until you upload, swimiqapp.com stays OLD.
+For analysis RIGHT NOW without GoDaddy: use 127.0.0.1 only.
 ============================================================

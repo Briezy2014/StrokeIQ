@@ -36,15 +36,15 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
     exit 1
 }
 
-# Hosted site shows Elite Video Lab UI. Public swimiqapp.com runs cloud
-# analysis (no local Elite server). Local Chrome still uses Elite CV.
+# Hosted site shows Elite Video Lab UI and calls Elite on THIS PC when
+# START-SWIMIQ-WITH-ELITE.bat left 127.0.0.1:8080 running (Chrome PNA + CORS).
 $prodEnv = Join-Path $env:TEMP 'swimiq-godaddy-defines.env'
 @(
     "SUPABASE_URL=$url"
     "SUPABASE_ANON_KEY=$key"
     'VIDEO_ENGINE_V2=true'
-    'VIDEO_ENGINE_V2_DUAL_RUN=false'
-    'ANALYSIS_API_BASE_URL='
+    'VIDEO_ENGINE_V2_DUAL_RUN=true'
+    'ANALYSIS_API_BASE_URL=http://127.0.0.1:8080'
 ) | Set-Content -LiteralPath $prodEnv -Encoding ascii
 
 Write-Host 'Cleaning + pub get...' -ForegroundColor Cyan

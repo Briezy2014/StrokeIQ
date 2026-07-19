@@ -179,9 +179,9 @@ Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat
 Write-Host ''
 Write-Host '############################################' -ForegroundColor Yellow
 Write-Host ' CLOSE every swimiqapp.com tab first.' -ForegroundColor Yellow
-Write-Host ' Fixed app address must be localhost' -ForegroundColor Yellow
-Write-Host ' or 127.0.0.1 - NEVER swimiqapp.com' -ForegroundColor Yellow
-Write-Host ' Black workstation banner = OLD website.' -ForegroundColor Yellow
+Write-Host ' Fixed app address must be 127.0.0.1' -ForegroundColor Yellow
+Write-Host ' If address bar says swimiqapp.com - WRONG TAB' -ForegroundColor Yellow
+Write-Host ' Old workstation banner = old website files' -ForegroundColor Yellow
 Write-Host '############################################' -ForegroundColor Yellow
 Write-Host ''
 Write-Host 'Clearing old Flutter web ports (fixes errno 10048)...' -ForegroundColor Cyan
@@ -199,6 +199,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+# Dedicated Chrome profile so session restore cannot reopen swimiqapp.com.
+$chromeProfile = 'C:\SwimIQChrome'
+New-Item -ItemType Directory -Force -Path $chromeProfile | Out-Null
+
 # Force a clean localhost URL so Chrome does not reopen swimiqapp.com.
 # Disable HTTP cache so an old triangle/favicon cannot stick.
 # Try a few ports if Windows still holds the last one.
@@ -210,6 +214,8 @@ foreach ($webPort in $webPorts) {
         --web-hostname=127.0.0.1 `
         --web-port=$webPort `
         --web-browser-flag=--disable-http-cache `
+        --web-browser-flag=--new-window `
+        "--web-browser-flag=--user-data-dir=$chromeProfile" `
         --dart-define-from-file=$envFile
     $code = $LASTEXITCODE
     if ($code -eq 0) { break }

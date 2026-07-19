@@ -1,38 +1,19 @@
 ============================================================
-  WHY YOU STILL SEE THE BLACK "WORKSTATION" MESSAGE
+  WHY YOU STILL SEE THE "WORKSTATION" MESSAGE
 ============================================================
 
-This is NOT because briezy682014@gmail.com lacks access.
-Your master login is fine.
+That red/black message is from OLD files on swimiqapp.com.
+It is NOT a login problem. Master login is fine.
 
-That black message is baked into OLD website files on GoDaddy.
-Your PC has the fix. swimiqapp.com has not been updated yet.
+If the address bar says swimiqapp.com - you are on the old site.
+Close it. Use 127.0.0.1 from START-SWIMIQ-WITH-ELITE.bat.
 
-PROOF you have the new site later:
-  Elite Video Lab subtitle will say:  build Jul18-b
-  If you do NOT see "build Jul18-b", you are still on the old site.
+PASS on the fixed app:
+  - Address: 127.0.0.1
+  - Elite subtitle mentions: build Jul19-a
+  - Green/orange Elite server banner (not workstation text)
 
-------------------------------------------------------------
-TEST ANALYSIS RIGHT NOW (this PC — works)
-------------------------------------------------------------
-1) Close swimiqapp.com
-2) Desktop\StrokeIQ\GET-LATEST-FIXED-APP.bat
-3) Desktop\StrokeIQ\RUN-ANALYSIS-ON-THIS-PC.bat
-4) Elite tab → Run Elite Analysis
-
-------------------------------------------------------------
-KILL THE MESSAGE ON THE WEBSITE
-------------------------------------------------------------
-1) Desktop\StrokeIQ\GET-LATEST-FIXED-APP.bat
-2) Desktop\StrokeIQ\DO-THIS-ONE-THING.bat
-   Wait until it says ZIP READY
-3) GoDaddy File Manager → public_html
-4) DELETE these old files if present:
-     flutter_service_worker.js
-     main.dart.js
-     (or Extract zip with overwrite — same idea)
-5) Upload swimiq-web-godaddy.zip → Extract → overwrite ALL
-6) Incognito → https://swimiqapp.com → Ctrl+Shift+R
-7) Elite subtitle must say: build Jul18-b
-8) Then Run Elite Analysis will NOT show the workstation message
+FAIL (still old website):
+  - Address: swimiqapp.com
+  - Message about workstation / live Elite analysis
 ============================================================

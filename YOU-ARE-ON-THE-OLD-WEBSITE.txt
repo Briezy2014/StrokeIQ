@@ -1,55 +1,38 @@
 ============================================================
-  THAT BLACK BANNER = OLD WEBSITE
+  YOUR PHOTO SHOWS swimiqapp.com - THAT IS THE WRONG TAB
 ============================================================
 
-I checked the live site. https://swimiqapp.com still contains:
-  "Elite stroke analysis runs on the SwimIQ workstation..."
+If the address bar says swimiqapp.com, Run Elite Analysis will
+show the OLD "workstation" message. That message is baked into
+the OLD website files on GoDaddy. Your Elite server on this PC
+CAN be running (127.0.0.1:8080/health) and still look "broken"
+if you click Run on the swimiqapp.com tab.
 
-The FIXED app in Desktop\StrokeIQ does NOT have that message.
-
-So if you see that black banner, Chrome is on the OLD site.
-Close every swimiqapp.com tab.
-
-============================================================
-  DO THIS NOW (analysis that works)
-============================================================
-
-1. Close ALL Chrome tabs that say swimiqapp.com
-2. Open Desktop\StrokeIQ
-3. Double-click:  OPEN-WORKING-APP-NOW.bat
-4. Wait for Chrome
-5. LOOK AT THE ADDRESS BAR
-   It MUST say:  localhost   or   127.0.0.1
-   If it says swimiqapp.com, CLOSE IT and go back to step 3
-
-6. Sign in: briezy682014@gmail.com
-7. Elite tab
-8. You should see a green/orange Elite SERVER banner
-   (NOT the black workstation banner)
-9. Run Elite Analysis
+PROOF from your screen:
+  - Active tab = swimiqapp.com  --> WRONG for Elite
+  - Other tab  = 127.0.0.1      --> USE THIS ONE
+  - Other tab  = 127.0.0.1:8080 --> Elite health (good)
 
 ============================================================
-  HOW TO KNOW YOU HAVE THE FIXED APP
+  DO THIS NOW (works on this PC)
 ============================================================
 
-PASS:
-- Address: localhost or 127.0.0.1
-- Elite subtitle does NOT say workstation
-- Passport shows: build Jul18-c - left Athlete Passport card removed
-- No light-blue Athlete Passport card on the left
-
-FAIL (still old):
-- Address: swimiqapp.com
-- Black banner about workstation / live Elite analysis demo
+1) CLOSE every tab that says swimiqapp.com
+2) Double-click: START-SWIMIQ-WITH-ELITE.bat
+3) When Chrome opens, look at the address bar
+   It MUST say 127.0.0.1   (not swimiqapp.com)
+4) Elite tab -> Run Elite Analysis
+5) Subtitle should mention: build Jul19-a
 
 ============================================================
-  OPTIONAL: update swimiqapp.com later
+  TO UPDATE THE PUBLIC WEBSITE TOO
 ============================================================
 
-Only after localhost works:
-  Double-click DO-THIS-ONE-THING.bat
-  Upload/extract the zip in GoDaddy public_html
-  Then open swimiqapp.com in Incognito
+1) Double-click GET-LATEST-FIXED-APP.bat
+2) Double-click DO-THIS-ONE-THING.bat (or MAKE-GODADDY-ZIP)
+3) Upload/extract the zip in GoDaddy public_html (overwrite)
+4) Open swimiqapp.com in Incognito -> Ctrl+Shift+R
+5) Elite subtitle must say: build Jul19-a
 
-Until you do that, swimiqapp.com stays OLD on purpose.
+Until you upload, swimiqapp.com stays OLD on purpose.
 ============================================================
