@@ -1,4 +1,4 @@
-# SwimIQ Chrome review — NO git pull (safe while Play upload / merge fixes in progress)
+# SwimIQ Chrome review - NO git pull (safe while Play upload / merge fixes in progress)
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'swimiq-windows-paths.ps1')
@@ -19,7 +19,7 @@ try {
 
 $envFile = Join-Path $paths.WorkDir '.env'
 if (-not (Test-Path -LiteralPath $envFile)) {
-    Write-Host 'ERROR: Missing .env — copy from .env.example and add Supabase keys.' -ForegroundColor Red
+    Write-Host 'ERROR: Missing .env - copy from .env.example and add Supabase keys.' -ForegroundColor Red
     Read-Host 'Press Enter to close'
     exit 1
 }
@@ -44,7 +44,7 @@ if (-not $url -or -not $key -or $url -match 'your-project') {
 }
 
 Write-Host 'Using LOCAL code only (no git pull).' -ForegroundColor Green
-Write-Host 'Starting Chrome — first launch may take 2-3 minutes...' -ForegroundColor Cyan
+Write-Host 'Starting Chrome - first launch may take 2-3 minutes...' -ForegroundColor Cyan
 Write-Host ''
 
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat

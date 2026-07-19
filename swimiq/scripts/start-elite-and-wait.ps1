@@ -102,7 +102,7 @@ if ($CheckOnly) {
         Write-Host $body
         exit 0
     }
-    Write-Host '[FAIL] Elite is not fully ready (CheckOnly — not restarting).' -ForegroundColor Red
+    Write-Host '[FAIL] Elite is not fully ready (CheckOnly - not restarting).' -ForegroundColor Red
     if ($body) { Write-Host $body }
     exit 1
 }
@@ -114,7 +114,7 @@ if ((Test-EliteFullyReady $body) -and (-not $ForceRestart) -and (-not $needsKeyR
 }
 
 if ($needsKeyRestart -and (Test-EliteFullyReady $body)) {
-    Write-Host '[WARN] GEMINI_API_KEY in swimiq\.env differs from Elite .env — restarting Elite to load it.' -ForegroundColor Yellow
+    Write-Host '[WARN] GEMINI_API_KEY in swimiq\.env differs from Elite .env - restarting Elite to load it.' -ForegroundColor Yellow
 }
 
 if ($body -and -not (Test-EliteFullyReady $body)) {

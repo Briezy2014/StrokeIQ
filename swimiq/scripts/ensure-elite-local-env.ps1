@@ -1,5 +1,6 @@
 # Prepares services/video_analysis/.env for local Windows Elite runs.
-$ErrorActionPreference = 'Stop'
+# ASCII-only on purpose. Windows PowerShell 5.1 misreads UTF-8 dashes/ellipsis.
+$ErrorActionPreference = 'Continue'
 
 function Read-EnvMap([string]$path) {
     $map = @{}
@@ -91,8 +92,8 @@ foreach ($candidate in $flutterCandidates) {
     if (-not (Test-Path -LiteralPath $candidate)) { continue }
     $dupCount = @(Get-Content -LiteralPath $candidate | Where-Object { $_ -match '^\s*GEMINI_API_KEY\s*=' }).Count
     if ($dupCount -gt 1) {
-        Write-Host "[WARN] $candidate has $dupCount GEMINI_API_KEY lines — using the LAST one only." -ForegroundColor Yellow
-        Write-Host '       Run FIX-ONE-GEMINI-KEY.bat so the file keeps a single line.' -ForegroundColor Yellow
+        Write-Host "[WARN] $candidate has $dupCount GEMINI_API_KEY lines - using the LAST one only." -ForegroundColor Yellow
+        Write-Host '       Keep only ONE GEMINI_API_KEY= line in swimiq\.env' -ForegroundColor Yellow
     }
     $flutterMap = Read-EnvMap $candidate
     $candidateKey = [string]$flutterMap['GEMINI_API_KEY']
@@ -182,7 +183,7 @@ if ($serviceOk) {
 $geminiOk = Is-Configured ([string]$map['GEMINI_API_KEY']) $geminiBad
 if ($geminiOk) {
     $prefix = if ($geminiKey.StartsWith('AQ.')) { 'AQ.' } elseif ($geminiKey.StartsWith('AIza')) { 'AIza' } else { 'custom' }
-    Write-Host "     GEMINI_API_KEY: set ($prefix… coaching report enabled)" -ForegroundColor Green
+    Write-Host "     GEMINI_API_KEY: set ($prefix... coaching report enabled)" -ForegroundColor Green
     if ($geminiSource) {
         Write-Host "     Copied coaching key from: $geminiSource" -ForegroundColor Green
     }
@@ -190,6 +191,6 @@ if ($geminiOk) {
 } else {
     Write-Host '     GEMINI_API_KEY: missing' -ForegroundColor Yellow
     Write-Host '     Put GEMINI_API_KEY=... in Desktop\StrokeIQ\swimiq\.env' -ForegroundColor Yellow
-    Write-Host '     (Google AI Studio key — AIza... or AQ.... both OK), then restart Elite' -ForegroundColor Yellow
+    Write-Host '     (Google AI Studio key - AIza... or AQ.... both OK), then restart Elite' -ForegroundColor Yellow
 }
 exit 0

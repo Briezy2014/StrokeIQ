@@ -106,7 +106,7 @@ try {
     Write-Host '[WARN] Could not update VIDEO_ENGINE_V2 in .env' -ForegroundColor Yellow
 }
 
-# START-SWIMIQ-WITH-ELITE already started Elite. Only ping health here — never kill/restart.
+# START-SWIMIQ-WITH-ELITE already started Elite. Only ping health here - never kill/restart.
 $eliteWait = Join-Path $PSScriptRoot 'start-elite-and-wait.ps1'
 if (Test-Path -LiteralPath $eliteWait) {
     Write-Host ''

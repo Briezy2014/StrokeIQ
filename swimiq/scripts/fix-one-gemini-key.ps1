@@ -1,5 +1,5 @@
 # Keep exactly ONE GEMINI_API_KEY line in swimiq\.env (the last real key wins).
-# Never throws hard — always exit 0/2/3 with a clear message.
+# Never throws hard - always exit 0/2/3 with a clear message.
 $ErrorActionPreference = 'Continue'
 $SwimIqDir = Split-Path $PSScriptRoot -Parent
 $EnvFile = Join-Path $SwimIqDir '.env'
