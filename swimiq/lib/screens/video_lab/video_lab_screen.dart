@@ -356,6 +356,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       return;
     }
 
+    if (!mounted) return;
     final consented = await AiDataConsentDialog.ensureGranted(context);
     if (!consented || !mounted) return;
 
