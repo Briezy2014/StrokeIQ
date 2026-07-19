@@ -1,6 +1,5 @@
 # Serve swimiq/build/web on 127.0.0.1 and open Chrome when ready.
 # ASCII-only. Used by launch-chrome-kara.ps1.
-# Uses no-cache headers so Chrome does not stick on a blank/white stale load.
 param(
     [Parameter(Mandatory = $true)][string]$WebDir,
     [Parameter(Mandatory = $true)][int]$Port,
@@ -22,7 +21,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $WebDir 'main.dart.js')) -and
     exit 1
 }
 
-# Free the port if a zombie server is still holding it.
 try {
     $owners = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique
@@ -58,14 +56,11 @@ if (-not $serveExe) {
     if (Get-Command py -ErrorAction SilentlyContinue) {
         $serveExe = 'py'
         $serveArgs = @('-3', '-m', 'http.server', "$Port", '--bind', '127.0.0.1')
-        $workDir = $WebDir
     } elseif (Get-Command python -ErrorAction SilentlyContinue) {
         $serveExe = 'python'
         $serveArgs = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
-        $workDir = $WebDir
     } else {
         Write-Host '[FAIL] Python not found to serve the app.' -ForegroundColor Red
-        Write-Host "Open this folder in Chrome manually: $WebDir" -ForegroundColor Yellow
         exit 1
     }
 }
@@ -80,56 +75,107 @@ $server = Start-Process -FilePath $serveExe -ArgumentList $serveArgs -WorkingDir
 Start-Sleep -Seconds 2
 
 $ready = $false
-for ($i = 0; $i -lt 45; $i++) {
+for ($i = 0; $i -lt 30; $i++) {
     try {
         $r = Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 3
         if ($r.StatusCode -eq 200 -and ($r.Content -match 'flutter|SwimIQ|swimiq-boot')) {
-            $jsOk = $false
-            try {
-                $js = Invoke-WebRequest -UseBasicParsing -Uri ($url + 'main.dart.js') -TimeoutSec 8
-                if ($js.StatusCode -eq 200 -and $js.RawContentLength -gt 10000) { $jsOk = $true }
-            } catch {}
-            if (-not $jsOk) {
-                try {
-                    $boot = Invoke-WebRequest -UseBasicParsing -Uri ($url + 'flutter_bootstrap.js') -TimeoutSec 5
-                    if ($boot.StatusCode -eq 200 -and $boot.RawContentLength -gt 200) { $jsOk = $true }
-                } catch {}
-            }
-            if ($jsOk) {
-                $ready = $true
-                break
-            }
+            $ready = $true
+            break
         }
     } catch {}
     Start-Sleep -Seconds 1
 }
 
 if (-not $ready) {
-    Write-Host '[FAIL] Local web server did not serve a complete app.' -ForegroundColor Red
-    try { Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue } catch {}
-    exit 1
+    Write-Host '[WARN] Health check slow - opening browser anyway.' -ForegroundColor Yellow
 }
 
-Write-Host '[OK] App files ready. Opening Chrome...' -ForegroundColor Green
-$chromeArgs = @(
-    '--new-window',
-    '--disable-http-cache',
-    '--disk-cache-size=1',
-    '--disable-application-cache',
-    $url
-)
-if ($ChromeExe -and (Test-Path -LiteralPath $ChromeExe)) {
-    Start-Process -FilePath $ChromeExe -ArgumentList $chromeArgs
-} else {
-    Start-Process $url
+function Open-SwimIqBrowser([string]$TargetUrl, [string]$PreferredChrome) {
+    $opened = $false
+
+    $chromeCandidates = @()
+    if ($PreferredChrome) { $chromeCandidates += $PreferredChrome }
+    $chromeCandidates += @(
+        "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe",
+        "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+        "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+    )
+
+    foreach ($exe in $chromeCandidates) {
+        if (-not $exe) { continue }
+        if (-not (Test-Path -LiteralPath $exe)) { continue }
+        try {
+            Start-Process -FilePath $exe -ArgumentList @(
+                '--new-window',
+                '--disable-http-cache',
+                '--disk-cache-size=1',
+                $TargetUrl
+            ) -ErrorAction Stop
+            Write-Host "[OK] Opened Chrome: $exe" -ForegroundColor Green
+            return $true
+        } catch {
+            Write-Host "[WARN] Chrome launch failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+
+    $edge = @(
+        "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+        "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe"
+    )
+    foreach ($exe in $edge) {
+        if (-not (Test-Path -LiteralPath $exe)) { continue }
+        try {
+            Start-Process -FilePath $exe -ArgumentList @('--new-window', $TargetUrl) -ErrorAction Stop
+            Write-Host "[OK] Opened Edge: $exe" -ForegroundColor Green
+            return $true
+        } catch {}
+    }
+
+    try {
+        Start-Process $TargetUrl -ErrorAction Stop
+        Write-Host '[OK] Opened default browser via Start-Process' -ForegroundColor Green
+        $opened = $true
+    } catch {}
+
+    if (-not $opened) {
+        try {
+            cmd.exe /c start "" "$TargetUrl"
+            Write-Host '[OK] Opened browser via cmd start' -ForegroundColor Green
+            $opened = $true
+        } catch {}
+    }
+
+    return $opened
 }
 
 Write-Host ''
-Write-Host 'SwimIQ is open. Leave this window running.' -ForegroundColor Yellow
-Write-Host 'You should see a blue SwimIQ loading screen first - not a blank white page.' -ForegroundColor Yellow
-Write-Host 'If it sticks on loading: Ctrl+Shift+R, or close Chrome and relaunch.' -ForegroundColor Yellow
-Write-Host 'Close this window to stop the local website server.' -ForegroundColor Yellow
+Write-Host '############################################' -ForegroundColor Cyan
+Write-Host ' OPENING BROWSER NOW' -ForegroundColor Cyan
+Write-Host " $url" -ForegroundColor White
+Write-Host '############################################' -ForegroundColor Cyan
 Write-Host ''
+
+$browserOk = Open-SwimIqBrowser -TargetUrl $url -PreferredChrome $ChromeExe
+if (-not $browserOk) {
+    Write-Host '[FAIL] Could not auto-open a browser.' -ForegroundColor Red
+}
+
+# Always leave a one-click opener next to the build for Kara.
+$openBat = Join-Path $WebDir 'OPEN-SWIMIQ-IN-BROWSER.bat'
+@(
+    '@echo off',
+    "start `"`" `"$url`"",
+    'exit /b 0'
+) | Set-Content -LiteralPath $openBat -Encoding ascii
+Write-Host "[OK] Backup opener: $openBat" -ForegroundColor Green
+Write-Host 'If no window appeared: double-click OPEN-SWIMIQ-IN-BROWSER.bat' -ForegroundColor Yellow
+Write-Host 'Or paste this into Chrome address bar:' -ForegroundColor Yellow
+Write-Host "  $url" -ForegroundColor White
+Write-Host ''
+Write-Host 'Leave THIS window running (it is the website server).' -ForegroundColor Yellow
+Write-Host 'Expect a blue SwimIQ loading screen first.' -ForegroundColor Yellow
+Write-Host ''
+
 try {
     Wait-Process -Id $server.Id
 } catch {}

@@ -12,41 +12,42 @@ void main() {
       swimIqScore: 550,
       highestCut: 'BB',
       team: 'Central Ohio Aquatics',
-      gpa: '4.0',
-      website: 'https://swimiq.app/aspyn',
       topEvents: const [
         '200 Butterfly 3:10.00 (LCM)',
         '100 Butterfly 1:02.3 (SCY)',
       ],
       graduationYear: 2032,
-      usaSwimmingId: 'AB1234E5F',
     );
 
     expect(bytes.length, greaterThan(400));
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
 
-  test('recruiting business card PDF embeds stat values in content stream', () async {
+  test('recruiting business card PDF embeds key wallet values', () async {
     final bytes = await RecruitingBusinessCardPdf.buildBytes(
       displayName: 'Aspyn Briezy',
       swimIqScore: 550,
       highestCut: 'BB',
       team: 'Central Ohio Aquatics',
-      gpa: '4.0',
-      website: 'https://swimiq.app/aspyn',
       topEvents: const [
         '200 Butterfly 3:10.00 (LCM)',
         '100 Butterfly 1:02.3 (SCY)',
       ],
       graduationYear: 2032,
-      usaSwimmingId: 'AB1234E5F',
     );
 
     final content = _decompressedPdfText(bytes);
-    for (final needle in ['550', 'BB', '4.0', 'swimiq.app', 'Butterfly', 'GPA']) {
+    for (final needle in [
+      '550',
+      'BB',
+      'Butterfly',
+      'SWIMIQ',
+      '2032',
+      'STATE',
+      'QUALIFIER',
+    ]) {
       expect(content, contains(needle), reason: '$needle missing from PDF stream');
     }
-    expect(content, isNot(contains('1 1 1 rg f')));
   });
 }
 

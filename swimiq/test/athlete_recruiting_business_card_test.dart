@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/widgets/athlete_recruiting_business_card.dart';
 
 void main() {
-  testWidgets('AthleteRecruitingBusinessCard shows recruiting fields', (tester) async {
+  testWidgets('AthleteRecruitingBusinessCard shows wallet recruiting fields', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -28,17 +30,18 @@ void main() {
     );
 
     expect(find.text('Aspyn Briezy'), findsOneWidget);
-    expect(find.text('SwimIQ Score'), findsOneWidget);
-    expect(find.textContaining('USA: AB1234E5F'), findsOneWidget);
-    expect(find.text('Central Ohio Aquatics'), findsOneWidget);
+    expect(find.text('SWIMIQ'), findsOneWidget);
     expect(find.text('550'), findsOneWidget);
-    expect(find.textContaining('Highest cut: BB'), findsOneWidget);
-    expect(find.text('3.85'), findsOneWidget);
-    expect(find.text('https://swimiq.app/aspyn'), findsOneWidget);
+    expect(find.textContaining('Class of 2032'), findsOneWidget);
+    expect(find.textContaining('Central Ohio Aquatics'), findsOneWidget);
+    expect(find.text('BB'), findsOneWidget);
     expect(find.textContaining('50 Butterfly'), findsOneWidget);
+    expect(find.textContaining('STATE QUALIFIER'), findsOneWidget);
   });
 
-  testWidgets('AthleteRecruitingBusinessCard shows upload photo action', (tester) async {
+  testWidgets('AthleteRecruitingBusinessCard shows upload photo action', (
+    tester,
+  ) async {
     var tapped = false;
     await tester.pumpWidget(
       MaterialApp(
@@ -59,8 +62,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Upload photo'), findsOneWidget);
-    await tester.tap(find.text('Upload photo'));
+    expect(find.text('Add profile photo'), findsOneWidget);
+    await tester.tap(find.text('Add profile photo'));
     expect(tapped, isTrue);
   });
 }

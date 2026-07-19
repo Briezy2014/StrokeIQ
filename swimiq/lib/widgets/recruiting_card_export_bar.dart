@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:printing/printing.dart';
 
 import '../core/recruiting/recruiting_business_card_pdf.dart';
@@ -12,24 +13,26 @@ class RecruitingCardSnapshot {
     required this.swimIqScore,
     required this.highestCut,
     required this.team,
-    required this.gpa,
-    required this.website,
     required this.topEvents,
     required this.graduationYear,
-    required this.usaSwimmingId,
     required this.fileSafeName,
+    this.gpa,
+    this.website,
+    this.usaSwimmingId,
+    this.profilePhotoUrl,
   });
 
   final String displayName;
   final int swimIqScore;
   final String highestCut;
   final String? team;
-  final String? gpa;
-  final String? website;
   final List<String> topEvents;
   final int? graduationYear;
-  final String? usaSwimmingId;
   final String fileSafeName;
+  final String? gpa;
+  final String? website;
+  final String? usaSwimmingId;
+  final String? profilePhotoUrl;
 }
 
 class RecruitingCardExportBar extends StatelessWidget {
@@ -40,17 +43,35 @@ class RecruitingCardExportBar extends StatelessWidget {
 
   final RecruitingCardSnapshot snapshot;
 
+  Future<Uint8List?> _loadPhotoBytes() async {
+    final url = snapshot.profilePhotoUrl?.trim();
+    if (url == null || url.isEmpty) return null;
+    try {
+      final response = await http.get(Uri.parse(url)).timeout(
+            const Duration(seconds: 8),
+          );
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300 &&
+          response.bodyBytes.isNotEmpty) {
+        return response.bodyBytes;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<Uint8List> _pdfBytes() async {
+    final photo = await _loadPhotoBytes();
     final bytes = await RecruitingBusinessCardPdf.buildBytes(
       displayName: snapshot.displayName,
       swimIqScore: snapshot.swimIqScore,
       highestCut: snapshot.highestCut,
       team: snapshot.team,
-      gpa: snapshot.gpa,
-      website: snapshot.website,
       topEvents: snapshot.topEvents,
       graduationYear: snapshot.graduationYear,
+      gpa: snapshot.gpa,
+      website: snapshot.website,
       usaSwimmingId: snapshot.usaSwimmingId,
+      profilePhotoBytes: photo,
     );
     return Uint8List.fromList(bytes);
   }
@@ -65,7 +86,9 @@ class RecruitingCardExportBar extends StatelessWidget {
       );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recruiting card PDF ready — save or share.')),
+        const SnackBar(
+          content: Text('Wallet recruiting card PDF ready — save or share.'),
+        ),
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -96,16 +119,16 @@ class RecruitingCardExportBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Your recruiting card',
+          'Wallet recruiting card',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppColors.primaryDeep,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 0.2,
               ),
         ),
         const SizedBox(height: 4),
         Text(
-          'A wallet-sized SwimIQ card coaches can keep — export PDF or print.',
+          '3.5″ × 2″ coach card — photo, top times, cut, SwimIQ Score. '
+          'Print, cut, and hand it to a college coach.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textDark.withValues(alpha: 0.78),
                 height: 1.35,
@@ -117,8 +140,8 @@ class RecruitingCardExportBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _exportPdf(context),
-                icon: const Icon(Icons.ios_share_outlined, size: 18),
-                label: const Text('Share / Export'),
+                icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                label: const Text('Export PDF'),
               ),
             ),
             const SizedBox(width: 8),
@@ -130,14 +153,6 @@ class RecruitingCardExportBar extends StatelessWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Tip: add a headshot, team, GPA, and top events below so the card looks game-day ready.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade700,
-                height: 1.3,
-              ),
         ),
       ],
     );

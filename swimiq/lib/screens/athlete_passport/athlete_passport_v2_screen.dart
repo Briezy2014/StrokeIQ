@@ -339,7 +339,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             const SwimIqPageHero(
               title: 'Athlete Passport',
               subtitle:
-                  'Your coach-ready recruiting card — share, print, and stand out',
+                  'Wallet recruiting card coaches remember — print, cut, hand off',
             ),
             const SizedBox(height: 12),
             Builder(
@@ -365,6 +365,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         topEvents: topEvents,
                         graduationYear: profile?.graduationYear,
                         usaSwimmingId: profile?.usaSwimmingId,
+                        profilePhotoUrl: profile?.profilePhotoUrl,
                         fileSafeName:
                             swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
                       ),
