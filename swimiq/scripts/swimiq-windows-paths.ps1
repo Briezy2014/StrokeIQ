@@ -20,7 +20,7 @@ function Get-PhysicalRootPath {
     if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
 
     $normalized = $Path.TrimEnd('\')
-    if ($normalized -match '^([A-Z]):\\?(.*)$') {
+    if ($normalized -match '^([A-Z]):\\-(.*)$') {
         $letter = $matches[1]
         $rest = $matches[2]
         $subst = Get-SubstMapping
