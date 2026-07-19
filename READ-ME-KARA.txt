@@ -1,11 +1,14 @@
-SwimIQ — morning path (Desktop\StrokeIQ)
+SwimIQ — use files that are ALREADY in Desktop\StrokeIQ
 
-Double-click:  START-SWIMIQ-WITH-ELITE.bat
+Gemini / coaching / analysis:
+
+  Double-click:  START-SWIMIQ-WITH-ELITE.bat
+
+If .env has TWO GEMINI_API_KEY lines, delete one in Notepad
+so only ONE GEMINI_API_KEY= line remains, then run the bat above.
 
 Leave the Elite black window OPEN.
 Use localhost / 127.0.0.1 — not swimiqapp.com.
 
-Short clips should finish in about 30–60 seconds with a full
-coaching breakdown (strengths, fixes, drills, next-race cues).
-
-Read: GOOD-MORNING-KARA.txt
+Do NOT hunt for FIX-ONE-GEMINI-KEY.bat or FIX-ANALYSIS-NOW.bat
+unless you already ran an update — those names are aliases only.
