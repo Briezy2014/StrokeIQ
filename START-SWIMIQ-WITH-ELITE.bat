@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 title SwimIQ + Elite Video Lab
 cd /d "%~dp0"
 
@@ -11,12 +11,10 @@ echo ############################################################
 echo.
 echo This one file:
 echo   1. Updates from GitHub (best effort)
-echo   2. Clears old Elite on port 8080
+echo   2. Fixes duplicate GEMINI_API_KEY lines (keep ONE only)
 echo   3. Starts Elite black window (LEAVE IT OPEN)
 echo   4. Waits until http://127.0.0.1:8080 answers
 echo   5. Opens SwimIQ in Chrome on localhost
-echo.
-echo If you saw a black banner about 127.0.0.1:8080 - this fixes it.
 echo.
 
 echo [1/5] Updating folder from GitHub...
@@ -32,15 +30,18 @@ if errorlevel 1 (
 echo [OK] Ready to start Elite.
 echo.
 
-REM If .env has two GEMINI_API_KEY lines, keep only one (last wins).
-if exist "%CD%\swimiq\scripts\fix-one-gemini-key.ps1" (
-  findstr /R /C:"^GEMINI_API_KEY=" "%CD%\swimiq\.env" 2>nul | find /C /V "" > "%TEMP%\swimiq_gemini_count.txt"
-  set /p GEMINI_LINES=<"%TEMP%\swimiq_gemini_count.txt"
-  if not "%GEMINI_LINES%"=="" if not "%GEMINI_LINES%"=="0" if not "%GEMINI_LINES%"=="1" (
-    echo [FIX] Multiple GEMINI_API_KEY lines found — keeping only one...
+echo [2/5] Checking Gemini key - MUST be exactly ONE GEMINI_API_KEY line...
+if exist "%CD%\swimiq\.env" (
+  if exist "%CD%\swimiq\scripts\fix-one-gemini-key.ps1" (
     powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\fix-one-gemini-key.ps1"
+  ) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+      "$p='%~dp0swimiq\.env'; $lines=Get-Content -LiteralPath $p; $keys=@(); $out=New-Object System.Collections.Generic.List[string]; foreach($l in $lines){ if($l -match '^\s*GEMINI_API_KEY\s*='){ $keys+=$l } else { [void]$out.Add($l) } }; if($keys.Count -gt 1){ Write-Host ('[FIX] Found '+$keys.Count+' GEMINI_API_KEY lines - keeping the LAST one only') -ForegroundColor Yellow; $v=($keys[-1] -replace '^\s*GEMINI_API_KEY\s*=\s*','').Trim().Trim('\"').Trim(\"'\"); [void]$out.Add('GEMINI_API_KEY='+$v); Set-Content -LiteralPath $p -Value $out.ToArray() -Encoding ascii } elseif($keys.Count -eq 1){ Write-Host '[OK] One GEMINI_API_KEY line' -ForegroundColor Green } else { Write-Host '[WARN] No GEMINI_API_KEY line yet' -ForegroundColor Yellow }"
   )
+) else (
+  echo [WARN] Missing swimiq\.env
 )
+echo.
 
 if not exist "%CD%\swimiq\scripts\start-elite-and-wait.ps1" (
   echo [FAIL] Missing swimiq\scripts\start-elite-and-wait.ps1
@@ -49,13 +50,13 @@ if not exist "%CD%\swimiq\scripts\start-elite-and-wait.ps1" (
   exit /b 1
 )
 
-echo [2/5] Clearing old Elite on port 8080...
+echo [3/5] Clearing old Elite on port 8080...
 if exist "%CD%\swimiq\scripts\kill-elite-port.ps1" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\kill-elite-port.ps1"
 )
 echo.
 
-echo [3/5] Starting Elite server...
+echo [4/5] Starting Elite server...
 echo A NEW black window titled "Elite Video Lab" will open.
 echo DO NOT CLOSE THAT WINDOW.
 echo.
@@ -65,16 +66,12 @@ if errorlevel 1 (
   echo [FAIL] Elite is not answering on http://127.0.0.1:8080
   echo Look at the Elite black window for the error.
   echo.
-  echo If storage keys missing: run FIX-STORAGE.bat then this file again.
-  echo If FFmpeg missing: run RESTART-ELITE-AFTER-FFMPEG.bat then this file again.
-  echo.
   pause
   exit /b 1
 )
 
 echo.
-echo [4/5] Elite is up on 127.0.0.1:8080
-echo [5/5] Opening Chrome on localhost (NOT swimiqapp.com)...
+echo [5/5] Elite is up. Opening Chrome on localhost (NOT swimiqapp.com)...
 echo Keep BOTH windows open: Elite black window + Chrome.
 echo.
 if not exist "%CD%\swimiq\LAUNCH-CHROME.bat" (
