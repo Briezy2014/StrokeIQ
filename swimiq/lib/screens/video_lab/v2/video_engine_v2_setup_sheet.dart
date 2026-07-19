@@ -6,6 +6,7 @@ import '../../../core/services/video_engine_v2_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/video_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/swimmer_data_provider.dart';
 import 'video_job_progress_screen.dart';
 
 /// Bottom sheet / page to confirm stroke/distance/course and start V2 analysis.
@@ -100,11 +101,21 @@ class _VideoEngineV2SetupSheetState
       }
 
       final targetTrack = _targetTrackController.text.trim();
+      final swimmerKey = widget.swimmerKey ?? widget.video.swimmer;
+      final swimmerData = ref.read(swimmerDataProvider).value;
+      final resolvedName = widget.displayName?.trim().isNotEmpty == true
+          ? widget.displayName!.trim()
+          : swimmerData?.profile
+                  ?.recruitingCardName(fallbackSwimmerKey: swimmerKey) ??
+              (swimmerKey != null
+                  ? swimmerData?.displayName(swimmerKey)
+                  : null) ??
+              swimmerKey;
       final job = await service.createJob(
         videoId: videoId,
         storagePath: widget.video.storagePath,
-        swimmerKey: widget.swimmerKey ?? widget.video.swimmer,
-        displayName: widget.displayName ?? widget.video.swimmer,
+        swimmerKey: swimmerKey,
+        displayName: resolvedName,
         stroke: _strokeController.text.trim(),
         distanceM: int.tryParse(_distanceController.text.trim()),
         course: _courseController.text.trim(),

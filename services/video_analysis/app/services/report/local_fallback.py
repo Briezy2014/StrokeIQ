@@ -24,7 +24,11 @@ def build_local_tracking_report(context: ReportContext) -> CoachingReportBody:
     distance = context.race_distance_m
     distance_bit = f"{distance} " if distance else ""
     athlete = (context.athlete_display_name or "").strip()
-    name = athlete if athlete and athlete.lower() != "demo" else "you"
+    # Prefer a real athlete name for parents/coaches; "you" only as last resort.
+    if athlete and athlete.lower() not in {"demo", "you", "athlete"}:
+        name = athlete.split()[0]
+    else:
+        name = "you"
 
     pack = _stroke_pack(stroke_key)
 

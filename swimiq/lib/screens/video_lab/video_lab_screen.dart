@@ -232,11 +232,19 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         return;
       }
 
+      final swimmerKey = swimmer ?? video.swimmer;
+      final swimmerData = ref.read(swimmerDataProvider).value;
+      final resolvedName = swimmerData?.profile
+              ?.recruitingCardName(fallbackSwimmerKey: swimmerKey) ??
+          (swimmerKey != null
+              ? swimmerData?.displayName(swimmerKey)
+              : null) ??
+          swimmerKey;
       final job = await service.createJob(
         videoId: videoId,
         storagePath: video.storagePath,
-        swimmerKey: swimmer ?? video.swimmer,
-        displayName: swimmer ?? video.swimmer,
+        swimmerKey: swimmerKey,
+        displayName: resolvedName,
         stroke: video.stroke ?? _strokeController.text.trim(),
         distanceM: video.distanceMeters ??
             int.tryParse(_distanceController.text.trim()),

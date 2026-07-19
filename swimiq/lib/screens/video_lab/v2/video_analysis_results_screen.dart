@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/video_analytics_service.dart';
 import '../../../core/services/video_engine_v2_service.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../data/models/video_engine_v2/video_engine_v2_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/swimmer_data_provider.dart';
+import '../../../widgets/coaching_report_view.dart';
 import '../../../widgets/swimiq_ui.dart';
 import 'video_job_progress_screen.dart';
 
@@ -85,11 +86,36 @@ class _VideoAnalysisResultsScreenState
     }
   }
 
+  String get _athleteName {
+    final swimmer = ref.watch(activeSwimmerProvider);
+    final data = ref.watch(swimmerDataProvider).value;
+    final fromResults = _results?.athlete?['display_name']?.toString().trim();
+    if (fromResults != null &&
+        fromResults.isNotEmpty &&
+        fromResults.toLowerCase() != 'demo' &&
+        fromResults.toLowerCase() != 'you') {
+      return fromResults;
+    }
+    if (data?.profile != null) {
+      return data!.profile!.recruitingCardName(fallbackSwimmerKey: swimmer);
+    }
+    if (swimmer != null &&
+        swimmer.trim().isNotEmpty &&
+        swimmer.toLowerCase() != 'demo') {
+      return data?.displayName(swimmer) ?? swimmer;
+    }
+    return 'Athlete';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final name = _athleteName;
+    final title = name == 'Athlete' || name == 'Add athlete name'
+        ? 'Your coaching report'
+        : "$name's coaching report";
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your coaching report'),
+        title: Text(title),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -98,11 +124,11 @@ class _VideoAnalysisResultsScreenState
           ),
         ],
       ),
-      body: _buildBody(),
+      body: _buildBody(athleteName: name),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody({required String athleteName}) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -181,18 +207,25 @@ class _VideoAnalysisResultsScreenState
       );
     }
 
-    return _SwimmerReport(results: results, onRetry: _retry, retrying: _retrying);
+    return _SwimmerReport(
+      results: results,
+      athleteName: athleteName,
+      onRetry: _retry,
+      retrying: _retrying,
+    );
   }
 }
 
 class _SwimmerReport extends StatelessWidget {
   const _SwimmerReport({
     required this.results,
+    required this.athleteName,
     required this.onRetry,
     required this.retrying,
   });
 
   final AnalysisResults results;
+  final String athleteName;
   final VoidCallback onRetry;
   final bool retrying;
 
@@ -228,122 +261,13 @@ class _SwimmerReport extends StatelessWidget {
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Do not show technical "limitations" banners to swimmers/parents/coaches.
-        // Only warn when the analysis truly failed and notes may be incomplete.
-        if (results.isFailed) ...[
-          Card(
-            color: const Color(0xFFFFF7ED),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Color(0xFFC2410C),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'We could not finish a full coaching report for this clip. '
-                      'Try again with a clear side-view video of the whole race.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            height: 1.35,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        if (hasSummary) ...[
-          Text(report.summary!, style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-                color: AppColors.primaryDark,
-              )),
-          const SizedBox(height: 20),
-        ],
-        if (hasStrengths) ...[
-          Text('Keep doing this', style: _h(context)),
-          const SizedBox(height: 8),
-          ...report.strengths.map(_bullet),
-          const SizedBox(height: 20),
-        ],
-        if (hasImprovements) ...[
-          Text('Fix this next', style: _h(context)),
-          const SizedBox(height: 8),
-          ...report.priorityImprovements.map((p) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    p.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                    ),
-                  ),
-                  if (p.drills.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Dryland',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryDark,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    ...p.drills.map(_bullet),
-                  ],
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-        ],
-        if (hasRace) ...[
-          Text('Next race', style: _h(context)),
-          const SizedBox(height: 8),
-          ...report.raceRecommendations.map(_bullet),
-        ],
-        if (results.isFailed) ...[
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: retrying ? null : onRetry,
-            child: Text(retrying ? 'Retrying…' : 'Retry analysis'),
-          ),
-        ],
-      ],
+    return CoachingReportView(
+      results: results,
+      athleteName: athleteName,
+      onRetry: onRetry,
+      retrying: retrying,
     );
   }
-
-  TextStyle? _h(BuildContext context) =>
-      Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: AppColors.primaryDark,
-          );
-
-  Widget _bullet(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('• '),
-            Expanded(
-              child: Text(text, style: const TextStyle(height: 1.35)),
-            ),
-          ],
-        ),
-      );
 }
 
 String? _geminiFailureCodeFromResults(AnalysisResults results) {
