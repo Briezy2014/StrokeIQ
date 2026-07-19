@@ -190,7 +190,8 @@ if (Test-Path -LiteralPath $killWeb) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
 }
 
-Write-Host 'Starting Chrome - wait 2-3 minutes...' -ForegroundColor Cyan
+Write-Host 'Starting app on 127.0.0.1 - wait 2-3 minutes...' -ForegroundColor Cyan
+Write-Host 'CLOSE any blank Chrome tabs that say 127.0.0.1 if they appear stuck.' -ForegroundColor Yellow
 Write-Host ''
 
 & $paths.FlutterBat pub get
@@ -199,38 +200,98 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-# Dedicated Chrome profile so session restore cannot reopen swimiqapp.com.
-$chromeProfile = 'C:\SwimIQChrome'
-New-Item -ItemType Directory -Force -Path $chromeProfile | Out-Null
+function Find-ChromeExe {
+    $candidates = @(
+        "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe",
+        "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+        "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path -LiteralPath $c) { return $c }
+    }
+    $cmd = Get-Command chrome -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+    return $null
+}
 
-# Force a clean localhost URL so Chrome does not reopen swimiqapp.com.
-# Disable HTTP cache so an old triangle/favicon cannot stick.
-# Try a few ports if Windows still holds the last one.
+function Open-LocalApp([string]$url) {
+    $chrome = Find-ChromeExe
+    if ($chrome) {
+        # Fresh window on localhost only - do not reuse swimiqapp.com session.
+        Start-Process -FilePath $chrome -ArgumentList @(
+            '--new-window',
+            '--disable-http-cache',
+            $url
+        )
+        return $true
+    }
+    try {
+        Start-Process $url
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+# Most reliable on Windows: Flutter serves the app, WE open Chrome.
+# Avoid --user-data-dir / debug-attach flags that cause "Failed to launch browser".
+$chromeExe = Find-ChromeExe
 $webPorts = @(7357, 7358, 7359, 7360)
 $code = 1
 foreach ($webPort in $webPorts) {
-    Write-Host ("Trying http://127.0.0.1:{0} ..." -f $webPort) -ForegroundColor Cyan
-    & $paths.FlutterBat run -d chrome `
-        --web-hostname=127.0.0.1 `
-        --web-port=$webPort `
-        --web-browser-flag=--disable-http-cache `
-        --web-browser-flag=--new-window `
-        "--web-browser-flag=--user-data-dir=$chromeProfile" `
-        --dart-define-from-file=$envFile
-    $code = $LASTEXITCODE
-    if ($code -eq 0) { break }
-    # 10048 / bind failure: clear again and try next port
-    Write-Host ("Port {0} failed (code {1}). Trying next..." -f $webPort, $code) -ForegroundColor Yellow
+    $url = "http://127.0.0.1:$webPort"
+    Write-Host ("Serving app at {0} ..." -f $url) -ForegroundColor Cyan
     if (Test-Path -LiteralPath $killWeb) {
         & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
     }
+
+    # Open the browser a few seconds after the server starts compiling.
+    $opener = Start-Job -ScriptBlock {
+        param($u, $chromePath)
+        Start-Sleep -Seconds 14
+        if ($chromePath -and (Test-Path -LiteralPath $chromePath)) {
+            Start-Process -FilePath $chromePath -ArgumentList @('--new-window', '--disable-http-cache', $u)
+        } else {
+            Start-Process $u
+        }
+    } -ArgumentList $url, $chromeExe
+
+    & $paths.FlutterBat run -d web-server `
+        --web-hostname=127.0.0.1 `
+        --web-port=$webPort `
+        --dart-define-from-file=$envFile
+    $code = $LASTEXITCODE
+
+    try { Stop-Job $opener -Force -ErrorAction SilentlyContinue } catch {}
+    try { Remove-Job $opener -Force -ErrorAction SilentlyContinue } catch {}
+
+    if ($code -eq 0) { break }
+    Write-Host ("Port {0} failed (code {1}). Trying next..." -f $webPort, $code) -ForegroundColor Yellow
     Start-Sleep -Seconds 1
 }
+
+# Last fallback: let Flutter drive Chrome itself (no custom profile flags).
+if ($code -ne 0) {
+    Write-Host 'Trying Flutter -> Chrome direct launch...' -ForegroundColor Yellow
+    if (Test-Path -LiteralPath $killWeb) {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $killWeb
+    }
+    & $paths.FlutterBat run -d chrome `
+        --web-hostname=127.0.0.1 `
+        --web-port=7357 `
+        --dart-define-from-file=$envFile
+    $code = $LASTEXITCODE
+}
+
 Write-Host ''
 if ($code -ne 0) {
-    Write-Host "Launch failed (code $code)" -ForegroundColor Red
+    Write-Host 'Launch failed.' -ForegroundColor Red
+    Write-Host 'Do this:' -ForegroundColor Yellow
+    Write-Host '  1) Close EVERY Chrome window' -ForegroundColor Yellow
+    Write-Host '  2) Run START-SWIMIQ-WITH-ELITE.bat again' -ForegroundColor Yellow
+    Write-Host '  3) Address bar must say 127.0.0.1  (not swimiqapp.com)' -ForegroundColor Yellow
 } else {
-    Write-Host 'Chrome session ended.' -ForegroundColor Green
+    Write-Host 'App session ended.' -ForegroundColor Green
 }
 Read-Host 'Press Enter to close'
 exit $code
