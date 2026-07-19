@@ -43,6 +43,11 @@ void main() {
     for (final needle in [
       '550',
       'BB',
+      'HIGHEST',
+      'USA',
+      'CUT',
+      'Motivational',
+      'standard',
       'Butterfly',
       'SWIMIQ',
       '2032',

@@ -53,11 +53,8 @@ class RecruitingBusinessCardPdf {
     final gradLine = graduationYear != null
         ? 'Class of $graduationYear'
         : 'Grad year';
-    final cutLine = _pdfText(
-      highestCut.trim().isNotEmpty && !highestCut.toLowerCase().contains('log')
-          ? highestCut.trim()
-          : 'Cut pending',
-    );
+    final cutValue = _cutDisplayValue(highestCut);
+    final cutPending = cutValue == '-';
     final scoreText = swimIqScore > 0 ? '$swimIqScore' : '-';
     final nameLine = _pdfText(
       displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim(),
@@ -71,6 +68,8 @@ class RecruitingBusinessCardPdf {
     final phoneLine = _pdfText(
       phone?.trim().isNotEmpty == true ? phone!.trim() : 'Add phone',
     );
+    final gpaLine =
+        gpa?.trim().isNotEmpty == true ? _pdfText(gpa!.trim()) : null;
 
     pw.ImageProvider? photo;
     if (profilePhotoBytes != null && profilePhotoBytes.isNotEmpty) {
@@ -133,105 +132,101 @@ class RecruitingBusinessCardPdf {
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 5),
-                pw.Expanded(
-                  child: pw.Row(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Container(
-                        width: 42,
-                        height: 42,
-                        decoration: pw.BoxDecoration(
-                          shape: pw.BoxShape.circle,
-                          color: _panel,
-                          border: pw.Border.all(
-                            color: PdfColors.white,
-                            width: 1.1,
-                          ),
+                pw.SizedBox(height: 4),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(
+                      width: 38,
+                      height: 38,
+                      decoration: pw.BoxDecoration(
+                        shape: pw.BoxShape.circle,
+                        color: _panel,
+                        border: pw.Border.all(
+                          color: PdfColors.white,
+                          width: 1.1,
                         ),
-                        alignment: pw.Alignment.center,
-                        child: photo != null
-                            ? pw.ClipOval(
-                                child: pw.Image(
-                                  photo,
-                                  width: 42,
-                                  height: 42,
-                                  fit: pw.BoxFit.cover,
-                                ),
-                              )
-                            : pw.Text(
-                                'PHOTO',
-                                style: pw.TextStyle(
-                                  color: _muted,
-                                  fontSize: 5.5,
-                                  font: pw.Font.helveticaBold(),
-                                ),
-                              ),
                       ),
-                      pw.SizedBox(width: 7),
-                      pw.Expanded(
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text(
-                              nameLine,
-                              maxLines: 1,
-                              style: pw.TextStyle(
-                                color: PdfColors.white,
-                                fontSize: 11,
-                                font: pw.Font.helveticaBold(),
+                      alignment: pw.Alignment.center,
+                      child: photo != null
+                          ? pw.ClipOval(
+                              child: pw.Image(
+                                photo,
+                                width: 38,
+                                height: 38,
+                                fit: pw.BoxFit.cover,
                               ),
-                            ),
-                            pw.Text(
-                              '$gradLine  |  $teamLine',
-                              maxLines: 1,
+                            )
+                          : pw.Text(
+                              'PHOTO',
                               style: pw.TextStyle(
                                 color: _muted,
-                                fontSize: 6.5,
+                                fontSize: 5.5,
                                 font: pw.Font.helveticaBold(),
                               ),
                             ),
-                            pw.SizedBox(height: 2),
-                            pw.Row(
-                              crossAxisAlignment: pw.CrossAxisAlignment.end,
-                              children: [
-                                pw.Text(
-                                  scoreText,
+                    ),
+                    pw.SizedBox(width: 6),
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            nameLine,
+                            maxLines: 1,
+                            style: pw.TextStyle(
+                              color: PdfColors.white,
+                              fontSize: 11,
+                              font: pw.Font.helveticaBold(),
+                            ),
+                          ),
+                          pw.Text(
+                            '$gradLine  |  $teamLine',
+                            maxLines: 1,
+                            style: pw.TextStyle(
+                              color: _muted,
+                              fontSize: 6.5,
+                              font: pw.Font.helveticaBold(),
+                            ),
+                          ),
+                          pw.SizedBox(height: 2),
+                          pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.end,
+                            children: [
+                              pw.Text(
+                                scoreText,
+                                style: pw.TextStyle(
+                                  color: PdfColors.white,
+                                  fontSize: 14,
+                                  font: pw.Font.helveticaBold(),
+                                  height: 1,
+                                ),
+                              ),
+                              pw.SizedBox(width: 3),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.only(bottom: 1),
+                                child: pw.Text(
+                                  'SwimIQ Score',
                                   style: pw.TextStyle(
                                     color: PdfColors.white,
-                                    fontSize: 15,
+                                    fontSize: 5.5,
                                     font: pw.Font.helveticaBold(),
-                                    height: 1,
                                   ),
                                 ),
-                                pw.SizedBox(width: 3),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.only(bottom: 1),
-                                  child: pw.Text(
-                                    'SwimIQ Score',
-                                    style: pw.TextStyle(
-                                      color: PdfColors.white,
-                                      fontSize: 5.5,
-                                      font: pw.Font.helveticaBold(),
-                                    ),
-                                  ),
-                                ),
-                                pw.Spacer(),
+                              ),
+                              if (gpaLine != null) ...[
+                                pw.SizedBox(width: 5),
                                 pw.Container(
                                   padding: const pw.EdgeInsets.symmetric(
                                     horizontal: 4,
-                                    vertical: 2,
+                                    vertical: 1.5,
                                   ),
                                   decoration: pw.BoxDecoration(
                                     color: _panel,
                                     borderRadius: pw.BorderRadius.circular(3),
-                                    border: pw.Border.all(
-                                      color: _accent,
-                                      width: 0.5,
-                                    ),
                                   ),
                                   child: pw.Text(
-                                    cutLine,
+                                    'GPA $gpaLine',
                                     style: pw.TextStyle(
                                       color: PdfColors.white,
                                       fontSize: 6,
@@ -240,8 +235,23 @@ class RecruitingBusinessCardPdf {
                                   ),
                                 ),
                               ],
-                            ),
-                            pw.SizedBox(height: 2),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 4),
+                pw.Expanded(
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                    children: [
+                      pw.Expanded(
+                        flex: 6,
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
                             pw.Text(
                               websiteLine,
                               maxLines: 1,
@@ -276,6 +286,60 @@ class RecruitingBusinessCardPdf {
                           ],
                         ),
                       ),
+                      pw.SizedBox(width: 5),
+                      pw.Expanded(
+                        flex: 4,
+                        child: pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColor.fromInt(0xFF03101F),
+                            borderRadius: pw.BorderRadius.circular(5),
+                            border: pw.Border.all(color: _accent, width: 0.6),
+                          ),
+                          child: pw.Column(
+                            mainAxisAlignment: pw.MainAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                'HIGHEST USA CUT',
+                                textAlign: pw.TextAlign.center,
+                                style: pw.TextStyle(
+                                  color: _muted,
+                                  fontSize: 5.5,
+                                  font: pw.Font.helveticaBold(),
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              pw.SizedBox(height: 1),
+                              pw.Text(
+                                cutValue,
+                                textAlign: pw.TextAlign.center,
+                                style: pw.TextStyle(
+                                  color: PdfColors.white,
+                                  fontSize: cutPending ? 12 : 18,
+                                  font: pw.Font.helveticaBold(),
+                                  height: 1,
+                                ),
+                              ),
+                              pw.SizedBox(height: 1),
+                              pw.Text(
+                                cutPending
+                                    ? 'Add meet PBs'
+                                    : 'Motivational standard',
+                                textAlign: pw.TextAlign.center,
+                                maxLines: 2,
+                                style: pw.TextStyle(
+                                  color: _muted,
+                                  fontSize: 5.5,
+                                  font: pw.Font.helveticaBold(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -308,6 +372,20 @@ class RecruitingBusinessCardPdf {
     );
 
     return doc.save();
+  }
+
+  static String _cutDisplayValue(String highestCut) {
+    final cut = highestCut.trim();
+    if (cut.isEmpty ||
+        cut.toLowerCase().contains('log') ||
+        cut.toLowerCase().contains('setup') ||
+        cut.toLowerCase().contains('no motivational')) {
+      return '-';
+    }
+    final match = RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b', caseSensitive: false)
+        .firstMatch(cut);
+    if (match != null) return match.group(1)!.toUpperCase();
+    return _pdfText(cut);
   }
 
   static pw.Widget _pbRow(String label, String value) {

@@ -61,14 +61,13 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     final gradLine =
         graduationYear != null ? 'Class of $graduationYear' : 'Add grad year';
     final scoreText = swimIqScore > 0 ? '$swimIqScore' : '—';
-    final cutLine = highestCut.trim().isNotEmpty &&
-            !highestCut.toLowerCase().contains('log')
-        ? highestCut.trim()
-        : 'Cut pending';
-    final nameLine = displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim();
+    final cutValue = _cutDisplayValue(highestCut);
+    final nameLine =
+        displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim();
     final websiteLine = _contactOrPlaceholder(website, 'Add website');
     final emailLine = _contactOrPlaceholder(email, 'Add email');
     final phoneLine = _contactOrPlaceholder(phone, 'Add phone');
+    final gpaLine = gpa?.trim().isNotEmpty == true ? gpa!.trim() : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +75,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
+            constraints: const BoxConstraints(maxWidth: 420),
             child: AspectRatio(
               aspectRatio: 3.5 / 2.35,
               child: DecoratedBox(
@@ -214,38 +213,29 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accent
-                                                  .withValues(alpha: 0.22),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: AppColors.accent
-                                                    .withValues(alpha: 0.75),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              cutLine,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 9.5,
-                                              ),
+                                      if (gpaLine != null) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'GPA $gpaLine',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 9,
                                             ),
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ],
                                   ),
                                 ],
@@ -253,23 +243,43 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5),
-                        _ContactLine(
-                          icon: Icons.language,
-                          value: websiteLine,
+                        const SizedBox(height: 6),
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 6,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _ContactLine(
+                                      icon: Icons.language,
+                                      value: websiteLine,
+                                    ),
+                                    _ContactLine(
+                                      icon: Icons.email_outlined,
+                                      value: emailLine,
+                                    ),
+                                    _ContactLine(
+                                      icon: Icons.phone_outlined,
+                                      value: phoneLine,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    _PbLine(label: '1', value: eventOne),
+                                    const SizedBox(height: 2),
+                                    _PbLine(label: '2', value: eventTwo),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 4,
+                                child: _HighestCutPanel(cutValue: cutValue),
+                              ),
+                            ],
+                          ),
                         ),
-                        _ContactLine(
-                          icon: Icons.email_outlined,
-                          value: emailLine,
-                        ),
-                        _ContactLine(
-                          icon: Icons.phone_outlined,
-                          value: phoneLine,
-                        ),
-                        const SizedBox(height: 4),
-                        _PbLine(label: '1', value: eventOne),
-                        const SizedBox(height: 2),
-                        _PbLine(label: '2', value: eventTwo),
                         const SizedBox(height: 5),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -342,6 +352,81 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     final text = value?.trim() ?? '';
     return text.isEmpty ? placeholder : text;
   }
+
+  static String _cutDisplayValue(String highestCut) {
+    final cut = highestCut.trim();
+    if (cut.isEmpty ||
+        cut.toLowerCase().contains('log') ||
+        cut.toLowerCase().contains('setup') ||
+        cut.toLowerCase().contains('no motivational')) {
+      return '—';
+    }
+    // Prefer short motivational letters (AAAA/AAA/AA/A/BB/B).
+    final match = RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b', caseSensitive: false)
+        .firstMatch(cut);
+    if (match != null) return match.group(1)!.toUpperCase();
+    return cut;
+  }
+}
+
+class _HighestCutPanel extends StatelessWidget {
+  const _HighestCutPanel({required this.cutValue});
+
+  final String cutValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = cutValue == '—';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.65),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'HIGHEST USA CUT',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontWeight: FontWeight.w900,
+              fontSize: 7.5,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            cutValue,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: pending ? 18 : 26,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            pending ? 'Add meet PBs' : 'Motivational standard',
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.82),
+              fontWeight: FontWeight.w700,
+              fontSize: 8.5,
+              height: 1.15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ContactLine extends StatelessWidget {
@@ -369,7 +454,8 @@ class _ContactLine extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: isPlaceholder ? 0.62 : 0.95),
+                color:
+                    Colors.white.withValues(alpha: isPlaceholder ? 0.62 : 0.95),
                 fontWeight: FontWeight.w700,
                 fontSize: 10,
               ),

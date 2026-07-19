@@ -40,6 +40,9 @@ void main() {
     expect(find.text('aspyn@example.com'), findsOneWidget);
     expect(find.text('(614) 555-0199'), findsOneWidget);
     expect(find.text('BB'), findsOneWidget);
+    expect(find.text('HIGHEST USA CUT'), findsOneWidget);
+    expect(find.text('Motivational standard'), findsOneWidget);
+    expect(find.textContaining('GPA 3.85'), findsOneWidget);
     expect(find.textContaining('50 Butterfly'), findsOneWidget);
     expect(find.textContaining('STATE QUALIFIER'), findsOneWidget);
   });
@@ -68,6 +71,8 @@ void main() {
     );
 
     expect(find.text('Add photo'), findsOneWidget);
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('HIGHEST USA CUT'), findsOneWidget);
     await tester.tap(find.text('Add photo'));
     expect(tapped, isTrue);
   });
