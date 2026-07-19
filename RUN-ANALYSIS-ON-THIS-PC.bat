@@ -1,5 +1,10 @@
 @echo off
-REM Same path as FINAL-TRY-THIS-ONLY.bat (kept for older shortcuts)
+setlocal
+title SwimIQ - redirected
 cd /d "%~dp0"
-call "%~dp0FINAL-TRY-THIS-ONLY.bat"
+echo.
+echo This file is only a shortcut.
+echo Running START-SWIMIQ-WITH-ELITE.bat ...
+echo.
+call "%~dp0START-SWIMIQ-WITH-ELITE.bat"
 exit /b %ERRORLEVEL%

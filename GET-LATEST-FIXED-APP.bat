@@ -31,7 +31,11 @@ set MISSING=0
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
 call :CheckFile "GOOD-MORNING-KARA.txt"
 call :CheckFile "swimiq\scripts\start-elite-and-wait.ps1"
+call :CheckFile "swimiq\scripts\ensure-elite-local-env.ps1"
+call :CheckFile "swimiq\scripts\fix-one-gemini-key.ps1"
 call :CheckFile "swimiq\scripts\kill-elite-port.ps1"
+call :CheckFile "swimiq\scripts\launch-chrome-kara.ps1"
+call :CheckFile "swimiq\scripts\swimiq-windows-paths.ps1"
 call :CheckFile "swimiq\START-ELITE-ANALYSIS-SERVER.bat"
 call :CheckFile "swimiq\LAUNCH-CHROME.bat"
 

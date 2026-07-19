@@ -1,24 +1,13 @@
-============================================================
-  ONLY ONE Gemini key (do this in Notepad if needed)
-============================================================
+ONE Gemini key only
 
-Do NOT look for FIX-ONE-GEMINI-KEY.bat — it may not be on your PC yet.
+In Desktop\StrokeIQ\swimiq\.env keep exactly ONE line like:
 
-Use a file you ALREADY have:
+  GEMINI_API_KEY=your_key_here
+
+If you pasted two keys, delete the extra GEMINI_API_KEY= line.
+
+Then run:
 
   START-SWIMIQ-WITH-ELITE.bat
 
-Or fix Notepad yourself right now:
-
-  1) Open Desktop\StrokeIQ\swimiq\.env
-  2) You must have ONLY ONE of these lines (delete the other):
-
-       GEMINI_API_KEY=...
-
-  3) Save and close Notepad
-  4) Double-click START-SWIMIQ-WITH-ELITE.bat
-  5) Leave Elite window open, analyze again, open Coaching
-
-Wrong = two GEMINI_API_KEY lines
-Right = one GEMINI_API_KEY line
-============================================================
+Do not hunt other FIX-*.bat files.

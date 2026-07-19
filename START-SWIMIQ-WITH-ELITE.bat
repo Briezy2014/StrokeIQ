@@ -50,14 +50,27 @@ echo.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%CD%\swimiq\scripts\start-elite-and-wait.ps1"
 set "ELITE_RC=%ERRORLEVEL%"
 echo Elite wait exit code %ELITE_RC%>> "%LOG%"
-if not "%ELITE_RC%"=="0" (
+if "%ELITE_RC%"=="0" goto :Chrome
+if "%ELITE_RC%"=="2" (
   echo.
-  echo [FAIL] Elite did not become ready. Exit code %ELITE_RC%
-  echo Look at the Elite Video Lab window for the real error.
-  echo Also open elite-start.log in Notepad.
+  echo [FAIL] Supabase URL/anon key missing in swimiq\.env
+  echo Edit that file, save, then run this bat once more.
   goto :Hold
 )
+if "%ELITE_RC%"=="3" (
+  echo.
+  echo [FAIL] FFmpeg is not installed / not on PATH.
+  echo Install once:  winget install Gyan.FFmpeg
+  echo Then close this window and run this bat once more.
+  goto :Hold
+)
+echo.
+echo [FAIL] Elite did not become ready. Exit code %ELITE_RC%
+echo Look at the Elite Video Lab window for the real error.
+echo Also open elite-start.log in Notepad.
+goto :Hold
 
+:Chrome
 echo.
 echo [4/4] Elite is up. Opening Chrome on localhost...
 if not exist "%CD%\swimiq\LAUNCH-CHROME.bat" (

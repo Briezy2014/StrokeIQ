@@ -1,22 +1,11 @@
-============================================================
-  Which Gemini key? (short answer)
-============================================================
+Which Gemini key-
 
-You already put a key in Notepad (swimiq\.env). That is the RIGHT file.
+Either Google AI Studio style is fine:
+  - starts with AIza...
+  - or starts with AQ....
 
-Elite does NOT read Notepad by itself while it is already running.
-It copies the key when Elite STARTS.
+Put exactly ONE line in Desktop\StrokeIQ\swimiq\.env:
 
-Either AI Studio key works:
-  - Gemini API KEY            (the one ending ...wKEA — already in your .env)
-  - SwimIQ Video Analysis     (ending ...GOtA — try this if coaching still fails)
+  GEMINI_API_KEY=paste_key_here
 
-Do this:
-  1. Save swimiq\.env
-  2. Close every Elite black window
-  3. Double-click OPEN-WORKING-APP-NOW.bat
-  4. Look for: GEMINI_API_KEY: set
-  5. Analyze again → open Coaching tab
-
-You do NOT need to hand-edit services\video_analysis\.env
-============================================================
+Then run START-SWIMIQ-WITH-ELITE.bat and leave Elite open.

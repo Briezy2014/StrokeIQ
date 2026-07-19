@@ -20,9 +20,13 @@ function Get-PhysicalRootPath {
     if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
 
     $normalized = $Path.TrimEnd('\')
-    if ($normalized -match '^([A-Z]):\\-(.*)$') {
+    # Match normal drive paths like S:\swimiq (old regex wrongly required a hyphen).
+    if ($normalized -match '^([A-Z]):(\\.*)-$') {
         $letter = $matches[1]
-        $rest = $matches[2]
+        $rest = ''
+        if ($matches.Count -ge 3 -and $matches[2]) {
+            $rest = $matches[2].TrimStart('\')
+        }
         $subst = Get-SubstMapping
         if ($subst.ContainsKey($letter)) {
             if ([string]::IsNullOrEmpty($rest)) { return $subst[$letter].TrimEnd('\') }
@@ -51,21 +55,38 @@ function Ensure-DirectoryJunction {
 
     if (Test-Path -LiteralPath $link) {
         $item = Get-Item -LiteralPath $link -Force
-        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+        $isReparse = [bool]($item.Attributes -band [IO.FileAttributes]::ReparsePoint)
+        # PS 5.1 often leaves DirectoryInfo.Target null for junctions. Prefer a
+        # content probe so we do not rmdir+mklink every launch (can fail if locked).
+        $probeOk = $false
+        foreach ($probe in @(
+                (Join-Path $link 'swimiq\pubspec.yaml'),
+                (Join-Path $link 'pubspec.yaml'),
+                (Join-Path $link 'START-SWIMIQ-WITH-ELITE.bat')
+            )) {
+            if (Test-Path -LiteralPath $probe) { $probeOk = $true; break }
+        }
+        $existing = $null
+        if ($isReparse) {
             $existing = $item.Target
             if ($existing -is [array]) { $existing = $existing[0] }
-            if ($existing -and ($existing.TrimEnd('\') -ieq $target)) {
-                Write-Host "OK  Junction $link -> $target" -ForegroundColor Green
-                return $link
-            }
+        }
+        if (($existing -and ($existing.TrimEnd('\') -ieq $target)) -or ($isReparse -and $probeOk)) {
+            Write-Host "OK  Junction $link -> $target" -ForegroundColor Green
+            return $link
+        }
+        if ($isReparse) {
             cmd /c "rmdir `"$link`"" | Out-Null
         } else {
             $children = @(Get-ChildItem -LiteralPath $link -Force -ErrorAction SilentlyContinue)
             if ($children.Count -eq 0) {
                 Remove-Item -LiteralPath $link -Force
                 Write-Host "OK  Removed empty folder blocking junction: $link" -ForegroundColor Yellow
+            } elseif ($probeOk) {
+                Write-Host "OK  Using existing folder $link (already has SwimIQ files)" -ForegroundColor Green
+                return $link
             } else {
-                throw "Cannot create junction - folder exists and is not a link:`n$link`nDelete or rename it, then run FIX-KARA-PATHS.bat again."
+                throw "Cannot create junction - folder exists and is not a link:`n$link`nDelete or rename it, then run START-SWIMIQ-WITH-ELITE.bat again."
             }
         }
     }

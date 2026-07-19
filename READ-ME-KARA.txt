@@ -1,14 +1,12 @@
-SwimIQ — use files that are ALREADY in Desktop\StrokeIQ
+SwimIQ - use files already in Desktop\StrokeIQ
 
-Gemini / coaching / analysis:
+ONLY button:
 
-  Double-click:  START-SWIMIQ-WITH-ELITE.bat
-
-If .env has TWO GEMINI_API_KEY lines, delete one in Notepad
-so only ONE GEMINI_API_KEY= line remains, then run the bat above.
+  START-SWIMIQ-WITH-ELITE.bat
 
 Leave the Elite black window OPEN.
-Use localhost / 127.0.0.1 — not swimiqapp.com.
+Use localhost / 127.0.0.1 - not swimiqapp.com.
 
-Do NOT hunt for FIX-ONE-GEMINI-KEY.bat or FIX-ANALYSIS-NOW.bat
-unless you already ran an update — those names are aliases only.
+If .env has TWO GEMINI_API_KEY lines, keep only ONE, then run the bat above.
+
+Ignore FIX-*.bat names. Everything important is inside the starter above.

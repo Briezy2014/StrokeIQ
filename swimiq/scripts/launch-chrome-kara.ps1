@@ -111,7 +111,8 @@ $eliteWait = Join-Path $PSScriptRoot 'start-elite-and-wait.ps1'
 if (Test-Path -LiteralPath $eliteWait) {
     Write-Host ''
     Write-Host 'Confirming Elite analysis server is still up...' -ForegroundColor Cyan
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $eliteWait -CheckOnly
+    # Nested process so CheckOnly "exit 0" does not kill this Chrome launcher.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $eliteWait -CheckOnly
     if ($LASTEXITCODE -ne 0) {
         Write-Host ''
         Write-Host 'ERROR: Elite server is not reachable at http://127.0.0.1:8080/health' -ForegroundColor Red
@@ -147,21 +148,30 @@ if (-not (Test-GoodPng $loginIcon)) {
         Copy-Item -LiteralPath $legacyIcon -Destination $logoIcon -Force
         Write-Host 'OK  Copied swimiq_icon.png -> icon.png for login' -ForegroundColor Green
     } else {
-        Write-Host '[FAIL] Aspyn login icon missing or too small.' -ForegroundColor Red
-        Write-Host "Expected: $loginIcon (at least 20KB PNG)" -ForegroundColor Red
-        Write-Host 'Drag your 512x512 SwimIQ/Aspyn icon onto COPY-LOGO.bat, then run this again.' -ForegroundColor Yellow
-        Read-Host 'Press Enter to close'
-        exit 1
+        # Do not block Elite bring-up on a logo. Prefer any existing PNG, else continue.
+        $fallback = $null
+        foreach ($cand in @($web512, $web192, $webFav, $logoIcon, $legacyIcon)) {
+            if (Test-Path -LiteralPath $cand) { $fallback = $cand; break }
+        }
+        if ($fallback) {
+            Copy-Item -LiteralPath $fallback -Destination $loginIcon -Force
+            Write-Host "[WARN] Login icon was small/missing - using $fallback for now." -ForegroundColor Yellow
+        } else {
+            Write-Host '[WARN] Login icon missing - continuing anyway (Elite still works).' -ForegroundColor Yellow
+            Write-Host '       Later: drag a 512x512 PNG onto COPY-LOGO.bat if you want Aspyn branding.' -ForegroundColor Yellow
+        }
     }
 }
 
-# Keep web favicons in sync so Chrome never shows a stale triangle tab icon.
-Copy-Item -LiteralPath $loginIcon -Destination $logoIcon -Force
-Copy-Item -LiteralPath $loginIcon -Destination $webFav -Force
-Copy-Item -LiteralPath $loginIcon -Destination $web512 -Force
-Copy-Item -LiteralPath $loginIcon -Destination $web192 -Force
-$iconBytes = (Get-Item -LiteralPath $loginIcon).Length
-Write-Host ("OK  Login icon ready ({0} bytes): {1}" -f $iconBytes, $loginIcon) -ForegroundColor Green
+# Keep web favicons in sync when we have a usable login icon.
+if (Test-Path -LiteralPath $loginIcon) {
+    Copy-Item -LiteralPath $loginIcon -Destination $logoIcon -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $loginIcon -Destination $webFav -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $loginIcon -Destination $web512 -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $loginIcon -Destination $web192 -Force -ErrorAction SilentlyContinue
+    $iconBytes = (Get-Item -LiteralPath $loginIcon).Length
+    Write-Host ("OK  Login icon ready ({0} bytes): {1}" -f $iconBytes, $loginIcon) -ForegroundColor Green
+}
 
 Write-Host 'Cleaning old build cache (fixes objective_c hook errors)...' -ForegroundColor Yellow
 Invoke-FlutterCleanSafe -FlutterBat $paths.FlutterBat

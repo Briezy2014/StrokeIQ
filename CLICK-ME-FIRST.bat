@@ -1,10 +1,10 @@
 @echo off
-title SwimIQ - CLICK ME FIRST
+setlocal
+title SwimIQ - redirected
 cd /d "%~dp0"
 echo.
-echo ============================================
-echo   Update + start Elite on this PC
-echo ============================================
+echo This file is only a shortcut.
+echo Running START-SWIMIQ-WITH-ELITE.bat ...
 echo.
-call "%~dp0GET-LATEST-FIXED-APP.bat"
+call "%~dp0START-SWIMIQ-WITH-ELITE.bat"
 exit /b %ERRORLEVEL%

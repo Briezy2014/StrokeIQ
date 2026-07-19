@@ -1,10 +1,10 @@
 @echo off
+setlocal
+title SwimIQ - redirected
+cd /d "%~dp0.."
 echo.
-echo This emergency switch turns Elite OFF and brings back the OLD Gemini Video Lab.
-echo You asked for Elite Video Lab only — do NOT use this unless support tells you to.
+echo This file is only a shortcut.
+echo Running START-SWIMIQ-WITH-ELITE.bat ...
 echo.
-echo To use Elite Video Lab instead:
-echo   1. Double-click START-ELITE-ANALYSIS-SERVER.bat and leave it open
-echo   2. Double-click LAUNCH-CHROME.bat
-echo.
-pause
+call "%~dp0..\START-SWIMIQ-WITH-ELITE.bat"
+exit /b %ERRORLEVEL%

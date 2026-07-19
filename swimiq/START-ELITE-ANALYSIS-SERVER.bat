@@ -56,7 +56,8 @@ call :EnsureLocalEnv
 if errorlevel 2 (
   echo.
   echo [FAIL] Elite .env is missing Supabase URL/anon key.
-  echo Fix services\video_analysis\.env then run FIX-STORAGE.bat
+  echo Put SUPABASE_URL and SUPABASE_ANON_KEY in swimiq\.env
+  echo then run START-SWIMIQ-WITH-ELITE.bat once.
   echo.
   pause
   exit /b 2

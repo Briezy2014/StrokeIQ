@@ -1,23 +1,8 @@
-============================================================
-  If START-SWIMIQ-WITH-ELITE keeps closing
-============================================================
+If START-SWIMIQ-WITH-ELITE.bat or the Elite window fails:
 
-1) Double-click START-SWIMIQ-WITH-ELITE.bat ONE time only.
-   Do not click it over and over.
+1. Read the red [FAIL] line in the window - that is the cause.
+2. Open elite-start.log in the StrokeIQ folder.
+3. Fix that ONE thing (example: install FFmpeg, or fix swimiq\.env).
+4. Run START-SWIMIQ-WITH-ELITE.bat once more.
 
-2) That starter window should now STAY OPEN and say "Press any key".
-
-3) A SECOND window titled:
-     Elite Video Lab - Analysis Server
-   must also stay open. That is the real analysis engine.
-
-4) If the Elite Video Lab window closes, open Notepad on:
-     Desktop\StrokeIQ\elite-start.log
-   and read the last lines. That is the real error.
-
-5) In swimiq\.env keep ONLY ONE line:
-     GEMINI_API_KEY=...
-   Delete any second GEMINI_API_KEY line.
-
-6) Try again with ONE click of START-SWIMIQ-WITH-ELITE.bat
-============================================================
+Do not click a stack of other FIX-*.bat files.

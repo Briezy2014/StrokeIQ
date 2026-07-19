@@ -1,4 +1,5 @@
 # Starts a FRESH Elite analysis server and waits until /health is fully ready.
+# ASCII-only. Windows PowerShell 5.1 misreads UTF-8 dashes/ellipsis.
 # Usage:
 #   start-elite-and-wait.ps1              # start if needed
 #   start-elite-and-wait.ps1 -CheckOnly   # never kill/restart; ping health only
@@ -42,7 +43,6 @@ function Test-EliteFullyReady([string]$body) {
 
 function Get-EnvValue([string]$path, [string]$key) {
     if (-not (Test-Path -LiteralPath $path)) { return '' }
-    # Last matching line wins (people sometimes paste GEMINI_API_KEY twice).
     $line = Get-Content -LiteralPath $path |
         Where-Object { $_ -match ("^\s*" + [regex]::Escape($key) + "\s*=") } |
         Select-Object -Last 1
@@ -78,8 +78,41 @@ function Refresh-PathFromRegistry {
     if (Test-Path $wingetLinks) { $parts = @($wingetLinks) + $parts }
     $ffmpegBin = Join-Path $env:ProgramFiles 'ffmpeg\bin'
     if (Test-Path $ffmpegBin) { $parts = @($ffmpegBin) + $parts }
+    $gyanBin = Join-Path $env:ProgramFiles 'Gyan\FFmpeg\bin'
+    if (Test-Path $gyanBin) { $parts = @($gyanBin) + $parts }
     if ($parts.Count -gt 0) {
         $env:Path = ($parts -join ';')
+    }
+}
+
+function Test-CommandOnPath([string]$name) {
+    try {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        return ($null -ne $cmd)
+    } catch {
+        return $false
+    }
+}
+
+function Write-PartialHealthHint([string]$body) {
+    if (-not $body) {
+        Write-Host '  /health: no response yet' -ForegroundColor Yellow
+        return
+    }
+    if ($body -match '"ffmpeg_available"\s*:\s*true') {
+        Write-Host '  ffmpeg: OK' -ForegroundColor Green
+    } else {
+        Write-Host '  ffmpeg: MISSING - install FFmpeg, then run START-SWIMIQ-WITH-ELITE.bat again' -ForegroundColor Red
+    }
+    if ($body -match '"ffprobe_available"\s*:\s*true') {
+        Write-Host '  ffprobe: OK' -ForegroundColor Green
+    } else {
+        Write-Host '  ffprobe: MISSING' -ForegroundColor Red
+    }
+    if ($body -match '"storage_download_configured"\s*:\s*true') {
+        Write-Host '  storage keys: OK' -ForegroundColor Green
+    } else {
+        Write-Host '  storage keys: MISSING - put SUPABASE_URL + SUPABASE_ANON_KEY in swimiq\.env' -ForegroundColor Red
     }
 }
 
@@ -93,6 +126,13 @@ Write-Host ''
 
 Refresh-PathFromRegistry
 
+if (-not (Test-Path -LiteralPath $VideoDir)) {
+    Write-Host "[FAIL] Missing video analysis folder:" -ForegroundColor Red
+    Write-Host "       $VideoDir" -ForegroundColor Red
+    Write-Host 'Run GET-LATEST-FIXED-APP.bat inside Desktop\StrokeIQ, then try again.' -ForegroundColor Yellow
+    exit 1
+}
+
 $body = Get-EliteHealthBody
 $needsKeyRestart = Test-GeminiNeedsRestart
 
@@ -103,6 +143,7 @@ if ($CheckOnly) {
         exit 0
     }
     Write-Host '[FAIL] Elite is not fully ready (CheckOnly - not restarting).' -ForegroundColor Red
+    Write-PartialHealthHint $body
     if ($body) { Write-Host $body }
     exit 1
 }
@@ -117,26 +158,54 @@ if ($needsKeyRestart -and (Test-EliteFullyReady $body)) {
     Write-Host '[WARN] GEMINI_API_KEY in swimiq\.env differs from Elite .env - restarting Elite to load it.' -ForegroundColor Yellow
 }
 
+# Fail fast on FFmpeg so we do not wait 7 minutes for a known miss.
+$hasFfmpeg = Test-CommandOnPath 'ffmpeg'
+$hasFfprobe = Test-CommandOnPath 'ffprobe'
+if (-not $hasFfmpeg -or -not $hasFfprobe) {
+    Write-Host '[FAIL] FFmpeg is not on PATH yet (needed for Elite analysis).' -ForegroundColor Red
+    if (-not $hasFfmpeg) { Write-Host '       Missing: ffmpeg' -ForegroundColor Yellow }
+    if (-not $hasFfprobe) { Write-Host '       Missing: ffprobe' -ForegroundColor Yellow }
+    Write-Host ''
+    Write-Host 'Install once (Windows):' -ForegroundColor Cyan
+    Write-Host '  winget install Gyan.FFmpeg' -ForegroundColor White
+    Write-Host 'Then CLOSE this window and run START-SWIMIQ-WITH-ELITE.bat again.' -ForegroundColor Yellow
+    Write-Host 'Or double-click RESTART-ELITE-AFTER-FFMPEG.bat after install.' -ForegroundColor Yellow
+    exit 3
+}
+Write-Host '[OK] ffmpeg + ffprobe found on PATH.' -ForegroundColor Green
+
 if ($body -and -not (Test-EliteFullyReady $body)) {
     Write-Host '[WARN] Something is on :8080 but it is NOT fully ready (likely OLD Elite code).' -ForegroundColor Yellow
-    Write-Host $body
+    Write-PartialHealthHint $body
     Write-Host 'Killing it and starting a fresh Elite server...' -ForegroundColor Yellow
 } elseif (-not $body) {
     Write-Host 'Elite server not running. Starting a fresh one...' -ForegroundColor Yellow
 }
 
 # Refresh Elite .env from Flutter before start (keys, intervals, etc.).
-if (Test-Path -LiteralPath $EnsureScript) {
-    Write-Host 'Refreshing services\video_analysis\.env from swimiq\.env ...' -ForegroundColor Cyan
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $EnsureScript $VideoDir
-    if ($LASTEXITCODE -eq 2) {
-        Write-Host '[FAIL] Elite .env missing Supabase URL/anon key.' -ForegroundColor Red
-        exit 2
+if (-not (Test-Path -LiteralPath $EnsureScript)) {
+    Write-Host "[FAIL] Missing $EnsureScript" -ForegroundColor Red
+    exit 1
+}
+Write-Host 'Refreshing services\video_analysis\.env from swimiq\.env ...' -ForegroundColor Cyan
+# Nested powershell -File so "exit" inside ensure does not kill this parent script.
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $EnsureScript $VideoDir
+$ensureCode = $LASTEXITCODE
+if ($ensureCode -ne 0) {
+    Write-Host "[FAIL] ensure-elite-local-env.ps1 exited with code $ensureCode" -ForegroundColor Red
+    if ($ensureCode -eq 2) {
+        Write-Host 'Elite .env still missing Supabase URL/anon key after edit.' -ForegroundColor Red
+        Write-Host 'Put them in Desktop\StrokeIQ\swimiq\.env then run START-SWIMIQ-WITH-ELITE.bat once.' -ForegroundColor Yellow
     }
+    exit $ensureCode
 }
 
 if (Test-Path -LiteralPath $KillScript) {
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $KillScript
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $KillScript
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host '[FAIL] Could not free port 8080. Close any other Elite window, then retry.' -ForegroundColor Red
+        exit 1
+    }
 }
 
 if (-not (Test-Path -LiteralPath $EliteBat)) {
@@ -148,14 +217,20 @@ Write-Host ''
 Write-Host '>>> Opening Elite black window. DO NOT CLOSE IT. <<<' -ForegroundColor Yellow
 # Child Elite bat must NOT kill port 8080 again (that fought the new server).
 $env:SWIMIQ_SKIP_PORT_KILL = '1'
-$eliteProc = Start-Process -FilePath 'cmd.exe' `
-    -ArgumentList '/k', "`"$EliteBat`"" `
-    -WorkingDirectory (Split-Path $EliteBat -Parent) `
-    -PassThru
+# Start the .bat directly so paths with spaces (Kara Williams / OneDrive) work on PS 5.1.
+$eliteWd = Split-Path $EliteBat -Parent
+try {
+    $eliteProc = Start-Process -FilePath $EliteBat -WorkingDirectory $eliteWd -PassThru
+} catch {
+    Write-Host "[FAIL] Could not start Elite bat: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Path: $EliteBat" -ForegroundColor Yellow
+    exit 1
+}
 
-$deadline = (Get-Date).AddSeconds(420)
+$deadline = (Get-Date).AddSeconds(240)
 $startedAt = Get-Date
-Write-Host 'Waiting for full Elite health (up to 7 minutes)...'
+$lastHintAt = Get-Date
+Write-Host 'Waiting for full Elite health (up to 4 minutes)...'
 Write-Host 'You should see a window titled: Elite Video Lab - Analysis Server'
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 2
@@ -167,15 +242,22 @@ while ((Get-Date) -lt $deadline) {
         try { Start-Process $HealthUrl } catch {}
         exit 0
     }
-    if ($eliteProc -and $eliteProc.HasExited -and ((Get-Date) - $startedAt).TotalSeconds -gt 20) {
+    if ($eliteProc -and $eliteProc.HasExited -and ((Get-Date) - $startedAt).TotalSeconds -gt 15) {
         $partial = Get-EliteHealthBody
         if (-not (Test-EliteFullyReady $partial)) {
             Write-Host ''
             Write-Host '[FAIL] Elite window closed or crashed before becoming ready.' -ForegroundColor Red
-            Write-Host 'Run START-SWIMIQ-WITH-ELITE.bat again and leave the Elite window open.' -ForegroundColor Yellow
+            Write-Host 'Read the Elite Video Lab window text (that is the real error).' -ForegroundColor Yellow
+            Write-Host 'Common causes: Python missing, pip/offline packages, or bad .env.' -ForegroundColor Yellow
+            Write-PartialHealthHint $partial
             if ($partial) { Write-Host $partial }
             exit 1
         }
+    }
+    if (((Get-Date) - $lastHintAt).TotalSeconds -ge 30) {
+        Write-Host ''
+        Write-PartialHealthHint $body
+        $lastHintAt = Get-Date
     }
     Write-Host -NoNewline '.'
 }
@@ -184,8 +266,8 @@ Write-Host ''
 Write-Host '[FAIL] Elite server did not become fully ready in time.' -ForegroundColor Red
 Write-Host 'Look at the Elite server window for errors. Do not close it.' -ForegroundColor Red
 $body = Get-EliteHealthBody
+Write-PartialHealthHint $body
 if ($body) { Write-Host $body } else { Write-Host '(no response on /health yet)' }
 Write-Host "Video dir: $VideoDir"
-Write-Host 'Need BOTH: ffmpeg_available:true AND storage_download_configured:true'
 Write-Host 'Then run: START-SWIMIQ-WITH-ELITE.bat'
 exit 1

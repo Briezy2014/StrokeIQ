@@ -1,25 +1,21 @@
 ============================================================
-  GOOD MORNING — Elite analysis (ONE path)
+  GOOD MORNING - Elite analysis (ONE path)
 ============================================================
 
-Goal for short clips: about 30-60 seconds, then a full coaching
-breakdown (strengths, what to fix, drills, next-race cues).
-
-Do this only:
+Only do this:
 
   1. Double-click   START-SWIMIQ-WITH-ELITE.bat
   2. Leave the Elite black window OPEN
-  3. Sign in on localhost (127.0.0.1) — NOT swimiqapp.com
-  4. Elite tab → Run Elite Analysis on a short clip
-  5. Watch the progress % move
-  6. Open Summary + Coaching tabs for the full breakdown
+  3. Sign in on localhost (127.0.0.1) - NOT swimiqapp.com
+  4. Elite tab -> Run Elite Analysis on a short clip
 
-If the black banner about 127.0.0.1:8080 appears:
-  Elite window was closed. Run START-SWIMIQ-WITH-ELITE.bat again.
+If it stops with a red [FAIL] message, that message is the real reason.
+Do NOT hunt other .bat files. Read the Elite window + elite-start.log.
 
-You should get coaching tips even if Gemini has a hiccup.
-Gemini key (optional upgrade): GEMINI_API_KEY=... in swimiq\.env
-then restart with START-SWIMIQ-WITH-ELITE.bat.
+Known one-time PC setup (only if the starter says so):
+  - Python 3.11 installed
+  - FFmpeg installed:  winget install Gyan.FFmpeg
+  - ONE GEMINI_API_KEY= line in swimiq\.env (optional for coaching upgrade)
 
-Do NOT hunt for other .bat files first.
+Do NOT click FIX-*.bat files. They all redirect here anyway.
 ============================================================
