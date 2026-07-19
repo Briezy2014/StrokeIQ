@@ -1,28 +1,83 @@
 ============================================================
-  UPDATE swimiqapp.com (kills the old workstation message)
+  STEP-BY-STEP: Upload SwimIQ zip to GoDaddy
 ============================================================
 
-On this PC first:
-  1) Double-click GET-LATEST-FIXED-APP.bat
-  2) Double-click DO-THIS-ONE-THING.bat
-     Wait until it says ZIP READY
-  3) Zip path:
-       Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+PART A - Make the zip on your PC
+--------------------------------
+1. Open folder:  Desktop\StrokeIQ
+2. Double-click:  GET-LATEST-FIXED-APP.bat
+   Wait until it finishes.
+3. Double-click:  DO-THIS-ONE-THING.bat
+   Wait until the window says ZIP READY.
+4. File Explorer should highlight this file:
 
-GoDaddy File Manager -> public_html:
-  4) Upload that zip
-  5) Extract / overwrite ALL
-  6) Delete flutter_service_worker.js if extract left an old one
-     (or extract with overwrite - same idea)
+     Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
 
-Then prove it:
-  7) Incognito -> https://swimiqapp.com  (or http://swimiqapp.com)
-  8) Ctrl+Shift+R hard refresh
-  9) Sign in -> Elite tab
- 10) Subtitle must say: build Jul19-a
- 11) Keep Elite running via START-SWIMIQ-WITH-ELITE.bat
- 12) Run Elite Analysis
+   If it did not open, go there yourself:
+     Desktop -> StrokeIQ -> swimiq -> build
+     Look for: swimiq-web-godaddy.zip
+     (It is NEXT TO the "web" folder, not inside it.)
 
-Until you upload, swimiqapp.com stays OLD.
-For analysis RIGHT NOW without GoDaddy: use 127.0.0.1 only.
+
+PART B - Open GoDaddy File Manager
+----------------------------------
+5. Open Chrome.
+6. Go to:  https://account.godaddy.com/products
+7. Sign in to GoDaddy if asked.
+8. Find your website / hosting for swimiqapp.com.
+9. Click:  Web Hosting  (or Manage Hosting).
+10. Click:  File Manager
+    (Sometimes under cPanel -> Files -> File Manager)
+11. Open the folder named:  public_html
+    This is the live website folder.
+
+
+PART C - Upload the zip
+-----------------------
+12. In File Manager, click Upload.
+13. Choose the file:
+      Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+14. Wait until upload hits 100% / Complete.
+15. Go back to the public_html folder.
+
+
+PART D - Extract / overwrite
+----------------------------
+16. In public_html, find:  swimiq-web-godaddy.zip
+17. Right-click the zip (or select it) -> Extract
+18. Extract INTO public_html (overwrite / replace existing files).
+19. When asked about replacing files, choose Yes / Overwrite / Replace All.
+20. After extract finishes, you can delete the zip in public_html
+    (optional cleanup).
+
+
+PART E - Clear old website cache
+--------------------------------
+21. In public_html, if you still see an OLD
+    flutter_service_worker.js that was not overwritten,
+    delete that old file, then re-extract if needed.
+22. On your PC: open a NEW Incognito Chrome window
+    (Ctrl + Shift + N).
+23. Go to:  https://swimiqapp.com
+    (or http://swimiqapp.com if that is what you use)
+24. Hard refresh:  Ctrl + Shift + R
+
+
+PART F - Prove it worked
+------------------------
+25. Sign in.
+26. Open Elite / Video.
+27. You should NOT see the old black/red
+    "workstation / Ask for a live Elite analysis" message.
+28. After a new analysis, the report should be ONE simple page:
+    Keep doing this / Fix this next / Dryland / Next race
+    (no Metrics / Details tab maze)
+
+
+IMPORTANT
+---------
+- Uploading the zip updates the PUBLIC website only.
+- For Elite analysis on this PC, still use:
+    START-SWIMIQ-WITH-ELITE.bat
+  and stay on 127.0.0.1 / localhost.
 ============================================================
