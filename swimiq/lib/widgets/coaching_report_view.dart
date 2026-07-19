@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
-import '../data/models/video_engine_v2/analysis_metric.dart';
 import '../data/models/video_engine_v2/analysis_results.dart';
 
 /// Athlete/parent/coach-facing Elite coaching report with clear visuals.
@@ -25,12 +24,17 @@ class CoachingReportView extends StatelessWidget {
     final report = results.report;
     if (report == null) return const SizedBox.shrink();
 
-    final stroke = _strokeLabel(results);
+    final stroke = _strokeLabel(results, report: report);
     final distance = _distanceLabel(results);
     final summary = personalizeSummary(report.summary ?? '', athleteName);
-    final raceCue = _firstRaceCue(report.raceRecommendations);
+    final raceCue = _friendlyRaceCue(
+      _firstRaceCue(report.raceRecommendations),
+    );
     final potential = _parsePotentialDrop(report.raceRecommendations);
-    final metrics = _coachMetrics(results.metrics);
+    final nextRaceLines = _parentCoachRaceLines(
+      report.raceRecommendations,
+      potential: potential,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -66,20 +70,6 @@ class CoachingReportView extends StatelessWidget {
         if (potential != null) ...[
           const SizedBox(height: 16),
           _PotentialCallout(potential: potential, athleteName: athleteName),
-        ],
-        if (metrics.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          Text('Race snapshot', style: _sectionStyle(context)),
-          const SizedBox(height: 4),
-          Text(
-            'Key numbers from this clip — easy for coaches to scan.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textDark.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 10),
-          _MetricSpotlightRow(metrics: metrics),
         ],
         if (report.strengths.isNotEmpty) ...[
           const SizedBox(height: 20),
@@ -122,13 +112,13 @@ class CoachingReportView extends StatelessWidget {
             ],
           ),
         ],
-        if (report.raceRecommendations.isNotEmpty) ...[
+        if (nextRaceLines.isNotEmpty) ...[
           const SizedBox(height: 14),
           _SectionPanel(
             title: 'Next race',
             icon: Icons.flag_outlined,
             accent: const Color(0xFF1D4ED8),
-            children: report.raceRecommendations.map(_bullet).toList(),
+            children: nextRaceLines.map(_bullet).toList(),
           ),
         ],
         if (results.isFailed && onRetry != null) ...[
@@ -161,16 +151,53 @@ class CoachingReportView extends StatelessWidget {
     return summary;
   }
 
-  static String _strokeLabel(AnalysisResults results) {
+  static String _strokeLabel(
+    AnalysisResults results, {
+    AnalysisReport? report,
+  }) {
     final fromMap = results.stroke?['stroke'] ?? results.stroke?['type'];
-    final raw = (fromMap ?? results.video?['stroke'] ?? '').toString().trim();
-    if (raw.isEmpty) return 'Swim';
-    return raw
-        .replaceAll('_', ' ')
-        .split(' ')
-        .where((p) => p.isNotEmpty)
-        .map((p) => '${p[0].toUpperCase()}${p.substring(1).toLowerCase()}')
-        .join(' ');
+    final raw = (fromMap ??
+            results.video?['stroke'] ??
+            results.video?['event'] ??
+            results.athlete?['stroke'] ??
+            '')
+        .toString()
+        .trim();
+    final normalized = _canonicalStroke(raw);
+    if (normalized != null) return normalized;
+
+    final inferred = _inferStrokeFromText([
+      report?.summary,
+      ...?report?.raceRecommendations,
+      ...?report?.strengths,
+      for (final item in report?.priorityImprovements ?? const []) item.title,
+      results.video?['event']?.toString(),
+      results.video?['title']?.toString(),
+    ]);
+    return inferred ?? 'Swim';
+  }
+
+  static String? _canonicalStroke(String raw) {
+    final lower = raw.toLowerCase().replaceAll('_', ' ').trim();
+    if (lower.isEmpty || lower == 'swim' || lower == 'unknown') return null;
+    if (lower.contains('butter') || lower.contains('fly')) return 'Butterfly';
+    if (lower.contains('back')) return 'Backstroke';
+    if (lower.contains('breast')) return 'Breaststroke';
+    if (lower.contains('free')) return 'Freestyle';
+    if (lower == 'im' ||
+        lower.contains('individual medley') ||
+        RegExp(r'\bim\b').hasMatch(lower)) {
+      return 'IM';
+    }
+    return null;
+  }
+
+  static String? _inferStrokeFromText(List<String?> chunks) {
+    for (final chunk in chunks) {
+      final hit = _canonicalStroke(chunk ?? '');
+      if (hit != null) return hit;
+    }
+    return null;
   }
 
   static String? _distanceLabel(AnalysisResults results) {
@@ -191,53 +218,79 @@ class CoachingReportView extends StatelessWidget {
     return lines.isNotEmpty ? lines.first.trim() : null;
   }
 
+  /// Keep race cues short and parent/coach friendly.
+  static String? _friendlyRaceCue(String? raw) {
+    if (raw == null) return null;
+    var text = raw.trim();
+    if (text.isEmpty) return null;
+    text = text.replaceAll(RegExp(r'\s+'), ' ');
+    // Drop technical metric chatter if a model ever appends it.
+    text = text
+        .replaceAll(
+          RegExp(
+            r'\b(swimmer visibility|frames analyzed|coverage fraction)\b.*$',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .trim();
+    if (!text.toLowerCase().startsWith('race cue')) {
+      text = 'Race cue: $text';
+    }
+    return text;
+  }
+
   static ({String low, String high})? _parsePotentialDrop(List<String> lines) {
-    final re = RegExp(
-      r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*seconds',
-      caseSensitive: false,
-    );
+    final patterns = [
+      RegExp(
+        r'(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(?:sec(?:onds?)?)?',
+        caseSensitive: false,
+      ),
+    ];
     for (final line in lines) {
-      final m = re.firstMatch(line);
-      if (m != null) {
-        return (low: m.group(1)!, high: m.group(2)!);
+      final lower = line.toLowerCase();
+      if (!(lower.contains('potential') ||
+          lower.contains('drop') ||
+          lower.contains('faster') ||
+          lower.contains('sec'))) {
+        continue;
+      }
+      for (final re in patterns) {
+        final m = re.firstMatch(line);
+        if (m != null) {
+          return (low: m.group(1)!, high: m.group(2)!);
+        }
       }
     }
     return null;
   }
 
-  static List<AnalysisMetric> _coachMetrics(List<AnalysisMetric> metrics) {
-    const preferred = [
-      'stroke_rate',
-      'average_stroke_rate',
-      'cycle_duration',
-      'average_cycle_duration',
-      'stroke_count',
-      'distance_per_stroke',
-      'estimated_underwater_kick_count',
-      'underwater_kick_count',
-      'target_coverage',
-    ];
-    final available = metrics.where((m) => !m.isUnavailable && m.value != null);
-    final ranked = <AnalysisMetric>[];
-    for (final key in preferred) {
-      for (final m in available) {
-        if (m.name.toLowerCase().contains(key) && !ranked.contains(m)) {
-          ranked.add(m);
-        }
+  static List<String> _parentCoachRaceLines(
+    List<String> lines, {
+    ({String low, String high})? potential,
+  }) {
+    final cleaned = <String>[];
+    for (final line in lines) {
+      final t = line.trim();
+      if (t.isEmpty) continue;
+      final lower = t.toLowerCase();
+      if (lower.contains('swimmer visibility') ||
+          lower.contains('frames analyzed') ||
+          lower.contains('coverage fraction') ||
+          lower.contains('frames with swimmer')) {
+        continue;
       }
+      // Potential is shown in its own callout.
+      if (potential != null &&
+          (lower.contains('potential') ||
+              RegExp(r'\d+(?:\.\d+)?\s*[-–—]\s*\d+(?:\.\d+)?\s*sec')
+                  .hasMatch(lower))) {
+        continue;
+      }
+      cleaned.add(t);
     }
-    for (final m in available) {
-      if (!ranked.contains(m)) ranked.add(m);
-      if (ranked.length >= 4) break;
-    }
-    return ranked.take(4).toList(growable: false);
+    return cleaned;
   }
-
-  TextStyle? _sectionStyle(BuildContext context) =>
-      Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: AppColors.primaryDark,
-          );
 
   static Widget _bullet(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
@@ -707,11 +760,12 @@ class _StrokeRhythmChart extends StatelessWidget {
 
   _RhythmGuide _guideFor(String stroke) {
     final s = stroke.toLowerCase();
-    if (s.contains('butter')) {
+    if (s.contains('butter') || (s.contains('fly') && !s.contains('free'))) {
       return _RhythmGuide(
         caption:
-            'Teaching model for this week — not a live sensor trace. Chase kick timing with the hands.',
-        footer: 'Highlight: second kick on hand entry',
+            'Butterfly rhythm model for parents & coaches — timing cue only, not a live sensor trace. '
+            'Chase the second kick with the hands.',
+        footer: 'Highlight: second kick on hand entry · breathe late and low',
         highlightIndexes: const {3},
         spots: const [
           FlSpot(0, 0.35),
@@ -733,7 +787,7 @@ class _StrokeRhythmChart extends StatelessWidget {
     if (s.contains('breast')) {
       return _RhythmGuide(
         caption:
-            'Teaching model for breaststroke timing — pull, breathe, kick, glide.',
+            'Breaststroke rhythm model for parents & coaches — pull, breathe, kick, glide.',
         footer: 'Highlight: long glide before the next pull',
         highlightIndexes: const {4},
         spots: const [
@@ -756,7 +810,7 @@ class _StrokeRhythmChart extends StatelessWidget {
     if (s.contains('back')) {
       return _RhythmGuide(
         caption:
-            'Teaching model for backstroke — hips high and a clean hand entry.',
+            'Backstroke rhythm model for parents & coaches — hips high and a clean hand entry.',
         footer: 'Highlight: hand entry with hips up',
         highlightIndexes: const {1, 4},
         spots: const [
@@ -776,11 +830,36 @@ class _StrokeRhythmChart extends StatelessWidget {
         },
       );
     }
-    // freestyle / default
+    if (s == 'im' || s.contains('medley')) {
+      return _RhythmGuide(
+        caption:
+            'IM rhythm model for parents & coaches — clean transitions keep speed between strokes.',
+        footer: 'Highlight: tight transition, then settle into tempo',
+        highlightIndexes: const {2},
+        spots: const [
+          FlSpot(0, 0.45),
+          FlSpot(0.25, 0.8),
+          FlSpot(0.5, 0.55),
+          FlSpot(0.75, 0.82),
+          FlSpot(1, 0.45),
+        ],
+        xLabels: const {
+          '0.00': 'Fly',
+          '0.25': 'Back',
+          '0.50': 'Breast',
+          '0.75': 'Free',
+          '1.00': 'Wall',
+        },
+      );
+    }
+    // freestyle / default only when stroke is actually freestyle or unknown
     return _RhythmGuide(
-      caption:
-          'Teaching model for freestyle — quiet head and early catch pressure.',
-      footer: 'Highlight: early catch before the pull',
+      caption: s.contains('free')
+          ? 'Freestyle rhythm model for parents & coaches — quiet head and early catch pressure.'
+          : 'Stroke rhythm model for parents & coaches — one timing cue to practice this week.',
+      footer: s.contains('free')
+          ? 'Highlight: early catch before the pull'
+          : 'Highlight: one timing cue — keep it simple in the race',
       highlightIndexes: const {1},
       spots: const [
         FlSpot(0, 0.5),
@@ -828,11 +907,11 @@ class _PotentialCallout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = athleteName.trim().isEmpty ||
-            athleteName.toLowerCase() == 'demo' ||
-            athleteName.toLowerCase() == 'add athlete name'
-        ? 'Your'
-        : "$athleteName's";
+    final hasName = athleteName.trim().isNotEmpty &&
+        athleteName.toLowerCase() != 'demo' &&
+        athleteName.toLowerCase() != 'add athlete name' &&
+        athleteName.toLowerCase() != 'you';
+    final who = hasName ? athleteName.trim() : 'this swimmer';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -857,7 +936,7 @@ class _PotentialCallout extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  '${potential.low}-${potential.high}',
+                  '${potential.low}–${potential.high}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -865,10 +944,10 @@ class _PotentialCallout extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'sec',
+                  'sec drop',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w700,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w800,
                     fontSize: 11,
                   ),
                 ),
@@ -878,108 +957,14 @@ class _PotentialCallout extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              "$name potential with this race focus — practice the cue, then race it.",
+              "That's about a ${potential.low}–${potential.high} second drop for $who "
+              'with this race focus — practice the cue in training, then race it.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     height: 1.35,
                     color: AppColors.primaryDark,
                   ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricSpotlightRow extends StatelessWidget {
-  const _MetricSpotlightRow({required this.metrics});
-
-  final List<AnalysisMetric> metrics;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 520;
-        final cards = metrics
-            .map(
-              (m) => _MetricCard(
-                title: _friendlyName(m.displayName),
-                value: m.displayWithUnit,
-              ),
-            )
-            .toList();
-        if (wide) {
-          return Row(
-            children: [
-              for (var i = 0; i < cards.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Expanded(child: cards[i]),
-              ],
-            ],
-          );
-        }
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: cards
-              .map(
-                (c) => SizedBox(
-                  width: (constraints.maxWidth - 8) / 2,
-                  child: c,
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
-
-  static String _friendlyName(String raw) {
-    return raw
-        .replaceAll('_', ' ')
-        .replaceAll('Average ', '')
-        .replaceAll('estimated ', '')
-        .trim();
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.title, required this.value});
-
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.6,
-                  color: AppColors.primaryDark,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
-                ),
           ),
         ],
       ),

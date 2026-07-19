@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/theme/app_theme.dart';
+import 'package:swimiq/data/models/video_engine_v2/analysis_metric.dart';
 import 'package:swimiq/data/models/video_engine_v2/analysis_results.dart';
 import 'package:swimiq/widgets/coaching_report_view.dart';
 
@@ -15,17 +16,32 @@ void main() {
     );
   });
 
-  testWidgets('CoachingReportView shows hero, rhythm chart, and sections', (
+  testWidgets('CoachingReportView is butterfly-specific and parent-friendly', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1100, 1400));
+    await tester.binding.setSurfaceSize(const Size(1100, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final results = AnalysisResults(
       jobId: 'job-1',
       status: 'completed',
       engineVersion: 'elite-0.9.0',
-      stroke: const {'stroke': 'butterfly', 'distance_m': 50},
+      // Missing stroke map — must infer Butterfly from the summary.
+      stroke: const {'distance_m': 50},
+      metrics: const [
+        AnalysisMetric(
+          name: 'swimmer_visibility_coverage',
+          displayName: 'Swimmer visibility coverage',
+          value: 1,
+          unit: 'fraction',
+        ),
+        AnalysisMetric(
+          name: 'frames_analyzed',
+          displayName: 'Frames analyzed',
+          value: 57,
+          unit: 'frames',
+        ),
+      ],
       report: const AnalysisReport(
         summary: 'you, on this 50 butterfly: keep your rhythm and body line.',
         strengths: [
@@ -59,15 +75,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aspyn'), findsWidgets);
+    expect(find.textContaining('Butterfly'), findsWidgets);
     expect(
       find.textContaining('Aspyn, on this 50 butterfly'),
       findsOneWidget,
     );
     expect(find.text('Race focus map'), findsOneWidget);
     expect(find.text('Stroke rhythm guide'), findsOneWidget);
+    expect(find.textContaining('Butterfly rhythm model'), findsOneWidget);
+    expect(find.textContaining('Teaching model for freestyle'), findsNothing);
+    expect(find.text('Race snapshot'), findsNothing);
+    expect(find.textContaining('Swimmer visibility'), findsNothing);
+    expect(find.textContaining('Frames analyzed'), findsNothing);
     expect(find.text('Keep doing this'), findsOneWidget);
     expect(find.text('Fix this next'), findsOneWidget);
     expect(find.text('Next race'), findsOneWidget);
-    expect(find.textContaining('0.3-0.8'), findsWidgets);
+    expect(find.textContaining('0.3–0.8'), findsWidgets);
+    expect(find.textContaining('second drop'), findsWidgets);
+    expect(
+      find.textContaining("That's about a 0.3–0.8 second drop for Aspyn"),
+      findsOneWidget,
+    );
   });
 }
