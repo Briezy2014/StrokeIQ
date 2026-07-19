@@ -1,5 +1,5 @@
 # Serve swimiq/build/web on 127.0.0.1 and open Chrome when ready.
-# ASCII-only. Used by launch-chrome-kara.ps1 for a blank-page-safe path.
+# ASCII-only. Used by launch-chrome-kara.ps1.
 param(
     [Parameter(Mandatory = $true)][string]$WebDir,
     [Parameter(Mandatory = $true)][int]$Port,
@@ -19,55 +19,48 @@ if (-not (Test-Path -LiteralPath (Join-Path $WebDir 'main.dart.js')) -and
     exit 1
 }
 
-$py = $null
-foreach ($c in @('py -3', 'python', 'python3')) {
-    try {
-        $parts = $c -split ' '
-        & $parts[0] $($parts[1]) --version >$null 2>&1
-        if ($LASTEXITCODE -eq 0 -or $-) { $py = $c; break }
-    } catch {}
-}
-# Simpler python probe
-if (-not $py) {
-    if (Get-Command py -ErrorAction SilentlyContinue) { $py = 'py' }
-    elseif (Get-Command python -ErrorAction SilentlyContinue) { $py = 'python' }
-}
-
-if (-not $py) {
+$serveExe = $null
+$serveArgs = @()
+if (Get-Command py -ErrorAction SilentlyContinue) {
+    $serveExe = 'py'
+    $serveArgs = @('-3', '-m', 'http.server', "$Port", '--bind', '127.0.0.1')
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $serveExe = 'python'
+    $serveArgs = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
+} else {
     Write-Host '[FAIL] Python not found to serve the app.' -ForegroundColor Red
-    Write-Host "Open this folder in Chrome manually after install: $WebDir" -ForegroundColor Yellow
+    Write-Host "Open this folder in Chrome manually: $WebDir" -ForegroundColor Yellow
     exit 1
 }
 
-Set-Location -LiteralPath $WebDir
 Write-Host "[OK] Serving $WebDir" -ForegroundColor Green
 Write-Host "[OK] URL $url" -ForegroundColor Green
-
-if ($py -eq 'py') {
-    $serveArgs = @('-3', '-m', 'http.server', "$Port", '--bind', '127.0.0.1')
-    $serveExe = 'py'
-} else {
-    $serveArgs = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
-    $serveExe = $py
-}
 
 $server = Start-Process -FilePath $serveExe -ArgumentList $serveArgs -WorkingDirectory $WebDir -PassThru -WindowStyle Minimized
 Start-Sleep -Seconds 2
 
 $ready = $false
-for ($i = 0; $i -lt 30; $i++) {
+for ($i = 0; $i -lt 40; $i++) {
     try {
         $r = Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 3
         if ($r.StatusCode -eq 200 -and ($r.Content -match 'flutter|SwimIQ')) {
-            $ready = $true
-            break
+            $js = Invoke-WebRequest -UseBasicParsing -Uri ($url + 'main.dart.js') -TimeoutSec 5
+            if ($js.StatusCode -eq 200 -and $js.RawContentLength -gt 10000) {
+                $ready = $true
+                break
+            }
+            $boot = Invoke-WebRequest -UseBasicParsing -Uri ($url + 'flutter_bootstrap.js') -TimeoutSec 5
+            if ($boot.StatusCode -eq 200 -and $boot.RawContentLength -gt 200) {
+                $ready = $true
+                break
+            }
         }
     } catch {}
     Start-Sleep -Seconds 1
 }
 
 if (-not $ready) {
-    Write-Host '[FAIL] Local web server did not respond.' -ForegroundColor Red
+    Write-Host '[FAIL] Local web server did not serve a complete app.' -ForegroundColor Red
     try { Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue } catch {}
     exit 1
 }
