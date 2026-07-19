@@ -46,11 +46,15 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final eventOne = topEvents.isNotEmpty
         ? topEvents.first
-        : 'Top event — log a meet result';
+        : 'Log a meet result to feature your best event';
     final eventTwo = topEvents.length > 1
         ? topEvents[1]
-        : 'Second event — add another PB';
+        : 'Add a second PB for coaches to compare';
     final scoreText = swimIqScore > 0 ? '$swimIqScore' : '—';
+    final cutLabel = highestCut.trim().isNotEmpty &&
+            !highestCut.toLowerCase().contains('log')
+        ? highestCut.trim()
+        : 'Cuts unlock after meet results';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -63,44 +67,111 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
 
         return DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(26),
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
                 Color(0xFF020812),
+                Color(0xFF0A3A6E),
                 AppColors.primaryDeep,
                 AppColors.primary,
               ],
+              stops: [0.0, 0.35, 0.72, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryDeep.withValues(alpha: 0.4),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: AppColors.primaryDeep.withValues(alpha: 0.45),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
               ),
             ],
-            border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(26),
             child: Stack(
               children: [
                 Positioned(
-                  right: -28,
-                  bottom: -24,
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF7DD3FC),
+                          Color(0xFF38B6FF),
+                          Color(0xFFFFFFFF),
+                          Color(0xFF38B6FF),
+                          Color(0xFF7DD3FC),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -36,
+                  top: 40,
                   child: Icon(
-                    Icons.water_drop,
-                    size: 180,
+                    Icons.pool,
+                    size: 200,
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+                Positioned(
+                  left: -20,
+                  bottom: -30,
+                  child: Icon(
+                    Icons.water,
+                    size: 160,
                     color: Colors.white.withValues(alpha: 0.05),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: const Text(
+                              'SWIMIQ · RECRUITING CARD',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Athlete Passport',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -125,7 +196,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                 Text(
                                   team?.trim().isNotEmpty == true
                                       ? team!.trim()
-                                      : 'Add swim team in passport',
+                                      : 'Your team — add it in Athlete Details',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
@@ -186,14 +257,12 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    _HeroPill(
-                                      label: 'Highest cut: $highestCut',
-                                    ),
+                                    _HeroPill(label: 'Highest cut: $cutLabel'),
                                     _HeroPill(
                                       label: usaSwimmingId?.trim().isNotEmpty ==
                                               true
                                           ? 'USA: ${usaSwimmingId!.trim()}'
-                                          : 'USA ID: add in passport',
+                                          : 'USA ID — add in passport',
                                       muted: usaSwimmingId?.trim().isEmpty !=
                                           false,
                                     ),
@@ -255,6 +324,16 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '© 2026 SwimIQ LLC · Built for the next level',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),

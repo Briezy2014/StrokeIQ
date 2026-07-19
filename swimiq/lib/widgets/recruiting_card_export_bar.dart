@@ -96,21 +96,29 @@ class RecruitingCardExportBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Exportable Recruiting Card',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          'Your recruiting card',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppColors.primaryDeep,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
               ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
+        Text(
+          'A wallet-sized SwimIQ card coaches can keep — export PDF or print.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textDark.withValues(alpha: 0.78),
+                height: 1.35,
+              ),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _exportPdf(context),
-                icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                label: const Text('Export PDF'),
+                icon: const Icon(Icons.ios_share_outlined, size: 18),
+                label: const Text('Share / Export'),
               ),
             ),
             const SizedBox(width: 8),
@@ -118,14 +126,14 @@ class RecruitingCardExportBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () => _printCard(context),
                 icon: const Icon(Icons.print_outlined, size: 18),
-                label: const Text('Print'),
+                label: const Text('Print card'),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
-          'Print or save a wallet-sized card (3.5″ × 2″) for meets and coaches. Upload a profile photo on the card below.',
+          'Tip: add a headshot, team, GPA, and top events below so the card looks game-day ready.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey.shade700,
                 height: 1.3,
