@@ -30,9 +30,13 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Clearing any old server on port 8080...
-if exist "%~dp0scripts\kill-elite-port.ps1" (
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\kill-elite-port.ps1"
+if /I "%SWIMIQ_SKIP_PORT_KILL%"=="1" (
+  echo Skipping port kill - parent starter already cleared 8080.
+) else (
+  echo Clearing any old server on port 8080...
+  if exist "%~dp0scripts\kill-elite-port.ps1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\kill-elite-port.ps1"
+  )
 )
 echo.
 

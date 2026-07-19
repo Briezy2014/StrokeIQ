@@ -8,7 +8,7 @@ param(
     [switch]$ForceRestart
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 
 $ApiBase = 'http://127.0.0.1:8080'
 $HealthUrl = "$ApiBase/health"
@@ -42,10 +42,13 @@ function Test-EliteFullyReady([string]$body) {
 
 function Get-EnvValue([string]$path, [string]$key) {
     if (-not (Test-Path -LiteralPath $path)) { return '' }
-    $line = Get-Content -LiteralPath $path | Where-Object { $_ -match ("^\s*" + [regex]::Escape($key) + "\s*=") } | Select-Object -First 1
+    # Last matching line wins (people sometimes paste GEMINI_API_KEY twice).
+    $line = Get-Content -LiteralPath $path |
+        Where-Object { $_ -match ("^\s*" + [regex]::Escape($key) + "\s*=") } |
+        Select-Object -Last 1
     if (-not $line) { return '' }
     $v = ($line -replace ("^\s*" + [regex]::Escape($key) + "\s*="), '').Trim().Trim('"').Trim("'")
-    if ($v -notmatch '^\s*["'']' -and $v.Contains('#')) {
+    if ($v.Contains('#')) {
         $v = ($v -split '#', 2)[0].Trim()
     }
     return $v
@@ -143,7 +146,12 @@ if (-not (Test-Path -LiteralPath $EliteBat)) {
 
 Write-Host ''
 Write-Host '>>> Opening Elite black window. DO NOT CLOSE IT. <<<' -ForegroundColor Yellow
-$eliteProc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', "`"$EliteBat`"" -WorkingDirectory (Split-Path $EliteBat -Parent) -PassThru
+# Child Elite bat must NOT kill port 8080 again (that fought the new server).
+$env:SWIMIQ_SKIP_PORT_KILL = '1'
+$eliteProc = Start-Process -FilePath 'cmd.exe' `
+    -ArgumentList '/k', "`"$EliteBat`"" `
+    -WorkingDirectory (Split-Path $EliteBat -Parent) `
+    -PassThru
 
 $deadline = (Get-Date).AddSeconds(420)
 $startedAt = Get-Date
