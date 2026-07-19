@@ -1,3 +1,4 @@
+import '../../core/recruiting/meet_history_analytics.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
@@ -8,6 +9,7 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swim_schedule_entry.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 import 'swim_time.dart';
@@ -55,6 +57,9 @@ class PassportSnapshot {
 class PassportMetrics {
   PassportMetrics._();
 
+  /// Shown when there is no upcoming meet/race on the schedule.
+  static const noUpcomingMeetLabel = 'None scheduled';
+
   static PassportSnapshot build({
     required String swimmerName,
     required SwimmerProfile? profile,
@@ -64,6 +69,8 @@ class PassportMetrics {
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
     required UsaMotivationalStandardsCatalog motivationalStandards,
+    List<SwimScheduleEntry> schedules = const [],
+    DateTime? now,
   }) {
     final userVideos = videos.where((video) => video.isUserFacing).toList();
     final userVideoIds =
@@ -106,7 +113,11 @@ class PassportMetrics {
         catalog: motivationalStandards,
         profile: profile,
       ),
-      nextMeet: nextMeet(meetResults),
+      nextMeet: nextMeet(
+        meetResults: meetResults,
+        schedules: schedules,
+        now: now,
+      ),
       imxScore: imxScore(raceLogs),
       readiness: readiness(
         raceLogs: raceLogs,
@@ -234,14 +245,77 @@ class PassportMetrics {
   }
 
   static String latestMeet(List<MeetResult> meetResults) {
-    if (meetResults.isEmpty) return 'No meet results logged yet';
-    final sorted = [...meetResults]
+    final realMeets = meetResults
+        .where(
+          (result) =>
+              result.meetName.trim().isNotEmpty &&
+              !MeetHistoryAnalytics.isSyntheticMeetName(result.meetName),
+        )
+        .toList();
+    if (realMeets.isEmpty) return 'No meet results logged yet';
+    final sorted = [...realMeets]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
     return sorted.first.meetName;
   }
 
-  /// Most recent meet attended (displayed as "Latest Meet" in the passport).
-  static String nextMeet(List<MeetResult> meetResults) => latestMeet(meetResults);
+  /// Upcoming meet/race from Schedule (never photo-upload placeholders).
+  static String nextMeet({
+    List<MeetResult> meetResults = const [],
+    List<SwimScheduleEntry> schedules = const [],
+    DateTime? now,
+  }) {
+    final upcoming = _upcomingScheduleMeet(schedules, now: now);
+    if (upcoming != null) {
+      final title = upcoming.title.trim();
+      if (title.isEmpty) return noUpcomingMeetLabel;
+      return '$title · ${_formatShortDate(upcoming.scheduleDate)}';
+    }
+    // Do not fall back to meet-result names like "Uploaded best times".
+    return noUpcomingMeetLabel;
+  }
+
+  static SwimScheduleEntry? _upcomingScheduleMeet(
+    List<SwimScheduleEntry> schedules, {
+    DateTime? now,
+  }) {
+    if (schedules.isEmpty) return null;
+    final clock = now ?? DateTime.now();
+    final startOfToday = DateTime(clock.year, clock.month, clock.day);
+    final future = schedules.where((entry) {
+      if (!entry.isMeet && !entry.isRace) return false;
+      if (MeetHistoryAnalytics.isSyntheticMeetName(entry.title)) return false;
+      final day = DateTime(
+        entry.scheduleDate.year,
+        entry.scheduleDate.month,
+        entry.scheduleDate.day,
+      );
+      return !day.isBefore(startOfToday);
+    }).toList()
+      ..sort((a, b) {
+        final byDate = a.scheduleDate.compareTo(b.scheduleDate);
+        if (byDate != 0) return byDate;
+        return (a.startTime ?? '').compareTo(b.startTime ?? '');
+      });
+    return future.isEmpty ? null : future.first;
+  }
+
+  static String _formatShortDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}';
+  }
 
   static String readiness({
     required List<RaceLog> raceLogs,

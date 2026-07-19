@@ -783,10 +783,14 @@ class _CompactAthleteStatusStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final upcomingMeet =
+        snapshot.nextMeet == PassportMetrics.noUpcomingMeetLabel
+            ? 'Add on Log → Schedule'
+            : snapshot.nextMeet;
     final chips = [
       _StatusChip('Focus', snapshot.currentFocus),
       _StatusChip('Readiness', snapshot.readiness),
-      _StatusChip('Latest meet', snapshot.nextMeet),
+      _StatusChip('Upcoming meet', upcomingMeet),
       _StatusChip('IMX / IMR', snapshot.imxScore),
     ];
 
