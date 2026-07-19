@@ -57,6 +57,29 @@ class AnalysisJob {
   /// Human-readable stage for progress UI (never invent a percentage).
   String get stageLabel => stageDisplayLabel(stage);
 
+  /// Athlete/parent/coach-facing status — never expose "limitations".
+  String get statusLabel {
+    switch (status.trim().toLowerCase()) {
+      case 'completed':
+      case 'completed_with_limitations':
+        return 'Complete';
+      case 'failed':
+        return 'Could not finish';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'queued':
+        return 'Queued';
+      case 'processing':
+      case 'running':
+        return 'Working';
+      default:
+        final cleaned = status.replaceAll('_', ' ').trim();
+        if (cleaned.isEmpty) return 'Working';
+        if (cleaned.toLowerCase().contains('limitation')) return 'Complete';
+        return cleaned[0].toUpperCase() + cleaned.substring(1);
+    }
+  }
+
   static String stageDisplayLabel(String stage) {
     switch (stage.trim().toLowerCase()) {
       case 'queued':
@@ -80,7 +103,8 @@ class AnalysisJob {
       case 'completed':
         return 'Completed';
       case 'completed_with_limitations':
-        return 'Completed with limitations';
+        // Keep athlete/parent/coach-facing copy professional — no "limitations".
+        return 'Report ready';
       case 'failed':
         return 'Failed';
       case 'cancelled':

@@ -231,7 +231,9 @@ class _SwimmerReport extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (results.isFailed || results.isPartialSuccess) ...[
+        // Do not show technical "limitations" banners to swimmers/parents/coaches.
+        // Only warn when the analysis truly failed and notes may be incomplete.
+        if (results.isFailed) ...[
           Card(
             color: const Color(0xFFFFF7ED),
             child: Padding(
@@ -239,20 +241,15 @@ class _SwimmerReport extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    results.isFailed
-                        ? Icons.error_outline
-                        : Icons.info_outline,
-                    color: results.isFailed
-                        ? const Color(0xFFC2410C)
-                        : AppColors.primaryDark,
+                  const Icon(
+                    Icons.error_outline,
+                    color: Color(0xFFC2410C),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      results.isFailed
-                          ? 'Analysis did not finish successfully. The notes below may be incomplete — do not treat them as a full coaching report.'
-                          : 'Analysis finished with limitations. Review the coaching notes, then re-film if something looks off.',
+                      'We could not finish a full coaching report for this clip. '
+                      'Try again with a clear side-view video of the whole race.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             height: 1.35,
                             fontWeight: FontWeight.w600,
@@ -446,7 +443,7 @@ class _VideoAnalysisHistoryScreenState
                           ),
                           title: Text(job.stageLabel),
                           subtitle: Text(
-                            '${job.status} · ${job.jobId.substring(0, job.jobId.length.clamp(0, 8))}…',
+                            '${job.statusLabel} · ${job.jobId.substring(0, job.jobId.length.clamp(0, 8))}…',
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {

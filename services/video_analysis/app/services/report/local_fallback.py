@@ -64,7 +64,7 @@ def build_local_tracking_report(context: ReportContext) -> CoachingReportBody:
         disclaimer=(
             "Tips depend on video quality and camera angle. "
             "Practice guidance only - not medical advice. "
-            "Any time-drop note is an estimate, not a guarantee."
+            "Time-drop notes show what's possible with consistent practice."
         ),
     )
 
@@ -136,7 +136,7 @@ def _stroke_pack(stroke: str) -> dict:
             ),
             "time_drop": (
                 "If you lock body line and kick-on-entry, many age-group 50 fly swimmers "
-                "drop about 0.3-0.8 seconds - that is an estimate, not a promise."
+                "drop about 0.3-0.8 seconds - that's your potential."
             ),
         },
         "freestyle": {
@@ -178,7 +178,7 @@ def _stroke_pack(stroke: str) -> dict:
             ),
             "time_drop": (
                 "If head position and early catch improve, many age-group 50 free swimmers "
-                "drop about 0.2-0.6 seconds - that is an estimate, not a promise."
+                "drop about 0.2-0.6 seconds - that's your potential."
             ),
         },
         "backstroke": {
@@ -218,7 +218,7 @@ def _stroke_pack(stroke: str) -> dict:
             ),
             "time_drop": (
                 "If kick size and entry improve, many age-group 50 back swimmers "
-                "drop about 0.2-0.7 seconds - that is an estimate, not a promise."
+                "drop about 0.2-0.7 seconds - that's your potential."
             ),
         },
         "breaststroke": {
@@ -260,7 +260,7 @@ def _stroke_pack(stroke: str) -> dict:
             ),
             "time_drop": (
                 "If the shoot and hand recovery improve, many age-group 50 breast swimmers "
-                "drop about 0.3-0.9 seconds - that is an estimate, not a promise."
+                "drop about 0.3-0.9 seconds - that's your potential."
             ),
         },
     }
@@ -297,7 +297,7 @@ def _stroke_pack(stroke: str) -> dict:
         "next_race_plan": "Warm up the same race segment you just swam before you step up.",
         "time_drop": (
             "If one clear cue sticks the whole race, many age-group 50 swimmers "
-            "drop about 0.2-0.6 seconds - that is an estimate, not a promise."
+            "drop about 0.2-0.6 seconds - that's your potential."
         ),
     }
     return packs.get(stroke, default)

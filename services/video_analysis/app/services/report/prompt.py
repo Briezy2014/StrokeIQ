@@ -26,9 +26,12 @@ Hard rules:
 9. At most TWO strengths and TWO priority improvements.
 10. Drills must be DRYLAND ONLY. One or two per improvement.
 11. Include a short disclaimer that tips depend on video quality and camera angle.
-12. Race recommendations: one clear race cue, plus an optional time-drop estimate
-    (say it is an estimate, not a guarantee).
+12. Race recommendations: one clear race cue, plus an optional time-drop note
+    framed as potential (e.g. "that's your potential") — never say
+    "estimate", "not a promise", "not a guarantee", or "limitations".
 13. Specific to the stroke/distance. No filler.
+14. Never say the analysis "finished with limitations" or anything similar.
+    Parents, coaches, and swimmers should only see clear coaching language.
 
 Return structured JSON matching the required schema only.
 """

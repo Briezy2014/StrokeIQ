@@ -151,7 +151,7 @@ class _VideoJobProgressScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Status: ${job.status.replaceAll('_', ' ')}'
+                          'Status: ${job.statusLabel}'
                           '${job.progress != null ? ' · ${(job.progress! * 100).clamp(0, 100).round()}%' : ''}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),

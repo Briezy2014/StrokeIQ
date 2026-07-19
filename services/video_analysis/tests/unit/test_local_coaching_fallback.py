@@ -60,6 +60,10 @@ def test_local_fallback_is_swimmer_speak():
     assert "dryland" in blob
     assert "race cue" in blob
     assert "aspyn" in body.summary.lower()
+    assert "estimate, not a promise" not in blob
+    assert "not a guarantee" not in blob
+    assert "limitations" not in blob
+    assert "that's your potential" in blob or "your potential" in blob
     assert 1 <= len(body.strengths) <= 2
     assert 1 <= len(body.priority_improvements) <= 2
     assert validate_coaching_report(body, ctx).ok, validate_coaching_report(body, ctx).errors
@@ -70,4 +74,6 @@ def test_local_fallback_freestyle_time_drop():
     body = build_local_tracking_report(ctx)
     joined = " ".join(body.race_recommendations).lower()
     assert "seconds" in joined
+    assert "your potential" in joined
+    assert "not a promise" not in joined
     assert validate_coaching_report(body, ctx).ok
