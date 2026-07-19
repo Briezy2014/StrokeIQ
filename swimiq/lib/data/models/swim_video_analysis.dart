@@ -59,6 +59,9 @@ class SwimVideoAnalysis {
   bool get isLegacyRulesEngine {
     final engine = analysisEngine;
     if (engine == 'swimiq-v1-rules') return true;
+    // Gemini / modern engines are never "legacy rules", even without sections.
+    if (isGeminiEngine) return false;
+    if (engine != null && engine.startsWith('swimiq-v2')) return false;
     final summaryLower = summary.toLowerCase();
     if (summaryLower.contains('overall readiness score')) return true;
     if (summaryLower.contains('consistent training history')) return true;

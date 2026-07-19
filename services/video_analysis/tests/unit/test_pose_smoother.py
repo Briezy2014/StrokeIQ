@@ -309,3 +309,97 @@ def test_no_swimming_performance_metrics_exported():
     forbidden = ["stroke_rate", "dps", "underwater", "turn_time", "gemini"]
     for word in forbidden:
         assert word not in blob.lower()
+
+
+def test_interpolation_follows_time_not_index():
+    """Uneven timestamps must place the fill near the temporally closer anchor."""
+    poses = [
+        _pose(0, pts=_core_pts(100, 100), timestamp_ms=0.0),
+        _pose(1, pts={}, timestamp_ms=10.0),  # near frame 0 in time
+        _pose(2, pts=_core_pts(200, 200), timestamp_ms=1000.0),
+    ]
+    # Equal confidence so weighting does not bias away from temporal lerp.
+    for p in poses:
+        for kp in p["keypoints"]:
+            if kp["confidence"]:
+                kp["confidence"] = 0.9
+    result = smooth_pose_sequence(
+        poses,
+        params=SmoothingParams(max_interpolation_gap_frames=3, continuity_max_jump_px=500.0),
+    )
+    wrist = result.smoothed_poses[1]["keypoints"][WRIST]
+    assert wrist["quality_flag"] == "interpolated"
+    assert wrist["x"] is not None
+    # Index midpoint would be ~165; time midpoint of 10ms in a 1000ms span is ~131.
+    assert wrist["x"] < 145
+    assert wrist["x"] > 125
+
+
+def test_subsampled_frames_do_not_trip_continuity():
+    """Normal swim motion across interval=4 samples must not be outlier_removed."""
+    poses = []
+    for i, frame in enumerate([0, 4, 8, 12]):
+        # ~150px between processed samples — exceeds the raw 100px ceiling but is
+        # normal motion when scaled by elapsed time (4 frames @ 30fps).
+        poses.append(
+            _pose(
+                frame,
+                pts=_core_pts(100 + i * 150, 100 + i * 20),
+                timestamp_ms=frame * (1000.0 / 30.0),
+            )
+        )
+    result = smooth_pose_sequence(
+        poses,
+        params=SmoothingParams(
+            continuity_max_jump_px=100.0,
+            max_joint_velocity_px_s=2500.0,
+            max_interpolation_gap_frames=0,
+        ),
+    )
+    for p in result.smoothed_poses:
+        assert p["keypoints"][WRIST]["quality_flag"] == "valid"
+
+
+def test_null_frame_number_and_short_crop_do_not_crash():
+    poses = [_pose(0, pts=_core_pts(100, 100))]
+    poses[0]["frame_number"] = None
+    poses[0]["crop_coordinates"] = [5.0]  # too short
+    result = smooth_pose_sequence(poses)
+    assert len(result.smoothed_poses) == 1
+    assert result.smoothed_poses[0]["keypoints"][WRIST]["x"] is not None
+
+
+def test_overall_confidence_uses_core_joints_not_face_hands():
+    poses = [_pose(0, pts=_core_pts(100, 100, conf=0.9))]
+    # Flood unused WholeBody slots with tiny confidence to dilute a naive mean.
+    for j, kp in enumerate(poses[0]["keypoints"]):
+        if j not in CORE and kp["x"] is None:
+            kp["confidence"] = 0.01
+    result = smooth_pose_sequence(poses)
+    assert result.smoothed_poses[0]["overall_pose_confidence"] > 0.7
+    assert result.smoothed_poses[0]["usable"] is True
+
+
+def test_timestamp_repair_uses_series_dt_not_hardcoded_30fps():
+    poses = [
+        _pose(0, pts=_core_pts(100, 100), timestamp_ms=0.0),
+        _pose(1, pts=_core_pts(105, 100), timestamp_ms=0.0),  # broken / duplicate
+        _pose(2, pts=_core_pts(110, 100), timestamp_ms=1000.0 / 24.0),
+        _pose(3, pts=_core_pts(115, 100), timestamp_ms=2000.0 / 24.0),
+    ]
+    result = smooth_pose_sequence(
+        poses,
+        params=SmoothingParams(
+            continuity_max_jump_px=100.0,
+            max_joint_velocity_px_s=2500.0,
+            max_interpolation_gap_frames=0,
+        ),
+    )
+    # With ~24fps repair (~41.7ms), a 5px jump is fine; 30fps hardcode was also fine,
+    # but repaired timestamps must remain strictly increasing and keep samples valid.
+    flags = [p["keypoints"][WRIST]["quality_flag"] for p in result.smoothed_poses]
+    assert flags == ["valid", "valid", "valid", "valid"]
+    stamps = [float(p["timestamp_ms"]) for p in result.raw_poses]
+    # Raw timestamps are preserved; smoothing uses a repaired internal series only.
+    assert stamps[1] == 0.0
+

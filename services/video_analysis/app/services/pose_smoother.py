@@ -35,7 +35,8 @@ class SmoothingParams:
     max_joint_velocity_px_s: float = 2500.0
     # High enough to tolerate small keypoint jitter; teleports still fail velocity/continuity.
     max_joint_acceleration_px_s2: float = 80000.0
-    # Hard frame-to-frame continuity ceiling (teleport detection), fps-independent.
+    # Hard per-nominal-frame continuity ceiling (teleport detection).
+    # Scaled by elapsed time so subsampled / VFR clips are not over-rejected.
     continuity_max_jump_px: float = 100.0
     savgol_window: int = 5
     savgol_polyorder: int = 2
@@ -123,7 +124,7 @@ def smooth_pose_sequence(
         )
 
     # Sort by frame number for temporal processing
-    ordered = sorted(raw, key=lambda p: int(p.get("frame_number", 0)))
+    ordered = sorted(raw, key=lambda p: _safe_frame_number(p))
     n = len(ordered)
     k = len(COCO_WHOLEBODY_KEYPOINT_NAMES)
 
@@ -159,21 +160,20 @@ def smooth_pose_sequence(
                     flags[i][j] = "occluded"
 
     timestamps_s = np.array(
-        [float(p.get("timestamp_ms") or 0.0) / 1000.0 for p in ordered],
+        [_safe_timestamp_s(p) for p in ordered],
         dtype=np.float64,
     )
-    # Repair non-monotonic / missing timestamps with frame index fallback
-    for i in range(n):
-        if i > 0 and timestamps_s[i] <= timestamps_s[i - 1]:
-            timestamps_s[i] = timestamps_s[i - 1] + (1.0 / 30.0)
+    nominal_dt = _repair_timestamps(timestamps_s)
 
     # Outlier removal via velocity / acceleration / continuity
     for j in range(k):
-        _mark_outliers_1d(xs[:, j], ys[:, j], timestamps_s, flags, j, params)
+        _mark_outliers_1d(xs[:, j], ys[:, j], timestamps_s, flags, j, params, nominal_dt)
 
-    # Confidence-weighted interpolation for short gaps only
+    # Confidence-weighted interpolation for short gaps only (time-based)
     for j in range(k):
-        _interpolate_short_gaps(xs[:, j], ys[:, j], confs[:, j], flags, j, params)
+        _interpolate_short_gaps(
+            xs[:, j], ys[:, j], confs[:, j], timestamps_s, flags, j, params
+        )
 
     # Savitzky–Golay on contiguous valid/interpolated segments (not across occlusions)
     for j in range(k):
@@ -183,7 +183,9 @@ def smooth_pose_sequence(
     smoothed: list[dict[str, Any]] = []
     frame_confidence: list[dict[str, Any]] = []
     for i, pose in enumerate(ordered):
-        crop = list(pose.get("crop_coordinates") or [0, 0, 0, 0])
+        crop = pose.get("crop_coordinates")
+        if not isinstance(crop, (list, tuple)) or len(crop) < 2:
+            crop = [0.0, 0.0, 0.0, 0.0]
         x1, y1 = float(crop[0]), float(crop[1])
         kps_out = []
         valid_count = 0
@@ -239,9 +241,14 @@ def smooth_pose_sequence(
             for j in CORE_BODY_INDICES
             if j < k and kps_out[j]["x"] is not None and kps_out[j]["quality_flag"] in {"valid", "interpolated"}
         )
-        # Average over observed keypoints only — do not dilute with unused WholeBody slots.
-        observed = confs[i][confs[i] > 0]
-        overall = float(np.mean(observed)) if observed.size else 0.0
+        # Average confidence over core joints that survived as motion samples.
+        # Ignore low-confidence / face-hand dilution from WholeBody slots.
+        core_conf_vals = [
+            float(confs[i, j])
+            for j in CORE_BODY_INDICES
+            if j < k and flags[i][j] in {"valid", "interpolated"}
+        ]
+        overall = float(np.mean(core_conf_vals)) if core_conf_vals else 0.0
         usable = (
             core_valid >= params.usable_frame_min_core_joints
             and overall >= params.usable_frame_min_confidence
@@ -312,6 +319,55 @@ def _filter_method_name() -> str:
     )
 
 
+def _safe_frame_number(pose: dict[str, Any], default: int = 0) -> int:
+    value = pose.get("frame_number", default)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_timestamp_s(pose: dict[str, Any]) -> float:
+    value = pose.get("timestamp_ms")
+    if value is None:
+        return 0.0
+    try:
+        return float(value) / 1000.0
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _repair_timestamps(timestamps_s: np.ndarray) -> float:
+    """
+    Make timestamps strictly increasing.
+
+    Uses the median positive delta from the series when available so 24/60 fps
+    (and interval-subsampled) clips are not force-fit to 30 fps.
+    Returns the nominal dt used for repairs (seconds).
+    """
+    n = len(timestamps_s)
+    if n == 0:
+        return 1.0 / 30.0
+
+    positive_dts = [
+        float(timestamps_s[i] - timestamps_s[i - 1])
+        for i in range(1, n)
+        if timestamps_s[i] > timestamps_s[i - 1]
+    ]
+    if positive_dts:
+        nominal_dt = float(np.median(positive_dts))
+    else:
+        nominal_dt = 1.0 / 30.0
+    nominal_dt = max(nominal_dt, 1e-3)
+
+    for i in range(1, n):
+        if timestamps_s[i] <= timestamps_s[i - 1]:
+            timestamps_s[i] = timestamps_s[i - 1] + nominal_dt
+    return nominal_dt
+
+
 def _mark_outliers_1d(
     xs: np.ndarray,
     ys: np.ndarray,
@@ -319,11 +375,16 @@ def _mark_outliers_1d(
     flags: list[list[QualityFlag]],
     j: int,
     params: SmoothingParams,
+    nominal_dt: float = 1.0 / 30.0,
 ) -> None:
     """Reject impossible jumps using the last valid sample (not only i-1)."""
     n = len(xs)
     last_valid = -1
     prev_valid = -1
+    # continuity_max_jump_px is defined per ~native frame; always scale from that
+    # reference so subsampled / VFR series are not over-rejected.
+    reference_dt = 1.0 / 30.0
+    fallback_dt = max(float(nominal_dt), reference_dt, 1e-3)
     for i in range(n):
         if flags[i][j] != "valid" or np.isnan(xs[i]) or np.isnan(ys[i]):
             continue
@@ -337,23 +398,24 @@ def _mark_outliers_1d(
         jump = float(np.hypot(dx, dy))
         dt = float(timestamps_s[i] - timestamps_s[last_valid])
         if dt <= 1e-6:
-            dt = 1.0 / 30.0
+            dt = fallback_dt
         speed = jump / dt
-        reject = jump > params.continuity_max_jump_px or speed > params.max_joint_velocity_px_s
+        max_jump = params.continuity_max_jump_px * max(1.0, dt / reference_dt)
+        reject = jump > max_jump or speed > params.max_joint_velocity_px_s
 
         if not reject and prev_valid >= 0:
             prev_dx = xs[last_valid] - xs[prev_valid]
             prev_dy = ys[last_valid] - ys[prev_valid]
             dt_prev = float(timestamps_s[last_valid] - timestamps_s[prev_valid])
             if dt_prev <= 1e-6:
-                dt_prev = 1.0 / 30.0
+                dt_prev = fallback_dt
             vx = dx / dt
             vy = dy / dt
             prev_vx = prev_dx / dt_prev
             prev_vy = prev_dy / dt_prev
             dt_acc = 0.5 * (dt + dt_prev)
             if dt_acc <= 1e-6:
-                dt_acc = 1.0 / 30.0
+                dt_acc = fallback_dt
             accel = float(np.hypot((vx - prev_vx) / dt_acc, (vy - prev_vy) / dt_acc))
             if accel > params.max_joint_acceleration_px_s2:
                 reject = True
@@ -372,6 +434,7 @@ def _interpolate_short_gaps(
     xs: np.ndarray,
     ys: np.ndarray,
     confs: np.ndarray,
+    timestamps_s: np.ndarray,
     flags: list[list[QualityFlag]],
     j: int,
     params: SmoothingParams,
@@ -411,11 +474,18 @@ def _interpolate_short_gaps(
                 ys[g] = np.nan
             continue
 
-        # Confidence-weighted linear interpolation between anchors
+        # Confidence-weighted linear interpolation between anchors (time-based)
         c0 = max(confs[left], 1e-3)
         c1 = max(confs[right], 1e-3)
+        t0 = float(timestamps_s[left])
+        t1 = float(timestamps_s[right])
+        span = t1 - t0
         for g in range(start, end):
-            t = (g - left) / float(right - left)
+            if span <= 1e-9:
+                t = (g - left) / float(right - left)
+            else:
+                t = (float(timestamps_s[g]) - t0) / span
+            t = min(1.0, max(0.0, t))
             # Weight toward higher-confidence anchor
             w1 = t * c1
             w0 = (1.0 - t) * c0
@@ -497,7 +567,11 @@ def _compute_coverage(
 
     tracked_overlap = 0.0
     if tracked_frame_numbers:
-        pose_frames = {int(p.get("frame_number", -1)) for p in smoothed if p.get("usable")}
+        pose_frames = {
+            _safe_frame_number(p, default=-1)
+            for p in smoothed
+            if p.get("usable")
+        }
         if tracked_frame_numbers:
             tracked_overlap = 100.0 * len(pose_frames & tracked_frame_numbers) / len(tracked_frame_numbers)
 

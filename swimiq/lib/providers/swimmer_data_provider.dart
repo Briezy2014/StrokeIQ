@@ -129,13 +129,32 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }
 
   List<SwimVideoAnalysis> _mergeAnalyses(List<SwimVideoAnalysis> remote) {
-    final merged = <String, SwimVideoAnalysis>{
-      for (final analysis in remote)
-        if (analysis.swimVideoId != null && analysis.swimVideoId!.isNotEmpty)
-          analysis.swimVideoId!: analysis,
-    };
-    merged.addAll(_localAnalysesByVideoId);
+    final merged = <String, SwimVideoAnalysis>{};
+    // Remote is ordered created_at desc — keep the newest per video.
+    for (final analysis in remote) {
+      final videoId = analysis.swimVideoId;
+      if (videoId == null || videoId.isEmpty) continue;
+      final existing = merged[videoId];
+      if (existing == null || _isNewerAnalysis(analysis, existing)) {
+        merged[videoId] = analysis;
+      }
+    }
+    for (final entry in _localAnalysesByVideoId.entries) {
+      final existing = merged[entry.key];
+      if (existing == null || _isNewerAnalysis(entry.value, existing)) {
+        merged[entry.key] = entry.value;
+      }
+    }
     return merged.values.toList();
+  }
+
+  bool _isNewerAnalysis(SwimVideoAnalysis a, SwimVideoAnalysis b) {
+    final aAt = a.createdAt;
+    final bAt = b.createdAt;
+    if (aAt != null && bAt != null) return aAt.isAfter(bAt);
+    if (aAt != null) return true;
+    if (bAt != null) return false;
+    return true;
   }
 
   Future<SwimmerData> _load(String swimmer) async {
@@ -443,23 +462,18 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             );
       } on GeminiAnalysisException catch (error) {
         return error.message;
-      } catch (_) {
-        analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
-              video: video,
-              raceLogs: current.raceLogs,
-              goals: current.goals,
-              profile: current.profile,
-              standards: current.usaStandards,
-            );
-        if (poseMetrics != null) {
-          analysis = analysis.copyWith(
-            analysisJson: {
-              ...?analysis.analysisJson,
-              'pose_metrics': poseMetrics.toJson(),
-              'engine': 'swimiq-v1-notes-mediapipe',
-            },
-          );
-        }
+      } catch (error) {
+        // Do not silently fall back to notes-only "AI" — that looked like success.
+        return 'AI analysis failed: $error';
+      }
+
+      if (poseMetrics != null) {
+        analysis = analysis.copyWith(
+          analysisJson: {
+            ...?analysis.analysisJson,
+            'pose_metrics': poseMetrics.toJson(),
+          },
+        );
       }
 
       final analysisWithIds = analysis.copyWith(
@@ -472,10 +486,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             .read(swimIqRepositoryProvider)
             .insertVideoAnalysis(analysisWithIds);
         _localAnalysesByVideoId[videoId] = saved;
-      } catch (_) {
-        _localAnalysesByVideoId[videoId] = analysisWithIds.copyWith(
-          id: 'local-$videoId',
-        );
+      } catch (error) {
+        return 'AI analysis completed but could not be saved: $error';
       }
 
       final refreshed = state.value ?? current;

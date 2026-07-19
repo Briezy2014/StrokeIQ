@@ -131,7 +131,9 @@ def render_skeleton_overlay(
         cap.release()
         raise RuntimeError(f"Unable to open overlay writer: {output_path}")
 
-    by_index = {int(p.get("frame_number", -1)): p for p in smoothed_poses}
+    by_index = {
+        _safe_overlay_frame_number(p, default=-1): p for p in smoothed_poses
+    }
     idx = 0
     try:
         while True:
@@ -145,7 +147,7 @@ def render_skeleton_overlay(
                 _hud(
                     frame,
                     job_id=job_id,
-                    frame_index=int(pf.get("frame_number", idx)),
+                    frame_index=_safe_overlay_frame_number(pf, default=idx),
                     timestamp_s=ts_ms / 1000.0,
                     track_id=pf.get("swimmer_track_id"),
                     pose_confidence=float(pf.get("overall_pose_confidence") or 0.0),
@@ -183,8 +185,12 @@ def export_diagnostic_frames(
     if not smoothed_poses:
         return []
 
+    frame_budget = max(0, min(int(max_frames), len(smoothed_poses)))
+    if frame_budget == 0:
+        return []
+
     indices = np.linspace(
-        0, len(smoothed_poses) - 1, num=min(max_frames, len(smoothed_poses)), dtype=int
+        0, len(smoothed_poses) - 1, num=frame_budget, dtype=int
     )
     selected = [smoothed_poses[int(i)] for i in sorted(set(indices.tolist()))]
 
@@ -195,7 +201,7 @@ def export_diagnostic_frames(
     paths: list[Path] = []
     try:
         for pf in selected:
-            frame_number = int(pf.get("frame_number", 0))
+            frame_number = _safe_overlay_frame_number(pf, default=0)
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             ok, frame = cap.read()
             if not ok:
@@ -216,6 +222,16 @@ def export_diagnostic_frames(
     finally:
         cap.release()
     return paths
+
+
+def _safe_overlay_frame_number(pose: dict[str, Any], *, default: int = 0) -> int:
+    value = pose.get("frame_number", default)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def write_pose_quality_report(

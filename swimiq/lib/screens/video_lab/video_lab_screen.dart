@@ -120,13 +120,28 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     final videoId = video.id;
     if (videoId == null) return;
 
-    final subscription = ref.read(subscriptionStateProvider).value;
-    if (subscription != null &&
+    final subscriptionAsync = ref.read(subscriptionStateProvider);
+    if (subscriptionAsync.isLoading) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Checking membership… try again in a moment.'),
+        ),
+      );
+      return;
+    }
+
+    final subscription = subscriptionAsync.value;
+    if (subscription == null ||
         !SubscriptionCapabilities.canRunSwimIqAiAnalysis(subscription)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(SubscriptionCapabilities.eliteGateMessage(subscription)),
+          content: Text(
+            subscription == null
+                ? 'Unable to verify membership. Pull to refresh and try again.'
+                : SubscriptionCapabilities.eliteGateMessage(subscription),
+          ),
         ),
       );
       return;
@@ -299,10 +314,17 @@ class _VideoCardState extends State<_VideoCard> {
   Future<void> _initPlayer() async {
     final url = widget.video.videoUrl;
     if (url == null || url.isEmpty) return;
-    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    await controller.initialize();
-    if (!mounted) return;
-    setState(() => _controller = controller);
+    try {
+      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+      await controller.initialize();
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      setState(() => _controller = controller);
+    } catch (_) {
+      // Leave player null — card still shows metadata without crashing.
+    }
   }
 
   @override

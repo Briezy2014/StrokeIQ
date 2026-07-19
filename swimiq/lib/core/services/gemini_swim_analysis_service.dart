@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
@@ -34,6 +35,16 @@ class GeminiSwimAnalysisService {
       ),
     );
 
+    if (response.status != 200) {
+      final data = response.data;
+      if (data is Map && data['error'] != null) {
+        throw GeminiAnalysisException(data['error'].toString());
+      }
+      throw GeminiAnalysisException(
+        'AI analysis failed (${response.status}).',
+      );
+    }
+
     final data = response.data;
     if (data is Map && data['error'] != null) {
       throw GeminiAnalysisException(data['error'].toString());
@@ -60,17 +71,14 @@ class GeminiSwimAnalysisService {
           '${SwimTime.fromSeconds(log.timeSeconds)}';
     }).toList();
 
-    final personalBests = <String>[];
-    final seen = <String>{};
-    for (final log in raceLogs) {
-      final key = '${log.distance}-${log.stroke}-${log.course}';
-      if (!seen.add(key)) continue;
-      personalBests.add(
-        '${log.distance} ${log.stroke} ${log.course} '
-        '${SwimTime.fromSeconds(log.timeSeconds)}',
-      );
-      if (personalBests.length >= 6) break;
-    }
+    final personalBests = SwimAnalytics.personalBests(raceLogs)
+        .take(6)
+        .map(
+          (log) =>
+              '${log.distance} ${log.stroke} ${log.course} '
+              '${SwimTime.fromSeconds(log.timeSeconds)}',
+        )
+        .toList();
 
     final goalLines = goals.take(5).map((goal) {
       return '${goal.event} ${SwimTime.fromSeconds(goal.goalTime)} '

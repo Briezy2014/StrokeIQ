@@ -57,6 +57,49 @@ void main() {
       expect(ctx['goals'], isNotEmpty);
     });
 
+    test('buildRequestBody uses fastest PB per event, not first log', () {
+      final video = SwimVideo(
+        id: 'video-uuid',
+        swimmer: 'Aspyn',
+        storagePath: 'Aspyn/clip.mp4',
+        title: '50 Fly sprint',
+        stroke: 'Butterfly',
+        distance: '50',
+        course: 'LCM',
+      );
+
+      final body = GeminiSwimAnalysisService.buildRequestBody(
+        video: video,
+        raceLogs: [
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '50 Fly',
+            distance: 50,
+            stroke: 'Butterfly',
+            course: 'LCM',
+            timeSeconds: 32.0,
+            date: DateTime(2026, 5, 1),
+          ),
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '50 Fly',
+            distance: 50,
+            stroke: 'Butterfly',
+            course: 'LCM',
+            timeSeconds: 30.1,
+            date: DateTime(2026, 6, 1),
+          ),
+        ],
+        goals: const [],
+        profile: null,
+      );
+
+      final ctx = body['coach_context'] as Map;
+      final pbs = (ctx['personal_bests'] as List).cast<String>();
+      expect(pbs.single, contains('30.1'));
+      expect(pbs.single, isNot(contains('32')));
+    });
+
     test('parseAnalysisResponse maps Gemini JSON to SwimVideoAnalysis', () {
       final analysis = GeminiSwimAnalysisService.parseAnalysisResponse({
         'swim_video_id': 'video-uuid',
@@ -75,6 +118,7 @@ void main() {
       });
 
       expect(analysis.isGeminiEngine, isTrue);
+      expect(analysis.isLegacyRulesEngine, isFalse);
       expect(analysis.overallScore, 80);
       expect(analysis.topPriorities.length, 3);
       expect(analysis.summary, contains('Gemini summary'));
