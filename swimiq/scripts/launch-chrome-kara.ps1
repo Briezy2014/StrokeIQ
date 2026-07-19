@@ -250,10 +250,13 @@ $code = $LASTEXITCODE
 Write-Host ''
 if ($code -ne 0) {
     Write-Host 'Launch failed.' -ForegroundColor Red
-    Write-Host 'Close every Chrome window, then run START-SWIMIQ-WITH-ELITE.bat again.' -ForegroundColor Yellow
-    Write-Host "Or open Chrome yourself to: $url" -ForegroundColor Yellow
+    Write-Host 'Run START-SWIMIQ-WITH-ELITE.bat again, or OPEN-SWIMIQ-NOW.bat after a successful build.' -ForegroundColor Yellow
+    Write-Host "URL: $url" -ForegroundColor Yellow
 } else {
-    Write-Host 'App session ended.' -ForegroundColor Green
+    Write-Host '[OK] Browser launch finished.' -ForegroundColor Green
+    Write-Host 'Keep the window titled "SwimIQ WEB SERVER - DO NOT CLOSE" open.' -ForegroundColor Yellow
+    Write-Host 'If the browser says refused to connect, double-click OPEN-SWIMIQ-NOW.bat' -ForegroundColor Yellow
+    Write-Host "URL: $url" -ForegroundColor White
 }
-Read-Host 'Press Enter to close'
+Read-Host 'Press Enter to close this launcher (web server window stays open)'
 exit $code

@@ -83,15 +83,18 @@ if not exist "%CD%\swimiq\LAUNCH-CHROME.bat" (
 call "%CD%\swimiq\LAUNCH-CHROME.bat"
 echo.
 echo ############################################################
-echo #  Keep the Elite black window OPEN while you analyze     #
-echo #  If Chrome was blank, press F5 once                     #
+echo #  Keep these windows OPEN:                               #
+echo #   1) Elite Video Lab - Analysis Server                  #
+echo #   2) SwimIQ WEB SERVER - DO NOT CLOSE                   #
+echo #  If browser says refused to connect:                    #
+echo #     double-click OPEN-SWIMIQ-NOW.bat                    #
 echo ############################################################
 echo.
 
 :Hold
 echo.
 echo --- Press any key to close THIS starter window ---
-echo --- Leave the Elite Video Lab window OPEN ---
+echo --- Leave Elite + WEB SERVER windows OPEN ---
 echo Log: %LOG%
 echo.
 pause
