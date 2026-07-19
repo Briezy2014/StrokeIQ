@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/video_engine_v2/analysis_results.dart';
 import 'race_blueprint_panel.dart';
+import 'race_opportunity_meter_panel.dart';
 
 /// Athlete/parent/coach-facing Elite coaching report with clear visuals.
 class CoachingReportView extends StatelessWidget {
@@ -70,10 +71,12 @@ class CoachingReportView extends StatelessWidget {
           recommendations: report.raceRecommendations,
           videoUrl: videoUrl,
         ),
-        if (potential != null) ...[
-          const SizedBox(height: 16),
-          _PotentialCallout(potential: potential, athleteName: athleteName),
-        ],
+        const SizedBox(height: 16),
+        RaceOpportunityMeterPanel(
+          report: report,
+          stroke: stroke,
+          distanceM: int.tryParse(distance ?? ''),
+        ),
         if (report.strengths.isNotEmpty) ...[
           const SizedBox(height: 20),
           _SectionPanel(
@@ -307,6 +310,7 @@ class CoachingReportView extends StatelessWidget {
           ],
         ),
       );
+
 }
 
 class _FailureBanner extends StatelessWidget {
@@ -444,82 +448,6 @@ class _ReportHero extends StatelessWidget {
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _PotentialCallout extends StatelessWidget {
-  const _PotentialCallout({
-    required this.potential,
-    required this.athleteName,
-  });
-
-  final ({String low, String high}) potential;
-  final String athleteName;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasName = athleteName.trim().isNotEmpty &&
-        athleteName.toLowerCase() != 'demo' &&
-        athleteName.toLowerCase() != 'add athlete name' &&
-        athleteName.toLowerCase() != 'you';
-    final who = hasName ? athleteName.trim() : 'this swimmer';
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [
-            AppColors.accent.withValues(alpha: 0.18),
-            AppColors.primary.withValues(alpha: 0.10),
-          ],
-        ),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.primaryDeep,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '${potential.low}–${potential.high}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                  ),
-                ),
-                Text(
-                  'sec drop',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              "That's about a ${potential.low}–${potential.high} second drop for $who "
-              'with this race focus — practice the cue in training, then race it.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    height: 1.35,
-                    color: AppColors.primaryDark,
-                  ),
-            ),
-          ),
         ],
       ),
     );

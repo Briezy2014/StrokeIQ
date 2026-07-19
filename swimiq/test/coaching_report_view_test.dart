@@ -19,7 +19,7 @@ void main() {
   testWidgets('CoachingReportView shows Race Blueprint for butterfly', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1100, 1800));
+    await tester.binding.setSurfaceSize(const Size(1100, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final results = AnalysisResults(
@@ -83,6 +83,11 @@ void main() {
     );
     expect(find.text('Race Blueprint'), findsOneWidget);
     expect(find.textContaining('Performance energy curve'), findsOneWidget);
+    expect(find.text('RACE SCAN'), findsOneWidget);
+    expect(find.text('Opportunity Meter'), findsOneWidget);
+    expect(find.textContaining('Where time can still be found'), findsWidgets);
+    expect(find.text('Breathing'), findsOneWidget);
+    expect(find.textContaining('RACE IQ'), findsOneWidget);
     expect(find.text('Start / UW'), findsOneWidget);
     expect(find.text('Breakout'), findsWidgets);
     expect(find.text('Mid-race'), findsOneWidget);
@@ -97,10 +102,12 @@ void main() {
     expect(find.text('Fix this next'), findsOneWidget);
     expect(find.text('Next race'), findsOneWidget);
     expect(find.textContaining('0.3–0.8'), findsWidgets);
-    expect(find.textContaining('second drop'), findsWidgets);
-    expect(
-      find.textContaining("That's about a 0.3–0.8 second drop for Aspyn"),
-      findsOneWidget,
-    );
+
+    await tester.ensureVisible(find.text('Breathing'));
+    await tester.tap(find.text('Breathing'));
+    await tester.pumpAndSettle();
+    expect(find.text('What happened'), findsOneWidget);
+    expect(find.text('Swim practice'), findsOneWidget);
+    expect(find.text('Dryland'), findsWidgets);
   });
 }
