@@ -271,13 +271,13 @@ class _SummaryTab extends StatelessWidget {
               ? 'Analysis needs another try'
               : 'Your swim coaching report',
           subtitle: hasCoachSummary || hasStrengths || hasImprovements
-              ? 'Strengths, improvements, drills, and next steps'
+              ? 'Pro, con, dryland drills, next-race cue, time-drop estimate'
               : 'Open the Coaching tab for tips, or retry if the report is empty',
         ),
         const SizedBox(height: 12),
         if (hasCoachSummary) ...[
           Text(
-            'Coach summary',
+            'Coach snapshot',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -288,7 +288,7 @@ class _SummaryTab extends StatelessWidget {
         ],
         if (hasStrengths) ...[
           Text(
-            'Strengths',
+            'Pro (keep this)',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -304,7 +304,7 @@ class _SummaryTab extends StatelessWidget {
         ],
         if (hasImprovements) ...[
           Text(
-            'What to fix next',
+            'Con (work on this)',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -318,7 +318,7 @@ class _SummaryTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Open the Coaching tab for drills and next-race cues.',
+            'Open the Coaching tab for dryland drills and next-race cues.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -327,7 +327,7 @@ class _SummaryTab extends StatelessWidget {
         ],
         if (report?.raceRecommendations.isNotEmpty == true) ...[
           Text(
-            'Next race',
+            'Next race + time-drop estimate',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
