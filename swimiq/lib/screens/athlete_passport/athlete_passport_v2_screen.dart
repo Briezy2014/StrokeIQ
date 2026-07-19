@@ -338,7 +338,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
           children: [
             const SwimIqPageHero(
               title: 'Athlete Passport',
-              subtitle: 'Exportable recruiting card, SwimDNA hub & college tools',
+              subtitle:
+                  'Your coach-ready recruiting card — share, print, and stand out',
             ),
             const SizedBox(height: 12),
             Builder(
