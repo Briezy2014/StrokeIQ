@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/goal_progress_analytics.dart';
+import '../../core/utils/swim_event_options.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/swim_goal.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/goal_progress_visuals.dart';
@@ -25,12 +25,9 @@ class GoalsScreen extends ConsumerStatefulWidget {
 class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
-  final _strokeController =
-      TextEditingController(text: AppConstants.strokes.first);
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
 
-  int _distance = 100;
+  String _course = AppConstants.courses.first;
+  SwimEventOption? _selectedEvent;
   DateTime _targetDate = DateTime.now();
   bool _isSaving = false;
   bool _showAddForm = false;
@@ -38,9 +35,29 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   @override
   void dispose() {
     _timeController.dispose();
-    _strokeController.dispose();
-    _courseController.dispose();
     super.dispose();
+  }
+
+  List<SwimEventOption> _eventOptions(SwimmerData data) {
+    return SwimEventOptions.forProfile(
+      catalog: data.motivationalStandards,
+      profile: data.profile,
+      course: _course,
+    );
+  }
+
+  SwimEventOption? _matchingSelection(List<SwimEventOption> options) {
+    if (options.isEmpty) return null;
+    final selected = _selectedEvent;
+    if (selected == null) return options.first;
+    for (final option in options) {
+      if (option.distance == selected.distance &&
+          option.stroke == selected.stroke &&
+          option.course == selected.course) {
+        return option;
+      }
+    }
+    return options.first;
   }
 
   Future<void> _pickDate() async {
@@ -53,28 +70,30 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     if (picked != null) setState(() => _targetDate = picked);
   }
 
-  Future<void> _saveGoal() async {
+  Future<void> _saveGoal(SwimmerData data, String swimmer) async {
     if (!_formKey.currentState!.validate()) return;
 
-    final swimmer = ref.read(activeSwimmerProvider);
-    if (swimmer == null) return;
+    final event = _matchingSelection(_eventOptions(data));
+    if (event == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pick a USA Swimming event from the list so cuts can track correctly.',
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
     try {
-      final stroke = _strokeController.text.trim().isEmpty
-          ? AppConstants.strokes.first
-          : _strokeController.text.trim();
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
-
       final goalTime = SwimTime.toSeconds(_timeController.text);
       final goal = SwimGoal(
         swimmerName: swimmer,
-        event: '$_distance $stroke',
+        event: event.meetResultEvent,
         goalTime: goalTime,
-        course: course,
+        course: _course,
         targetDate: _targetDate,
       );
 
@@ -91,7 +110,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           const SnackBar(content: Text('Goal saved.')),
         );
         _timeController.clear();
-        setState(() => _showAddForm = false);
+        setState(() {
+          _showAddForm = false;
+          _selectedEvent = event;
+        });
       }
     } on FormatException {
       if (mounted) {
@@ -151,6 +173,8 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             .length;
         final showForm = _showAddForm || data.goals.isEmpty;
         final snapshot = data.passportSnapshot(swimmer);
+        final eventOptions = _eventOptions(data);
+        final currentSelection = _matchingSelection(eventOptions);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -159,7 +183,8 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             SwimIqPageHero(
               showMark: false,
               title: 'Goals',
-              subtitle: 'Targets, progress & USA cuts for ${data.displayName(swimmer)}',
+              subtitle:
+                  'Targets, progress & USA cuts for ${data.displayName(swimmer)}',
               stats: [
                 SwimIqHeroStat('${data.goals.length} active goals'),
                 if (achieved > 0) SwimIqHeroStat('$achieved achieved'),
@@ -212,7 +237,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                       style: TextStyle(fontWeight: FontWeight.w900),
                     ),
                     subtitle: const Text(
-                      'Add a target time — we track progress from your logs.',
+                      'Pick a USA event + course so progress and cuts match Log & PBs.',
                     ),
                     trailing: Icon(
                       showForm ? Icons.expand_less : Icons.expand_more,
@@ -225,36 +250,69 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            TextFormField(
-                              controller: _strokeController,
+                            DropdownButtonFormField<String>(
+                              key: ValueKey('goal-course-$_course'),
+                              initialValue: _course,
                               decoration: const InputDecoration(
-                                labelText: 'Goal stroke',
-                                hintText:
-                                    'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
+                                labelText: 'Course',
                               ),
+                              items: AppConstants.courses
+                                  .map(
+                                    (course) => DropdownMenuItem(
+                                      value: course,
+                                      child: Text(course),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: _isSaving
+                                  ? null
+                                  : (value) {
+                                      if (value == null) return;
+                                      setState(() {
+                                        _course = value;
+                                        _selectedEvent = null;
+                                      });
+                                    },
                             ),
                             const SizedBox(height: 12),
-                            TextFormField(
-                              initialValue: '$_distance',
-                              decoration: const InputDecoration(
-                                labelText: 'Goal distance',
+                            if (eventOptions.isEmpty)
+                              Text(
+                                'Official USA events could not load for this course. '
+                                'Check birthday and gender in Athlete Passport, then try again.',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: Colors.grey.shade700),
+                              )
+                            else
+                              DropdownButtonFormField<SwimEventOption>(
+                                key: ValueKey(
+                                  'goal-event-$_course-${currentSelection?.label}',
+                                ),
+                                initialValue: currentSelection,
+                                decoration: const InputDecoration(
+                                  labelText: 'Event',
+                                  helperText:
+                                      'Same USA Swimming events used for cuts on PBs & Dashboard',
+                                ),
+                                isExpanded: true,
+                                items: eventOptions
+                                    .map(
+                                      (option) => DropdownMenuItem(
+                                        value: option,
+                                        child: Text(option.label),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: _isSaving
+                                    ? null
+                                    : (value) =>
+                                        setState(() => _selectedEvent = value),
+                                validator: (value) =>
+                                    value == null ? 'Pick an event' : null,
                               ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                final parsed = int.tryParse(value);
-                                if (parsed != null && parsed >= 25) {
-                                  setState(() => _distance = parsed);
-                                }
-                              },
-                              validator: (value) {
-                                final parsed = int.tryParse(value ?? '');
-                                if (parsed == null || parsed < 25) {
-                                  return 'Distance must be at least 25';
-                                }
-                                return null;
-                              },
-                            ),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _timeController,
@@ -275,14 +333,6 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                               },
                             ),
                             const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _courseController,
-                              decoration: const InputDecoration(
-                                labelText: 'Goal course',
-                                hintText: 'SCY, SCM, or LCM',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
                             ListTile(
                               contentPadding: EdgeInsets.zero,
                               title: const Text('Target date'),
@@ -296,7 +346,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                             SwimIqSaveButton(
                               label: 'Save goal',
                               isSaving: _isSaving,
-                              onPressed: _saveGoal,
+                              onPressed: () => _saveGoal(data, swimmer),
                             ),
                           ],
                         ),
