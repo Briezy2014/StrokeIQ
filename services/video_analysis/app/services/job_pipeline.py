@@ -480,11 +480,10 @@ def run_analysis_pipeline(
                     job.model_versions["milestone"] = "7"
                     job.model_versions["turn_finish"] = "framework_v1"
 
-        # Milestone 8: coaching report from structured CV results only (never raw video).
-        # Deterministic metrics remain on the job even when Gemini fails.
-        run_report = settings.gemini_report_enabled or bool(
-            options.get("generate_gemini_report")
-        )
+        # Milestone 8: always produce SwimIQ Elite coaching (never depends on Gemini).
+        # generate_gemini_report remains accepted for API back-compat but coaching
+        # always runs so athletes get a full report 100% of the time.
+        run_report = True
         if run_report:
             if job.status != JobStatus.generating_report:
                 job.transition(JobStatus.generating_report, progress=0.98)
@@ -571,32 +570,35 @@ def run_analysis_pipeline(
                 ]
             )
         )
-        run_report = settings.gemini_report_enabled or bool(
-            ((job.request_payload or {}).get("options") or {}).get(
-                "generate_gemini_report"
+        # Always produce Elite coaching even after pose skip.
+        try:
+            job.transition(JobStatus.generating_report, progress=0.98)
+            store.save(job)
+            art = artifact_dir(settings, job_id)
+            report_result = ReportGenerator(settings=settings).generate_for_job(
+                job,
+                output_dir=art / "report",
             )
-        )
-        if run_report:
+            job.report = result_to_job_payload(report_result)
+            job.limitations = list(
+                dict.fromkeys([*job.limitations, *report_result.limitations])
+            )
+        except Exception as report_exc:  # noqa: BLE001
+            log_exception(
+                logger,
+                stage=job.stage,
+                job_id=job_id,
+                video_id=video_id,
+                error=report_exc,
+            )
+            # Last-resort: still try a bare elite coach report.
             try:
-                job.transition(JobStatus.generating_report, progress=0.98)
-                store.save(job)
-                art = artifact_dir(settings, job_id)
                 report_result = ReportGenerator(settings=settings).generate_for_job(
                     job,
-                    output_dir=art / "report",
+                    output_dir=artifact_dir(settings, job_id) / "report",
                 )
                 job.report = result_to_job_payload(report_result)
-                job.limitations = list(
-                    dict.fromkeys([*job.limitations, *report_result.limitations])
-                )
-            except Exception as report_exc:  # noqa: BLE001
-                log_exception(
-                    logger,
-                    stage=job.stage,
-                    job_id=job_id,
-                    video_id=video_id,
-                    error=report_exc,
-                )
+            except Exception:  # noqa: BLE001
                 job.limitations.append("coaching_report_unavailable")
         if job.limitations:
             job.transition(JobStatus.completed_with_limitations, progress=1.0)

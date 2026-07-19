@@ -120,6 +120,7 @@ class Settings(BaseSettings):
     finish_analysis_enabled: bool = False
 
     # Milestone 8 — Gemini coaching report (structured results only; never raw video)
+    # Optional Gemini enhance only. Default OFF — SwimIQ Elite coaching is always-on.
     gemini_report_enabled: bool = False
     gemini_api_key: str | None = None  # backend env only (GEMINI_API_KEY)
     gemini_model_name: str = "gemini-2.5-flash"

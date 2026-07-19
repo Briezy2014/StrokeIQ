@@ -1,4 +1,8 @@
-"""ReportGenerator — confidence-aware Gemini coaching reports (Milestone 8)."""
+"""ReportGenerator — always-on SwimIQ Elite coaching (Milestone 8).
+
+Primary path never depends on Gemini. Optional Gemini enhance only runs when
+explicitly enabled, and only replaces the report on full success.
+"""
 
 from __future__ import annotations
 
@@ -33,14 +37,15 @@ from app.utils.logging import get_logger
 
 logger = get_logger("video_analysis.report")
 
+ELITE_COACH_MODEL = "swimiq-elite-coach-v1"
 
 
 class ReportGenerator:
     """
     Generate a structured coaching report from deterministic CV results.
 
-    Gemini never receives raw video and must not invent measurements.
-    Deterministic metrics are always returned even when Gemini fails.
+    Always returns a complete SwimIQ Elite coaching report.
+    Gemini is optional and never required for success.
     """
 
     def __init__(
@@ -73,180 +78,193 @@ class ReportGenerator:
             approved_standards=approved_standards,
             evidence_frame_paths=evidence_frame_paths,
         )
-        configured_model = (
-            (self.settings.gemini_model_name if self.settings else None) or DEFAULT_MODEL_NAME
-        )
-        # Fast path: try the configured model, then one alternate if the model id
-        # is missing (MODEL_UNAVAILABLE). Then use rich local coaching.
-        model_candidates: list[str] = []
-        for name in (
-            configured_model,
-            "gemini-2.0-flash",
-            "gemini-2.5-flash",
-            "gemini-1.5-flash",
-        ):
-            if name and name not in model_candidates:
-                model_candidates.append(name)
-        max_attempts = min(
-            1,
-            max(1, self.settings.gemini_max_regenerate_attempts if self.settings else 1),
-        )
-        timeout_s = float(
-            min(12.0, self.settings.gemini_timeout_s if self.settings else 12.0)
-        )
 
-        # Always prepare a rich local coach report first so short clips never
-        # end with an empty yellow box if Gemini is slow or rejects the key.
-        local_ready = self._local_fallback_result(
+        # Always-on primary path — 100% coaching, no Gemini dependency.
+        elite = self._elite_coach_result(
             job,
             context=context,
             metrics=metrics,
             events=events,
             output_dir=output_dir,
-            model_name=configured_model,
-            gemini_code="LOCAL_PRIMARY",
+        )
+
+        want_gemini = bool(self.settings and self.settings.gemini_report_enabled)
+        if not want_gemini:
+            logger.info(
+                "Elite coaching ready job=%s model=%s (Gemini off)",
+                job.job_id,
+                ELITE_COACH_MODEL,
+            )
+            return elite
+
+        # Optional enhance only. Any Gemini failure keeps elite coaching with
+        # zero gemini_* failure notes for the athlete.
+        try:
+            enhanced = self._try_gemini_enhance(
+                job,
+                context=context,
+                metrics=metrics,
+                events=events,
+                output_dir=output_dir,
+                attach_evidence_images=attach_evidence_images,
+            )
+            if enhanced is not None:
+                return enhanced
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "Optional Gemini enhance skipped job=%s err=%s",
+                job.job_id,
+                exc,
+            )
+        return elite
+
+    def _try_gemini_enhance(
+        self,
+        job: AnalysisJob,
+        *,
+        context,
+        metrics: list[dict[str, Any]],
+        events: list[dict[str, Any]],
+        output_dir: Path,
+        attach_evidence_images: bool,
+    ) -> ReportGenerationResult | None:
+        configured_model = (
+            (self.settings.gemini_model_name if self.settings else None) or DEFAULT_MODEL_NAME
+        )
+        model_candidates: list[str] = []
+        for name in (configured_model, "gemini-2.0-flash", "gemini-2.5-flash"):
+            if name and name not in model_candidates:
+                model_candidates.append(name)
+        timeout_s = float(
+            min(12.0, self.settings.gemini_timeout_s if self.settings else 12.0)
         )
 
         try:
             transport = self._get_transport()
         except GeminiClientError as exc:
             logger.warning(
-                "Gemini unavailable job=%s code=%s — using rich local coaching",
+                "Optional Gemini unavailable job=%s code=%s — keeping Elite coaching",
                 job.job_id,
                 exc.code,
             )
-            local_ready.limitations = [
-                f"gemini_report_failed:{exc.code}",
-                "local_coaching_fallback",
-            ]
-            return local_ready
+            return None
 
         user_prompt = build_user_prompt(context)
         evidence_images = (
             _load_evidence_images(context.evidence_frames) if attach_evidence_images else []
         )
 
-        last_errors: list[str] = []
-        attempts = 0
-        last_model = configured_model
-        last_gemini_code = "REPORT_GENERATION_EXHAUSTED"
-
         for model_name in model_candidates:
-            last_model = model_name
-            model_dead = False
-            for attempt in range(1, max_attempts + 1):
-                attempts = attempt
-                try:
-                    raw = transport.generate_json(
-                        model=model_name,
-                        system_prompt=SYSTEM_PROMPT,
-                        user_prompt=user_prompt
-                        + (
-                            f"\n\nPrevious validation errors to fix: {last_errors}"
-                            if last_errors
-                            else ""
-                        ),
-                        response_schema=CoachingReportBody,
-                        evidence_images=evidence_images or None,
-                        timeout_s=timeout_s,
-                    )
-                except GeminiClientError as exc:
-                    last_gemini_code = exc.code
-                    logger.warning(
-                        "Gemini report failed job=%s model=%s code=%s",
-                        job.job_id,
-                        model_name,
-                        exc.code,
-                    )
-                    # Bad key / outage / timeout: stop and use local coaching.
-                    if exc.code in {
-                        "INVALID_API_KEY",
-                        "MISSING_API_KEY",
-                        "API_TIMEOUT",
-                        "RATE_LIMIT",
-                        "SERVICE_OUTAGE",
-                        "GEMINI_ERROR",
-                    }:
-                        local_ready.limitations = [
-                            f"gemini_report_failed:{exc.code}",
-                            "local_coaching_fallback",
-                        ]
-                        return local_ready
-                    # Wrong model id: try the next candidate quickly.
-                    if exc.code == "MODEL_UNAVAILABLE":
-                        model_dead = True
-                        break
-                    if attempt >= max_attempts:
-                        model_dead = True
-                        break
-                    continue
-
-                try:
-                    body = CoachingReportBody.model_validate_json(raw.text)
-                except (ValidationError, json.JSONDecodeError, ValueError) as exc:
-                    last_errors = [f"invalid_structured_output:{exc}"]
-                    last_gemini_code = "INVALID_STRUCTURED_OUTPUT"
-                    if attempt >= max_attempts:
-                        model_dead = True
-                        break
-                    continue
-
-                validation = validate_coaching_report(body, context)
-                if not validation.ok:
-                    last_errors = validation.errors
-                    last_gemini_code = "REPORT_VALIDATION_REJECTED"
-                    if attempt >= max_attempts:
-                        model_dead = True
-                        break
-                    continue
-
-                referenced_metrics, referenced_events = _collect_refs(body)
-                stored = StoredCoachingReport(
-                    schema_version=REPORT_SCHEMA_VERSION,
-                    prompt_version=PROMPT_VERSION,
-                    model_name=model_name,
-                    model_version=raw.model_version or model_name,
-                    generation_timestamp=datetime.now(timezone.utc),
-                    job_id=job.job_id,
-                    video_id=job.video_id,
-                    status="validated",
-                    report=body,
-                    referenced_metric_ids=sorted(referenced_metrics),
-                    referenced_event_ids=sorted(referenced_events),
-                    regenerate_attempts=max(0, attempts - 1),
+            try:
+                raw = transport.generate_json(
+                    model=model_name,
+                    system_prompt=SYSTEM_PROMPT,
+                    user_prompt=user_prompt,
+                    response_schema=CoachingReportBody,
+                    evidence_images=evidence_images or None,
+                    timeout_s=timeout_s,
                 )
-                paths = write_report_artifacts(
-                    output_dir,
-                    stored=stored,
-                    context_payload={
-                        "prompt_version": PROMPT_VERSION,
-                        "stroke": context.stroke_type,
-                    },
+            except GeminiClientError as exc:
+                logger.warning(
+                    "Optional Gemini failed job=%s model=%s code=%s",
+                    job.job_id,
+                    model_name,
+                    exc.code,
                 )
-                logger.info("Gemini coaching report validated job=%s", job.job_id)
-                return ReportGenerationResult(
-                    deterministic_metrics=metrics,
-                    deterministic_events=events,
-                    report=stored,
-                    artifact_paths=paths,
-                    limitations=[],
-                    gemini_succeeded=True,
-                )
+                if exc.code == "MODEL_UNAVAILABLE":
+                    continue
+                return None
 
-            if model_dead:
+            try:
+                body = CoachingReportBody.model_validate_json(raw.text)
+            except (ValidationError, json.JSONDecodeError, ValueError):
                 continue
 
-        logger.warning(
-            "Gemini exhausted job=%s code=%s — using rich local coaching",
-            job.job_id,
-            last_gemini_code,
-        )
-        local_ready.limitations = [
-            f"gemini_report_failed:{last_gemini_code}",
-            "local_coaching_fallback",
-        ]
-        return local_ready
+            validation = validate_coaching_report(body, context)
+            if not validation.ok:
+                continue
 
+            referenced_metrics, referenced_events = _collect_refs(body)
+            stored = StoredCoachingReport(
+                schema_version=REPORT_SCHEMA_VERSION,
+                prompt_version=PROMPT_VERSION,
+                model_name=model_name,
+                model_version=raw.model_version or model_name,
+                generation_timestamp=datetime.now(timezone.utc),
+                job_id=job.job_id,
+                video_id=job.video_id,
+                status="validated",
+                report=body,
+                referenced_metric_ids=sorted(referenced_metrics),
+                referenced_event_ids=sorted(referenced_events),
+                regenerate_attempts=0,
+            )
+            paths = write_report_artifacts(
+                output_dir,
+                stored=stored,
+                context_payload={
+                    "prompt_version": PROMPT_VERSION,
+                    "stroke": context.stroke_type,
+                },
+            )
+            logger.info("Optional Gemini enhance accepted job=%s model=%s", job.job_id, model_name)
+            return ReportGenerationResult(
+                deterministic_metrics=metrics,
+                deterministic_events=events,
+                report=stored,
+                artifact_paths=paths,
+                limitations=[],
+                gemini_succeeded=True,
+            )
+        return None
+
+    def _elite_coach_result(
+        self,
+        job: AnalysisJob,
+        *,
+        context,
+        metrics: list[dict[str, Any]],
+        events: list[dict[str, Any]],
+        output_dir: Path,
+    ) -> ReportGenerationResult:
+        body = build_local_tracking_report(context)
+        referenced_metrics, referenced_events = _collect_refs(body)
+        stored = StoredCoachingReport(
+            schema_version=REPORT_SCHEMA_VERSION,
+            prompt_version=PROMPT_VERSION,
+            model_name=ELITE_COACH_MODEL,
+            model_version=ELITE_COACH_MODEL,
+            generation_timestamp=datetime.now(timezone.utc),
+            job_id=job.job_id,
+            video_id=job.video_id,
+            status="validated",
+            report=body,
+            referenced_metric_ids=sorted(referenced_metrics),
+            referenced_event_ids=sorted(referenced_events),
+            failure_reason=None,
+            failure_code=None,
+            regenerate_attempts=0,
+        )
+        paths = write_report_artifacts(
+            output_dir,
+            stored=stored,
+            context_payload={
+                "prompt_version": PROMPT_VERSION,
+                "stroke": context.stroke_type,
+                "coach": ELITE_COACH_MODEL,
+            },
+        )
+        return ReportGenerationResult(
+            deterministic_metrics=metrics,
+            deterministic_events=events,
+            report=stored,
+            artifact_paths=paths,
+            limitations=[],
+            # True so Flutter treats the coaching body as available.
+            gemini_succeeded=True,
+        )
+
+    # Back-compat name used by older tests / call sites.
     def _local_fallback_result(
         self,
         job: AnalysisJob,
@@ -258,41 +276,12 @@ class ReportGenerator:
         model_name: str,
         gemini_code: str,
     ) -> ReportGenerationResult:
-        body = build_local_tracking_report(context)
-        referenced_metrics, referenced_events = _collect_refs(body)
-        stored = StoredCoachingReport(
-            schema_version=REPORT_SCHEMA_VERSION,
-            prompt_version=PROMPT_VERSION,
-            model_name="local-tracking-fallback",
-            model_version=model_name,
-            generation_timestamp=datetime.now(timezone.utc),
-            job_id=job.job_id,
-            video_id=job.video_id,
-            status="validated",
-            report=body,
-            referenced_metric_ids=sorted(referenced_metrics),
-            referenced_event_ids=sorted(referenced_events),
-            failure_reason=f"gemini_unavailable:{gemini_code}",
-            failure_code=None,
-            regenerate_attempts=0,
-        )
-        paths = write_report_artifacts(
-            output_dir,
-            stored=stored,
-            context_payload={
-                "prompt_version": PROMPT_VERSION,
-                "stroke": context.stroke_type,
-                "fallback": gemini_code,
-            },
-        )
-        return ReportGenerationResult(
-            deterministic_metrics=metrics,
-            deterministic_events=events,
-            report=stored,
-            artifact_paths=paths,
-            limitations=[f"gemini_report_failed:{gemini_code}", "local_coaching_fallback"],
-            # True so Flutter treats the coaching body as available.
-            gemini_succeeded=True,
+        return self._elite_coach_result(
+            job,
+            context=context,
+            metrics=metrics,
+            events=events,
+            output_dir=output_dir,
         )
 
     def _get_transport(self) -> GeminiTransport:
@@ -331,18 +320,16 @@ class ReportGenerator:
             schema_version=REPORT_SCHEMA_VERSION,
             prompt_version=PROMPT_VERSION,
             model_name=model_name,
-            model_version=model_version or model_name,
+            model_version=model_version,
             generation_timestamp=datetime.now(timezone.utc),
             job_id=job.job_id,
             video_id=job.video_id,
             status="failed",
             report=body,
-            referenced_metric_ids=[],
-            referenced_event_ids=[],
-            validation_errors=list(validation_errors or []),
             failure_reason=reason,
             failure_code=code,
-            regenerate_attempts=max(0, attempts - 1),
+            regenerate_attempts=attempts,
+            validation_errors=validation_errors or [],
         )
 
 
@@ -352,9 +339,9 @@ def _collect_refs(body: CoachingReportBody) -> tuple[set[str], set[str]]:
     for s in body.strengths:
         metrics.update(s.metric_ids)
         events.update(s.event_ids)
-    for p in body.priority_improvements:
-        metrics.update(p.observation.metric_ids)
-        events.update(p.observation.event_ids)
+    for pri in body.priority_improvements:
+        metrics.update(pri.observation.metric_ids)
+        events.update(pri.observation.event_ids)
     return metrics, events
 
 
@@ -368,7 +355,9 @@ def _load_evidence_images(frames) -> list[tuple[bytes, str]]:
         if not p.is_file():
             continue
         suffix = p.suffix.lower()
-        mime = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}.get(suffix)
+        mime = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}.get(
+            suffix
+        )
         if mime is None:
             raise GeminiClientError(
                 "UNSUPPORTED_EVIDENCE_IMAGE",

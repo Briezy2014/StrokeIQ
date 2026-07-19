@@ -84,11 +84,11 @@ function Import-FlutterKeys([hashtable]$map, [string[]]$flutterCandidates, [stri
         $geminiKey = [string]$map['GEMINI_API_KEY']
         $geminiSource = $eliteEnvPath
     }
+    # Coaching always uses SwimIQ Elite coach on this PC (100% path).
+    # Gemini is optional enhance only and stays OFF so reports never fail on API issues.
+    $map['GEMINI_REPORT_ENABLED'] = 'false'
     if ($geminiKey) {
         $map['GEMINI_API_KEY'] = $geminiKey
-        $map['GEMINI_REPORT_ENABLED'] = 'true'
-    } else {
-        $map['GEMINI_REPORT_ENABLED'] = 'false'
     }
 
     return @{
@@ -211,17 +211,11 @@ if ($serviceOk) {
 }
 $geminiKey = $importInfo.GeminiKey
 $geminiSource = $importInfo.GeminiSource
+Write-Host '     Coaching: SwimIQ Elite coach ALWAYS ON (does not need Gemini)' -ForegroundColor Green
 $geminiOk = Is-Configured ([string]$map['GEMINI_API_KEY']) $geminiBad
 if ($geminiOk) {
-    $prefix = if ($geminiKey -and $geminiKey.StartsWith('AQ.')) { 'AQ.' } elseif ($geminiKey -and $geminiKey.StartsWith('AIza')) { 'AIza' } else { 'custom' }
-    Write-Host "     GEMINI_API_KEY: set ($prefix... coaching report enabled)" -ForegroundColor Green
-    if ($geminiSource) {
-        Write-Host "     Copied coaching key from: $geminiSource" -ForegroundColor Green
-    }
-    Write-Host "     Wrote into: $envFile" -ForegroundColor Green
+    Write-Host '     GEMINI_API_KEY: present but OFF (optional only; reports never wait on it)' -ForegroundColor Green
 } else {
-    Write-Host '     GEMINI_API_KEY: missing (Elite will still start; coaching uses local tips)' -ForegroundColor Yellow
-    Write-Host '     Optional: put ONE GEMINI_API_KEY=... line in Desktop\StrokeIQ\swimiq\.env' -ForegroundColor Yellow
-    Write-Host '     (Google AI Studio key - AIza... or AQ.... both OK), then restart Elite' -ForegroundColor Yellow
+    Write-Host '     GEMINI_API_KEY: not set (OK - Elite coaching still runs every time)' -ForegroundColor Green
 }
 exit 0
