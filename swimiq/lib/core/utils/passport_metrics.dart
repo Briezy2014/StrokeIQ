@@ -80,6 +80,9 @@ class PassportMetrics {
     final swimIqScore = swimIqScoreValue(
       raceLogs: raceLogs,
       goals: goals,
+      meetResults: meetResults,
+      videos: userVideos,
+      analyses: userAnalyses,
     );
 
     return PassportSnapshot(
@@ -143,8 +146,19 @@ class PassportMetrics {
   static int swimIqScoreValue({
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
+    List<MeetResult> meetResults = const [],
+    List<SwimVideo> videos = const [],
+    List<SwimVideoAnalysis> analyses = const [],
+    DateTime? now,
   }) =>
-      SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);
+      SwimAnalytics.calculateSwimIqScore(
+        raceLogs: raceLogs,
+        goals: goals,
+        meetResults: meetResults,
+        videos: videos,
+        analyses: analyses,
+        now: now,
+      );
 
   static String swimIqExplanation({
     required int score,
@@ -152,12 +166,13 @@ class PassportMetrics {
     required List<SwimGoal> goals,
     required int personalBestCount,
   }) {
-    if (raceLogs.isEmpty) {
-      return 'No SwimIQ score yet. Log swim sessions to start building your score.';
+    if (raceLogs.isEmpty && personalBestCount == 0) {
+      return 'No SwimIQ score yet. Log swims, upload best times, or analyze a video to start climbing.';
     }
 
     return 'Score $score from ${raceLogs.length} logged sessions, '
-        '${goals.length} goals, and $personalBestCount personal bests.';
+        '${goals.length} goals, and $personalBestCount personal bests. '
+        'Rises with recent app activity and cools off after quiet days.';
   }
 
   static String currentFocus({

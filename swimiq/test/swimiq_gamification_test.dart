@@ -34,8 +34,10 @@ void main() {
     expect(progress.todayPoints, 20);
     expect(progress.climbFraction, 0.2);
     expect(progress.scoreRopePercent, closeTo(0.55, 0.001));
-    expect(progress.ropeClimbFraction, closeTo(0.57, 0.001));
-    expect(progress.ropeClimbPercent, 57);
+    // 55% score height + 20% of a 15% daily boost band = 58%
+    expect(progress.ropeClimbFraction, closeTo(0.58, 0.001));
+    expect(progress.ropeClimbPercent, 58);
+    expect(progress.daysInactive, 0);
   });
 
   test('rope climb matches SwimIQ score when no activity today', () {

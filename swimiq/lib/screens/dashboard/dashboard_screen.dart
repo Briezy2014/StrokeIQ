@@ -74,6 +74,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           meetResults: meetResults,
           videos: data.userFacingVideos,
           goals: data.goals,
+          analyses: data.userFacingVideoAnalyses,
           overallSwimIqScore: data.swimIqScore,
         );
         final badges = SwimIqBadgeCatalog.evaluate(

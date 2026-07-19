@@ -124,14 +124,25 @@ class SwimIqRopeClimbCard extends StatelessWidget {
 String _ropeClimbExplanation(SwimIqDailyProgress daily) {
   final scorePercent = (daily.scoreRopePercent * 100).round();
   final boost = daily.todayPoints;
+  final inactive = daily.daysInactive;
+  final inactivityNote = inactive > 1
+      ? ' Score is cooling off after $inactive quiet days — log something to climb again.'
+      : '';
   if (boost > 0) {
     return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
         '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
-        'Today\'s log adds +$boost boost pts on top (max 100 per day).';
+        'Today\'s log adds +$boost boost pts on top (max 100 per day).'
+        '$inactivityNote';
+  }
+  if (inactive > 1) {
+    return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
+        '${SwimIqDailyProgress.ropeScoreMax}) is at $scorePercent% after $inactive quiet days. '
+        'Log a practice, upload best times, or analyze a video to climb again.';
   }
   return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
       '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
-      'Log a practice, meet, or video today to earn up to 100 daily boost points.';
+      'Log a practice, meet, PB photo, or video today — the score rises with activity '
+      'and drops if you go quiet.';
 }
 
 class _ScorePill extends StatelessWidget {

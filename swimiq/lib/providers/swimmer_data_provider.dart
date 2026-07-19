@@ -84,8 +84,13 @@ class SwimmerData {
   List<PersonalBestEntry> get personalBests =>
       SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
 
-  int get swimIqScore =>
-      SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);
+  int get swimIqScore => SwimAnalytics.calculateSwimIqScore(
+        raceLogs: raceLogs,
+        goals: goals,
+        meetResults: meetResults,
+        videos: userFacingVideos,
+        analyses: userFacingVideoAnalyses,
+      );
 
   String displayName(String swimmerName) {
     final preferred = profile?.preferredName?.trim();

@@ -74,7 +74,7 @@ void main() {
       expect(pbs.first.timeSeconds, 55);
     });
 
-    test('calculates SwimIQ score', () {
+    test('calculates SwimIQ score with recent activity and no decay', () {
       final score = SwimAnalytics.calculateSwimIqScore(
         raceLogs: logs,
         goals: [
@@ -86,8 +86,54 @@ void main() {
             targetDate: DateTime(2026, 6, 1),
           ),
         ],
+        now: DateTime(2026, 2, 2),
       );
-      expect(score, 555);
+      // Foundation 350 + 2*5 sessions + 1*15 goal + 1*12 PB = 387
+      // Recent (within 7d of Feb 2): only Feb 1 log → 1*12 = 12
+      // Jan 1 is outside the week window. Grace day (1 quiet day) → no decay.
+      expect(score, 399);
+    });
+
+    test('SwimIQ score drops after quiet days', () {
+      final active = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 2),
+      );
+      final quiet = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 12),
+      );
+      expect(quiet, lessThan(active));
+      // Active (Feb 2): 350 + 10 sessions + 12 PB + 12 recent = 384
+      // Quiet (Feb 12): foundation 372, no recent boost, 11 days since Feb 1
+      // → (11 - 1 grace) * 25 = −250 → 122. Drop = 262.
+      expect(active - quiet, 262);
+    });
+
+    test('SwimIQ score rises when meet PBs are uploaded', () {
+      final withoutMeets = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 2),
+      );
+      final withMeets = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Invite',
+            event: '50 Butterfly',
+            swimTime: 31.6,
+            course: 'SCY',
+            meetDate: DateTime(2026, 2, 2),
+          ),
+        ],
+        now: DateTime(2026, 2, 2),
+      );
+      expect(withMeets, greaterThan(withoutMeets));
     });
 
     test('calculates seconds to goal', () {
