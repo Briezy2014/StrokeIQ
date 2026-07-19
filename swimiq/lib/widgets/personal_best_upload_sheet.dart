@@ -166,7 +166,6 @@ class _PersonalBestUploadSheetState
   String? _extractStatus;
 
   static const _uploadSourceLabel = 'Uploaded best times';
-  static const _multipleEventLabel = 'Multiple (from photo)';
 
   @override
   void initState() {
