@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,6 +29,7 @@ class _VideoAnalysisResultsScreenState
   Object? _error;
   bool _loading = true;
   bool _retrying = false;
+  String? _videoUrl;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _VideoAnalysisResultsScreenState
     setState(() {
       _loading = true;
       _error = null;
+      _videoUrl = null;
     });
     try {
       final results =
@@ -53,12 +57,26 @@ class _VideoAnalysisResultsScreenState
         _results = results;
         _loading = false;
       });
+      // Non-blocking: Race Blueprint still works if signed URL fails.
+      unawaited(_loadSignedVideoUrl());
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e;
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadSignedVideoUrl() async {
+    try {
+      final url = await ref
+          .read(videoEngineV2ServiceProvider)
+          .signedVideoUrl(widget.jobId);
+      if (!mounted) return;
+      setState(() => _videoUrl = url);
+    } catch (_) {
+      // Preview is optional — do not surface as a hard results error.
     }
   }
 
@@ -212,6 +230,7 @@ class _VideoAnalysisResultsScreenState
       athleteName: athleteName,
       onRetry: _retry,
       retrying: _retrying,
+      videoUrl: _videoUrl,
     );
   }
 }
@@ -222,12 +241,14 @@ class _SwimmerReport extends StatelessWidget {
     required this.athleteName,
     required this.onRetry,
     required this.retrying,
+    this.videoUrl,
   });
 
   final AnalysisResults results;
   final String athleteName;
   final VoidCallback onRetry;
   final bool retrying;
+  final String? videoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +287,7 @@ class _SwimmerReport extends StatelessWidget {
       athleteName: athleteName,
       onRetry: onRetry,
       retrying: retrying,
+      videoUrl: videoUrl,
     );
   }
 }

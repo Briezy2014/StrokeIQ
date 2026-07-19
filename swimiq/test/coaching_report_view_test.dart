@@ -16,10 +16,10 @@ void main() {
     );
   });
 
-  testWidgets('CoachingReportView is butterfly-specific and parent-friendly', (
+  testWidgets('CoachingReportView shows Race Blueprint for butterfly', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1100, 1600));
+    await tester.binding.setSurfaceSize(const Size(1100, 1800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final results = AnalysisResults(
@@ -28,6 +28,7 @@ void main() {
       engineVersion: 'elite-0.9.0',
       // Missing stroke map — must infer Butterfly from the summary.
       stroke: const {'distance_m': 50},
+      video: const {'duration_ms': 26000},
       metrics: const [
         AnalysisMetric(
           name: 'swimmer_visibility_coverage',
@@ -80,10 +81,15 @@ void main() {
       find.textContaining('Aspyn, on this 50 butterfly'),
       findsOneWidget,
     );
-    expect(find.text('Race focus map'), findsOneWidget);
-    expect(find.text('Stroke rhythm guide'), findsOneWidget);
-    expect(find.textContaining('Butterfly rhythm model'), findsOneWidget);
-    expect(find.textContaining('Teaching model for freestyle'), findsNothing);
+    expect(find.text('Race Blueprint'), findsOneWidget);
+    expect(find.textContaining('Performance energy curve'), findsOneWidget);
+    expect(find.text('Start / UW'), findsOneWidget);
+    expect(find.text('Breakout'), findsWidgets);
+    expect(find.text('Mid-race'), findsOneWidget);
+    expect(find.text('Finish'), findsWidgets);
+    expect(find.text('Stroke rhythm guide'), findsNothing);
+    expect(find.text('Race focus map'), findsNothing);
+    expect(find.textContaining('Butterfly rhythm model'), findsNothing);
     expect(find.text('Race snapshot'), findsNothing);
     expect(find.textContaining('Swimmer visibility'), findsNothing);
     expect(find.textContaining('Frames analyzed'), findsNothing);
