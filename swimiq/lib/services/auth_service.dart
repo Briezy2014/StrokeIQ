@@ -4,6 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/app_providers.dart';
 
 /// Email/password authentication via Supabase Auth.
+///
+/// Google Sign-In is prepared separately in `GoogleAuthService` and remains
+/// disabled until `FeatureFlags.googleSignInEnabled` is turned on. Existing
+/// email/password flows are unchanged.
 class AuthService {
   AuthService(this._client);
 

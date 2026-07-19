@@ -8,13 +8,25 @@ class Env {
 
   static const _urlDefine = String.fromEnvironment('SUPABASE_URL');
   static const _keyDefine = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const _googleWebClientIdDefine =
+      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   static String? _urlFromDotenv;
   static String? _keyFromDotenv;
+  static String? _googleWebClientIdFromDotenv;
 
   static void loadFromDotenv(Map<String, String> env) {
     _urlFromDotenv = env['SUPABASE_URL'];
     _keyFromDotenv = env['SUPABASE_ANON_KEY'];
+    _googleWebClientIdFromDotenv = env['GOOGLE_WEB_CLIENT_ID'];
+  }
+
+  /// Optional Web client ID for future Google Sign-In (Supabase ID token flow).
+  /// Not required until [FeatureFlags.googleSignInEnabled] is turned on.
+  static String? get googleWebClientId {
+    final value = _googleWebClientIdFromDotenv ?? _googleWebClientIdDefine;
+    if (value.isEmpty) return null;
+    return value;
   }
 
   static String get supabaseUrl {
