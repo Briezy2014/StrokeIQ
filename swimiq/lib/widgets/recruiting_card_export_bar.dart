@@ -103,14 +103,6 @@ class RecruitingCardExportBar extends StatelessWidget {
                 letterSpacing: 0.3,
               ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          'build Jul18-c - left Athlete Passport card removed',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
         const SizedBox(height: 8),
         Row(
           children: [

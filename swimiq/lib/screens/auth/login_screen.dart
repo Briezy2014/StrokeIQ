@@ -96,6 +96,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     widget.onSwitchToSignup();
   }
 
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || AuthValidators.email(email) != null) {
+      setState(
+        () => _errorMessage = 'Enter your account email above, then tap '
+            'Forgot password.',
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authServiceProvider).resetPassword(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'If an account exists for that email, a reset link is on the way. '
+            'Check your inbox.',
+          ),
+        ),
+      );
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _ownerLogin() async {
     setState(() {
       _isLoading = true;
@@ -149,21 +183,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 24),
                             if (_errorMessage != null) ...[
                               _ErrorBanner(message: _errorMessage!),
-                              if (_emailController.text.trim().toLowerCase() ==
-                                  OwnerAccountConstants.email.toLowerCase())
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Text(
-                                    'This owner account must be created at supabase.com '
-                                    '(Authentication → Users → Add user). '
-                                    'Or sign in with briezy682014@gmail.com — that account already works.',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Colors.grey.shade800,
-                                          height: 1.35,
-                                        ),
-                                  ),
-                                ),
                               const SizedBox(height: 16),
                             ],
                             TextFormField(
@@ -205,7 +224,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               isLoading: _isLoading,
                               onPressed: _submit,
                             ),
-                            const SizedBox(height: 16),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: _isLoading ? null : _forgotPassword,
+                                child: const Text('Forgot password?'),
+                              ),
+                            ),
                             TextButton(
                               onPressed: widget.onSwitchToSignup,
                               child: const Text('Create an account'),

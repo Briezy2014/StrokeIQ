@@ -308,13 +308,13 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final useCloud = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Elite server not running on this PC'),
+            title: const Text('Elite analysis is not available right now'),
             content: const Text(
-              'Full Elite analysis needs the black Elite window on THIS computer.\n\n'
-              '1) Double-click START-SWIMIQ-WITH-ELITE.bat\n'
-              '2) Leave the Elite window open\n'
-              '3) Press Recheck, then Run Elite Analysis again\n\n'
-              'Or use Gemini cloud coaching now (no stroke tracking overlay).',
+              'Full Elite analysis needs the SwimIQ Elite analysis server running '
+              'on this computer.\n\n'
+              'Start SwimIQ with Elite, leave that server window open, tap Recheck, '
+              'then try again.\n\n'
+              'Or continue with cloud coaching (no stroke-tracking overlay).',
             ),
             actions: [
               TextButton(
@@ -335,7 +335,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Elite is not ready. Run START-SWIMIQ-WITH-ELITE.bat and leave the Elite window open.',
+              'Elite analysis is not ready yet. Start SwimIQ with Elite, leave '
+              'the Elite server window open, then try again.',
             ),
             duration: Duration(seconds: 10),
           ),
@@ -446,8 +447,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = v2Allowed
             ? (hosted
-                ? 'Elite Video Lab - build Jul19-a (uses Elite on this PC when running)'
-                : 'Elite stroke analysis from your race footage - build Jul19-a')
+                ? 'Elite stroke analysis from your race footage'
+                : 'Elite stroke analysis from your race footage')
             : canRunAi
             ? 'AI coaching from your race footage'
             : hasPro
@@ -480,8 +481,9 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Tip: for the most reliable Elite run, use the localhost app '
-                    '(127.0.0.1) from START-SWIMIQ-WITH-ELITE.bat — not only this website tab.',
+                    'Tip: for the most reliable Elite analysis, use the SwimIQ app '
+                    'running on this computer (127.0.0.1) with the Elite analysis '
+                    'server left open.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: const Color(0xFF6B7280),
                         ),

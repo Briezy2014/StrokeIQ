@@ -243,7 +243,8 @@ class GeminiSwimAnalysisService {
   static int _parseScore(Object? value) {
     if (value is int) return value.clamp(0, 100);
     final parsed = int.tryParse(value?.toString() ?? '');
-    return (parsed ?? 70).clamp(0, 100);
+    // Do not invent mid-range scores when Gemini omits values.
+    return (parsed ?? 0).clamp(0, 100);
   }
 }
 

@@ -130,16 +130,35 @@ class _VideoAnalysisResultsScreenState
       return const EmptyStateMessage(message: 'No analysis results yet.');
     }
 
+    if (results.isCancelled) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const SwimIqScreenHeader(
+            title: 'Analysis cancelled',
+            subtitle:
+                'This video was not analyzed. Start a new analysis from Video Lab when you are ready.',
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+            child: const Text('Back to Video Lab'),
+          ),
+        ],
+      );
+    }
+
     if (results.isFailed && results.report == null) {
       final friendly = VideoEngineV2Service.userMessageForErrorCode(
         results.errorCode,
-        fallback: results.errorMessage,
+        fallback: results.errorMessage ??
+            'SwimIQ could not analyze this video. Please try again with a clearer side-view clip.',
       );
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwimIqScreenHeader(
-            title: 'Analysis needs another try',
+            title: 'This video could not be analyzed',
             subtitle: friendly,
           ),
           const SizedBox(height: 16),
@@ -190,10 +209,14 @@ class _SwimmerReport extends StatelessWidget {
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            VideoEngineV2Service.userMessageForErrorCode(
+          SwimIqScreenHeader(
+            title: 'This video could not be analyzed',
+            subtitle: VideoEngineV2Service.userMessageForErrorCode(
               _geminiFailureCodeFromResults(results) ??
                   'GEMINI_REPORT_UNAVAILABLE',
+              fallback:
+                  'SwimIQ could not build a coaching report for this clip. '
+                  'Please try again or upload a clearer side-view video.',
             ),
           ),
           const SizedBox(height: 16),
@@ -208,6 +231,40 @@ class _SwimmerReport extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (results.isFailed || results.isPartialSuccess) ...[
+          Card(
+            color: const Color(0xFFFFF7ED),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    results.isFailed
+                        ? Icons.error_outline
+                        : Icons.info_outline,
+                    color: results.isFailed
+                        ? const Color(0xFFC2410C)
+                        : AppColors.primaryDark,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      results.isFailed
+                          ? 'Analysis did not finish successfully. The notes below may be incomplete — do not treat them as a full coaching report.'
+                          : 'Analysis finished with limitations. Review the coaching notes, then re-film if something looks off.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (hasSummary) ...[
           Text(report.summary!, style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,

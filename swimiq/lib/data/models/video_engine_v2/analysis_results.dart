@@ -41,7 +41,8 @@ class AnalysisResults {
   final Map<String, dynamic>? tracking;
   final DateTime? createdAt;
 
-  bool get isFailed => status == 'failed';
+  bool get isFailed => status == 'failed' || status == 'unknown';
+  bool get isCancelled => status == 'cancelled';
   bool get isPartialSuccess => status == 'completed_with_limitations';
   bool get isCompleted => status == 'completed' || isPartialSuccess;
   bool get hasDeterministicMetrics => metrics.isNotEmpty;
@@ -126,9 +127,11 @@ class AnalysisResults {
       });
     }
 
+    final rawStatus = (json['status'] ?? '').toString().trim();
     return AnalysisResults(
       jobId: (json['job_id'] ?? '').toString(),
-      status: (json['status'] ?? 'completed').toString(),
+      // Missing status must not look like a successful completed analysis.
+      status: rawStatus.isEmpty ? 'unknown' : rawStatus,
       engineVersion: (json['engine_version'] ?? '').toString(),
       videoId: json['video_id']?.toString(),
       metrics: metrics,

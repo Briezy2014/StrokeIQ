@@ -41,6 +41,11 @@ class AuthService {
 
   Future<void> signOut() => _client.auth.signOut();
 
+  /// Sends a password-reset email via Supabase Auth.
+  Future<void> resetPassword({required String email}) {
+    return _client.auth.resetPasswordForEmail(email.trim());
+  }
+
   /// Maps an authenticated user to the swimmer key used in race_logs.
   static String swimmerKeyForUser(User user) {
     final displayName = user.userMetadata?['display_name'] as String?;

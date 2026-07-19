@@ -21,6 +21,11 @@ abstract final class LegalConstants {
   static const privacyPolicyWebUrl = '$websiteUrl/privacy';
   static const termsOfServiceWebUrl = '$websiteUrl/terms';
   static const aiDisclosureWebUrl = '$websiteUrl/ai';
+  static const deleteAccountWebUrl = '$websiteUrl/delete-account';
+  static const supportMailtoUrl =
+      'mailto:$supportEmail?subject=SwimIQ%20Support';
+  static const deleteAccountMailtoUrl =
+      'mailto:$contactEmail?subject=Delete%20my%20SwimIQ%20account&body=Please%20delete%20my%20SwimIQ%20account%20and%20all%20my%20data.%0A%0AMy%20account%20email%3A%20';
 
   /// Athlete age range SwimIQ is designed for (see Terms and Privacy Policy).
   static const athleteAgeMin = 8;

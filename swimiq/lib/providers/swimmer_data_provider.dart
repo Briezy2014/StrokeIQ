@@ -1,10 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_constants.dart';
-import '../core/services/ai_swim_analysis_service.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/utils/supabase_table_errors.dart';
 import '../core/utils/youth_friendly_analysis.dart';
@@ -847,7 +844,12 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       await _reloadPreservingUi();
 
-      await ref.read(subscriptionStateProvider.notifier).recordCoachAiAnalysis();
+      // Only count successful analyses against coach Elite sneak-peek limits.
+      if (fallbackNotice == null) {
+        await ref
+            .read(subscriptionStateProvider.notifier)
+            .recordCoachAiAnalysis();
+      }
       return fallbackNotice;
     } catch (error) {
       return error.toString();

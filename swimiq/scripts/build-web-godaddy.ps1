@@ -74,7 +74,7 @@ if (Test-Path $htaccess) {
 
 # Keep legal pages at /privacy /terms /ai beside the Flutter app
 $websiteDir = Join-Path $paths.WorkDir 'website'
-foreach ($page in @('privacy.html', 'terms.html', 'ai.html')) {
+foreach ($page in @('privacy.html', 'terms.html', 'ai.html', 'delete-account.html')) {
     $src = Join-Path $websiteDir $page
     if (Test-Path -LiteralPath $src) {
         Copy-Item -LiteralPath $src -Destination (Join-Path $webOut $page) -Force
