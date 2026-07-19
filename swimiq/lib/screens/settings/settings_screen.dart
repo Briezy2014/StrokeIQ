@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/legal_constants.dart';
+import '../../core/services/app_review_service.dart';
+import '../../core/services/app_share_service.dart';
+import '../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
-import '../../core/constants/legal_constants.dart';
+import '../../services/auth_service.dart';
+import '../../widgets/legal_footer.dart';
 import '../legal/legal_document_screen.dart';
 import '../membership/membership_screen.dart';
-import '../../widgets/legal_footer.dart';
-import '../../services/auth_service.dart';
+import '../onboarding/onboarding_screen.dart';
 
 /// Account and app settings — Milestone 4.
 class SettingsScreen extends ConsumerWidget {
@@ -23,6 +27,40 @@ class SettingsScreen extends ConsumerWidget {
     if (context.mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _confirmLogOut(WidgetRef ref, BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Log Out?'),
+          content: const Text(
+            'Are you sure you want to log out?\n'
+            'Your SwimIQ data is securely saved and will be available the next '
+            'time you sign in.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Log Out'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _signOut(ref, context);
+    }
+  }
+
   Future<void> _openWebLegalUrl(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -31,6 +69,42 @@ class SettingsScreen extends ConsumerWidget {
         SnackBar(content: Text('Could not open $url')),
       );
     }
+  }
+
+  Future<void> _rateSwimIq(BuildContext context) async {
+    try {
+      await AppReviewService.rateSwimIq();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the rating page. Please try again.'),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareSwimIq(BuildContext context) async {
+    try {
+      await AppShareService.shareSwimIq();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the share sheet. Please try again.'),
+          ),
+        );
+      }
+    }
+  }
+
+  void _openWalkthrough(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const OnboardingScreen(openedFromSettings: true),
+      ),
+    );
   }
 
   @override
@@ -106,6 +180,15 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 24),
+          Text(
+            'Premium',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          const _PremiumComingSoonCard(),
           const SizedBox(height: 24),
           Text(
             'Legal & privacy',
@@ -214,6 +297,30 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.star_rate_rounded),
+                  title: const Text('⭐ Rate SwimIQ'),
+                  subtitle: const Text('Share feedback on Google Play'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _rateSwimIq(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.ios_share_outlined),
+                  title: const Text('📤 Share SwimIQ'),
+                  subtitle: const Text('Invite friends via any installed app'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _shareSwimIq(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: const Text('App walkthrough'),
+                  subtitle: const Text('Replay the SwimIQ introduction'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _openWalkthrough(context),
+                ),
+                const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.info_outline),
                   title: Text('Version'),
@@ -232,13 +339,113 @@ class SettingsScreen extends ConsumerWidget {
           const LegalFooter(),
           const SizedBox(height: 32),
           FilledButton.icon(
-            onPressed: () => _signOut(ref, context),
+            onPressed: () => _confirmLogOut(ref, context),
             icon: const Icon(Icons.logout),
-            label: const Text('Sign Out'),
+            label: const Text('Log Out'),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Disabled Premium teaser — no purchases or subscription logic.
+class _PremiumComingSoonCard extends StatelessWidget {
+  const _PremiumComingSoonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      color: AppColors.comingSoonBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.comingSoonBorder),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.workspace_premium,
+                  color: AppColors.primaryDeep.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'SwimIQ Premium',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.comingSoonBorder),
+                  ),
+                  child: Text(
+                    'Coming Soon',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Coming Soon',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryDark,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const _PremiumBullet(text: 'Advanced AI analysis'),
+            const _PremiumBullet(text: 'Recruiting tools'),
+            const _PremiumBullet(text: 'Elite performance insights'),
+            const _PremiumBullet(text: 'Additional training resources'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PremiumBullet extends StatelessWidget {
+  const _PremiumBullet({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('•  ', style: TextStyle(color: AppColors.primaryDark)),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textDark.withValues(alpha: 0.85),
+                  ),
             ),
           ),
         ],

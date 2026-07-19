@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/env.dart';
+import '../core/constants/feature_flags.dart';
+import '../core/services/onboarding_storage.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
@@ -10,6 +12,7 @@ import '../services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 
 /// Routes between splash, auth, and the main app based on session state.
@@ -23,6 +26,26 @@ class SwimIqApp extends ConsumerStatefulWidget {
 class _SwimIqAppState extends ConsumerState<SwimIqApp> {
   bool _showSignup = false;
 
+  /// null = still loading local onboarding flag (only when feature enabled).
+  bool? _onboardingCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    if (FeatureFlags.onboardingEnabled) {
+      _loadOnboardingStatus();
+    } else {
+      // Disabled by default — first-launch walkthrough stays off.
+      _onboardingCompleted = true;
+    }
+  }
+
+  Future<void> _loadOnboardingStatus() async {
+    final done = await OnboardingStorage.isCompleted();
+    if (!mounted) return;
+    setState(() => _onboardingCompleted = done);
+  }
+
   void _toggleAuthMode() {
     setState(() => _showSignup = !_showSignup);
   }
@@ -34,6 +57,22 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
         home: const _ConfigErrorScreen(),
+      );
+    }
+
+    // First-launch walkthrough (only when FeatureFlags.onboardingEnabled).
+    if (FeatureFlags.onboardingEnabled && _onboardingCompleted != true) {
+      return MaterialApp(
+        title: 'SwimIQ',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: _onboardingCompleted == null
+            ? const SplashScreen()
+            : OnboardingScreen(
+                onFinished: () {
+                  setState(() => _onboardingCompleted = true);
+                },
+              ),
       );
     }
 
