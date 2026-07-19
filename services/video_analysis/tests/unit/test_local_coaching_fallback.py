@@ -1,4 +1,4 @@
-"""Rich local coaching fallback must always produce a full coach report."""
+"""Local coaching must be clear swimmer-speak."""
 
 from __future__ import annotations
 
@@ -36,42 +36,38 @@ def _tracking_job(stroke: str = "butterfly") -> AnalysisJob:
     return job
 
 
-def test_local_fallback_has_full_coach_breakdown():
-    ctx = build_report_context(_tracking_job("butterfly"))
-    body = build_local_tracking_report(ctx)
-    assert len(body.summary) >= 20
-    assert 1 <= len(body.strengths) <= 3
-    assert 1 <= len(body.priority_improvements) <= 3
-    assert body.race_recommendations
-    assert all(1 <= len(p.drills) <= 2 for p in body.priority_improvements)
-    joined = " ".join(s.text for s in body.strengths).lower()
-    assert "the available frames may indicate" not in joined
-    assert "pro:" in joined
-    drills = " ".join(d for p in body.priority_improvements for d in p.drills).lower()
-    assert "dryland" in drills
-    assert "3-3-3" not in drills  # no pool-only drill strings
-    result = validate_coaching_report(body, ctx)
-    assert result.ok, result.errors
-
-
-def test_local_fallback_freestyle_next_race_cues():
-    ctx = build_report_context(_tracking_job("freestyle"))
-    body = build_local_tracking_report(ctx)
-    joined = " ".join(body.race_recommendations).lower()
-    assert "race cue" in joined or "cue" in joined
-    assert "seconds" in joined  # time-drop estimate present
-    assert validate_coaching_report(body, ctx).ok
-
-
-def test_local_fallback_limited_visibility_stays_readable():
-    job = _tracking_job("butterfly")
-    job.tracking["quality_summary"]["target_coverage"] = 0.1
-    ctx = build_report_context(job)
-    body = build_local_tracking_report(ctx)
-    blob = " ".join(
+def _blob(body) -> str:
+    return " ".join(
         [body.summary]
         + [s.text for s in body.strengths]
         + [p.observation.text for p in body.priority_improvements]
+        + [d for p in body.priority_improvements for d in p.drills]
+        + list(body.race_recommendations)
+        + list(body.limitations)
     ).lower()
+
+
+def test_local_fallback_is_swimmer_speak():
+    ctx = build_report_context(_tracking_job("butterfly"))
+    body = build_local_tracking_report(ctx)
+    blob = _blob(body)
+    assert "frame" not in blob
     assert "the available frames may indicate" not in blob
+    assert "local coaching" not in blob
+    assert "gemini" not in blob
+    assert "pro:" not in blob
+    assert "con:" not in blob
+    assert "dryland" in blob
+    assert "race cue" in blob
+    assert "aspyn" in body.summary.lower()
+    assert 1 <= len(body.strengths) <= 2
+    assert 1 <= len(body.priority_improvements) <= 2
+    assert validate_coaching_report(body, ctx).ok, validate_coaching_report(body, ctx).errors
+
+
+def test_local_fallback_freestyle_time_drop():
+    ctx = build_report_context(_tracking_job("freestyle"))
+    body = build_local_tracking_report(ctx)
+    joined = " ".join(body.race_recommendations).lower()
+    assert "seconds" in joined
     assert validate_coaching_report(body, ctx).ok

@@ -108,7 +108,7 @@ echo Starting server on http://127.0.0.1:8080 ...
 echo Leave this window open.
 echo When you see "Uvicorn running on http://127.0.0.1:8080" it is ready.
 echo.
-start "" "http://127.0.0.1:8080/health"
+echo Health check (do not open unless asked): http://127.0.0.1:8080/health
 "%VENV_PY%" -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 set "ERR=%ERRORLEVEL%"
 echo.

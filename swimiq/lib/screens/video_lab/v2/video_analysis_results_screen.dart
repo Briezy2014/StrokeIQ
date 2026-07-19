@@ -7,11 +7,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/video_engine_v2/video_engine_v2_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../widgets/swimiq_ui.dart';
-import 'components/limitations_panel.dart';
-import 'components/metric_tile.dart';
 import 'video_job_progress_screen.dart';
 
-/// Results viewer for Video Engine V2 jobs.
+/// Results viewer for Video Engine V2 jobs — one swimmer-facing report.
 class VideoAnalysisResultsScreen extends ConsumerStatefulWidget {
   const VideoAnalysisResultsScreen({super.key, required this.jobId});
 
@@ -87,18 +85,11 @@ class _VideoAnalysisResultsScreenState
     }
   }
 
-  List<AnalysisMetric> _metricsMatching(AnalysisResults r, List<String> keys) {
-    return r.metrics.where((m) {
-      final hay = '${m.name} ${m.displayName}'.toLowerCase();
-      return keys.any(hay.contains);
-    }).toList(growable: false);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analysis results'),
+        title: const Text('Your coaching report'),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -139,14 +130,11 @@ class _VideoAnalysisResultsScreenState
       return const EmptyStateMessage(message: 'No analysis results yet.');
     }
 
-    if (results.isFailed && !results.hasDeterministicMetrics) {
+    if (results.isFailed && results.report == null) {
       final friendly = VideoEngineV2Service.userMessageForErrorCode(
         results.errorCode,
         fallback: results.errorMessage,
       );
-      final notes = results.limitations
-          .where((l) => !_SummaryTab._isInternalLimitation(l))
-          .toList(growable: false);
       return ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -155,14 +143,9 @@ class _VideoAnalysisResultsScreenState
             subtitle: friendly,
           ),
           const SizedBox(height: 16),
-          if (notes.isNotEmpty) ...[
-            LimitationsPanel(title: 'Notes', limitations: notes),
-            const SizedBox(height: 16),
-          ],
           if (results.isClipQualityFailure) ...[
             Text(
-              'A new clip usually works better than retrying the same one. '
-              'Film from the side, keep the full body in frame, and avoid heavy splash or shaking.',
+              'Film from the side, keep the whole body in view, and hold the camera steady.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -179,71 +162,12 @@ class _VideoAnalysisResultsScreenState
       );
     }
 
-    final startMetrics = _metricsMatching(results, [
-      'start',
-      'reaction',
-      'underwater',
-      'breakout',
-      'kick',
-    ]);
-    final strokeMetrics = _metricsMatching(results, [
-      'stroke',
-      'tempo',
-      'rate',
-      'cycle',
-      'distance_per',
-      'dps',
-    ]);
-    final turnMetrics = _metricsMatching(results, [
-      'turn',
-      'finish',
-      'wall',
-    ]);
-    final used = {...startMetrics, ...strokeMetrics, ...turnMetrics};
-    final otherMetrics =
-        results.metrics.where((m) => !used.contains(m)).toList();
-
-    return DefaultTabController(
-      length: 4,
-      child: Column(
-        children: [
-          Material(
-            color: AppColors.surfaceLight,
-            child: const TabBar(
-              isScrollable: true,
-              labelColor: AppColors.primaryDark,
-              tabs: [
-                Tab(text: 'Summary'),
-                Tab(text: 'Metrics'),
-                Tab(text: 'Coaching'),
-                Tab(text: 'Details'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _SummaryTab(results: results, onRetry: _retry, retrying: _retrying),
-                _MetricsTab(
-                  results: results,
-                  startMetrics: startMetrics,
-                  strokeMetrics: strokeMetrics,
-                  turnMetrics: turnMetrics,
-                  otherMetrics: otherMetrics,
-                ),
-                _CoachingTab(results: results),
-                _DetailsTab(results: results),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return _SwimmerReport(results: results, onRetry: _retry, retrying: _retrying);
   }
 }
 
-class _SummaryTab extends StatelessWidget {
-  const _SummaryTab({
+class _SwimmerReport extends StatelessWidget {
+  const _SwimmerReport({
     required this.results,
     required this.onRetry,
     required this.retrying,
@@ -256,117 +180,89 @@ class _SummaryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final report = results.report;
-    final coachFacingNotes = results.limitations
-        .where((l) => !_isInternalLimitation(l))
-        .toList(growable: false);
-    final hasCoachSummary = report?.summary?.trim().isNotEmpty == true;
+    final hasSummary = report?.summary?.trim().isNotEmpty == true;
     final hasStrengths = report?.strengths.isNotEmpty == true;
     final hasImprovements = report?.priorityImprovements.isNotEmpty == true;
+    final hasRace = report?.raceRecommendations.isNotEmpty == true;
+
+    if (report == null ||
+        (!hasSummary && !hasStrengths && !hasImprovements && !hasRace)) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            VideoEngineV2Service.userMessageForErrorCode(
+              _geminiFailureCodeFromResults(results) ??
+                  'GEMINI_REPORT_UNAVAILABLE',
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: retrying ? null : onRetry,
+            child: Text(retrying ? 'Retrying…' : 'Retry analysis'),
+          ),
+        ],
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        SwimIqScreenHeader(
-          title: results.isFailed && !hasCoachSummary
-              ? 'Analysis needs another try'
-              : 'Your swim coaching report',
-          subtitle: hasCoachSummary || hasStrengths || hasImprovements
-              ? 'Pro, con, dryland drills, next-race cue, time-drop estimate'
-              : 'Open the Coaching tab for tips, or retry if the report is empty',
-        ),
-        const SizedBox(height: 12),
-        if (hasCoachSummary) ...[
-          Text(
-            'Coach snapshot',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(report!.summary!),
-          const SizedBox(height: 16),
+        if (hasSummary) ...[
+          Text(report.summary!, style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+                color: AppColors.primaryDark,
+              )),
+          const SizedBox(height: 20),
         ],
         if (hasStrengths) ...[
-          Text(
-            'Pro (keep this)',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 6),
-          ...report!.strengths.map(
-            (s) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('• $s'),
-            ),
-          ),
-          const SizedBox(height: 16),
+          Text('Keep doing this', style: _h(context)),
+          const SizedBox(height: 8),
+          ...report.strengths.map(_bullet),
+          const SizedBox(height: 20),
         ],
         if (hasImprovements) ...[
-          Text(
-            'Con (work on this)',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 6),
-          ...report!.priorityImprovements.map(
-            (p) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text('• ${p.title}'),
-            ),
-          ),
+          Text('Fix this next', style: _h(context)),
           const SizedBox(height: 8),
-          Text(
-            'Open the Coaching tab for dryland drills and next-race cues.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        if (report?.raceRecommendations.isNotEmpty == true) ...[
-          Text(
-            'Next race + time-drop estimate',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 6),
-          ...report!.raceRecommendations.map(
-            (r) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('• $r'),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        if (!hasCoachSummary && results.reportFailed) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: Text(
-              VideoEngineV2Service.userMessageForErrorCode(
-                _geminiFailureCodeFromResults(results) ??
-                    'GEMINI_REPORT_UNAVAILABLE',
+          ...report.priorityImprovements.map((p) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                    ),
+                  ),
+                  if (p.drills.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Dryland',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primaryDark,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    ...p.drills.map(_bullet),
+                  ],
+                ],
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
+            );
+          }),
+          const SizedBox(height: 8),
         ],
-        if (coachFacingNotes.isNotEmpty) ...[
-          LimitationsPanel(
-            title: 'Notes',
-            limitations: coachFacingNotes,
-          ),
-          const SizedBox(height: 16),
+        if (hasRace) ...[
+          Text('Next race', style: _h(context)),
+          const SizedBox(height: 8),
+          ...report.raceRecommendations.map(_bullet),
         ],
-        if (results.isFailed && !results.isClipQualityFailure) ...[
+        if (results.isFailed) ...[
+          const SizedBox(height: 24),
           FilledButton(
             onPressed: retrying ? null : onRetry,
             child: Text(retrying ? 'Retrying…' : 'Retry analysis'),
@@ -376,32 +272,24 @@ class _SummaryTab extends StatelessWidget {
     );
   }
 
-  static bool _isInternalLimitation(String raw) {
-    final lower = raw.toLowerCase();
-    return lower.contains('pose dependency') ||
-        lower.contains('missing=[') ||
-        lower.contains('no module named') ||
-        lower.contains('torch') ||
-        lower.contains('mmpose') ||
-        lower.contains('mmcv') ||
-        lower.contains('mmengine') ||
-        lower.contains('skipped_no_smoothed') ||
-        lower.contains('supabase_persist') ||
-        lower.contains('first 45') ||
-        lower.contains('gemini_report_failed') ||
-        lower.contains('local_coaching_fallback');
-  }
+  TextStyle? _h(BuildContext context) =>
+      Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: AppColors.primaryDark,
+          );
 
-}
-
-String? _strokeLabel(AnalysisResults results) {
-  final stroke = results.stroke;
-  if (stroke == null || stroke.isEmpty) return null;
-  final predicted = stroke['predicted'] ?? stroke['stroke'] ?? stroke['name'];
-  if (predicted == null) return null;
-  final text = predicted.toString().trim();
-  if (text.isEmpty) return null;
-  return text.replaceAll('_', ' ');
+  Widget _bullet(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('• '),
+            Expanded(
+              child: Text(text, style: const TextStyle(height: 1.35)),
+            ),
+          ],
+        ),
+      );
 }
 
 String? _geminiFailureCodeFromResults(AnalysisResults results) {
@@ -413,341 +301,6 @@ String? _geminiFailureCodeFromResults(AnalysisResults results) {
     if (code.isNotEmpty) return code.toUpperCase();
   }
   return null;
-}
-
-class _MetricsTab extends StatelessWidget {
-  const _MetricsTab({
-    required this.results,
-    required this.startMetrics,
-    required this.strokeMetrics,
-    required this.turnMetrics,
-    required this.otherMetrics,
-  });
-
-  final AnalysisResults results;
-  final List<AnalysisMetric> startMetrics;
-  final List<AnalysisMetric> strokeMetrics;
-  final List<AnalysisMetric> turnMetrics;
-  final List<AnalysisMetric> otherMetrics;
-
-  AnalysisMetric? _findMetric(List<String> nameBits) {
-    for (final m in results.metrics) {
-      final hay = '${m.name} ${m.displayName}'.toLowerCase();
-      if (nameBits.every((b) => hay.contains(b))) return m;
-    }
-    return null;
-  }
-
-  String _clarityLabel(AnalysisMetric? coverage) {
-    final v = coverage?.value?.toDouble();
-    if (v == null) return 'Not measured';
-    if (v >= 0.45) return 'Clear — good side view for coaching';
-    if (v >= 0.25) return 'Okay — some splash or distance limited the view';
-    return 'Limited — splash, underwater, or camera angle hid the body';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final coverage = _findMetric(['coverage']) ?? _findMetric(['target_coverage']);
-    final processed =
-        _findMetric(['processed']) ?? _findMetric(['frames analyzed']);
-    final detected = _findMetric(['detections']) ??
-        _findMetric(['frames_with_detections']) ??
-        _findMetric(['with swimmer']);
-    final hasRaceMetrics = startMetrics.isNotEmpty ||
-        strokeMetrics.isNotEmpty ||
-        turnMetrics.isNotEmpty;
-
-    Widget coachCard(String title, String value, String help) {
-      return Card(
-        margin: const EdgeInsets.only(bottom: 10),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      color: AppColors.primaryDark,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 6),
-              Text(help, style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-        ),
-      );
-    }
-
-    Widget section(String title, List<AnalysisMetric> metrics) {
-      if (metrics.isEmpty) return const SizedBox.shrink();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primaryDark,
-                ),
-          ),
-          const SizedBox(height: 8),
-          ...metrics.map((m) => MetricTile(metric: m)),
-          const SizedBox(height: 12),
-        ],
-      );
-    }
-
-    final processedN = processed?.value?.toInt();
-    final detectedN = detected?.value?.toInt();
-    String reviewed;
-    if (processedN != null && detectedN != null && processedN > 0) {
-      final pct = ((detectedN / processedN) * 100).clamp(0, 100).round();
-      reviewed =
-          'We reviewed about $processedN frames and found the swimmer in $pct% of them.';
-    } else if (processedN != null) {
-      reviewed = 'We reviewed about $processedN frames from this clip.';
-    } else {
-      reviewed = 'Frame counts were not available for this clip.';
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'What this means for coaching',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryDark,
-              ),
-        ),
-        const SizedBox(height: 8),
-        coachCard(
-          'VIDEO CLARITY',
-          _clarityLabel(coverage),
-          'Clearer side-view video = sharper stroke notes next time.',
-        ),
-        coachCard(
-          'HOW MUCH WE REVIEWED',
-          reviewed,
-          'This is not a race split. It tells you how much of the clip Elite could use.',
-        ),
-        if (_strokeLabel(results) != null)
-          coachCard(
-            'STROKE',
-            _strokeLabel(results)!,
-            'Used to pick stroke-specific coaching cues.',
-          ),
-        if (hasRaceMetrics) ...[
-          const SizedBox(height: 8),
-          section('Starts / underwater', startMetrics),
-          section('Stroke', strokeMetrics),
-          section('Turns / finishes', turnMetrics),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          'Open the Coaching tab for the pro, the con, dryland drills, and next-race cue.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CoachingTab extends StatelessWidget {
-  const _CoachingTab({required this.results});
-
-  final AnalysisResults results;
-
-  @override
-  Widget build(BuildContext context) {
-    final report = results.report;
-    if (report == null || !report.isAvailable) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            VideoEngineV2Service.userMessageForErrorCode(
-              _geminiFailureCodeFromResults(results) ??
-                  'GEMINI_REPORT_UNAVAILABLE',
-            ),
-          ),
-          if (results.hasDeterministicMetrics) ...[
-            const SizedBox(height: 12),
-            const Text(
-              'Deterministic metrics are still available on the Metrics tab.',
-            ),
-          ],
-        ],
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (report.summary?.trim().isNotEmpty == true) ...[
-          Text('Coach snapshot', style: _h(context)),
-          const SizedBox(height: 6),
-          Text(report.summary!),
-          const SizedBox(height: 16),
-        ],
-        if (report.strengths.isNotEmpty) ...[
-          Text('Pro (keep this)', style: _h(context)),
-          const SizedBox(height: 6),
-          ...report.strengths.map((s) => _bullet(s)),
-          const SizedBox(height: 16),
-        ],
-        if (report.priorityImprovements.isNotEmpty) ...[
-          Text('Con + dryland drills', style: _h(context)),
-          const SizedBox(height: 6),
-          ...report.priorityImprovements.map((p) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  ...p.drills.map((d) => _bullet(d)),
-                ],
-              ),
-            );
-          }),
-        ],
-        if (report.raceRecommendations.isNotEmpty) ...[
-          Text('Next race + time-drop estimate', style: _h(context)),
-          const SizedBox(height: 6),
-          ...report.raceRecommendations.map(_bullet),
-          const SizedBox(height: 16),
-        ],
-        if (report.limitationsStatement?.trim().isNotEmpty == true) ...[
-          Text('Notes', style: _h(context)),
-          const SizedBox(height: 6),
-          Text(report.limitationsStatement!),
-        ],
-      ],
-    );
-  }
-
-  TextStyle? _h(BuildContext context) =>
-      Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.primaryDark,
-          );
-
-  Widget _bullet(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('• '),
-            Expanded(child: Text(text)),
-          ],
-        ),
-      );
-}
-
-class _DetailsTab extends StatelessWidget {
-  const _DetailsTab({required this.results});
-
-  final AnalysisResults results;
-
-  static bool _isInternalLimitation(String raw) {
-    final lower = raw.toLowerCase();
-    return lower.contains('pose dependency') ||
-        lower.contains('missing=[') ||
-        lower.contains('no module named') ||
-        lower.contains('torch') ||
-        lower.contains('mmpose') ||
-        lower.contains('mmcv') ||
-        lower.contains('mmengine') ||
-        lower.contains('skipped_no_smoothed') ||
-        lower.contains('supabase_persist') ||
-        lower.contains('first 45') ||
-        lower.contains('gemini_report_failed') ||
-        lower.contains('local_coaching_fallback') ||
-        lower.contains('model_unavailable') ||
-        lower.contains('detector_version') ||
-        lower.contains('gemini_prompt');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final coachNotes = results.limitations
-        .where((l) => !_isInternalLimitation(l))
-        .toList(growable: false);
-    final usedLocal = results.limitations.any(
-      (l) => l.toLowerCase().contains('local_coaching_fallback'),
-    );
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text('About this analysis', style: _h(context)),
-        const SizedBox(height: 8),
-        Text(
-          usedLocal
-              ? 'Coaching used SwimIQ local coach tips on this PC '
-                  '(Gemini AI was unavailable for this run). '
-                  'Pros/cons and dryland drills are still for the swimmer to use.'
-              : 'Coaching was generated with Elite analysis on this PC.',
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Status: ${results.isFailed ? 'Needs another try' : 'Complete'}',
-        ),
-        if (_strokeLabel(results) != null) ...[
-          const SizedBox(height: 6),
-          Text('Stroke: ${_strokeLabel(results)}'),
-        ],
-        if (results.engineVersion.trim().isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text('Engine: ${results.engineVersion}'),
-        ],
-        if (coachNotes.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          LimitationsPanel(
-            title: 'Notes for the next film',
-            limitations: coachNotes,
-          ),
-        ],
-        if (results.evidence.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text('Key moments', style: _h(context)),
-          const SizedBox(height: 8),
-          ...results.evidence.map(
-            (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text('• ${e.displayLabel}'),
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        Text(
-          'Support ID (only if you need help): ${results.jobId}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    );
-  }
-
-  TextStyle? _h(BuildContext context) =>
-      Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.primaryDark,
-          );
 }
 
 /// Simple history list for prior V2 analyses.

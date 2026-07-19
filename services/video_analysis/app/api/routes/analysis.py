@@ -400,23 +400,14 @@ def _flutter_facing_report(job_report: dict | None) -> dict | None:
             if title:
                 improvements_out.append({"title": title, "drills": drills})
 
-        limitations = body.get("limitations") or []
-        limitations_statement = None
-        if isinstance(limitations, list) and limitations:
-            limitations_statement = "; ".join(str(x) for x in limitations if str(x).strip())
-        elif isinstance(limitations, str):
-            limitations_statement = limitations
-
+        # Never surface engineer/Gemini fallback notes to the Flutter report UI.
         return {
             "summary": body.get("summary"),
             "strengths": strengths_out,
             "priority_improvements": improvements_out,
             "race_recommendations": list(body.get("race_recommendations") or []),
-            # Do not duplicate improvement drills into a top-level list
-            # (that made the Coaching tab show the same drills twice).
             "drills": [],
-            "limitations_statement": limitations_statement
-            or body.get("limitations_statement"),
+            "limitations_statement": None,
             "confidence_statement": body.get("confidence_statement"),
             "model": stored.get("model_name") or body.get("model"),
             "gemini_succeeded": gemini_ok,

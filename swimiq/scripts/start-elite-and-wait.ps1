@@ -239,7 +239,7 @@ while ((Get-Date) -lt $deadline) {
         Write-Host ''
         Write-Host '[OK] Elite server is fully ready.' -ForegroundColor Green
         Write-Host $body
-        try { Start-Process $HealthUrl } catch {}
+        # Do not open /health in a browser - that JSON page looks like an error to users.
         exit 0
     }
     if ($eliteProc -and $eliteProc.HasExited -and ((Get-Date) - $startedAt).TotalSeconds -gt 15) {
