@@ -19,6 +19,8 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     this.onUploadPhoto,
     this.gpa,
     this.website,
+    this.email,
+    this.phone,
     this.usaSwimmingId,
   });
 
@@ -33,6 +35,8 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   final VoidCallback? onUploadPhoto;
   final String? gpa;
   final String? website;
+  final String? email;
+  final String? phone;
   final String? usaSwimmingId;
 
   static List<String> topEventLines(List<PersonalBestEntry> personalBests) {
@@ -61,6 +65,10 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
             !highestCut.toLowerCase().contains('log')
         ? highestCut.trim()
         : 'Cut pending';
+    final nameLine = displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim();
+    final websiteLine = _contactOrPlaceholder(website, 'Add website');
+    final emailLine = _contactOrPlaceholder(email, 'Add email');
+    final phoneLine = _contactOrPlaceholder(phone, 'Add phone');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,9 +76,9 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: const BoxConstraints(maxWidth: 380),
             child: AspectRatio(
-              aspectRatio: 3.5 / 2,
+              aspectRatio: 3.5 / 2.35,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
@@ -97,7 +105,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 9),
+                    padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -139,7 +147,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -154,13 +162,13 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    displayName,
+                                    nameLine,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w900,
-                                      fontSize: 17,
+                                      fontSize: 16,
                                       height: 1.05,
                                     ),
                                   ),
@@ -173,10 +181,10 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                       color:
                                           Colors.white.withValues(alpha: 0.88),
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 11,
+                                      fontSize: 10.5,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 4),
                                   Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.end,
@@ -186,48 +194,55 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w900,
-                                          fontSize: 26,
+                                          fontSize: 20,
                                           height: 0.95,
                                           letterSpacing: -0.8,
                                         ),
                                       ),
-                                      const SizedBox(width: 5),
+                                      const SizedBox(width: 4),
                                       Padding(
                                         padding:
-                                            const EdgeInsets.only(bottom: 3),
+                                            const EdgeInsets.only(bottom: 2),
                                         child: Text(
                                           'SwimIQ\nScore',
                                           style: TextStyle(
                                             color: Colors.white
                                                 .withValues(alpha: 0.85),
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             height: 1.05,
                                           ),
                                         ),
                                       ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.accent
-                                              .withValues(alpha: 0.22),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                          border: Border.all(
-                                            color: AppColors.accent
-                                                .withValues(alpha: 0.75),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          cutLine,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 10,
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.accent
+                                                  .withValues(alpha: 0.22),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: AppColors.accent
+                                                    .withValues(alpha: 0.75),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              cutLine,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 9.5,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -238,15 +253,28 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 5),
+                        _ContactLine(
+                          icon: Icons.language,
+                          value: websiteLine,
+                        ),
+                        _ContactLine(
+                          icon: Icons.email_outlined,
+                          value: emailLine,
+                        ),
+                        _ContactLine(
+                          icon: Icons.phone_outlined,
+                          value: phoneLine,
+                        ),
+                        const SizedBox(height: 4),
                         _PbLine(label: '1', value: eventOne),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 2),
                         _PbLine(label: '2', value: eventTwo),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 5),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 6,
+                            vertical: 5,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.28),
@@ -259,7 +287,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.auto_awesome,
-                                size: 12,
+                                size: 11,
                                 color: AppColors.accent.withValues(alpha: 0.95),
                               ),
                               const SizedBox(width: 5),
@@ -271,7 +299,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w800,
-                                    fontSize: 11,
+                                    fontSize: 10.5,
                                   ),
                                 ),
                               ),
@@ -309,6 +337,48 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
       ],
     );
   }
+
+  static String _contactOrPlaceholder(String? value, String placeholder) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? placeholder : text;
+  }
+}
+
+class _ContactLine extends StatelessWidget {
+  const _ContactLine({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPlaceholder = value.toLowerCase().startsWith('add ');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 1.5),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 11,
+            color: Colors.white.withValues(alpha: isPlaceholder ? 0.55 : 0.9),
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: isPlaceholder ? 0.62 : 0.95),
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CardPhoto extends StatelessWidget {
@@ -324,7 +394,7 @@ class _CardPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = 58.0;
+    const size = 52.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -346,10 +416,10 @@ class _CardPhoto extends StatelessWidget {
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.person,
                       color: Colors.white70,
-                      size: 26,
+                      size: 24,
                     ),
                   )
-                : const Icon(Icons.person, color: Colors.white70, size: 26),
+                : const Icon(Icons.person, color: Colors.white70, size: 24),
           ),
         ),
       ),
@@ -368,8 +438,8 @@ class _PbLine extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 16,
-          height: 16,
+          width: 15,
+          height: 15,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.16),
@@ -393,7 +463,7 @@ class _PbLine extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w800,
-              fontSize: 11.5,
+              fontSize: 11,
             ),
           ),
         ),

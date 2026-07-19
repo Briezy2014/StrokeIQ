@@ -18,7 +18,7 @@ class RecruitingBusinessCardPdf {
 
   static PdfPageFormat get pageFormat => PdfPageFormat(
         3.5 * PdfPageFormat.inch,
-        2 * PdfPageFormat.inch,
+        2.2 * PdfPageFormat.inch,
         marginAll: 6,
       );
 
@@ -31,6 +31,8 @@ class RecruitingBusinessCardPdf {
     required int? graduationYear,
     String? gpa,
     String? website,
+    String? email,
+    String? phone,
     String? usaSwimmingId,
     Uint8List? profilePhotoBytes,
   }) async {
@@ -57,6 +59,18 @@ class RecruitingBusinessCardPdf {
           : 'Cut pending',
     );
     final scoreText = swimIqScore > 0 ? '$swimIqScore' : '-';
+    final nameLine = _pdfText(
+      displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim(),
+    );
+    final websiteLine = _pdfText(
+      website?.trim().isNotEmpty == true ? website!.trim() : 'Add website',
+    );
+    final emailLine = _pdfText(
+      email?.trim().isNotEmpty == true ? email!.trim() : 'Add email',
+    );
+    final phoneLine = _pdfText(
+      phone?.trim().isNotEmpty == true ? phone!.trim() : 'Add phone',
+    );
 
     pw.ImageProvider? photo;
     if (profilePhotoBytes != null && profilePhotoBytes.isNotEmpty) {
@@ -160,11 +174,11 @@ class RecruitingBusinessCardPdf {
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             pw.Text(
-                              _pdfText(displayName),
+                              nameLine,
                               maxLines: 1,
                               style: pw.TextStyle(
                                 color: PdfColors.white,
-                                fontSize: 12,
+                                fontSize: 11,
                                 font: pw.Font.helveticaBold(),
                               ),
                             ),
@@ -173,11 +187,11 @@ class RecruitingBusinessCardPdf {
                               maxLines: 1,
                               style: pw.TextStyle(
                                 color: _muted,
-                                fontSize: 7,
+                                fontSize: 6.5,
                                 font: pw.Font.helveticaBold(),
                               ),
                             ),
-                            pw.SizedBox(height: 3),
+                            pw.SizedBox(height: 2),
                             pw.Row(
                               crossAxisAlignment: pw.CrossAxisAlignment.end,
                               children: [
@@ -185,7 +199,7 @@ class RecruitingBusinessCardPdf {
                                   scoreText,
                                   style: pw.TextStyle(
                                     color: PdfColors.white,
-                                    fontSize: 18,
+                                    fontSize: 15,
                                     font: pw.Font.helveticaBold(),
                                     height: 1,
                                   ),
@@ -197,7 +211,7 @@ class RecruitingBusinessCardPdf {
                                     'SwimIQ Score',
                                     style: pw.TextStyle(
                                       color: PdfColors.white,
-                                      fontSize: 6,
+                                      fontSize: 5.5,
                                       font: pw.Font.helveticaBold(),
                                     ),
                                   ),
@@ -220,16 +234,44 @@ class RecruitingBusinessCardPdf {
                                     cutLine,
                                     style: pw.TextStyle(
                                       color: PdfColors.white,
-                                      fontSize: 6.5,
+                                      fontSize: 6,
                                       font: pw.Font.helveticaBold(),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            pw.SizedBox(height: 4),
-                            _pbRow('1', eventOne),
                             pw.SizedBox(height: 2),
+                            pw.Text(
+                              websiteLine,
+                              maxLines: 1,
+                              style: pw.TextStyle(
+                                color: _muted,
+                                fontSize: 6,
+                                font: pw.Font.helveticaBold(),
+                              ),
+                            ),
+                            pw.Text(
+                              emailLine,
+                              maxLines: 1,
+                              style: pw.TextStyle(
+                                color: _muted,
+                                fontSize: 6,
+                                font: pw.Font.helveticaBold(),
+                              ),
+                            ),
+                            pw.Text(
+                              phoneLine,
+                              maxLines: 1,
+                              style: pw.TextStyle(
+                                color: _muted,
+                                fontSize: 6,
+                                font: pw.Font.helveticaBold(),
+                              ),
+                            ),
+                            pw.SizedBox(height: 2),
+                            _pbRow('1', eventOne),
+                            pw.SizedBox(height: 1),
                             _pbRow('2', eventTwo),
                           ],
                         ),
@@ -237,7 +279,7 @@ class RecruitingBusinessCardPdf {
                     ],
                   ),
                 ),
-                pw.SizedBox(height: 4),
+                pw.SizedBox(height: 3),
                 pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
                     horizontal: 5,

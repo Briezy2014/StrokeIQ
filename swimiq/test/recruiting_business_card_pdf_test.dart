@@ -29,6 +29,9 @@ void main() {
       swimIqScore: 550,
       highestCut: 'BB',
       team: 'Central Ohio Aquatics',
+      website: 'https://swimiq.app/aspyn',
+      email: 'aspyn@example.com',
+      phone: '614-555-0199',
       topEvents: const [
         '200 Butterfly 3:10.00 (LCM)',
         '100 Butterfly 1:02.3 (SCY)',
@@ -45,6 +48,9 @@ void main() {
       '2032',
       'STATE',
       'QUALIFIER',
+      'swimiq.app',
+      'aspyn@example.com',
+      '614-555-0199',
     ]) {
       expect(content, contains(needle), reason: '$needle missing from PDF stream');
     }

@@ -17,6 +17,8 @@ class RecruitingCardSnapshot {
     required this.fileSafeName,
     this.gpa,
     this.website,
+    this.email,
+    this.phone,
     this.usaSwimmingId,
     this.profilePhotoUrl,
   });
@@ -30,6 +32,8 @@ class RecruitingCardSnapshot {
   final String fileSafeName;
   final String? gpa;
   final String? website;
+  final String? email;
+  final String? phone;
   final String? usaSwimmingId;
   final String? profilePhotoUrl;
 }
@@ -69,6 +73,8 @@ class RecruitingCardExportBar extends StatelessWidget {
       graduationYear: snapshot.graduationYear,
       gpa: snapshot.gpa,
       website: snapshot.website,
+      email: snapshot.email,
+      phone: snapshot.phone,
       usaSwimmingId: snapshot.usaSwimmingId,
       profilePhotoBytes: photo,
     );
@@ -112,24 +118,34 @@ class RecruitingCardExportBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _exportPdf(context),
-            icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-            label: const Text('Export PDF'),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () => _printCard(context),
-            icon: const Icon(Icons.print_outlined, size: 18),
-            label: const Text('Print'),
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 340;
+        final export = OutlinedButton.icon(
+          onPressed: () => _exportPdf(context),
+          icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+          label: Text(compact ? 'PDF' : 'Export PDF'),
+        );
+        final printBtn = FilledButton.icon(
+          onPressed: () => _printCard(context),
+          icon: const Icon(Icons.print_outlined, size: 18),
+          label: Text(compact ? 'Print' : 'Print'),
+        );
+        if (compact) {
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [export, printBtn],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: export),
+            const SizedBox(width: 8),
+            Expanded(child: printBtn),
+          ],
+        );
+      },
     );
   }
 }

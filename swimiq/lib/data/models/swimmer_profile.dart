@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|SAT Score|ACT Score|Intended Major|Recruiting Status|Coach Email|Coach Phone|Athlete Website|Other Interests|Academic Honors|Athletic Honors|College Interests|Leadership & Service|Recruiting Email):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|SAT Score|ACT Score|Intended Major|Recruiting Status|Coach Email|Coach Phone|Athlete Email|Athlete Phone|Athlete Website|Other Interests|Academic Honors|Athletic Honors|College Interests|Leadership & Service|Recruiting Email):\s*(.+)$',
   );
 
   final int? id;
@@ -72,6 +72,9 @@ class SwimmerProfile {
   String? get recruitingStatus => _structuredNotesValue('Recruiting Status');
   String? get coachEmail => _structuredNotesValue('Coach Email');
   String? get coachPhone => _structuredNotesValue('Coach Phone');
+  String? get athleteEmail =>
+      _structuredNotesValue('Athlete Email') ?? recruitingEmail;
+  String? get athletePhone => _structuredNotesValue('Athlete Phone');
   String? get athleteWebsite => _structuredNotesValue('Athlete Website');
   String? get otherInterests => _structuredNotesValue('Other Interests');
   String? get academicHonors => _structuredNotesValue('Academic Honors');
@@ -79,6 +82,19 @@ class SwimmerProfile {
   String? get collegeInterests => _structuredNotesValue('College Interests');
   String? get leadershipService => _structuredNotesValue('Leadership & Service');
   String? get recruitingEmail => _structuredNotesValue('Recruiting Email');
+
+  /// Name for recruiting card UI — never fall back to account slugs like "demo".
+  String recruitingCardName({String? fallbackSwimmerKey}) {
+    final preferred = preferredName?.trim();
+    if (preferred != null && preferred.isNotEmpty) return preferred;
+    final legal = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    if (legal.isNotEmpty) return legal;
+    final key = (fallbackSwimmerKey ?? swimmerName).trim();
+    if (key.isEmpty || key.toLowerCase() == 'demo') {
+      return 'Add athlete name';
+    }
+    return key;
+  }
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -191,6 +207,8 @@ class SwimmerProfile {
     String? recruitingStatus,
     String? coachEmail,
     String? coachPhone,
+    String? athleteEmail,
+    String? athletePhone,
     String? athleteWebsite,
     String? otherInterests,
     String? academicHonors,
@@ -221,13 +239,16 @@ class SwimmerProfile {
     addLine('Recruiting Status', recruitingStatus);
     addLine('Coach Email', coachEmail);
     addLine('Coach Phone', coachPhone);
+    addLine('Athlete Email', athleteEmail);
+    addLine('Athlete Phone', athletePhone);
     addLine('Athlete Website', athleteWebsite);
     addLine('Other Interests', otherInterests);
     addLine('Academic Honors', academicHonors);
     addLine('Athletic Honors', athleticHonors);
     addLine('College Interests', collegeInterests);
     addLine('Leadership & Service', leadershipService);
-    addLine('Recruiting Email', recruitingEmail);
+    // Keep recruiting email in sync with athlete email for older readers.
+    addLine('Recruiting Email', recruitingEmail ?? athleteEmail);
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {

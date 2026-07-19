@@ -62,6 +62,8 @@ Future<void> _pumpPassport(
   WidgetTester tester,
   SwimmerProfile profile,
 ) async {
+  await tester.binding.setSurfaceSize(const Size(1100, 900));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -103,14 +105,11 @@ void main() {
       expect(find.byType(DropdownButtonFormField<dynamic>), findsNothing);
       expect(find.byType(DropdownButton<dynamic>), findsNothing);
 
-      expect(find.text('USA Swimming'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('Athlete Passport™ Command Center'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
+      // Recruiting card shows the athlete name (not an account slug).
+      expect(find.text('Aspyn'), findsWidgets);
+      expect(find.text('Add website'), findsOneWidget);
+      expect(find.text('Add email'), findsOneWidget);
+      expect(find.text('Add phone'), findsOneWidget);
 
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
       expect(find.text('SwimDNA™'), findsOneWidget);
@@ -118,6 +117,16 @@ void main() {
       expect(find.text('AI Coach'), findsWidgets);
       expect(find.text('Coming Soon to Athlete Passport™'), findsNothing);
       expect(find.text('Coming Soon'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.text('Athlete email'),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Athlete email'), findsOneWidget);
+      expect(find.text('Athlete phone'), findsOneWidget);
+      expect(find.text('Athlete website'), findsOneWidget);
     });
 
     testWidgets('renders invalid saved strokes as text without crashing',

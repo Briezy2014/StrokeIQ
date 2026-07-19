@@ -17,6 +17,8 @@ void main() {
               team: 'Central Ohio Aquatics',
               gpa: '3.85',
               website: 'https://swimiq.app/aspyn',
+              email: 'aspyn@example.com',
+              phone: '(614) 555-0199',
               topEvents: [
                 '50 Butterfly 28.45 (SCY)',
                 '100 Butterfly 1:02.3 (SCY)',
@@ -34,6 +36,9 @@ void main() {
     expect(find.text('550'), findsOneWidget);
     expect(find.textContaining('Class of 2032'), findsOneWidget);
     expect(find.textContaining('Central Ohio Aquatics'), findsOneWidget);
+    expect(find.text('https://swimiq.app/aspyn'), findsOneWidget);
+    expect(find.text('aspyn@example.com'), findsOneWidget);
+    expect(find.text('(614) 555-0199'), findsOneWidget);
     expect(find.text('BB'), findsOneWidget);
     expect(find.textContaining('50 Butterfly'), findsOneWidget);
     expect(find.textContaining('STATE QUALIFIER'), findsOneWidget);

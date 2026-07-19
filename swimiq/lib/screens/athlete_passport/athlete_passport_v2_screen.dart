@@ -44,6 +44,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _notesController;
   late final TextEditingController _gpaController;
   late final TextEditingController _websiteController;
+  late final TextEditingController _athleteEmailController;
+  late final TextEditingController _athletePhoneController;
   late final TextEditingController _interestsController;
   late final TextEditingController _academicHonorsController;
   late final TextEditingController _athleticHonorsController;
@@ -82,6 +84,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _notesController = TextEditingController();
     _gpaController = TextEditingController();
     _websiteController = TextEditingController();
+    _athleteEmailController = TextEditingController();
+    _athletePhoneController = TextEditingController();
     _interestsController = TextEditingController();
     _academicHonorsController = TextEditingController();
     _athleticHonorsController = TextEditingController();
@@ -119,6 +123,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _notesController.dispose();
     _gpaController.dispose();
     _websiteController.dispose();
+    _athleteEmailController.dispose();
+    _athletePhoneController.dispose();
     _interestsController.dispose();
     _academicHonorsController.dispose();
     _athleticHonorsController.dispose();
@@ -184,6 +190,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _notesController.text = profile?.notesBody ?? '';
     _gpaController.text = profile?.gpa ?? '';
     _websiteController.text = profile?.athleteWebsite ?? '';
+    _athleteEmailController.text = profile?.athleteEmail ?? '';
+    _athletePhoneController.text = profile?.athletePhone ?? '';
     _interestsController.text = profile?.otherInterests ?? '';
     _academicHonorsController.text = profile?.academicHonors ?? '';
     _athleticHonorsController.text = profile?.athleticHonors ?? '';
@@ -193,8 +201,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _actController.text = profile?.actScore ?? '';
     _intendedMajorController.text = profile?.intendedMajor ?? '';
     _recruitingStatusController.text = profile?.recruitingStatus ?? '';
-    _coachEmailController.text =
-        profile?.coachEmail ?? profile?.recruitingEmail ?? '';
+    _coachEmailController.text = profile?.coachEmail ?? '';
     _coachPhoneController.text = profile?.coachPhone ?? '';
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
@@ -252,6 +259,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         profilePhotoUrl: existing?.profilePhotoUrl,
         gpa: _gpaController.text,
         athleteWebsite: _websiteController.text,
+        athleteEmail: _athleteEmailController.text,
+        athletePhone: _athletePhoneController.text,
         otherInterests: _interestsController.text,
         academicHonors: _academicHonorsController.text,
         athleticHonors: _athleticHonorsController.text,
@@ -326,10 +335,76 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final profile = data.profile;
-        final displayName = profile?.displayName ?? swimmer;
+        final displayName =
+            profile?.recruitingCardName(fallbackSwimmerKey: swimmer) ??
+                (swimmer.toLowerCase() == 'demo' ? 'Add athlete name' : swimmer);
         final dateFormat = DateFormat('MM/dd/yyyy');
 
         final snapshot = data.passportSnapshot(swimmer);
+        final topEvents = AthleteRecruitingBusinessCard.topEventLines(
+          data.personalBests,
+        ).isNotEmpty
+            ? AthleteRecruitingBusinessCard.topEventLines(
+                data.personalBests,
+              )
+            : snapshot.personalBests.take(2).toList();
+
+        void openRecruitingCenter() {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const CollegeRecruitingHubScreen(),
+            ),
+          );
+        }
+
+        final cardBlock = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            RecruitingCardExportBar(
+              snapshot: RecruitingCardSnapshot(
+                displayName: displayName,
+                swimIqScore: snapshot.swimIqScore,
+                highestCut: snapshot.highestCut,
+                team: profile?.team,
+                gpa: profile?.gpa,
+                website: profile?.athleteWebsite,
+                email: profile?.athleteEmail,
+                phone: profile?.athletePhone,
+                topEvents: topEvents,
+                graduationYear: profile?.graduationYear,
+                usaSwimmingId: profile?.usaSwimmingId,
+                profilePhotoUrl: profile?.profilePhotoUrl,
+                fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            AthleteRecruitingBusinessCard(
+              displayName: displayName,
+              swimIqScore: snapshot.swimIqScore,
+              highestCut: snapshot.highestCut,
+              team: profile?.team,
+              gpa: profile?.gpa,
+              website: profile?.athleteWebsite,
+              email: profile?.athleteEmail,
+              phone: profile?.athletePhone,
+              graduationYear: profile?.graduationYear,
+              profilePhotoUrl: profile?.profilePhotoUrl,
+              usaSwimmingId: profile?.usaSwimmingId,
+              topEvents: topEvents,
+              isUploadingPhoto: _isUploadingPhoto,
+              onUploadPhoto: _uploadProfilePhoto,
+            ),
+            const SizedBox(height: 10),
+            _CompactAthleteStatusStrip(snapshot: snapshot),
+          ],
+        );
+
+        final hub = PassportHub(
+          data: data,
+          swimmer: swimmer,
+          snapshot: snapshot,
+          onOpenRecruitingCenter: openRecruitingCenter,
+        );
 
         return ListView(
           controller: _scrollController,
@@ -341,65 +416,36 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               subtitle: 'Your recruiting card, SwimDNA hub, and college tools',
             ),
             const SizedBox(height: 12),
-            Builder(
-              builder: (context) {
-                final topEvents = AthleteRecruitingBusinessCard.topEventLines(
-                  data.personalBests,
-                ).isNotEmpty
-                    ? AthleteRecruitingBusinessCard.topEventLines(
-                        data.personalBests,
-                      )
-                    : snapshot.personalBests.take(2).toList();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Need enough room for the wallet card + command-center column.
+                final wide = constraints.maxWidth >= 900;
+                if (!wide) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      cardBlock,
+                      const SizedBox(height: 14),
+                      hub,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    RecruitingCardExportBar(
-                      snapshot: RecruitingCardSnapshot(
-                        displayName: displayName,
-                        swimIqScore: snapshot.swimIqScore,
-                        highestCut: snapshot.highestCut,
-                        team: profile?.team,
-                        gpa: profile?.gpa,
-                        website: profile?.athleteWebsite,
-                        topEvents: topEvents,
-                        graduationYear: profile?.graduationYear,
-                        usaSwimmingId: profile?.usaSwimmingId,
-                        profilePhotoUrl: profile?.profilePhotoUrl,
-                        fileSafeName:
-                            swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
+                    Expanded(flex: 11, child: cardBlock),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 9,
+                      child: PassportHub(
+                        data: data,
+                        swimmer: swimmer,
+                        snapshot: snapshot,
+                        layout: PassportHubLayout.sidePanel,
+                        onOpenRecruitingCenter: openRecruitingCenter,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    AthleteRecruitingBusinessCard(
-                      displayName: displayName,
-                      swimIqScore: snapshot.swimIqScore,
-                      highestCut: snapshot.highestCut,
-                      team: profile?.team,
-                      gpa: profile?.gpa,
-                      website: profile?.athleteWebsite,
-                      graduationYear: profile?.graduationYear,
-                      profilePhotoUrl: profile?.profilePhotoUrl,
-                      usaSwimmingId: profile?.usaSwimmingId,
-                      topEvents: topEvents,
-                      isUploadingPhoto: _isUploadingPhoto,
-                      onUploadPhoto: _uploadProfilePhoto,
-                    ),
                   ],
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _CompactAthleteStatusStrip(snapshot: snapshot),
-            const SizedBox(height: 16),
-            PassportHub(
-              data: data,
-              swimmer: swimmer,
-              snapshot: snapshot,
-              onOpenRecruitingCenter: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const CollegeRecruitingHubScreen(),
-                  ),
                 );
               },
             ),
@@ -423,6 +469,9 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 'Age: ${_passportLabel(profile?.age?.toString())}',
                 'Graduation Year: ${_passportLabel(profile?.graduationYear?.toString())}',
                 'School: ${_passportLabel(profile?.school)}',
+                'Website: ${_passportLabel(profile?.athleteWebsite)}',
+                'Email: ${_passportLabel(profile?.athleteEmail)}',
+                'Phone: ${_passportLabel(profile?.athletePhone)}',
               ],
             ),
             const SizedBox(height: 8),
@@ -639,6 +688,18 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         keyboardType: TextInputType.url,
                       ),
                       _field(
+                        controller: _athleteEmailController,
+                        label: 'Athlete email',
+                        hint: 'athlete@email.com',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      _field(
+                        controller: _athletePhoneController,
+                        label: 'Athlete phone',
+                        hint: 'Example: (555) 123-4567',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      _field(
                         controller: _interestsController,
                         label: 'Other interests',
                         hint: 'Music, community service, other sports…',
@@ -745,32 +806,37 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.textDark,
-                height: 1.2,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Text.rich(
+          TextSpan(
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppColors.textDark,
+                  height: 1.2,
+                ),
+            children: [
+              TextSpan(
+                text: '$label: ',
+                style: const TextStyle(fontWeight: FontWeight.w800),
               ),
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            TextSpan(
-              text: value,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark.withValues(alpha: 0.85),
+              TextSpan(
+                text: value,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark.withValues(alpha: 0.85),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
