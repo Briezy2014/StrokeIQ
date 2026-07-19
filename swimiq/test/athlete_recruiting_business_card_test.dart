@@ -62,8 +62,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Add profile photo'), findsOneWidget);
-    await tester.tap(find.text('Add profile photo'));
+    expect(find.text('Add photo'), findsOneWidget);
+    await tester.tap(find.text('Add photo'));
     expect(tapped, isTrue);
   });
 }

@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:printing/printing.dart';
 
 import '../core/recruiting/recruiting_business_card_pdf.dart';
-import '../core/theme/app_theme.dart';
 
 class RecruitingCardSnapshot {
   const RecruitingCardSnapshot({
@@ -86,9 +85,7 @@ class RecruitingCardExportBar extends StatelessWidget {
       );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wallet recruiting card PDF ready — save or share.'),
-        ),
+        const SnackBar(content: Text('Recruiting card PDF ready — save or share.')),
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -115,44 +112,22 @@ class RecruitingCardExportBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        Text(
-          'Wallet recruiting card',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.primaryDeep,
-                fontWeight: FontWeight.w900,
-              ),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _exportPdf(context),
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+            label: const Text('Export PDF'),
+          ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          '3.5″ × 2″ coach card — photo, top times, cut, SwimIQ Score. '
-          'Print, cut, and hand it to a college coach.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textDark.withValues(alpha: 0.78),
-                height: 1.35,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _exportPdf(context),
-                icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                label: const Text('Export PDF'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: () => _printCard(context),
-                icon: const Icon(Icons.print_outlined, size: 18),
-                label: const Text('Print card'),
-              ),
-            ),
-          ],
+        const SizedBox(width: 8),
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: () => _printCard(context),
+            icon: const Icon(Icons.print_outlined, size: 18),
+            label: const Text('Print'),
+          ),
         ),
       ],
     );
