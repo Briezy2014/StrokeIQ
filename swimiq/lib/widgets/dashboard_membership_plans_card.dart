@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/constants/app_constants.dart';
 import '../core/models/subscription_plan.dart';
 import '../core/services/stripe_checkout_support.dart';
 import '../core/theme/app_theme.dart';
@@ -77,9 +78,15 @@ class _DashboardMembershipPlansCardState
 
   @override
   Widget build(BuildContext context) {
+    // Closed testing / demos: never show plan upsell on the dashboard.
+    if (AppConstants.unlockAllTabsForPreview) {
+      return const SizedBox.shrink();
+    }
+
     final subscription = ref.watch(subscriptionStateProvider).value;
     final userEmail = ref.watch(currentUserProvider)?.email;
     if (subscription == null) return const SizedBox.shrink();
+    if (subscription.isDemoMaster) return const SizedBox.shrink();
 
     final trialDays = subscription.isTrialActive && subscription.trialEndsAt != null
         ? subscription.trialEndsAt!.difference(DateTime.now()).inDays.clamp(0, 99)

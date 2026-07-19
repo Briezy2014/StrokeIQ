@@ -1,7 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/demo_account_constants.dart';
 import '../constants/founder_account_constants.dart';
+import '../constants/master_account_constants.dart';
 import '../models/subscription_plan.dart';
 
 class SubscriptionState {
@@ -139,6 +141,11 @@ class SubscriptionService {
     );
 
     state = await _mergeServerState(state);
+    // Always force Elite for demo/master even if Supabase row is missing/stale.
+    final email = _client?.auth.currentUser?.email;
+    if (_isBuiltInEliteEmail(email)) {
+      state = _founderEliteState(state);
+    }
     return state;
   }
 
@@ -147,12 +154,22 @@ class SubscriptionService {
     return current;
   }
 
+  /// Demo + master emails always get full Elite locally (no paywall / no upgrade ad).
+  static bool _isBuiltInEliteEmail(String? email) {
+    final normalized = email?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return false;
+    return FounderAccountConstants.isFounderEmail(normalized) ||
+        normalized == DemoAccountConstants.email.toLowerCase() ||
+        normalized == MasterAccountConstants.email.toLowerCase();
+  }
+
   Future<SubscriptionState> _mergeServerState(SubscriptionState local) async {
     final client = _client;
     final user = client?.auth.currentUser;
     if (client == null || user == null) return local;
 
     final founder = FounderAccountConstants.isFounderEmail(user.email);
+    final builtInElite = _isBuiltInEliteEmail(user.email);
 
     try {
       final row = await client
@@ -162,12 +179,13 @@ class SubscriptionService {
           .maybeSingle();
 
       if (row == null) {
-        return founder ? _founderEliteState(local) : local;
+        return builtInElite ? _founderEliteState(local) : local;
       }
 
-      final isDemo = row['is_demo_master'] == true || founder;
+      final isDemo =
+          row['is_demo_master'] == true || founder || builtInElite;
       final status = row['status'] as String?;
-      final tier = founder
+      final tier = builtInElite
           ? SubscriptionTier.elite
           : _parseTier(row['tier'] as String?);
       final cycle = row['billing_cycle'] == BillingCycle.annual.name
@@ -177,13 +195,14 @@ class SubscriptionService {
       return local.copyWith(
         tier: tier,
         billingCycle: cycle,
-        serverStatus: founder || status == 'active' || status == 'trialing'
-            ? 'active'
-            : status,
+        serverStatus:
+            builtInElite || status == 'active' || status == 'trialing'
+                ? 'active'
+                : status,
         isDemoMaster: isDemo,
       );
     } catch (_) {
-      return founder ? _founderEliteState(local) : local;
+      return builtInElite ? _founderEliteState(local) : local;
     }
   }
 

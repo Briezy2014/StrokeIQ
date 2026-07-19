@@ -15,8 +15,9 @@ class AppConstants {
   /// Max swim clip size for Gemini File API analysis (matches edge function cap).
   static const maxGeminiVideoBytes = 50 * 1024 * 1024;
 
-  /// Set false to enforce Basic / Pro / Elite tab gates (before public launch).
-  static const unlockAllTabsForPreview = false;
+  /// Closed testing / demos: keep true so no paywall ads, tab locks, or Elite
+  /// upgrade banners appear. Set false only when public paid launch is ready.
+  static const unlockAllTabsForPreview = true;
 
   /// Official 2024-2028 USA Swimming age-group brackets from the motivational PDF.
   static const ageGroups = [

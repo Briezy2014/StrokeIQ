@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../config/env.dart';
 import '../../config/feature_flags.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/gemini_swim_analysis_service.dart';
 import '../../core/services/subscription_service.dart';
@@ -502,7 +503,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 ),
               ),
             ],
-            if (hasPro && !canRunAi && !v2Allowed) ...[
+            // Never show Elite upgrade ads during closed testing / demo unlock.
+            if (!AppConstants.unlockAllTabsForPreview &&
+                hasPro &&
+                !canRunAi &&
+                !v2Allowed) ...[
               const SizedBox(height: 12),
               _VideoLabEliteBanner(subscription: subscription),
             ],

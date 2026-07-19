@@ -1,3 +1,4 @@
+import '../constants/app_constants.dart';
 import '../models/subscription_plan.dart';
 import '../services/subscription_service.dart';
 import '../../providers/app_providers.dart';
@@ -10,6 +11,7 @@ class SubscriptionCapabilities {
     SubscriptionState state,
     SubscriptionTier minimum,
   ) {
+    if (AppConstants.unlockAllTabsForPreview) return true;
     switch (minimum) {
       case SubscriptionTier.basic:
       case SubscriptionTier.trial:
@@ -23,6 +25,9 @@ class SubscriptionCapabilities {
   }
 
   static bool hasProAccess(SubscriptionState state) {
+    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+      return true;
+    }
     switch (state.effectiveTier) {
       case SubscriptionTier.elite:
       case SubscriptionTier.pro:
@@ -36,7 +41,9 @@ class SubscriptionCapabilities {
   }
 
   static bool hasEliteAccess(SubscriptionState state) {
-    if (state.isDemoMaster) return true;
+    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+      return true;
+    }
     if (state.effectiveTier == SubscriptionTier.elite) return true;
     if (state.isTrialActive) return true;
     if (state.isCoachTrialActive && state.hasCoachElitePeek) return true;
@@ -88,6 +95,9 @@ class SubscriptionCapabilities {
   // ── Elite (AI performance intelligence) ─────────────────────────────
 
   static bool canRunSwimIqAiAnalysis(SubscriptionState state) {
+    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+      return true;
+    }
     if (!hasEliteAccess(state)) return false;
     if (state.isCoachTrialActive && state.hasCoachElitePeek) {
       return state.coachAiAnalysesUsed <
@@ -123,6 +133,7 @@ class SubscriptionCapabilities {
   }
 
   static bool canAccessHomeTab(int tabIndex, SubscriptionState? state) {
+    if (AppConstants.unlockAllTabsForPreview) return true;
     if (state == null) {
       return minimumTierForHomeTab(tabIndex) == SubscriptionTier.basic;
     }
