@@ -48,7 +48,7 @@ async def extract_best_times(
             image_bytes=image_bytes,
             mime_type=mime,
             api_key=api_key,
-            model_name=settings.gemini_model_name or "gemini-2.5-flash",
+            model_name=settings.gemini_model_name or "gemini-3.5-flash",
             course_hint=body.course_hint,
         )
     except GeminiClientError as exc:

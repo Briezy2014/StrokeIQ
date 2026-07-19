@@ -12,7 +12,7 @@ The orange "GEMINI_MODEL" error is WRONG and may be SAVED from an old attempt.
 Even with no GEMINI_MODEL secret, an old server version wrote that bad message.
 After KARA-GEMINI-FIX-NOW.bat succeeds, tap Analyze again — the new message will be correct.
 
-SwimIQ auto-picks the newest Gemini Flash model your key allows (often gemini-2.5-flash).
+SwimIQ auto-picks the newest Gemini Flash model your key allows (often gemini-3.5-flash).
 
 
 ================================================================================

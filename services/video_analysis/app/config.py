@@ -123,7 +123,7 @@ class Settings(BaseSettings):
     # Optional Gemini enhance only. Default OFF — SwimIQ Elite coaching is always-on.
     gemini_report_enabled: bool = False
     gemini_api_key: str | None = None  # backend env only (GEMINI_API_KEY)
-    gemini_model_name: str = "gemini-2.5-flash"
+    gemini_model_name: str = "gemini-3.5-flash"
     # Keep Gemini short so short clips still finish near 30-60s wall time.
     gemini_timeout_s: float = 12.0
     gemini_max_regenerate_attempts: int = 1

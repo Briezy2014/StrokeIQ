@@ -5,14 +5,16 @@ const BUCKET = "swim-videos";
 const MAX_INLINE_BYTES = 12 * 1024 * 1024;
 /** Edge-safe max clip size (Supabase worker memory limit). */
 const MAX_FILE_API_BYTES = 25 * 1024 * 1024;
-const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v9";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v10";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -895,7 +897,7 @@ function friendlyGeminiHttpError(
   if (status === 429 || isQuotaError(lower)) {
     if (lower.includes("gemini-1.5") || model.includes("1.5")) {
       return "Google retired gemini-1.5 (quota 0). Redeploy sync-v9 — your server "
-        + "must only use gemini-2.5-flash. Create a NEW key at aistudio.google.com/apikey if needed.";
+        + "must use a current Flash model (gemini-3.5-flash). Create a NEW key at aistudio.google.com/apikey if needed.";
     }
     if (lower.includes("gemini-2.0-flash") || model.includes("2.0-flash")) {
       return "Gemini 2.0 Flash is retired (quota limit 0). "

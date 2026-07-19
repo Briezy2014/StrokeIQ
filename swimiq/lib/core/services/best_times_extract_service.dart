@@ -176,9 +176,18 @@ class BestTimesExtractService {
     final detail = map?['detail'];
     if (detail is Map) {
       throw BestTimesExtractException(
-        (detail['message'] ?? 'Could not read best times from photo.')
-            .toString(),
+        _friendlyExtractMessage(
+          (detail['message'] ?? 'Could not read best times from photo.')
+              .toString(),
+        ),
         errorCode: detail['error_code']?.toString(),
+      );
+    }
+    final mapError = map?['error']?.toString() ?? map?['message']?.toString();
+    if (mapError != null && mapError.trim().isNotEmpty) {
+      throw BestTimesExtractException(
+        _friendlyExtractMessage(mapError),
+        errorCode: 'EXTRACT_FAILED',
       );
     }
     if (response.statusCode == 401 || response.statusCode == 403) {
@@ -194,10 +203,30 @@ class BestTimesExtractService {
       );
     }
     throw BestTimesExtractException(
-      detail?.toString() ??
-          'Could not read best times from photo (${response.statusCode}).',
+      _friendlyExtractMessage(
+        detail?.toString() ??
+            'Could not read best times from photo (${response.statusCode}).',
+      ),
       errorCode: 'EXTRACT_FAILED',
     );
+  }
+
+  static String _friendlyExtractMessage(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('no longer available') ||
+        lower.contains('not_found') ||
+        lower.contains('gemini-2.5-flash') ||
+        lower.contains('gemini-2.0-flash')) {
+      return 'Google retired the old Gemini model for photo reading. '
+          'Restart SwimIQ with START-SWIMIQ-WITH-ELITE.bat (pulls the fix that uses '
+          'gemini-3.5-flash), then tap Re-read photo.';
+    }
+    if (lower.contains('missing_api_key') ||
+        lower.contains('gemini_api_key is not configured')) {
+      return 'GEMINI_API_KEY is not configured on the Elite server. '
+          'Add it to services/video_analysis/.env and restart Elite.';
+    }
+    return raw;
   }
 
   static String _mimeFromName(String fileName) {

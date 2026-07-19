@@ -1,6 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+/** Prefer current Flash models; keep 2.5 as fallback for older API keys. */
+const GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,64 +72,84 @@ Deno.serve(async (req) => {
         ? ` Default course hint if unclear: ${courseHint}.`
         : "");
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            { text: prompt },
             {
-              parts: [
-                { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: mime,
-                    data: rawBase64,
-                  },
-                },
-              ],
+              inline_data: {
+                mime_type: mime,
+                data: rawBase64,
+              },
             },
           ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                times: {
-                  type: "ARRAY",
-                  items: {
-                    type: "OBJECT",
-                    properties: {
-                      event: { type: "STRING" },
-                      time: { type: "STRING" },
-                      course: { type: "STRING" },
-                      date: { type: "STRING" },
-                      meet_name: { type: "STRING" },
-                    },
-                    required: ["event", "time"],
-                  },
+        },
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            times: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  event: { type: "STRING" },
+                  time: { type: "STRING" },
+                  course: { type: "STRING" },
+                  date: { type: "STRING" },
+                  meet_name: { type: "STRING" },
                 },
-                detected_course: { type: "STRING" },
-                notes: { type: "STRING" },
+                required: ["event", "time"],
               },
-              required: ["times"],
             },
+            detected_course: { type: "STRING" },
+            notes: { type: "STRING" },
           },
-        }),
+          required: ["times"],
+        },
       },
-    );
+    };
 
-    if (!geminiResponse.ok) {
-      const errText = await geminiResponse.text();
-      return jsonError(`Gemini API error: ${errText}`, 502);
+    let textPart: string | undefined;
+    let lastError = "";
+    let usedModel = GEMINI_MODELS[0];
+    for (const model of GEMINI_MODELS) {
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        },
+      );
+
+      if (!geminiResponse.ok) {
+        lastError = await geminiResponse.text();
+        continue;
+      }
+
+      const geminiJson = await geminiResponse.json();
+      textPart = geminiJson?.candidates?.[0]?.content?.parts?.find(
+        (part: { text?: string }) => typeof part.text === "string",
+      )?.text;
+      if (textPart) {
+        usedModel = model;
+        break;
+      }
+      lastError = "Gemini returned an empty extract.";
     }
 
-    const geminiJson = await geminiResponse.json();
-    const textPart = geminiJson?.candidates?.[0]?.content?.parts?.find(
-      (part: { text?: string }) => typeof part.text === "string",
-    )?.text;
-    if (!textPart) return jsonError("Gemini returned an empty extract.", 502);
+    if (!textPart) {
+      return jsonError(
+        lastError
+          ? `Gemini API error: ${lastError}`
+          : "Gemini returned an empty extract.",
+        502,
+      );
+    }
 
     const parsed = JSON.parse(textPart) as {
       times?: Array<Record<string, unknown>>;
@@ -141,7 +167,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        engine: "swimiq-best-times-extract-edge-v1",
+        engine: "swimiq-best-times-extract-edge-v2",
+        model: usedModel,
         times,
         detected_course: parsed.detected_course ?? null,
         notes: parsed.notes ?? null,

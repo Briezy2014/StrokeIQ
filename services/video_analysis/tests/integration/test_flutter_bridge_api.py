@@ -142,7 +142,7 @@ def test_report_retrieval_when_present(api_client):
         "report": {
             "status": "validated",
             "summary": "Steady butterfly rhythm.",
-            "model_name": "gemini-2.5-flash",
+            "model_name": "gemini-3.5-flash",
         },
     }
     job.butterfly = {"metrics": [{"name": "stroke_rate", "value": 40, "unit": "strokes/min"}], "events": []}
@@ -167,7 +167,7 @@ def test_nested_stored_coaching_report_is_flattened_for_flutter(api_client):
         "gemini_succeeded": True,
         "report": {
             "status": "validated",
-            "model_name": "gemini-2.5-flash",
+            "model_name": "gemini-3.5-flash",
             "report": {
                 "summary": "Nested body summary for the coach.",
                 "strengths": [

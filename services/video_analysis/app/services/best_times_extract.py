@@ -48,7 +48,7 @@ def extract_best_times_from_image(
     image_bytes: bytes,
     mime_type: str,
     api_key: str,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-3.5-flash",
     course_hint: str | None = None,
     timeout_s: float = 45.0,
 ) -> BestTimesExtractResult:
@@ -70,7 +70,17 @@ def extract_best_times_from_image(
         user_prompt += f" Default course hint if unclear: {hint}."
 
     transport = GoogleGenAITransport(api_key=api_key)
-    models = [model_name, "gemini-2.0-flash", "gemini-2.5-flash"]
+    # Prefer current Flash models; keep 2.5 as fallback for older keys.
+    models: list[str] = []
+    for name in (
+        model_name,
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+    ):
+        if name and name not in models:
+            models.append(name)
     last_error: Exception | None = None
     for model in models:
         try:

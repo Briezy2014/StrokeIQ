@@ -132,7 +132,12 @@ class ReportGenerator:
             (self.settings.gemini_model_name if self.settings else None) or DEFAULT_MODEL_NAME
         )
         model_candidates: list[str] = []
-        for name in (configured_model, "gemini-2.0-flash", "gemini-2.5-flash"):
+        for name in (
+            configured_model,
+            "gemini-3.5-flash",
+            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash",
+        ):
             if name and name not in model_candidates:
                 model_candidates.append(name)
         timeout_s = float(

@@ -94,7 +94,7 @@ def settings(tmp_path: Path) -> Settings:
         finish_analysis_enabled=False,
         gemini_report_enabled=False,
         gemini_api_key=None,
-        gemini_model_name="gemini-2.5-flash",
+        gemini_model_name="gemini-3.5-flash",
         gemini_timeout_s=45.0,
         gemini_max_regenerate_attempts=2,
         gemini_attach_evidence_images=False,
