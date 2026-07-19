@@ -115,6 +115,15 @@ void main() {
 
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
+        find.text('Cuts mix'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Cuts mix'), findsOneWidget);
+      expect(find.text('Log meets'), findsNothing);
+      expect(find.text('Events & USA cuts'), findsNothing);
+      await tester.scrollUntilVisible(
         find.text('Choose your SwimIQ plan'),
         200,
         scrollable: find.byType(Scrollable).first,
@@ -124,14 +133,6 @@ void main() {
       expect(find.text('SwimIQ Basic'), findsOneWidget);
       expect(find.text('SwimIQ Pro'), findsOneWidget);
       expect(find.text('SwimIQ Elite'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Log meets'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Log meets'), findsOneWidget);
-      expect(find.text('Cuts mix'), findsOneWidget);
     });
 
     testWidgets('Log tab shows training segment controls', (tester) async {

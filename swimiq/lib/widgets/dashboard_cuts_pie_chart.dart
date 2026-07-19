@@ -8,7 +8,7 @@ import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swimmer_profile.dart';
 
-/// Dashboard pie — USA cuts mix (Pro) or stroke mix (training logs).
+/// Featured dashboard pie — USA cuts mix (Pro) or stroke mix (training logs).
 class DashboardCutsPieChart extends StatelessWidget {
   const DashboardCutsPieChart({
     super.key,
@@ -29,7 +29,7 @@ class DashboardCutsPieChart extends StatelessWidget {
     'AAAA': Color(0xFF7C3AED),
     'AAA': Color(0xFFF59E0B),
     'AA': Color(0xFFEAB308),
-    'A': Color(0xFF94A3B8),
+    'A': AppColors.primary,
     'BB': Color(0xFFCD7F32),
     'B': Color(0xFF64748B),
     'Below B': Color(0xFFCBD5E1),
@@ -46,93 +46,92 @@ class DashboardCutsPieChart extends StatelessWidget {
     }
 
     final total = slices.fold<int>(0, (sum, slice) => sum + slice.value);
+    final isCuts = showProFeatures && personalBests.isNotEmpty;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          showProFeatures && personalBests.isNotEmpty
-              ? 'Cuts mix'
-              : 'Training mix',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          isCuts ? 'Cuts mix' : 'Training mix',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: AppColors.primaryDeep,
               ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
+        Text(
+          isCuts
+              ? 'USA motivational cuts across your best times.'
+              : 'Stroke mix from your recent training logs.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+        ),
+        const SizedBox(height: 18),
         SizedBox(
-          height: 132,
-          child: Row(
+          height: 220,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Expanded(
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 28,
-                    sections: slices
-                        .map(
-                          (slice) => PieChartSectionData(
-                            value: slice.value.toDouble(),
-                            color: slice.color,
-                            title: '${slice.value}',
-                            radius: 44,
-                            titleStyle: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 11,
-                            ),
+              PieChart(
+                PieChartData(
+                  sectionsSpace: 3,
+                  centerSpaceRadius: 58,
+                  startDegreeOffset: -90,
+                  sections: slices
+                      .map(
+                        (slice) => PieChartSectionData(
+                          value: slice.value.toDouble(),
+                          color: slice.color,
+                          title: '${slice.value}',
+                          radius: 72,
+                          titleStyle: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
                           ),
-                        )
-                        .toList(),
-                  ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final slice in slices.take(4))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: slice.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                '${slice.label} (${slice.value})',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    Text(
-                      '$total events',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$total',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                      height: 1,
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    isCuts ? 'events' : 'logs',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final slice in slices)
+              _LegendChip(
+                color: slice.color,
+                label: '${slice.label} · ${slice.value}',
+              ),
+          ],
         ),
       ],
     );
@@ -196,6 +195,44 @@ class DashboardCutsPieChart extends StatelessWidget {
   }
 }
 
+class _LegendChip extends StatelessWidget {
+  const _LegendChip({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              color: AppColors.textDark.withValues(alpha: 0.9),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyChart extends StatelessWidget {
   const _EmptyChart({required this.showProFeatures});
 
@@ -204,36 +241,45 @@ class _EmptyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           showProFeatures ? 'Cuts mix' : 'Training mix',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: AppColors.primaryDeep,
               ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
+        Text(
+          showProFeatures
+              ? 'USA motivational cuts across your best times.'
+              : 'Stroke mix from your recent training logs.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+        ),
+        const SizedBox(height: 18),
         Container(
-          height: 132,
+          height: 220,
           width: double.infinity,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(24),
             child: Text(
               showProFeatures
-                  ? 'Log official meet times to see your USA cuts breakdown.'
+                  ? 'Add official meet times on the Log tab to see your USA cuts breakdown.'
                   : 'Log training sessions to see your stroke mix.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey.shade700,
-                fontSize: 12,
-                height: 1.35,
+                fontSize: 14,
+                height: 1.4,
               ),
             ),
           ),

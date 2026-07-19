@@ -173,22 +173,22 @@ void main() {
       expect(find.text('${data.swimIqScore}'), findsOneWidget);
       expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
+        find.text('Cuts mix'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Cuts mix'), findsOneWidget);
+      expect(find.text('Events & USA cuts'), findsNothing);
+      expect(find.text('Log meets'), findsNothing);
+      expect(find.text('Log tab'), findsNothing);
+      await tester.scrollUntilVisible(
         find.text('Choose your SwimIQ plan'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
       expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Events & USA cuts'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Events & USA cuts'), findsOneWidget);
-      expect(find.text('Log meets'), findsOneWidget);
-      expect(find.text('Log tab'), findsNothing);
-      expect(find.text('Cuts mix'), findsOneWidget);
       expect(find.text('Add meet'), findsNothing);
       expect(find.text('Recent Activity'), findsNothing);
       expect(find.textContaining('Dryland'), findsNothing);

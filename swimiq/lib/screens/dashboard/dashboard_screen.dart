@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swim_time.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
@@ -13,7 +10,6 @@ import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/dashboard_membership_plans_card.dart';
-import '../../widgets/common_widgets.dart';
 import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimiq_media_picker.dart';
@@ -107,20 +103,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
             const SizedBox(height: 12),
-            const DashboardMembershipPlansCard(),
-            const SizedBox(height: 16),
-            _EventCutsProgressSection(
+            _CutsMixSection(
               personalBests: personalBests,
               raceLogs: logs,
               catalog: data.motivationalStandards,
               profile: data.profile,
               showProFeatures: showProFeatures,
-              highestCut: snapshot.highestCut,
-              onOpenMeetsTab: () {
-                ref.read(trainingLogSegmentProvider.notifier).state = 1;
-                ref.read(homeTabIndexProvider.notifier).state = HomeTab.trainingLog;
-              },
             ),
+            const SizedBox(height: 12),
+            const DashboardMembershipPlansCard(),
             const SizedBox(height: 8),
           ],
         );
@@ -378,15 +369,13 @@ class _HeroChip extends StatelessWidget {
   }
 }
 
-class _EventCutsProgressSection extends StatelessWidget {
-  const _EventCutsProgressSection({
+class _CutsMixSection extends StatelessWidget {
+  const _CutsMixSection({
     required this.personalBests,
     required this.raceLogs,
     required this.catalog,
     required this.profile,
     required this.showProFeatures,
-    required this.highestCut,
-    required this.onOpenMeetsTab,
   });
 
   final List<PersonalBestEntry> personalBests;
@@ -394,193 +383,23 @@ class _EventCutsProgressSection extends StatelessWidget {
   final UsaMotivationalStandardsCatalog catalog;
   final SwimmerProfile? profile;
   final bool showProFeatures;
-  final String highestCut;
-  final VoidCallback onOpenMeetsTab;
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat.yMMMd();
-
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Events & USA cuts',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.primaryDeep,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Top times and motivational standards per event.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade700,
-                  ),
-            ),
-            const SizedBox(height: 14),
-            if (showProFeatures && personalBests.isNotEmpty)
-              ...personalBests.take(8).map((pb) {
-                final cut = MotivationalCut.labelForSwim(
-                  catalog: catalog,
-                  profile: profile,
-                  stroke: pb.stroke,
-                  distance: pb.distance,
-                  course: pb.course,
-                  timeSeconds: pb.timeSeconds,
-                );
-                return _EventProgressTile(
-                  title: pb.displayTitle,
-                  subtitle:
-                      '${pb.course} · ${pb.formattedTime} · ${dateFormat.format(pb.date)}',
-                  cutLabel: cut,
-                  highlight: cut == highestCut,
-                );
-              })
-            else if (!showProFeatures && raceLogs.isNotEmpty)
-              ..._sessionSummaries(raceLogs, dateFormat)
-            else
-              EmptyStateMessage(
-                message: showProFeatures
-                    ? 'No official meet times yet. Log meets to unlock your cuts chart.'
-                    : 'Log training sessions to see your stroke mix chart.',
-              ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: DashboardCutsPieChart(
-                    personalBests: personalBests,
-                    raceLogs: raceLogs,
-                    catalog: catalog,
-                    profile: profile,
-                    showProFeatures: showProFeatures,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 28),
-                      FilledButton.tonalIcon(
-                        onPressed: onOpenMeetsTab,
-                        icon: const Icon(Icons.stadium_outlined, size: 20),
-                        label: const Text('Log meets'),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add official meet times & heat sheets.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade700,
-                              height: 1.3,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
+        padding: const EdgeInsets.all(18),
+        child: DashboardCutsPieChart(
+          personalBests: personalBests,
+          raceLogs: raceLogs,
+          catalog: catalog,
+          profile: profile,
+          showProFeatures: showProFeatures,
         ),
-      ),
-    );
-  }
-
-  List<Widget> _sessionSummaries(List<RaceLog> logs, DateFormat dateFormat) {
-    final sorted = [...logs]..sort((a, b) => a.date.compareTo(b.date));
-    final byEvent = <String, RaceLog>{};
-    for (final log in sorted) {
-      final key = '${log.distance} ${log.stroke} (${log.course})';
-      final existing = byEvent[key];
-      if (existing == null || log.timeSeconds < existing.timeSeconds) {
-        byEvent[key] = log;
-      }
-    }
-    return byEvent.entries.map((entry) {
-      final log = entry.value;
-      return _EventProgressTile(
-        title: entry.key,
-        subtitle: 'Best session · ${dateFormat.format(log.date)}',
-        cutLabel: SwimTime.fromSeconds(log.timeSeconds),
-        highlight: false,
-      );
-    }).toList();
-  }
-}
-
-class _EventProgressTile extends StatelessWidget {
-  const _EventProgressTile({
-    required this.title,
-    required this.subtitle,
-    required this.cutLabel,
-    required this.highlight,
-  });
-
-  final String title;
-  final String subtitle;
-  final String cutLabel;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: highlight
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: highlight
-              ? AppColors.primary.withValues(alpha: 0.45)
-              : Colors.grey.shade200,
-          width: highlight ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                Text(subtitle, style: TextStyle(color: Colors.grey.shade700)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-            ),
-            child: Text(
-              cutLabel,
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                color: AppColors.primaryDeep,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
