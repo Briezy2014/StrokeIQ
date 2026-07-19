@@ -4,26 +4,27 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../utils/swim_time.dart';
 
-class MeetAttendanceSummary {
-  const MeetAttendanceSummary({
-    required this.totalMeets,
+class MeetHistorySummary {
+  const MeetHistorySummary({
+    required this.realMeetCount,
     required this.totalSwims,
-    required this.meetNames,
+    required this.eventCount,
     required this.seasonSummaries,
     required this.progressionLines,
-    required this.championshipHighlights,
+    required this.highlightSwims,
   });
 
-  final int totalMeets;
+  /// Distinct real meet names (excludes photo uploads / synthetic sources).
+  final int realMeetCount;
   final int totalSwims;
-  final List<String> meetNames;
-  final List<SeasonMeetSummary> seasonSummaries;
+  final int eventCount;
+  final List<SeasonHighlightSummary> seasonSummaries;
   final List<String> progressionLines;
-  final List<String> championshipHighlights;
+  final List<String> highlightSwims;
 }
 
-class SeasonMeetSummary {
-  const SeasonMeetSummary({
+class SeasonHighlightSummary {
+  const SeasonHighlightSummary({
     required this.seasonLabel,
     required this.meetCount,
     required this.swimCount,
@@ -36,26 +37,42 @@ class SeasonMeetSummary {
   final List<String> bestSwims;
 }
 
+/// Builds recruiting-facing career highlights from meet results + PBs.
 class MeetHistoryAnalytics {
   MeetHistoryAnalytics._();
 
-  static MeetAttendanceSummary build({
+  static const _syntheticMeetLabels = {
+    'uploaded best times',
+    'uploaded best time',
+    'photo upload',
+    'best times upload',
+    'manual pb upload',
+  };
+
+  static MeetHistorySummary build({
     required List<MeetResult> meetResults,
     required List<PersonalBestEntry> personalBests,
   }) {
-    if (meetResults.isEmpty) {
-      return const MeetAttendanceSummary(
-        totalMeets: 0,
+    if (meetResults.isEmpty && personalBests.isEmpty) {
+      return const MeetHistorySummary(
+        realMeetCount: 0,
         totalSwims: 0,
-        meetNames: [],
+        eventCount: 0,
         seasonSummaries: [],
         progressionLines: [],
-        championshipHighlights: [],
+        highlightSwims: [],
       );
     }
 
-    final meetNames = meetResults.map((r) => r.meetName).toSet().toList()
-      ..sort();
+    final realMeets = meetResults
+        .map((r) => r.meetName.trim())
+        .where((name) => name.isNotEmpty && !_isSyntheticMeet(name))
+        .toSet();
+
+    final events = <String>{
+      for (final result in meetResults) '${result.event}|${result.course}',
+      for (final pb in personalBests) '${pb.displayTitle}|${pb.course}',
+    };
 
     final bySeason = <String, List<MeetResult>>{};
     for (final result in meetResults) {
@@ -64,7 +81,10 @@ class MeetHistoryAnalytics {
     }
 
     final seasonSummaries = bySeason.entries.map((entry) {
-      final meets = entry.value.map((r) => r.meetName).toSet();
+      final seasonMeets = entry.value
+          .map((r) => r.meetName.trim())
+          .where((name) => name.isNotEmpty && !_isSyntheticMeet(name))
+          .toSet();
       final bestByEvent = <String, MeetResult>{};
       for (final swim in entry.value) {
         final key = '${swim.event}|${swim.course}';
@@ -73,35 +93,44 @@ class MeetHistoryAnalytics {
           bestByEvent[key] = swim;
         }
       }
-      final bestSwims = bestByEvent.values
-          .toList()
+      final bestSwims = bestByEvent.values.toList()
         ..sort((a, b) => a.swimTime.compareTo(b.swimTime));
-      return SeasonMeetSummary(
+      return SeasonHighlightSummary(
         seasonLabel: entry.key,
-        meetCount: meets.length,
+        meetCount: seasonMeets.length,
         swimCount: entry.value.length,
-        bestSwims: bestSwims
-            .take(4)
-            .map(
-              (s) =>
-                  '${s.event} ${SwimTime.fromSeconds(s.swimTime)} at ${s.meetName}',
-            )
-            .toList(),
+        bestSwims: bestSwims.take(6).map(_formatBestSwim).toList(),
       );
     }).toList()
       ..sort((a, b) => b.seasonLabel.compareTo(a.seasonLabel));
 
-    return MeetAttendanceSummary(
-      totalMeets: meetNames.length,
+    return MeetHistorySummary(
+      realMeetCount: realMeets.length,
       totalSwims: meetResults.length,
-      meetNames: meetNames,
+      eventCount: events.length,
       seasonSummaries: seasonSummaries,
       progressionLines: _progressionLines(meetResults),
-      championshipHighlights: _championshipHighlights(
+      highlightSwims: _highlightSwims(
         meetResults: meetResults,
         personalBests: personalBests,
       ),
     );
+  }
+
+  static bool isSyntheticMeetName(String meetName) => _isSyntheticMeet(meetName);
+
+  static bool _isSyntheticMeet(String meetName) {
+    final lower = meetName.trim().toLowerCase();
+    if (_syntheticMeetLabels.contains(lower)) return true;
+    return lower.startsWith('uploaded best');
+  }
+
+  static String _formatBestSwim(MeetResult swim) {
+    final time = SwimTime.fromSeconds(swim.swimTime);
+    if (_isSyntheticMeet(swim.meetName)) {
+      return '${swim.event} $time (${swim.course})';
+    }
+    return '${swim.event} $time — ${swim.meetName}';
   }
 
   static List<String> _progressionLines(List<MeetResult> meetResults) {
@@ -111,28 +140,33 @@ class MeetHistoryAnalytics {
       byEvent.putIfAbsent(key, () => []).add(result);
     }
 
-    final lines = <String>[];
+    final scored = <({String line, double improvement})>[];
     for (final entry in byEvent.entries) {
       final swims = [...entry.value]
         ..sort((a, b) => a.meetDate.compareTo(b.meetDate));
       if (swims.length < 2) continue;
       final first = swims.first;
-      final latest = swims.last;
-      final delta = latest.swimTime - first.swimTime;
-      final direction = delta < 0 ? 'faster' : 'slower';
+      final best = swims.reduce(
+        (a, b) => a.swimTime <= b.swimTime ? a : b,
+      );
+      final delta = best.swimTime - first.swimTime;
+      final direction = delta < 0 ? 'faster' : (delta > 0 ? 'slower' : 'even');
       final gap = SwimTime.fromSeconds(delta.abs());
-      lines.add(
-        '${entry.key}: ${SwimTime.fromSeconds(first.swimTime)} → '
-        '${SwimTime.fromSeconds(latest.swimTime)} ($gap $direction over '
-        '${swims.length} swims)',
+      scored.add(
+        (
+          line: '${entry.key}: ${SwimTime.fromSeconds(first.swimTime)} → '
+              '${SwimTime.fromSeconds(best.swimTime)} '
+              '($gap $direction over ${swims.length} swims)',
+          improvement: -delta,
+        ),
       );
     }
 
-    lines.sort();
-    return lines.take(6).toList();
+    scored.sort((a, b) => b.improvement.compareTo(a.improvement));
+    return scored.take(6).map((item) => item.line).toList();
   }
 
-  static List<String> _championshipHighlights({
+  static List<String> _highlightSwims({
     required List<MeetResult> meetResults,
     required List<PersonalBestEntry> personalBests,
   }) {
@@ -140,14 +174,15 @@ class MeetHistoryAnalytics {
     final dateFormat = DateFormat.yMMMd();
 
     final championshipMeets = meetResults.where((r) {
+      if (_isSyntheticMeet(r.meetName)) return false;
       final name = r.meetName.toLowerCase();
       return name.contains('champ') ||
           name.contains('futures') ||
           name.contains('sectional') ||
-          name.contains('junior') ||
+          name.contains('junior national') ||
           name.contains('state');
     }).toList()
-      ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
+      ..sort((a, b) => a.swimTime.compareTo(b.swimTime));
 
     for (final swim in championshipMeets.take(5)) {
       highlights.add(
@@ -157,9 +192,11 @@ class MeetHistoryAnalytics {
     }
 
     if (highlights.isEmpty) {
-      for (final pb in personalBests.take(3)) {
+      final sortedPbs = [...personalBests]
+        ..sort((a, b) => a.timeSeconds.compareTo(b.timeSeconds));
+      for (final pb in sortedPbs.take(5)) {
         highlights.add(
-          'Lifetime best ${pb.displayTitle}: ${pb.formattedTime} (${pb.course})',
+          '${pb.displayTitle}: ${pb.formattedTime} (${pb.course})',
         );
       }
     }

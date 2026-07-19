@@ -24,11 +24,11 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
       minimumTier: SubscriptionTier.pro,
       title: 'Unlock SwimIQ Pro',
       message: 'The College Recruiting Hub is included with Pro — athlete passport, '
-          'résumé builder, meet history, and highlight video organization.',
+          'résumé builder, career highlights, and highlight video organization.',
       teaserFeatures: const [
         'College Recruiting Hub & Athlete Passport',
         'Best Times Résumé — export for coaches',
-        'Meet History & lifetime progression',
+        'Career Highlights & lifetime progression',
         'Highlight Video Builder',
       ],
       child: SwimmerScreen(
@@ -43,7 +43,7 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
               const SwimIqPageHero(
                 title: 'College Recruiting Hub',
                 subtitle: 'Prepare your recruiting package — passport, résumé, '
-                    'meet history & videos in one place.',
+                    'career highlights & videos in one place.',
               ),
               const SizedBox(height: 16),
               _ProfileSummaryCard(
@@ -73,8 +73,8 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
               ),
               _HubTile(
                 emoji: '📅',
-                title: 'Meet History',
-                subtitle: 'Attendance, seasonal improvement & championship swims',
+                title: 'Career Highlights',
+                subtitle: 'Season bests, lifetime progression & top recruiting swims',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const MeetHistoryScreen(),

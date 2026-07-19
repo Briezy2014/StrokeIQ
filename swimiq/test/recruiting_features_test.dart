@@ -79,17 +79,32 @@ void main() {
     expect(text, contains('100 Fly'));
   });
 
-  test('meet history tracks attendance and progression', () {
+  test('career highlights ignore uploaded best times as meets', () {
+    final withUploads = [
+      ...meets,
+      MeetResult(
+        swimmerName: 'Test Swimmer',
+        meetName: 'Uploaded best times',
+        event: '50 Free',
+        swimTime: 25.1,
+        course: 'SCY',
+        meetDate: DateTime(2026, 3, 1),
+      ),
+    ];
     final summary = MeetHistoryAnalytics.build(
-      meetResults: meets,
+      meetResults: withUploads,
       personalBests: pbs,
     );
 
-    expect(summary.totalMeets, 2);
-    expect(summary.totalSwims, 2);
-    expect(summary.meetNames, contains('State Championships'));
+    expect(summary.realMeetCount, 2);
+    expect(summary.totalSwims, 3);
     expect(summary.progressionLines, isNotEmpty);
-    expect(summary.championshipHighlights.first, contains('State Championships'));
+    expect(summary.highlightSwims.first, contains('State Championships'));
+    expect(
+      summary.seasonSummaries.expand((s) => s.bestSwims).join(' '),
+      isNot(contains('Uploaded best times')),
+    );
+    expect(MeetHistoryAnalytics.isSyntheticMeetName('Uploaded best times'), isTrue);
   });
 
   test('recruiting resume PDF generates bytes', () async {
