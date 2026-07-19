@@ -326,7 +326,7 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                     label: const Text('Log meet result'),
                   ),
                   FilledButton.tonalIcon(
-                    onPressed: () => showPersonalBestUploadSheet(context),
+                    onPressed: () => showPersonalBestUploadChooser(context),
                     icon: const Icon(Icons.upload_outlined, size: 18),
                     label: const Text('Upload best times'),
                   ),

@@ -17,10 +17,95 @@ import '../providers/swimmer_data_provider.dart';
 import 'swim_time_entry_fields.dart';
 import 'swimiq_ui.dart';
 
+enum PersonalBestUploadStart {
+  chooser,
+  camera,
+  file,
+  manual,
+}
+
+/// One entry point: choose take a picture, add a file, or enter manually.
+Future<void> showPersonalBestUploadChooser(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    showDragHandle: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    builder: (sheetContext) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Upload best times',
+              style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDeep,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Choose how you want to add times.',
+              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textDark.withValues(alpha: 0.72),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a picture'),
+              subtitle: const Text('Photo of Best Times History'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showPersonalBestUploadSheet(
+                  context,
+                  start: PersonalBestUploadStart.camera,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file_outlined),
+              title: const Text('Add a file'),
+              subtitle: const Text('Upload a screenshot or photo'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showPersonalBestUploadSheet(
+                  context,
+                  start: PersonalBestUploadStart.file,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Enter manually'),
+              subtitle: const Text('Type one or more events yourself'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showPersonalBestUploadSheet(
+                  context,
+                  start: PersonalBestUploadStart.manual,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 Future<void> showPersonalBestUploadSheet(
   BuildContext context, {
+  PersonalBestUploadStart start = PersonalBestUploadStart.manual,
+  @Deprecated('Use start: PersonalBestUploadStart.file')
   bool startWithPhotoPicker = false,
 }) {
+  final resolvedStart = startWithPhotoPicker
+      ? PersonalBestUploadStart.file
+      : start;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -31,9 +116,7 @@ Future<void> showPersonalBestUploadSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
-      child: PersonalBestUploadSheet(
-        startWithPhotoPicker: startWithPhotoPicker,
-      ),
+      child: PersonalBestUploadSheet(start: resolvedStart),
     ),
   );
 }
@@ -55,9 +138,12 @@ class _BestTimeRow {
 }
 
 class PersonalBestUploadSheet extends ConsumerStatefulWidget {
-  const PersonalBestUploadSheet({super.key, this.startWithPhotoPicker = false});
+  const PersonalBestUploadSheet({
+    super.key,
+    this.start = PersonalBestUploadStart.manual,
+  });
 
-  final bool startWithPhotoPicker;
+  final PersonalBestUploadStart start;
 
   @override
   ConsumerState<PersonalBestUploadSheet> createState() =>
@@ -85,11 +171,19 @@ class _PersonalBestUploadSheetState
   @override
   void initState() {
     super.initState();
-    if (widget.startWithPhotoPicker) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() => _mode = _EntryMode.multipleFromPhoto);
-        _pickPhotoFromFiles();
+    if (widget.start == PersonalBestUploadStart.camera ||
+        widget.start == PersonalBestUploadStart.file) {
+      _mode = _EntryMode.multipleFromPhoto;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        if (widget.start == PersonalBestUploadStart.camera) {
+          await _takePhoto();
+        } else {
+          await _pickPhotoFromFiles();
+        }
       });
+    } else {
+      _mode = _EntryMode.manual;
     }
   }
 
@@ -448,40 +542,11 @@ class _PersonalBestUploadSheetState
             const SizedBox(height: 6),
             Text(
               _mode == _EntryMode.multipleFromPhoto
-                  ? 'Choose Multiple (from photo), upload a Best Times History '
-                      'screenshot, and SwimIQ fills every event it can read.'
-                  : 'Add one or more events manually, or switch Event to '
-                      'Multiple (from photo) to load a whole list from a screenshot.',
+                  ? 'SwimIQ reads every event it can from your Best Times History photo. Review the list, then save.'
+                  : 'Add one or more events. Saved times sync to your PBs, dashboard cuts, and Athlete Passport.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textDark.withValues(alpha: 0.7),
                   ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<_EntryMode>(
-              value: _mode,
-              decoration: const InputDecoration(labelText: 'Event'),
-              items: const [
-                DropdownMenuItem(
-                  value: _EntryMode.manual,
-                  child: Text('Single / manual events'),
-                ),
-                DropdownMenuItem(
-                  value: _EntryMode.multipleFromPhoto,
-                  child: Text(_multipleEventLabel),
-                ),
-              ],
-              onChanged: busy
-                  ? null
-                  : (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _mode = value;
-                        _extractStatus = null;
-                        if (value == _EntryMode.manual && _rows.isEmpty) {
-                          _rows.add(_BestTimeRow());
-                        }
-                      });
-                    },
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
@@ -523,40 +588,8 @@ class _PersonalBestUploadSheetState
                 onTap: busy ? null : _pickDate,
               ),
             ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: busy ? null : _takePhoto,
-                    icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                    label: const Text('Camera'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: busy ? null : _pickPhotoFromFiles,
-                    icon: const Icon(Icons.upload_file_outlined, size: 18),
-                    label: Text(
-                      _mode == _EntryMode.multipleFromPhoto
-                          ? 'Upload times photo'
-                          : 'Upload photo',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_photoName != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  _photoName!,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ),
             if (_mode == _EntryMode.multipleFromPhoto) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               if (_isExtracting)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -570,15 +603,37 @@ class _PersonalBestUploadSheetState
                         color: AppColors.primaryDark,
                       ),
                 ),
-              if (_photoBytes != null && !_isExtracting)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: busy ? null : _extractTimesFromPhoto,
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Re-read times from photo'),
+              if (_photoName != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _photoName!,
+                    style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: busy ? null : _takePhoto,
+                    icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                    label: const Text('Retake picture'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: busy ? null : _pickPhotoFromFiles,
+                    icon: const Icon(Icons.upload_file_outlined, size: 18),
+                    label: const Text('Choose another file'),
+                  ),
+                  if (_photoBytes != null && !_isExtracting)
+                    TextButton.icon(
+                      onPressed: busy ? null : _extractTimesFromPhoto,
+                      icon: const Icon(Icons.auto_awesome),
+                      label: const Text('Re-read photo'),
+                    ),
+                ],
+              ),
             ],
             const SizedBox(height: 16),
             if (_mode == _EntryMode.manual && eventOptions.isEmpty)
