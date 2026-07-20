@@ -38,14 +38,23 @@ call :CheckFile "swimiq\scripts\launch-chrome-kara.ps1"
 call :CheckFile "swimiq\scripts\swimiq-windows-paths.ps1"
 call :CheckFile "swimiq\START-ELITE-ANALYSIS-SERVER.bat"
 call :CheckFile "swimiq\LAUNCH-CHROME.bat"
+call :CheckFile "STRIPE-BILLING-STEPS.txt"
+call :CheckFile "TURN-ON-STRIPE-BILLING.bat"
+call :CheckFile "GET-STRIPE-BILLING.bat"
+call :CheckFile "swimiq\DEPLOY-STRIPE-NOW.cmd"
 
 echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo NEXT: starting Elite + Chrome for you now
+echo Stripe billing files are ready.
+echo For billing: open STRIPE-BILLING-STEPS.txt
+echo Or double-click TURN-ON-STRIPE-BILLING.bat
 echo ============================================
 echo.
+echo NEXT: starting Elite + Chrome for you now
+echo.
+if exist "%CD%\STRIPE-BILLING-STEPS.txt" start "" notepad "%CD%\STRIPE-BILLING-STEPS.txt"
 if exist "%CD%\GOOD-MORNING-KARA.txt" start "" notepad "%CD%\GOOD-MORNING-KARA.txt"
 call "%CD%\START-SWIMIQ-WITH-ELITE.bat"
 exit /b %ERRORLEVEL%
