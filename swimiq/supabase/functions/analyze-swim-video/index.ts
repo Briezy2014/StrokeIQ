@@ -14,7 +14,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
 ];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v10";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v11-best-times";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -86,6 +86,11 @@ type PoseMetrics = {
 
 type AnalyzeRequest = {
   health_check?: boolean;
+  /** Best Times History photo extract (no video upload required). */
+  extract_best_times?: boolean;
+  image_base64?: string;
+  mime_type?: string;
+  course_hint?: string;
   storage_path?: string;
   video_id?: string;
   swimmer?: string;
@@ -149,6 +154,7 @@ Deno.serve(async (req) => {
           available_models: PREFERRED_GEMINI_MODELS,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
+          best_times_extract: true,
           max_video_mb: 25,
           inline_max_mb: Math.round(MAX_INLINE_BYTES / (1024 * 1024)),
         }),
@@ -157,6 +163,11 @@ Deno.serve(async (req) => {
           status: 200,
         },
       );
+    }
+
+    // Upload best times photo — works even when extract-best-times is not deployed.
+    if (body.extract_best_times === true) {
+      return await extractBestTimesFromPhoto(geminiApiKey, body);
     }
 
     const storagePath = body.storage_path?.trim();
@@ -1115,6 +1126,144 @@ function mimeTypeForPath(path: string): string {
   if (lower.endsWith(".webm")) return "video/webm";
   if (lower.endsWith(".mkv")) return "video/x-matroska";
   return "video/mp4";
+}
+
+/** Best Times History screenshot → many PB rows (used by Upload best times). */
+async function extractBestTimesFromPhoto(
+  geminiApiKey: string,
+  body: AnalyzeRequest,
+): Promise<Response> {
+  const imageBase64 = (body.image_base64 ?? "").trim();
+  if (!imageBase64) {
+    return jsonError("image_base64 is required for best-times extract.", 400);
+  }
+
+  let mime = (body.mime_type ?? "image/jpeg").split(";")[0].trim().toLowerCase();
+  let rawBase64 = imageBase64;
+  if (imageBase64.startsWith("data:")) {
+    const comma = imageBase64.indexOf(",");
+    const header = imageBase64.slice(0, comma);
+    rawBase64 = imageBase64.slice(comma + 1);
+    const match = header.match(/data:([^;]+);base64/i);
+    if (match?.[1]) mime = match[1].toLowerCase();
+  }
+  if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mime)) {
+    return jsonError(`Unsupported image type: ${mime}`, 400);
+  }
+  if (mime === "image/jpg") mime = "image/jpeg";
+
+  const courseHint = (body.course_hint ?? "").trim().toUpperCase();
+  const prompt =
+    "Extract all personal best rows from this Best Times History screenshot. " +
+    "Return JSON with times[].event, times[].time, times[].course (SCY/LCM/SCM), " +
+    "times[].date, times[].meet_name, plus detected_course." +
+    (["SCY", "LCM", "SCM"].includes(courseHint)
+      ? ` Default course hint if unclear: ${courseHint}.`
+      : "");
+
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          { text: prompt },
+          {
+            inline_data: {
+              mime_type: mime,
+              data: rawBase64,
+            },
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          times: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                event: { type: "STRING" },
+                time: { type: "STRING" },
+                course: { type: "STRING" },
+                date: { type: "STRING" },
+                meet_name: { type: "STRING" },
+              },
+              required: ["event", "time"],
+            },
+          },
+          detected_course: { type: "STRING" },
+          notes: { type: "STRING" },
+        },
+        required: ["times"],
+      },
+    },
+  };
+
+  let textPart: string | undefined;
+  let lastError = "";
+  let usedModel = PREFERRED_GEMINI_MODELS[0];
+  for (const model of filterAllowedModels(PREFERRED_GEMINI_MODELS)) {
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      },
+    );
+    if (!geminiResponse.ok) {
+      lastError = await geminiResponse.text();
+      continue;
+    }
+    const geminiJson = await geminiResponse.json();
+    textPart = geminiJson?.candidates?.[0]?.content?.parts?.find(
+      (part: { text?: string }) => typeof part.text === "string",
+    )?.text;
+    if (textPart) {
+      usedModel = model;
+      break;
+    }
+    lastError = "Gemini returned an empty extract.";
+  }
+
+  if (!textPart) {
+    return jsonError(
+      lastError ? `Gemini API error: ${lastError}` : "Gemini returned an empty extract.",
+      502,
+    );
+  }
+
+  const parsed = JSON.parse(textPart) as {
+    times?: Array<Record<string, unknown>>;
+    detected_course?: string;
+    notes?: string;
+  };
+  const times = Array.isArray(parsed.times) ? parsed.times : [];
+  if (times.length === 0) {
+    return jsonError(
+      "No swim times were found in that photo. Use a clear Best Times History screenshot.",
+      422,
+    );
+  }
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      engine: "swimiq-best-times-extract-via-analyze-v11",
+      model: usedModel,
+      function_version: CURRENT_FUNCTION_VERSION,
+      times,
+      detected_course: parsed.detected_course ?? null,
+      notes: parsed.notes ?? null,
+    }),
+    {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    },
+  );
 }
 
 function jsonError(message: string, status: number, functionVersion?: string) {

@@ -16,4 +16,21 @@ void main() {
     );
     expect(elite.errorCode, 'SERVER_UNAVAILABLE');
   });
+
+  test('combined failure message tells user how to fix deploy or Elite', () {
+    final message = BestTimesExtractService.combinedFailureMessageForTest([
+      'Elite: not running on http://127.0.0.1:8080',
+      'Cloud extract-best-times: Failed to fetch',
+    ]);
+    expect(message, contains('DEPLOY-EXTRACT-BEST-TIMES.bat'));
+    expect(message, contains('START-SWIMIQ-WITH-ELITE.bat'));
+    expect(message.toLowerCase(), contains('gemini_api_key'));
+  });
+
+  test('elite timeout is long enough for Gemini photo reads', () {
+    expect(
+      BestTimesExtractService.eliteTimeout.inSeconds,
+      greaterThanOrEqualTo(60),
+    );
+  });
 }

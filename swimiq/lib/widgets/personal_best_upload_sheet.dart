@@ -279,7 +279,8 @@ class _PersonalBestUploadSheetState
 
     setState(() {
       _isExtracting = true;
-      _extractStatus = 'Reading times from your photo…';
+      _extractStatus =
+          'Reading times from your photo… this can take up to a minute.';
     });
 
     try {
