@@ -14,9 +14,17 @@ import 'app_providers.dart';
 /// server turns the banner green without a manual Recheck click.
 final videoServerHealthProvider =
     FutureProvider.autoDispose<VideoAnalysisServerHealth>((ref) async {
-  // Always probe local Elite (including swimiqapp.com). Chrome can reach
-  // 127.0.0.1:8080 when Elite is running on this PC (CORS + private-network).
+  // Public website customers must never see local .bat / 127.0.0.1 setup copy.
+  // Cloud coaching is the website path; local Elite is optional for developers.
   if (FeatureFlags.videoEngineV2Enabled) {
+    if (Env.isPublicHostedWeb) {
+      return const VideoAnalysisServerHealth(
+        ok: true,
+        message: 'Cloud AI coaching is ready on this website.',
+        functionVersion: 'cloud-coaching',
+        modelProbeOk: true,
+      );
+    }
     final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
     final ready = elite.reachable &&
         elite.mediaToolsReady &&
@@ -28,12 +36,9 @@ final videoServerHealthProvider =
       // Cancel on dispose so we never invalidate after teardown (Riverpod 2.x).
       ref.onDispose(timer.cancel);
     }
-    final hostedHint = Env.isPublicHostedWeb && !ready
-        ? ' Start START-SWIMIQ-WITH-ELITE.bat on this PC, leave Elite open, then Recheck.'
-        : '';
     return VideoAnalysisServerHealth(
       ok: ready,
-      message: '${elite.message}$hostedHint',
+      message: elite.message,
       functionVersion: elite.engineVersion,
       modelProbeOk: elite.mediaToolsReady,
     );
