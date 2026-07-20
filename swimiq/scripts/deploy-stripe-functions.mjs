@@ -1,10 +1,13 @@
 /**
  * Deploy Stripe Edge Functions via Supabase Management API.
- * Avoids broken Windows CLI --project-ref parsing.
+ * Kara pastes a Personal Access Token once (Windows Credential Manager
+ * is not readable from Node after `supabase login`).
  *
  * Usage: node scripts/deploy-stripe-functions.mjs
  */
-import { execSync } from 'node:child_process';
+import {
+  createInterface,
+} from 'node:readline/promises';
 import {
   existsSync,
   mkdirSync,
@@ -16,78 +19,93 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateRawSync } from 'node:zlib';
+import { execSync } from 'node:child_process';
 
 const PROJECT_REF = 'bryurwyeosbffvfpdbv';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FUNCTIONS_DIR = path.join(ROOT, 'supabase', 'functions');
+const TOKEN_FILE = path.join(os.homedir(), '.supabase', 'access-token');
 const IS_WIN = process.platform === 'win32';
 
 const FUNCTIONS = [
-  {
-    slug: 'create-stripe-checkout',
-    verifyJwt: true,
-  },
-  {
-    slug: 'stripe-webhook',
-    verifyJwt: false,
-  },
+  { slug: 'create-stripe-checkout', verifyJwt: true },
+  { slug: 'stripe-webhook', verifyJwt: false },
 ];
 
-function npxCmd() {
-  const full = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'nodejs', 'npx.cmd');
-  if (existsSync(full)) return `"${full}"`;
-  return IS_WIN ? 'npx.cmd' : 'npx';
-}
-
-function accessTokenPath() {
-  return path.join(os.homedir(), '.supabase', 'access-token');
-}
-
-function readAccessToken() {
-  if (process.env.SUPABASE_ACCESS_TOKEN) {
+function readSavedToken() {
+  if (process.env.SUPABASE_ACCESS_TOKEN?.trim()) {
     return process.env.SUPABASE_ACCESS_TOKEN.trim();
   }
-  const tokenFile = accessTokenPath();
-  if (existsSync(tokenFile)) {
-    return readFileSync(tokenFile, 'utf8').trim();
+  if (existsSync(TOKEN_FILE)) {
+    const value = readFileSync(TOKEN_FILE, 'utf8').trim();
+    if (value) return value;
   }
   return '';
 }
 
-function ensureLogin() {
-  const existing = readAccessToken();
-  if (existing) {
-    console.log('[1/3] Already have Supabase access token — skipping login.');
+function saveToken(token) {
+  mkdirSync(path.dirname(TOKEN_FILE), { recursive: true });
+  writeFileSync(TOKEN_FILE, `${token}\n`, 'utf8');
+}
+
+async function ensureToken() {
+  const existing = readSavedToken();
+  if (existing.startsWith('sbp_') || existing.length > 20) {
+    console.log('[1/3] Using saved Supabase access token.');
     return existing;
   }
 
-  console.log('[1/3] Login required (browser may open)...');
-  const cmd = `${npxCmd()} --yes supabase login`;
+  const tokensUrl = 'https://supabase.com/dashboard/account/tokens';
+  console.log('');
+  console.log('[1/3] We need a Supabase access token (one-time).');
+  console.log('');
+  console.log('1. A browser page will open.');
+  console.log('2. Click: Generate new token');
+  console.log('3. Name it: SwimIQ Stripe');
+  console.log('4. Copy the token (starts with sbp_)');
+  console.log('5. Paste it below and press Enter');
+  console.log('');
+  console.log(tokensUrl);
+  console.log('');
+
   try {
-    execSync(cmd, {
-      cwd: ROOT,
-      stdio: 'inherit',
-      env: process.env,
-      shell: IS_WIN ? 'cmd.exe' : true,
-    });
+    if (IS_WIN) {
+      execSync(`cmd /c start "" "${tokensUrl}"`, { stdio: 'ignore' });
+    } else {
+      execSync(`xdg-open "${tokensUrl}"`, { stdio: 'ignore' });
+    }
   } catch {
-    console.error('[ERROR] Login failed.');
+    /* browser open is optional */
+  }
+
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const pasted = (await rl.question('Paste token here: ')).trim();
+  rl.close();
+
+  if (!pasted || pasted.length < 20) {
+    console.error('[ERROR] That does not look like a token. Try again.');
     process.exit(1);
   }
 
-  const token = readAccessToken();
-  if (!token) {
-    console.error(
-      `[ERROR] Login finished but no token at ${accessTokenPath()}.\n` +
-        'Create one at https://supabase.com/dashboard/account/tokens\n' +
-        'then set SUPABASE_ACCESS_TOKEN and rerun.',
-    );
-    process.exit(1);
-  }
-  return token;
+  saveToken(pasted);
+  console.log(`[OK] Saved token to ${TOKEN_FILE}`);
+  return pasted;
 }
 
-/** Minimal ZIP (stored or deflated) with one file at archive root. */
+function crc32(buf) {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
+    }
+  }
+  return ~c >>> 0;
+}
+
 function zipOneFile(name, contentBuf) {
   const nameBuf = Buffer.from(name, 'utf8');
   const compressed = deflateRawSync(contentBuf);
@@ -143,17 +161,6 @@ function zipOneFile(name, contentBuf) {
   return Buffer.concat([local, payload, central, end]);
 }
 
-function crc32(buf) {
-  let c = ~0;
-  for (let i = 0; i < buf.length; i++) {
-    c ^= buf[i];
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
-    }
-  }
-  return ~c >>> 0;
-}
-
 async function deployFunction(token, { slug, verifyJwt }) {
   const entry = path.join(FUNCTIONS_DIR, slug, 'index.ts');
   if (!existsSync(entry)) {
@@ -162,7 +169,6 @@ async function deployFunction(token, { slug, verifyJwt }) {
 
   const source = readFileSync(entry);
   const zipBuf = zipOneFile('index.ts', source);
-
   const tmpDir = path.join(os.tmpdir(), 'swimiq-stripe-deploy');
   mkdirSync(tmpDir, { recursive: true });
   const zipPath = path.join(tmpDir, `${slug}.zip`);
@@ -183,22 +189,20 @@ async function deployFunction(token, { slug, verifyJwt }) {
     `${slug}.zip`,
   );
 
-  const url = `https://api.supabase.com/v1/projects/${PROJECT_REF}/functions/deploy?slug=${encodeURIComponent(slug)}`;
+  const url =
+    `https://api.supabase.com/v1/projects/${PROJECT_REF}` +
+    `/functions/deploy?slug=${encodeURIComponent(slug)}`;
   console.log(`Uploading ${slug} ...`);
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
     body: form,
   });
-
   const text = await res.text();
   if (!res.ok) {
     throw new Error(`${slug} deploy failed (${res.status}): ${text}`);
   }
-
   console.log(`[OK] ${slug}`);
   try {
     rmSync(zipPath, { force: true });
@@ -208,12 +212,12 @@ async function deployFunction(token, { slug, verifyJwt }) {
 }
 
 async function main() {
-  console.log('SwimIQ Stripe deploy (API — no CLI project-ref)');
+  console.log('SwimIQ Stripe deploy');
   console.log(`Project: ${PROJECT_REF}`);
   console.log(`Folder:  ${ROOT}`);
   console.log('');
 
-  const token = ensureLogin();
+  const token = await ensureToken();
 
   console.log('\n[2/3] Deploy create-stripe-checkout ...');
   await deployFunction(token, FUNCTIONS[0]);
