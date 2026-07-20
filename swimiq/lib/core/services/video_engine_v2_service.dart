@@ -164,14 +164,16 @@ class VideoEngineV2Service {
         'target_selection_mode':
             targetTrackId != null ? 'track_id' : 'automatic',
         if (targetTrackId != null) 'target_track_id': targetTrackId,
-        // Protected Elite defaults win over any caller options map.
+        // Launch defaults: coaching always works; sensors enrich when the
+        // phone clip + Elite PC can support them (pose soft-fails safely).
         'generate_gemini_report': generateGeminiReport,
+        'attach_evidence_images': true,
         'generate_overlay': false,
-        'run_pose_stage': false,
-        'run_butterfly_analysis': false,
-        'run_underwater_analysis': false,
-        'run_turn_analysis': false,
-        'run_finish_analysis': false,
+        'run_pose_stage': true,
+        'run_butterfly_analysis': true,
+        'run_underwater_analysis': true,
+        'run_turn_analysis': true,
+        'run_finish_analysis': true,
       },
     };
 

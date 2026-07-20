@@ -48,6 +48,36 @@ void main() {
     final reaction = meter.segments.firstWhere((s) => s.id == 'reaction');
     expect(reaction.signal, OpportunitySignal.lockedIn);
     expect(reaction.opportunityLabel, 'Locked in');
+    expect(meter.mode, RaceScanMode.phoneCoaching);
+    expect(meter.modeBadge, 'Phone coaching');
+  });
+
+  test('sensor-boosted mode when underwater phase is present', () {
+    final meter = RaceOpportunityMeterBuilder.fromReport(
+      report: const AnalysisReport(
+        summary: 'Strong race',
+        raceRecommendations: [
+          'drop about 0.2-0.5 seconds - that\'s your potential.',
+        ],
+      ),
+      stroke: 'Freestyle',
+      distanceM: 50,
+      results: const AnalysisResults(
+        jobId: 'job-uw',
+        status: 'completed',
+        engineVersion: 'elite',
+        phases: [
+          AnalysisPhase(
+            name: 'underwater_phase',
+            startMs: 0,
+            endMs: 3000,
+          ),
+        ],
+      ),
+    );
+
+    expect(meter.mode, RaceScanMode.sensorBoosted);
+    expect(meter.modeBadge, 'Sensor boosted');
   });
 
   test('100s include turns segment', () {

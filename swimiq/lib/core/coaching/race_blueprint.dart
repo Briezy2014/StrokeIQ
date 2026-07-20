@@ -88,7 +88,7 @@ class RaceBlueprintBuilder {
     final caption = measured
         ? 'Effort map for this race — phases use timing from your clip. '
             'Tap a phase to jump in the video.'
-        : 'Effort map for this race — start to wall coaching guide for parents & coaches. '
+        : 'Effort map for phone race videos — start to wall coaching for parents & coaches. '
             'Tap a phase to jump in the video when playback is ready.';
 
     return RaceBlueprint(

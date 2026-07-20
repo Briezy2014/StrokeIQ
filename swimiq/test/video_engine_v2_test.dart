@@ -171,6 +171,14 @@ void main() {
         expect(request.headers['Authorization'], 'Bearer test-token');
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['storage_path'], 'user-1/clip.mp4');
+        final options = body['options'] as Map<String, dynamic>;
+        // Launch phone-friendly defaults: sensors enrich, overlay stays off.
+        expect(options['run_pose_stage'], isTrue);
+        expect(options['run_underwater_analysis'], isTrue);
+        expect(options['run_turn_analysis'], isTrue);
+        expect(options['run_finish_analysis'], isTrue);
+        expect(options['attach_evidence_images'], isTrue);
+        expect(options['generate_overlay'], isFalse);
         return http.Response(
           jsonEncode({
             'job_id': 'job-1',

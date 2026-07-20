@@ -54,12 +54,22 @@ class OpportunitySegment {
   }
 }
 
+/// How this Race Scan was produced for the customer.
+enum RaceScanMode {
+  /// Phone-friendly coaching from this clip — always available at launch.
+  phoneCoaching,
+
+  /// Pose / UW / turn / finish sensors enriched parts of the scan.
+  sensorBoosted,
+}
+
 /// Opportunity Meter™ / Race Scan built from Elite coaching analysis.
 class RaceOpportunityMeter {
   const RaceOpportunityMeter({
     required this.segments,
     required this.raceIq,
     required this.caption,
+    required this.mode,
     this.potentialLowSec,
     this.potentialHighSec,
   });
@@ -67,8 +77,17 @@ class RaceOpportunityMeter {
   final List<OpportunitySegment> segments;
   final int raceIq;
   final String caption;
+  final RaceScanMode mode;
   final double? potentialLowSec;
   final double? potentialHighSec;
+
+  String get modeBadge => mode == RaceScanMode.sensorBoosted
+      ? 'Sensor boosted'
+      : 'Phone coaching';
+
+  String get modeSubtitle => mode == RaceScanMode.sensorBoosted
+      ? 'Extra body-line / race timing locked from this clip where the camera allowed it.'
+      : 'Built for phone race videos — body line, breathing, and tempo cues even when angles aren’t perfect.';
 
   String get potentialLabel {
     if (potentialLowSec == null || potentialHighSec == null) {
@@ -94,10 +113,12 @@ class RaceOpportunityMeterBuilder {
     required AnalysisReport report,
     required String stroke,
     int? distanceM,
+    AnalysisResults? results,
   }) {
     final corpus = _Corpus.fromReport(report);
     final potential = _parsePotential(report.raceRecommendations);
     final ids = _segmentIdsFor(stroke: stroke, distanceM: distanceM);
+    final mode = modeFor(results);
 
     final scored = <_ScoredSegment>[];
     for (final id in ids) {
@@ -106,19 +127,68 @@ class RaceOpportunityMeterBuilder {
 
     final allocated = _allocateOpportunity(scored, potential);
     final raceIq = _raceIq(allocated);
-    final caption = potential != null
-        ? 'Where time can still be found on this race — tap a row for the cue and drills. '
-            'Times are coaching estimates from this analysis, not stopwatch splits.'
-        : 'Race Scan from this clip’s coaching cues — tap a row for what to fix next '
-            'and how to practice it.';
+    final caption = mode == RaceScanMode.sensorBoosted
+        ? 'Where time can still be found — tap a row for the cue and drills. '
+            'Green rows look solid; yellow/red still have time on the table.'
+        : 'Where time can still be found on this phone race video — tap a row '
+            'for the cue and drills. Perfect camera angles not required.';
 
     return RaceOpportunityMeter(
       segments: allocated,
       raceIq: raceIq,
       caption: caption,
+      mode: mode,
       potentialLowSec: potential?.low,
       potentialHighSec: potential?.high,
     );
+  }
+
+  /// Detect whether Elite sensors enriched this job (pose soft-fail → phone mode).
+  static RaceScanMode modeFor(AnalysisResults? results) {
+    if (results == null) return RaceScanMode.phoneCoaching;
+
+    for (final phase in results.phases) {
+      final name = phase.name.toLowerCase();
+      if (name.contains('underwater') ||
+          name.contains('turn') ||
+          name.contains('finish') ||
+          name.contains('butterfly')) {
+        return RaceScanMode.sensorBoosted;
+      }
+    }
+
+    final tracking = results.tracking;
+    if (tracking != null) {
+      for (final key in const [
+        'pose',
+        'butterfly',
+        'underwater',
+        'turn',
+        'finish',
+      ]) {
+        final value = tracking[key];
+        if (value is! Map || value.isEmpty) continue;
+        if (key == 'pose' &&
+            (value['status']?.toString().toLowerCase() == 'skipped')) {
+          continue;
+        }
+        return RaceScanMode.sensorBoosted;
+      }
+    }
+
+    for (final metric in results.metrics) {
+      if (metric.isUnavailable) continue;
+      final name = metric.name.toLowerCase();
+      if (name.contains('underwater') ||
+          name.contains('stroke_rate') ||
+          name.contains('breakout') ||
+          name.contains('turn') ||
+          name.contains('finish')) {
+        return RaceScanMode.sensorBoosted;
+      }
+    }
+
+    return RaceScanMode.phoneCoaching;
   }
 
   static List<String> _segmentIdsFor({

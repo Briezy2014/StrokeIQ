@@ -10,11 +10,13 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
     super.key,
     required this.report,
     required this.stroke,
+    this.results,
     this.distanceM,
   });
 
   final AnalysisReport report;
   final String stroke;
+  final AnalysisResults? results;
   final int? distanceM;
 
   @override
@@ -23,6 +25,7 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
       report: report,
       stroke: stroke,
       distanceM: distanceM,
+      results: results,
     );
 
     return Container(
@@ -71,9 +74,9 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.22),
                   ),
                 ),
-                child: const Text(
-                  'Opportunity Meter',
-                  style: TextStyle(
+                child: Text(
+                  meter.modeBadge,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
                     fontSize: 10,
@@ -89,6 +92,16 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                 ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            meter.modeSubtitle,
+            style: TextStyle(
+              color: AppColors.accent.withValues(alpha: 0.95),
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              height: 1.3,
+            ),
           ),
           const SizedBox(height: 4),
           Text(

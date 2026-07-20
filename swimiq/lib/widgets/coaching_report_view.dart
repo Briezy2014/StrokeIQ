@@ -75,6 +75,7 @@ class CoachingReportView extends StatelessWidget {
         RaceOpportunityMeterPanel(
           report: report,
           stroke: stroke,
+          results: results,
           distanceM: int.tryParse(distance ?? ''),
         ),
         if (report.strengths.isNotEmpty) ...[

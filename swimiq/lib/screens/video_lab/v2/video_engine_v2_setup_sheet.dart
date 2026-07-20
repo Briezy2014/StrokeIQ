@@ -175,6 +175,42 @@ class _VideoEngineV2SetupSheetState
             widget.video.displayTitle,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Phone videos welcome',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryDark,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Parents and coaches: film from the side when you can, keep the '
+                  'whole body in view, and hold steady. Other angles still get a '
+                  'full Race Scan — body line, breathing, and tempo cues. Better '
+                  'side views unlock more precise underwater / turn / finish notes.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                        color: AppColors.textDark.withValues(alpha: 0.85),
+                      ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _strokeController,
