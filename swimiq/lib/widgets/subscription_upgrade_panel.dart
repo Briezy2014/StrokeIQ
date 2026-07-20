@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/models/subscription_plan.dart';
+import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
-import '../core/theme/app_theme.dart';
 import '../providers/app_providers.dart';
+import '../services/auth_service.dart';
 import '../screens/membership/membership_screen.dart';
 import 'swimiq_logo.dart';
+import '../core/theme/app_theme.dart';
 
 /// Full-screen upgrade prompt when a tier is required.
 class SubscriptionUpgradePanel extends ConsumerWidget {
@@ -107,6 +109,9 @@ class SubscriptionGatedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (AppConstants.unlockAllTabsForPreview) return child;
 
+    final email = ref.watch(currentUserProvider)?.email;
+    if (SubscriptionService.isBuiltInEliteEmail(email)) return child;
+
     final subscriptionAsync = ref.watch(subscriptionStateProvider);
     return subscriptionAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -120,6 +125,7 @@ class SubscriptionGatedScreen extends ConsumerWidget {
         if (!SubscriptionCapabilities.meetsMinimumTier(
           subscription,
           minimumTier,
+          email: email,
         )) {
           return SubscriptionUpgradePanel(
             minimumTier: minimumTier,

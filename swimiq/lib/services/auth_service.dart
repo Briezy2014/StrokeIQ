@@ -143,9 +143,12 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 
 final currentUserProvider = Provider<User?>((ref) {
   // Widget tests and early boot may render before Supabase.initialize().
-  // Avoid touching Supabase.instance.client until it is ready.
   if (!Supabase.instance.isInitialized) return null;
-  return ref.watch(authStateProvider).value?.session?.user;
+  final fromStream = ref.watch(authStateProvider).value?.session?.user;
+  if (fromStream != null) return fromStream;
+  // Fall back to the live Supabase session so master Elite tab unlocks
+  // even if the auth stream briefly lags after a refresh hiccup.
+  return Supabase.instance.client.auth.currentUser;
 });
 
 final isAuthenticatedProvider = Provider<bool>((ref) {

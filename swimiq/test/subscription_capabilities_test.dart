@@ -157,6 +157,43 @@ void main() {
     );
   });
 
+  test('master email unlocks passport and elite home tabs even on basic state', () {
+    const basic = SubscriptionState(
+      tier: SubscriptionTier.basic,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+    );
+
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.passport,
+        basic,
+        email: 'briezy682014@gmail.com',
+      ),
+      isTrue,
+    );
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.videoLab,
+        basic,
+        email: 'briezy682014@gmail.com',
+      ),
+      isTrue,
+    );
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.passport,
+        basic,
+        email: 'random@gmail.com',
+      ),
+      isFalse,
+    );
+  });
+
   test('founder elite state unlocks all features', () {
     const state = SubscriptionState(
       tier: SubscriptionTier.elite,

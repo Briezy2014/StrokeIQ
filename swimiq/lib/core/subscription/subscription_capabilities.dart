@@ -9,9 +9,11 @@ class SubscriptionCapabilities {
 
   static bool meetsMinimumTier(
     SubscriptionState state,
-    SubscriptionTier minimum,
-  ) {
+    SubscriptionTier minimum, {
+    String? email,
+  }) {
     if (AppConstants.unlockAllTabsForPreview) return true;
+    if (SubscriptionService.isBuiltInEliteEmail(email)) return true;
     switch (minimum) {
       case SubscriptionTier.basic:
       case SubscriptionTier.trial:
@@ -24,8 +26,10 @@ class SubscriptionCapabilities {
     }
   }
 
-  static bool hasProAccess(SubscriptionState state) {
-    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+  static bool hasProAccess(SubscriptionState state, {String? email}) {
+    if (AppConstants.unlockAllTabsForPreview ||
+        state.isDemoMaster ||
+        SubscriptionService.isBuiltInEliteEmail(email)) {
       return true;
     }
     switch (state.effectiveTier) {
@@ -47,11 +51,13 @@ class SubscriptionCapabilities {
   ) {
     if (SubscriptionService.isBuiltInEliteEmail(email)) return true;
     if (state == null) return false;
-    return canUseProFeatures(state);
+    return canUseProFeatures(state, email: email);
   }
 
-  static bool hasEliteAccess(SubscriptionState state) {
-    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+  static bool hasEliteAccess(SubscriptionState state, {String? email}) {
+    if (AppConstants.unlockAllTabsForPreview ||
+        state.isDemoMaster ||
+        SubscriptionService.isBuiltInEliteEmail(email)) {
       return true;
     }
     if (state.effectiveTier == SubscriptionTier.elite) return true;
@@ -80,35 +86,43 @@ class SubscriptionCapabilities {
 
   // ── Pro (competitive tools) ─────────────────────────────────────────
 
-  static bool canUseProFeatures(SubscriptionState state) => hasProAccess(state);
+  static bool canUseProFeatures(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessOfficialPbsAndStandards(SubscriptionState state) =>
-      hasProAccess(state);
+  static bool canAccessOfficialPbsAndStandards(
+    SubscriptionState state, {
+    String? email,
+  }) =>
+      hasProAccess(state, email: email);
 
   /// Legacy alias — official meet PBs & USA standards.
-  static bool canAccessPersonalBests(SubscriptionState state) =>
-      canAccessOfficialPbsAndStandards(state);
+  static bool canAccessPersonalBests(SubscriptionState state, {String? email}) =>
+      canAccessOfficialPbsAndStandards(state, email: email);
 
-  static bool canAccessMeetResults(SubscriptionState state) =>
-      hasProAccess(state);
+  static bool canAccessMeetResults(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessPassport(SubscriptionState state) => hasProAccess(state);
+  static bool canAccessPassport(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessVideoLab(SubscriptionState state) => hasProAccess(state);
+  static bool canAccessVideoLab(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessAiDrylandCoach(SubscriptionState state) =>
-      hasProAccess(state);
+  static bool canAccessAiDrylandCoach(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessMotivationalCuts(SubscriptionState state) =>
-      hasProAccess(state);
+  static bool canAccessMotivationalCuts(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
   // ── Elite (AI performance intelligence) ─────────────────────────────
 
-  static bool canRunSwimIqAiAnalysis(SubscriptionState state) {
-    if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
+  static bool canRunSwimIqAiAnalysis(SubscriptionState state, {String? email}) {
+    if (AppConstants.unlockAllTabsForPreview ||
+        state.isDemoMaster ||
+        SubscriptionService.isBuiltInEliteEmail(email)) {
       return true;
     }
-    if (!hasEliteAccess(state)) return false;
+    if (!hasEliteAccess(state, email: email)) return false;
     if (state.isCoachTrialActive && state.hasCoachElitePeek) {
       return state.coachAiAnalysesUsed <
           SubscriptionCatalog.coachEliteAnalysisLimit;
@@ -116,16 +130,23 @@ class SubscriptionCapabilities {
     return true;
   }
 
-  static bool canAccessRecruitingHub(SubscriptionState state) => hasProAccess(state);
+  static bool canAccessRecruitingHub(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
 
-  static bool canAccessRecruitingIntelligence(SubscriptionState state) =>
-      hasEliteAccess(state);
+  static bool canAccessRecruitingIntelligence(
+    SubscriptionState state, {
+    String? email,
+  }) =>
+      hasEliteAccess(state, email: email);
 
-  static bool canUseRaceIntelligence(SubscriptionState state) =>
-      hasEliteAccess(state);
+  static bool canUseRaceIntelligence(SubscriptionState state, {String? email}) =>
+      hasEliteAccess(state, email: email);
 
-  static bool canAccessAiPerformanceReports(SubscriptionState state) =>
-      hasEliteAccess(state);
+  static bool canAccessAiPerformanceReports(
+    SubscriptionState state, {
+    String? email,
+  }) =>
+      hasEliteAccess(state, email: email);
 
   static SubscriptionTier minimumTierForHomeTab(int tabIndex) {
     switch (tabIndex) {
@@ -142,12 +163,21 @@ class SubscriptionCapabilities {
     }
   }
 
-  static bool canAccessHomeTab(int tabIndex, SubscriptionState? state) {
+  static bool canAccessHomeTab(
+    int tabIndex,
+    SubscriptionState? state, {
+    String? email,
+  }) {
     if (AppConstants.unlockAllTabsForPreview) return true;
+    if (SubscriptionService.isBuiltInEliteEmail(email)) return true;
     if (state == null) {
       return minimumTierForHomeTab(tabIndex) == SubscriptionTier.basic;
     }
-    return meetsMinimumTier(state, minimumTierForHomeTab(tabIndex));
+    return meetsMinimumTier(
+      state,
+      minimumTierForHomeTab(tabIndex),
+      email: email,
+    );
   }
 
   static String proGateMessage({String feature = 'This feature'}) =>

@@ -65,14 +65,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  bool _tabLocked(int index, SubscriptionState? subscription) {
+  bool _tabLocked(int index, SubscriptionState? subscription, {String? email}) {
     if (AppConstants.unlockAllTabsForPreview) return false;
-    return !SubscriptionCapabilities.canAccessHomeTab(index, subscription);
+    return !SubscriptionCapabilities.canAccessHomeTab(
+      index,
+      subscription,
+      email: email,
+    );
   }
 
   void _onTabSelected(int index) {
     final subscription = ref.read(subscriptionStateProvider).value;
-    if (_tabLocked(index, subscription)) {
+    final email = ref.read(currentUserProvider)?.email;
+    if (_tabLocked(index, subscription, email: email)) {
       final minTier = SubscriptionCapabilities.minimumTierForHomeTab(index);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -108,6 +113,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _refresh() async {
     await ref.read(swimmerDataProvider.notifier).refresh();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureOwnerElite());
+  }
+
+  Future<void> _ensureOwnerElite() async {
+    final email = ref.read(currentUserProvider)?.email;
+    if (!SubscriptionService.isBuiltInEliteEmail(email)) return;
+    final sub = ref.read(subscriptionStateProvider).value;
+    if (sub != null && sub.isDemoMaster && sub.effectiveTier == SubscriptionTier.elite) {
+      return;
+    }
+    await ref.read(subscriptionStateProvider.notifier).refreshFromServer();
   }
 
   @override
@@ -175,12 +196,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             selectedIndex: selectedIndex,
             onDestinationSelected: _onTabSelected,
             destinations: [
-              _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', HomeTab.dashboard, subscription),
-              _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription),
-              _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription),
-              _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription),
-              _dest(Icons.videocam_outlined, Icons.videocam, videoTabLabel, HomeTab.videoLab, subscription),
-              _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription),
+              _dest(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', HomeTab.dashboard, subscription, email),
+              _dest(Icons.emoji_events_outlined, Icons.emoji_events, 'PBs', HomeTab.personalBests, subscription, email),
+              _dest(Icons.list_alt_outlined, Icons.list_alt, 'Log', HomeTab.trainingLog, subscription, email),
+              _dest(Icons.flag_outlined, Icons.flag, 'Goals', HomeTab.goals, subscription, email),
+              _dest(Icons.videocam_outlined, Icons.videocam, videoTabLabel, HomeTab.videoLab, subscription, email),
+              _dest(Icons.badge_outlined, Icons.badge, 'Passport', HomeTab.passport, subscription, email),
             ],
           ),
         ],
@@ -194,8 +215,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     String label,
     int index,
     SubscriptionState? subscription,
+    String? email,
   ) {
-    final locked = _tabLocked(index, subscription);
+    final locked = _tabLocked(index, subscription, email: email);
     return NavigationDestination(
       icon: Icon(locked ? Icons.lock_outline : icon),
       selectedIcon: Icon(locked ? Icons.lock : selected),
