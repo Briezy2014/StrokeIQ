@@ -1,0 +1,76 @@
+SWIMIQ — STRIPE BILLING (ONLY)
+================================
+
+Goal: when someone clicks a plan on swimiqapp.com, Stripe checkout opens.
+
+You already said products + secrets are done. Good.
+What’s left is usually just 3 things below.
+
+
+----------------------------------------
+STEP 1 — Get the Stripe turn-on file
+----------------------------------------
+1. Open File Explorer
+2. Go to: Desktop → StrokeIQ
+   (if you use OneDrive: OneDrive → Desktop → StrokeIQ)
+3. Double-click:  GET-STRIPE-BILLING.bat
+4. Wait until it says OK
+5. It will open this instructions file again if needed
+
+
+----------------------------------------
+STEP 2 — Turn on Stripe checkout
+----------------------------------------
+1. Still in the StrokeIQ folder
+2. Double-click:  TURN-ON-STRIPE-BILLING.bat
+3. A black window opens — press any key when it asks
+4. A browser may open — sign in to Supabase if asked
+5. Wait until you see:  [OK] Stripe functions deployed
+6. If you see [ERROR], take a photo of that window and send it
+
+
+----------------------------------------
+STEP 3 — Connect Stripe webhook (website only)
+----------------------------------------
+1. Open Stripe Dashboard in your browser
+2. Make sure TEST MODE is ON (sandbox)
+3. Click: Developers → Webhooks → Add endpoint
+4. Paste this exact URL:
+
+https://bryurwyeosbffvfpdbv.supabase.co/functions/v1/stripe-webhook
+
+5. Choose these 3 events:
+   - checkout.session.completed
+   - customer.subscription.updated
+   - customer.subscription.deleted
+6. Save
+7. Copy the Signing secret (starts with whsec_)
+8. Open Supabase → Edge Functions → Secrets
+9. Add or update secret name:  STRIPE_WEBHOOK_SECRET
+10. Paste the whsec_ value → Save
+
+
+----------------------------------------
+STEP 4 — Test a fake payment
+----------------------------------------
+1. Open https://swimiqapp.com
+2. Sign in
+3. Go to Settings → Plans & billing
+4. Click Choose on a plan
+5. Use this test card:
+   Card: 4242 4242 4242 4242
+   Date: any future date
+   CVC: any 3 digits
+6. Finish checkout
+7. You should come back to SwimIQ with the plan Active
+
+
+----------------------------------------
+IF CHECKOUT STILL FAILS
+----------------------------------------
+Most common cause: Step 2 did not finish with [OK].
+Send a photo of the black window from Step 2.
+
+
+Do NOT worry about best times photos, Elite video, or PowerShell for Stripe.
+Those are separate.
