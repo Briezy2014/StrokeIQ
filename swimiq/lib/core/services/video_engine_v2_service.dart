@@ -317,25 +317,18 @@ class VideoEngineV2Service {
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
       case 'MISSING_API_KEY':
-        return 'Coaching tips need GEMINI_API_KEY in swimiq\\.env. '
-            'Save Notepad, close Elite windows, run START-SWIMIQ-WITH-ELITE.bat, '
-            'then analyze again.';
       case 'GEMINI_ERROR':
       case 'INVALID_API_KEY':
-        return 'Google rejected the Gemini key. In swimiq\\.env keep ONLY ONE line: '
-            'GEMINI_API_KEY=... (delete the extra key line). '
-            'Then run FIX-ONE-GEMINI-KEY.bat or START-SWIMIQ-WITH-ELITE.bat and analyze again. '
-            'Coaching tips should still appear after that restart.';
+        return 'AI coaching tips are temporarily unavailable. '
+            'Please try Analyze again in a few minutes.';
       case 'UPLOAD_FAILED':
-        return 'Elite could not download your video from cloud storage. '
-            'Check this PC’s internet, stay signed in, restart '
-            'START-SWIMIQ-WITH-ELITE.bat, then analyze again.';
+        return 'Could not load your video for analysis. '
+            'Check your connection, stay signed in, and try again.';
       case 'DOWNLOAD_TIMEOUT':
-        return 'Elite timed out downloading your video from the cloud. '
-            'Short clips still need a working link from this PC to Supabase — '
-            'check Wi-Fi, keep the Elite window open, stay signed in, then try again.';
+        return 'Downloading your video timed out. '
+            'Check Wi-Fi, stay signed in, and try a shorter clip.';
       case 'FFPROBE_TIMEOUT':
-        return 'Elite could not read this video file. Re-upload as MP4 (H.264) and try again.';
+        return 'Could not read this video file. Re-upload as MP4 (H.264) and try again.';
       case 'AUTHENTICATION_EXPIRED':
       case 'UNAUTHORIZED':
       case 'AUTH_REQUIRED':

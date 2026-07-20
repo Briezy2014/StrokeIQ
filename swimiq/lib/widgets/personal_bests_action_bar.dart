@@ -71,8 +71,7 @@ class PersonalBestsActionBar extends ConsumerWidget {
         content: Text(
           'Uploading official best times (photo / file) is included with '
           'SwimIQ Pro.\n\n'
-          'Signed in as: ${email ?? 'unknown'}\n'
-          'Master Elite login: briezy682014@gmail.com',
+          'Upgrade to Pro to import times from a photo or file.',
           style: TextStyle(
             color: AppColors.textDark.withValues(alpha: 0.9),
             height: 1.4,

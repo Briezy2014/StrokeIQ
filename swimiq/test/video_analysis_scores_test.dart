@@ -40,7 +40,7 @@ void main() {
       VideoAnalysisScores.overallSummary(awaiting),
       contains('has not watched'),
     );
-    expect(VideoAnalysisScores.legend(awaiting), contains('not analyzed'));
+    expect(VideoAnalysisScores.legendFor(awaiting), contains('not analyzed'));
   });
 
   test('legend differs for Gemini vs notes fallback', () {
@@ -55,25 +55,28 @@ void main() {
       analysisJson: {'engine': 'swimiq-v1-notes'},
     );
 
-    expect(VideoAnalysisScores.legend(gemini), contains('video'));
-    expect(VideoAnalysisScores.legend(notes), contains('not analyzed'));
+    expect(VideoAnalysisScores.legendFor(gemini), contains('video'));
+    expect(VideoAnalysisScores.legendFor(notes), contains('not analyzed'));
     expect(VideoAnalysisScores.fallbackReason(notes), isNull);
     expect(
       VideoAnalysisScores.fallbackReason(awaiting),
-      contains('server needs an update'),
+      contains('temporarily unavailable'),
     );
   });
 
   test('rewrites stale GEMINI_MODEL error saved from old server deploys', () {
-    const stale = 'Gemini model is retired (often gemini-1.5-flash in Supabase secrets). '
+    const stale =
+        'Gemini model is retired (often gemini-1.5-flash in Supabase secrets). '
         'Delete GEMINI_MODEL secret in Supabase, then run KARA-GEMINI-FIX-NOW.bat';
     final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(stale);
-    expect(rewritten, contains('do NOT need a GEMINI_MODEL secret'));
+    expect(rewritten, contains('temporarily unavailable'));
     expect(rewritten, isNot(contains('Delete GEMINI_MODEL')));
+    expect(rewritten, isNot(contains('.bat')));
   });
 
   test('rewrites 503 high demand errors with retry guidance', () {
-    const busy = 'Gemini model "gemini-3.5-flash" is busy right now (Google high demand).';
+    const busy =
+        'Gemini model "gemini-3.5-flash" is busy right now (Google high demand).';
     final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(busy);
     expect(rewritten, contains('temporarily busy'));
   });

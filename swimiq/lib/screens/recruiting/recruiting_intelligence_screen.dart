@@ -206,9 +206,8 @@ class _RecruitingIntelligenceScreenState
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    'Gemini coach summary unavailable — school names still come from '
-                    'SwimIQ benchmark matching. Deploy match-college-recruiting after '
-                    'setting GEMINI_API_KEY.',
+                    'AI coach summary is temporarily unavailable — school matches '
+                    'still use SwimIQ benchmarks. Try again later.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade700,
                         ),

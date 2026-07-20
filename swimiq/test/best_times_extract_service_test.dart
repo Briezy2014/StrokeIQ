@@ -4,10 +4,11 @@ import 'package:swimiq/core/services/best_times_extract_service.dart';
 void main() {
   test('extract exceptions carry actionable codes', () {
     final edge = BestTimesExtractException(
-      'GEMINI_API_KEY is not configured in Supabase Edge Function secrets.',
+      'Photo import is temporarily unavailable. '
+      'Please try again later or enter times manually.',
       errorCode: 'EDGE_FAILED',
     );
-    expect(edge.message, contains('GEMINI_API_KEY'));
+    expect(edge.message, contains('temporarily unavailable'));
     expect(edge.errorCode, 'EDGE_FAILED');
 
     final elite = BestTimesExtractException(

@@ -27,14 +27,13 @@ abstract final class SupabaseTableErrors {
   }
 
   static String missingVideoAnalysesMessage() {
-    return 'Video database table missing in Supabase. '
-        'Open Supabase → SQL Editor → run swimiq/supabase/fix_video_tables.sql '
-        '(or double-click FIX-VIDEO-DATABASE.bat / KARA-FIX-VIDEO-DATABASE.bat). Then try again.';
+    return 'Video history is temporarily unavailable. '
+        'Please try again in a few minutes. '
+        'If it keeps happening, email support@swimiqapp.com.';
   }
 
   static String missingSwimVideosUserIdMessage() {
-    return 'Video upload needs a database update. '
-        'Open FIX-VIDEO-UPLOAD-NOW.txt and paste the SQL into Supabase → SQL Editor → Run. '
-        'Then upload again.';
+    return 'Video upload needs a quick server update. '
+        'Please try again shortly, or email support@swimiqapp.com.';
   }
 }

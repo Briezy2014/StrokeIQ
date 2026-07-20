@@ -106,12 +106,9 @@ class BestTimesExtractService {
         !elite.toLowerCase().contains('could not reach')) {
       return elite;
     }
-    return 'Could not read best times from this photo.\n\n'
-        '1. Deploy Supabase function extract-best-times '
-        '(GEMINI_API_KEY must be in Edge Function secrets), or\n'
-        '2. Run START-SWIMIQ-WITH-ELITE.bat and keep Elite open, then retry.\n\n'
-        '${edge.isNotEmpty ? 'Cloud: $edge\n' : ''}'
-        '${elite.isNotEmpty ? 'Elite: $elite' : ''}'.trim();
+    return 'Could not read best times from this photo. '
+        'Try a clearer screenshot, or enter times manually. '
+        'If it keeps failing, email support@swimiqapp.com.';
   }
 
   Future<BestTimesExtractResponse> _extractViaElite({
@@ -189,8 +186,8 @@ class BestTimesExtractService {
       }
       if (e.status == 404 || message.toLowerCase().contains('not found')) {
         throw BestTimesExtractException(
-          'Cloud photo reader is not deployed. '
-          'Run: supabase functions deploy extract-best-times',
+          'Photo import is temporarily unavailable. '
+          'Please try again later or enter times manually.',
           errorCode: 'EDGE_NOT_DEPLOYED',
         );
       }
@@ -290,19 +287,22 @@ class BestTimesExtractService {
     if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
         lower.contains('gemini-2.5-flash') ||
-        lower.contains('gemini-2.0-flash')) {
-      return 'Google retired the old Gemini model for photo reading. '
-          'Redeploy extract-best-times or restart Elite with the latest code.';
-    }
-    if (lower.contains('missing_api_key') ||
-        lower.contains('gemini_api_key is not configured')) {
-      return 'Add GEMINI_API_KEY to Supabase Edge Function secrets '
-          '(and services/video_analysis/.env for local Elite), then retry.';
+        lower.contains('gemini-2.0-flash') ||
+        lower.contains('missing_api_key') ||
+        lower.contains('gemini_api_key')) {
+      return 'Photo import is temporarily unavailable. '
+          'Try again shortly, or enter times manually.';
     }
     if (lower.contains('failed to fetch') ||
         lower.contains('clientexception') ||
         lower.contains('network')) {
-      return 'Network error talking to the photo reader. Check Wi‑Fi and try again.';
+      return 'Network error reading this photo. Check Wi‑Fi and try again.';
+    }
+    if (lower.contains('.bat') ||
+        lower.contains('supabase') ||
+        lower.contains('127.0.0.1')) {
+      return 'Could not read best times from this photo. '
+          'Try a clearer image or enter times manually.';
     }
     return raw;
   }

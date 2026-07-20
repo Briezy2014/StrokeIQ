@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/env.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/recruiting/highlight_reel_planner.dart';
 import '../../core/services/video_engine_v2_service.dart';
@@ -181,12 +182,20 @@ class _HighlightVideoBuilderScreenState
 
     setState(() => _building = true);
     try {
+      if (Env.isPublicHostedWeb) {
+        throw VideoEngineV2Exception(
+          'Automatic highlight video stitching is coming to the website soon. '
+          'For now, use tagged clips in your recruiting résumé export.',
+          errorCode: 'SERVER_UNAVAILABLE',
+          retriable: false,
+        );
+      }
       final health = await ref.read(videoEngineV2ServiceProvider).checkHealth();
       if (!health.reachable || !health.mediaToolsReady) {
         throw VideoEngineV2Exception(
           health.reachable
-              ? 'Elite is up but FFmpeg is missing. Restart START-SWIMIQ-WITH-ELITE.bat.'
-              : health.message,
+              ? 'Highlight stitching tools are not ready on this computer yet.'
+              : 'Highlight video builder is temporarily unavailable. Try again later.',
           errorCode: 'SERVER_UNAVAILABLE',
           retriable: true,
         );
@@ -208,8 +217,8 @@ class _HighlightVideoBuilderScreenState
       _showMessage(
         title: 'Reel not ready',
         body:
-            'Could not reach Elite to build the reel. '
-            'Run START-SWIMIQ-WITH-ELITE.bat and try again. ($e)',
+            'Could not build the highlight reel right now. '
+            'Please try again later.',
       );
     } finally {
       if (mounted) setState(() => _building = false);
