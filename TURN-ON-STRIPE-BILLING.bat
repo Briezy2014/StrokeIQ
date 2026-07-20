@@ -8,16 +8,13 @@ echo ========================================
 echo  SwimIQ - Turn on Stripe billing
 echo ========================================
 echo.
-echo This only turns on website plan checkout.
-echo It is NOT about best times photos.
+echo Local SwimIQ in the browser is fine to leave open.
+echo This black window turns on Stripe checkout in the cloud.
 echo.
 
-if not exist "%~dp0swimiq\DEPLOY-STRIPE-NOW.cmd" (
-  echo [ERROR] Missing swimiq\DEPLOY-STRIPE-NOW.cmd
-  echo.
-  echo First double-click GET-STRIPE-BILLING.bat in this same folder.
-  echo Then run TURN-ON-STRIPE-BILLING.bat again.
-  echo.
+if not exist "%~dp0swimiq\scripts\deploy-stripe-functions.mjs" (
+  echo [ERROR] Missing deploy helper.
+  echo Double-click GET-LATEST-FIXED-APP.bat first, then try again.
   pause
   exit /b 1
 )
