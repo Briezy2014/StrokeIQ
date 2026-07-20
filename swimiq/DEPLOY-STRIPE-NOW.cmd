@@ -3,70 +3,42 @@ setlocal EnableExtensions
 title SwimIQ - Deploy Stripe billing
 cd /d "%~dp0"
 
-set "PROJECT_REF=bryurwyeosbffvfpdbv"
-
 echo.
 echo ========================================
 echo  Stripe billing deploy (SwimIQ)
 echo ========================================
 echo.
-echo This turns on Plans and billing checkout.
-echo Project: %PROJECT_REF%
+echo Project: bryurwyeosbffvfpdbv
 echo.
 echo You already need in Supabase secrets:
 echo   STRIPE_SECRET_KEY
-echo   STRIPE_PRICE_BASIC_MONTHLY ... ELITE_ANNUAL (6 prices)
+echo   STRIPE_PRICE_* (6 prices)
 echo.
 pause
 
-set "NPX="
-if exist "%ProgramFiles%\nodejs\npx.cmd" set "NPX=%ProgramFiles%\nodejs\npx.cmd"
-if not defined NPX if exist "%ProgramFiles(x86)%\nodejs\npx.cmd" set "NPX=%ProgramFiles(x86)%\nodejs\npx.cmd"
-if not defined NPX (
-  where npx.cmd >nul 2>nul
-  if not errorlevel 1 for /f "delims=" %%I in ('where npx.cmd') do (
-    set "NPX=%%I"
-    goto :have_npx
-  )
-)
-:have_npx
-if not defined NPX (
-  echo [ERROR] Install Node.js LTS from https://nodejs.org then run this again.
+where node >nul 2>nul
+if errorlevel 1 (
+  if exist "%ProgramFiles%\nodejs\node.exe" goto :have_node_path
+  echo [ERROR] Node.js not found. Install LTS from https://nodejs.org
   pause
   exit /b 1
 )
+goto :run
 
-echo Using: "%NPX%"
+:have_node_path
+set "PATH=%ProgramFiles%\nodejs;%PATH%"
+
+:run
+echo Running Node deploy helper...
 echo.
-
-echo [1/3] Login (skip if already logged in) ...
-call "%NPX%" --yes supabase login
-if errorlevel 1 goto :fail
-
-echo [2/3] Deploy create-stripe-checkout ...
-call "%NPX%" --yes supabase functions deploy create-stripe-checkout --project-ref %PROJECT_REF% --use-api
-if errorlevel 1 goto :fail
-
-echo [3/3] Deploy stripe-webhook ...
-call "%NPX%" --yes supabase functions deploy stripe-webhook --project-ref %PROJECT_REF% --use-api
-if errorlevel 1 goto :fail
-
-echo.
-echo [OK] Stripe functions deployed.
-echo.
-echo NEXT - in Stripe website:
-echo   Developers - Webhooks - Add endpoint
-echo   URL:
-echo   https://%PROJECT_REF%.supabase.co/functions/v1/stripe-webhook
-echo.
-echo Then paste Signing secret (whsec_...) as STRIPE_WEBHOOK_SECRET
-echo in Supabase Edge Function secrets.
+node "%~dp0scripts\deploy-stripe-functions.mjs"
+set "ERR=%ERRORLEVEL%"
+if not "%ERR%"=="0" (
+  echo.
+  echo [ERROR] Stopped. Tell the agent which step number failed.
+  pause
+  exit /b %ERR%
+)
 echo.
 pause
 exit /b 0
-
-:fail
-echo.
-echo [ERROR] Stopped. Tell the agent which step number failed.
-pause
-exit /b 1
