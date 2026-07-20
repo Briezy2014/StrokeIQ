@@ -165,10 +165,10 @@ class _VideoJobProgressScreenState
                         if (_isEarlyFetchStage(job)) ...[
                           const SizedBox(height: 16),
                           Text(
-                            'Large videos can take a few minutes while Elite '
-                            'downloads from cloud storage. Keep the Elite '
-                            'server window open — the percent should move '
-                            'during download.',
+                            'Elite must re-download the clip from cloud storage '
+                            'on this PC (even short videos). If this sits still '
+                            'for more than about a minute, cancel and check Wi-Fi '
+                            '/ that the Elite window is still open, then try again.',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Colors.black54,

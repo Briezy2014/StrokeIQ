@@ -327,7 +327,15 @@ class VideoEngineV2Service {
             'Then run FIX-ONE-GEMINI-KEY.bat or START-SWIMIQ-WITH-ELITE.bat and analyze again. '
             'Coaching tips should still appear after that restart.';
       case 'UPLOAD_FAILED':
-        return 'Video upload failed. Check your connection and try again.';
+        return 'Elite could not download your video from cloud storage. '
+            'Check this PC’s internet, stay signed in, restart '
+            'START-SWIMIQ-WITH-ELITE.bat, then analyze again.';
+      case 'DOWNLOAD_TIMEOUT':
+        return 'Elite timed out downloading your video from the cloud. '
+            'Short clips still need a working link from this PC to Supabase — '
+            'check Wi-Fi, keep the Elite window open, stay signed in, then try again.';
+      case 'FFPROBE_TIMEOUT':
+        return 'Elite could not read this video file. Re-upload as MP4 (H.264) and try again.';
       case 'AUTHENTICATION_EXPIRED':
       case 'UNAUTHORIZED':
       case 'AUTH_REQUIRED':

@@ -28,6 +28,7 @@ def resolve_local_path(
     *,
     settings: Settings,
     progress_callback=None,
+    cancel_check=None,
 ) -> Path:
     if job.local_path:
         return Path(job.local_path).expanduser().resolve()
@@ -48,12 +49,20 @@ def resolve_local_path(
                 dest=dest,
                 user_access_token=getattr(job, "download_access_token", None),
                 progress_callback=progress_callback,
+                cancel_check=cancel_check,
             )
         except SupabaseBridgeError as exc:
+            if exc.code == "CANCELLED":
+                raise VideoValidationError(
+                    "CANCELLED",
+                    "Job was cancelled during download",
+                    retriable=False,
+                ) from exc
             retriable = exc.code in {
                 "SERVER_UNAVAILABLE",
                 "UPLOAD_FAILED",
                 "SERVICE_UNAVAILABLE",
+                "DOWNLOAD_TIMEOUT",
             }
             raise VideoValidationError(
                 exc.code, exc.message, retriable=retriable
@@ -119,10 +128,18 @@ def run_analysis_pipeline(
                         message=label,
                     )
 
+            def _download_cancelled() -> bool:
+                latest = store.get(job_id)
+                if latest is not None and latest.cancelled:
+                    job.cancelled = True
+                    return True
+                return bool(job.cancelled)
+
             path = resolve_local_path(
                 job,
                 settings=settings,
                 progress_callback=_on_download_progress,
+                cancel_check=_download_cancelled,
             )
         else:
             path = resolve_local_path(job, settings=settings)

@@ -54,7 +54,15 @@ def _run_ffprobe(ffprobe_path: str, video_path: Path) -> dict[str, Any]:
             check=False,
             capture_output=True,
             text=True,
+            timeout=20,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise VideoValidationError(
+            "FFPROBE_TIMEOUT",
+            "Video validation timed out while reading this file. "
+            "Re-upload the clip as MP4 (H.264) and try again.",
+            retriable=True,
+        ) from exc
     except FileNotFoundError as exc:
         raise VideoValidationError(
             "FFPROBE_UNAVAILABLE",

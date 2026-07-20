@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -15,6 +16,17 @@ from app.domain.jobs import AnalysisJob
 from app.utils.logging import get_logger
 
 logger = get_logger("video_analysis.supabase")
+
+# Fail-fast for Elite local analysis: short phone clips must not sit for minutes.
+_DOWNLOAD_CONNECT_S = 10.0
+_DOWNLOAD_READ_IDLE_S = 20.0
+_DOWNLOAD_OVERALL_S = 90.0
+_DOWNLOAD_TIMEOUT_MESSAGE = (
+    "Elite could not finish downloading your video from cloud storage in time. "
+    "Even short clips need a working internet link from this PC to Supabase. "
+    "Check Wi-Fi, keep START-SWIMIQ-WITH-ELITE.bat open, stay signed in, "
+    "then Run Elite Analysis again."
+)
 
 
 class SupabaseBridgeError(Exception):
@@ -61,6 +73,8 @@ class SupabaseBridge:
         dest: Path,
         user_access_token: str | None = None,
         progress_callback: Callable[[float, str], None] | None = None,
+        cancel_check: Callable[[], bool] | None = None,
+        overall_timeout_s: float = _DOWNLOAD_OVERALL_S,
     ) -> Path:
         """
         Download a private storage object.
@@ -69,51 +83,137 @@ class SupabaseBridge:
         fall back to the signed-in Flutter user's JWT + anon key so analysis
         works without putting SUPABASE_SERVICE_ROLE_KEY on the machine.
 
-        Streams to disk and optionally reports progress so large videos do not
-        appear stuck at a fixed validating percentage.
+        Streams to disk with short idle/overall timeouts so a hung cloud
+        download fails in under ~90s instead of looking stuck forever —
+        length of the swim clip does not matter (15s clips re-download too).
         """
         mode, headers = self._download_auth(user_access_token=user_access_token)
         dest.parent.mkdir(parents=True, exist_ok=True)
         # Service role uses /object/... ; user JWT must use /object/authenticated/...
         if mode == "service":
-            url = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
+            urls = [f"{self.base}/storage/v1/object/{bucket}/{storage_path}"]
         else:
-            url = (
-                f"{self.base}/storage/v1/object/authenticated/"
-                f"{bucket}/{storage_path}"
-            )
-        timeout = httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0)
-        fallback = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
+            urls = [
+                (
+                    f"{self.base}/storage/v1/object/authenticated/"
+                    f"{bucket}/{storage_path}"
+                ),
+                f"{self.base}/storage/v1/object/{bucket}/{storage_path}",
+            ]
+
+        timeout = httpx.Timeout(
+            connect=_DOWNLOAD_CONNECT_S,
+            read=_DOWNLOAD_READ_IDLE_S,
+            write=30.0,
+            pool=30.0,
+        )
+        deadline = time.monotonic() + max(15.0, float(overall_timeout_s))
+        started_at = time.monotonic()
+        last_error: Exception | None = None
+
         try:
             with httpx.Client(timeout=timeout) as client:
-                request = client.build_request("GET", url, headers=headers)
-                resp = client.send(request, stream=True)
-                try:
-                    # Some projects still allow /object/ with a user JWT — try once.
-                    if (
-                        mode == "user"
-                        and resp.status_code in {400, 401, 403}
-                        and user_access_token
-                    ):
-                        resp.close()
-                        request = client.build_request(
-                            "GET", fallback, headers=headers
+                for index, url in enumerate(urls):
+                    if cancel_check is not None and cancel_check():
+                        raise SupabaseBridgeError(
+                            "CANCELLED",
+                            "Download cancelled",
                         )
+                    if time.monotonic() > deadline:
+                        raise SupabaseBridgeError(
+                            "DOWNLOAD_TIMEOUT",
+                            _DOWNLOAD_TIMEOUT_MESSAGE,
+                        )
+                    try:
+                        if progress_callback is not None:
+                            progress_callback(
+                                0.0,
+                                "Connecting to cloud storage",
+                            )
+                        request = client.build_request("GET", url, headers=headers)
                         resp = client.send(request, stream=True)
-                    self._write_streamed_response(
-                        resp,
-                        dest,
-                        progress_callback=progress_callback,
-                    )
-                finally:
-                    resp.close()
+                        try:
+                            # Authenticated path may 4xx — try plain /object/ once.
+                            if (
+                                mode == "user"
+                                and resp.status_code in {400, 401, 403}
+                                and index == 0
+                                and len(urls) > 1
+                            ):
+                                resp.close()
+                                continue
+                            self._write_streamed_response(
+                                resp,
+                                dest,
+                                progress_callback=progress_callback,
+                                cancel_check=cancel_check,
+                                deadline=deadline,
+                                started_at=started_at,
+                            )
+                            return dest
+                        finally:
+                            resp.close()
+                    except SupabaseBridgeError:
+                        raise
+                    except httpx.TimeoutException as exc:
+                        last_error = exc
+                        logger.warning(
+                            "storage download timeout url=%s err=%s",
+                            url,
+                            exc,
+                        )
+                        continue
+                    except httpx.HTTPError as exc:
+                        last_error = exc
+                        logger.warning(
+                            "storage download http error url=%s err=%s",
+                            url,
+                            exc,
+                        )
+                        continue
+
+                # Service-role path: try a signed URL once (often more reliable).
+                if mode == "service" and self.enabled:
+                    try:
+                        if progress_callback is not None:
+                            progress_callback(0.0, "Retrying download via signed URL")
+                        signed = self.create_signed_url(
+                            bucket=bucket,
+                            storage_path=storage_path,
+                            expires_in=600,
+                        )
+                        request = client.build_request("GET", signed)
+                        resp = client.send(request, stream=True)
+                        try:
+                            self._write_streamed_response(
+                                resp,
+                                dest,
+                                progress_callback=progress_callback,
+                                cancel_check=cancel_check,
+                                deadline=deadline,
+                                started_at=started_at,
+                            )
+                            return dest
+                        finally:
+                            resp.close()
+                    except SupabaseBridgeError:
+                        raise
+                    except httpx.HTTPError as exc:
+                        last_error = exc
         except SupabaseBridgeError:
             raise
         except httpx.HTTPError as exc:
+            last_error = exc
+
+        if isinstance(last_error, httpx.TimeoutException):
             raise SupabaseBridgeError(
-                "UPLOAD_FAILED", f"Storage download failed: {exc}"
-            ) from exc
-        return dest
+                "DOWNLOAD_TIMEOUT",
+                _DOWNLOAD_TIMEOUT_MESSAGE,
+            ) from last_error
+        raise SupabaseBridgeError(
+            "UPLOAD_FAILED",
+            f"Storage download failed: {last_error or 'unknown error'}",
+        ) from last_error
 
     def _write_streamed_response(
         self,
@@ -121,6 +221,9 @@ class SupabaseBridge:
         dest: Path,
         *,
         progress_callback: Callable[[float, str], None] | None = None,
+        cancel_check: Callable[[], bool] | None = None,
+        deadline: float | None = None,
+        started_at: float | None = None,
     ) -> None:
         if resp.status_code == 404:
             raise SupabaseBridgeError("INVALID_VIDEO", "Video object not found in storage")
@@ -140,15 +243,34 @@ class SupabaseBridge:
         downloaded = 0
         last_fraction_reported = -1.0
         last_bytes_reported = 0
+        last_heartbeat = time.monotonic()
+        started = started_at if started_at is not None else time.monotonic()
         if progress_callback is not None:
             progress_callback(0.0, "Downloading video from cloud")
 
         with dest.open("wb") as handle:
             for chunk in resp.iter_bytes(chunk_size=256 * 1024):
+                if cancel_check is not None and cancel_check():
+                    raise SupabaseBridgeError("CANCELLED", "Download cancelled")
+                if deadline is not None and time.monotonic() > deadline:
+                    raise SupabaseBridgeError(
+                        "DOWNLOAD_TIMEOUT",
+                        _DOWNLOAD_TIMEOUT_MESSAGE,
+                    )
                 if not chunk:
+                    # Time-based heartbeat while waiting on the socket.
+                    now = time.monotonic()
+                    if progress_callback is not None and now - last_heartbeat >= 2.0:
+                        last_heartbeat = now
+                        elapsed = int(now - started)
+                        progress_callback(
+                            min(0.05, downloaded / max(total, 1) if total else 0.02),
+                            f"Waiting on cloud download… {max(0, elapsed)}s",
+                        )
                     continue
                 handle.write(chunk)
                 downloaded += len(chunk)
+                last_heartbeat = time.monotonic()
                 if progress_callback is None:
                     continue
                 if total > 0:
@@ -162,15 +284,20 @@ class SupabaseBridge:
                             fraction,
                             f"Downloading video · {mb:.1f}/{total_mb:.1f} MB",
                         )
-                elif downloaded - last_bytes_reported >= 2 * 1024 * 1024:
-                    # No Content-Length: heartbeat every ~2 MB.
+                elif downloaded - last_bytes_reported >= 512 * 1024:
+                    # No Content-Length: heartbeat every ~0.5 MB (phone clips).
                     last_bytes_reported = downloaded
                     mb = downloaded / (1024 * 1024)
                     progress_callback(
-                        min(0.95, mb / 100.0),
+                        min(0.95, mb / 20.0),
                         f"Downloading video · {mb:.1f} MB",
                     )
 
+        if downloaded <= 0:
+            raise SupabaseBridgeError(
+                "UPLOAD_FAILED",
+                "Cloud storage returned an empty video file.",
+            )
         if progress_callback is not None:
             progress_callback(1.0, "Download complete")
 

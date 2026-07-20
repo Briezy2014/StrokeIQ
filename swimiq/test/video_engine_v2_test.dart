@@ -160,7 +160,11 @@ void main() {
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('UPLOAD_FAILED'),
-        contains('upload'),
+        contains('download'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('DOWNLOAD_TIMEOUT'),
+        contains('timed out'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('AUTHENTICATION_EXPIRED'),
