@@ -25,35 +25,56 @@ class UsaMotivationalStandardsCatalog {
   String get versionLabel => bundle.versionLabel;
   String get versionId => bundle.versionId;
 
-  static Future<UsaMotivationalStandardsCatalog> loadFromAssets() async {
-    final raw = await rootBundle.loadString(assetPath);
-    final decoded = jsonDecode(raw) as Map<String, dynamic>;
-    final bundle = UsaMotivationalStandardsBundle.fromJson(decoded);
-    final eventsByKey = <String, UsaMotivationalEventStandard>{};
-
-    for (final event in bundle.events) {
-      eventsByKey[_eventKey(
-        ageGroup: event.ageGroup,
-        gender: event.gender,
-        course: event.course,
-        distance: event.distance,
-        stroke: event.stroke,
-      )] = event;
-    }
-
-    final flat = (decoded['flat_standards'] as List? ?? [])
-        .map(
-          (item) => UsaTimeStandard.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
-        )
-        .toList();
-
+  /// Empty catalog used when the web build is missing the asset file.
+  /// Prefer a full rebuild/republish; this keeps login from hard-failing.
+  static UsaMotivationalStandardsCatalog empty() {
     return UsaMotivationalStandardsCatalog._(
-      bundle: bundle,
-      eventsByKey: eventsByKey,
-      flatStandards: flat,
+      bundle: const UsaMotivationalStandardsBundle(
+        versionId: 'missing',
+        versionLabel: 'Standards unavailable',
+        source: 'asset-missing',
+        effectiveThrough: 0,
+        events: [],
+      ),
+      eventsByKey: const {},
+      flatStandards: const [],
     );
+  }
+
+  static Future<UsaMotivationalStandardsCatalog> loadFromAssets() async {
+    try {
+      final raw = await rootBundle.loadString(assetPath);
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final bundle = UsaMotivationalStandardsBundle.fromJson(decoded);
+      final eventsByKey = <String, UsaMotivationalEventStandard>{};
+
+      for (final event in bundle.events) {
+        eventsByKey[_eventKey(
+          ageGroup: event.ageGroup,
+          gender: event.gender,
+          course: event.course,
+          distance: event.distance,
+          stroke: event.stroke,
+        )] = event;
+      }
+
+      final flat = (decoded['flat_standards'] as List? ?? [])
+          .map(
+            (item) => UsaTimeStandard.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+
+      return UsaMotivationalStandardsCatalog._(
+        bundle: bundle,
+        eventsByKey: eventsByKey,
+        flatStandards: flat,
+      );
+    } catch (_) {
+      // Incomplete GoDaddy/web zip must not block sign-in.
+      return empty();
+    }
   }
 
   List<UsaMotivationalEventStandard> get events => bundle.events;
