@@ -42,6 +42,7 @@ call :CheckFile "STRIPE-BILLING-STEPS.txt"
 call :CheckFile "TURN-ON-STRIPE-BILLING.bat"
 call :CheckFile "GET-STRIPE-BILLING.bat"
 call :CheckFile "swimiq\DEPLOY-STRIPE-NOW.cmd"
+call :CheckFile "swimiq\scripts\deploy-stripe-functions.mjs"
 
 echo.
 if "%MISSING%"=="1" goto :MissingFiles
