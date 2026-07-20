@@ -57,6 +57,14 @@ class _VideoAnalysisResultsScreenState
         _results = results;
         _loading = false;
       });
+      // Sync Elite coaching into AI Coach / Passport (no race notes needed).
+      if (results.hasReport) {
+        unawaited(
+          ref
+              .read(swimmerDataProvider.notifier)
+              .persistEliteCoachReport(results),
+        );
+      }
       // Non-blocking: Race Blueprint still works if signed URL fails.
       unawaited(_loadSignedVideoUrl());
     } catch (e) {

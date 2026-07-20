@@ -19,7 +19,8 @@ class PassportAiRecommendation {
     required this.destination,
     this.suggestedEvent,
     this.priorities = const [],
-    this.engineLabel = 'SwimIQ AI Coach · powered by your videos, notes, and race data',
+    this.engineLabel =
+        'SwimIQ AI Coach · powered by your race videos and meet data',
   });
 
   final String headline;
@@ -39,34 +40,44 @@ class PassportAiRecommendation {
     final analyses = data.userFacingVideoAnalyses;
     final unanalyzed = _unanalyzedVideos(videos, analyses);
 
+    // Prefer an existing coaching report so AI Coach never looks empty
+    // after Elite analysis already succeeded.
+    if (analyses.isNotEmpty) {
+      final latest = _latestAnalysis(analyses);
+      final priorities = latest?.topPriorities ?? const <String>[];
+      final event =
+          snapshot.latestAnalysisEvent ??
+          latest?.analysisJson?['event']?.toString();
+      final detail = priorities.isNotEmpty
+          ? priorities.take(3).join('\n')
+          : (snapshot.nextFocus.trim().isNotEmpty
+              ? snapshot.nextFocus
+              : (latest?.summary.trim().isNotEmpty == true
+                  ? latest!.summary.trim()
+                  : 'Open your latest coaching report for race cues and drills.'));
+
+      return PassportAiRecommendation(
+        headline: 'AI Coach — current focus',
+        detail: detail,
+        actionLabel: 'View AI Coach feedback',
+        destination: PassportHubDestination.aiCoach,
+        suggestedEvent: event,
+        priorities: priorities,
+      );
+    }
+
     if (unanalyzed.isNotEmpty) {
       final video = unanalyzed.first;
       return PassportAiRecommendation(
         headline: 'Recommended next AI analysis',
         detail:
-            'Run coaching analysis on "${video.displayTitle}". '
-            'Add race notes on upload so the AI Coach can rank your top 3 practice priorities.',
+            'Run Elite coaching analysis on "${video.displayTitle}" in Video Lab. '
+            'SwimIQ builds practice priorities automatically from the race video.',
         actionLabel: 'Analyze in Video Lab',
         destination: PassportHubDestination.videoLab,
         suggestedEvent: video.eventLabel,
-        priorities: snapshot.nextFocus.isNotEmpty ? [snapshot.nextFocus] : const [],
-      );
-    }
-
-    if (analyses.isNotEmpty) {
-      final latest = _latestAnalysis(analyses);
-      final priorities = latest?.topPriorities ?? const <String>[];
-      final event = snapshot.latestAnalysisEvent ?? latest?.analysisJson?['event']?.toString();
-
-      return PassportAiRecommendation(
-        headline: 'AI Coach — current focus',
-        detail: priorities.isNotEmpty
-            ? priorities.take(3).join('\n')
-            : snapshot.nextFocus,
-        actionLabel: 'View AI Coach feedback',
-        destination: PassportHubDestination.aiCoach,
-        suggestedEvent: event,
-        priorities: priorities,
+        priorities:
+            snapshot.nextFocus.isNotEmpty ? [snapshot.nextFocus] : const [],
       );
     }
 
@@ -75,7 +86,8 @@ class PassportAiRecommendation {
       return PassportAiRecommendation(
         headline: 'Ready for AI Coach review',
         detail:
-            '${video.displayTitle} is uploaded. Run SwimIQ analysis to turn your notes into drills and race prep.',
+            '${video.displayTitle} is uploaded. Run Elite analysis in Video Lab '
+            'to build your coaching report and top practice priorities.',
         actionLabel: 'Run analysis in Video Lab',
         destination: PassportHubDestination.videoLab,
         suggestedEvent: video.eventLabel,
@@ -86,9 +98,8 @@ class PassportAiRecommendation {
     return PassportAiRecommendation(
       headline: 'Start your AI Coach profile',
       detail:
-          'Upload a $focus video in Video Lab with short race notes '
-          '(start, underwater, strokes, breathing, finish). '
-          'SwimDNA™ and Race Intelligence™ use that data for your next move.',
+          'Upload a $focus race video in Video Lab, then run Elite analysis. '
+          'SwimIQ reads the swim and builds your coaching report automatically.',
       actionLabel: 'Go to Video Lab',
       destination: PassportHubDestination.videoLab,
       suggestedEvent: focus,

@@ -84,6 +84,7 @@ class SwimVideoAnalysis {
     'swimiq-v1-notes-mediapipe',
     'swimiq-v2-gemini',
     'swimiq-v2-gemini-mediapipe',
+    'swimiq-elite-v2',
   };
 
   /// Old rule-based engine stored in Supabase before notes-driven V1.

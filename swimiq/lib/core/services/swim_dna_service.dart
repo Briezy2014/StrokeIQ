@@ -118,7 +118,7 @@ class SwimDnaService {
     final growthEdges = <String>[
       snapshot.nextFocus,
       if (snapshot.videoCount == 0)
-        'Add a race video so AI Coach can rank your top practice priorities.',
+        'Add a race video and run Elite analysis so AI Coach can rank practice priorities.',
       if (snapshot.analysisCount == 0 && snapshot.videoCount > 0)
         'Run AI analysis on your latest upload to unlock coaching DNA.',
       if (data.goals.isEmpty) 'Set a goal event to sharpen training focus.',

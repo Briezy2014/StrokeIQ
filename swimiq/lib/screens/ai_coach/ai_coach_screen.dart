@@ -86,7 +86,9 @@ class AiCoachScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            recommendation.detail,
+                            'Run Elite analysis on a race video in Video Lab. '
+                            'SwimIQ builds this coaching report automatically — '
+                            'you do not need to add race notes.',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   height: 1.45,
                                 ),
@@ -99,7 +101,7 @@ class AiCoachScreen extends ConsumerWidget {
                               Navigator.of(context).popUntil((route) => route.isFirst);
                             },
                             icon: const Icon(Icons.videocam_outlined),
-                            label: const Text('Upload video in Video Lab'),
+                            label: const Text('Open Video Lab'),
                           ),
                         ],
                       ),

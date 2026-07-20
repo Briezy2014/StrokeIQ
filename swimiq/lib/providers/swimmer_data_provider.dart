@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/coaching/elite_coach_report_mapper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/utils/supabase_table_errors.dart';
@@ -17,6 +18,7 @@ import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
 import '../data/models/swim_schedule_entry.dart';
 import '../data/models/swimmer_profile.dart';
+import '../data/models/video_engine_v2/analysis_results.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
 import 'app_providers.dart';
@@ -410,6 +412,48 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
         ),
       );
     }
+  }
+
+  /// Saves an Elite Video Lab coaching report into AI Coach history.
+  /// Race notes are not required — the Elite report is enough.
+  Future<void> persistEliteCoachReport(AnalysisResults results) async {
+    final current = state.value;
+    if (current == null) return;
+    final videoId = results.videoId?.trim();
+    if (videoId == null || videoId.isEmpty || !results.hasReport) return;
+
+    SwimVideo? video;
+    for (final candidate in current.videos) {
+      if (candidate.id == videoId) {
+        video = candidate;
+        break;
+      }
+    }
+    if (video == null) return;
+
+    final mapped = EliteCoachReportMapper.fromResults(
+      results: results,
+      swimmer: video.swimmer,
+    );
+    if (mapped == null) return;
+
+    final existing = current.analysisForVideo(videoId);
+    final existingJob =
+        existing?.analysisJson?['elite_job_id']?.toString();
+    if (existingJob != null &&
+        existingJob == results.jobId &&
+        existing?.id != null &&
+        !existing!.id!.startsWith('local-')) {
+      // Already synced this Elite job to Supabase.
+      _localAnalysesByVideoId[videoId] = existing;
+      return;
+    }
+
+    await _persistVideoAnalysis(
+      videoId: videoId,
+      video: video,
+      analysis: YouthFriendlyAnalysis.sanitizeAnalysis(mapped),
+    );
   }
 
   Future<void> refresh() async {

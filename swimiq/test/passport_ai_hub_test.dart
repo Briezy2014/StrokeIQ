@@ -95,6 +95,62 @@ void main() {
       expect(recommendation.headline, contains('Recommended next AI analysis'));
       expect(recommendation.actionLabel, contains('Video Lab'));
       expect(recommendation.suggestedEvent, contains('50'));
+      expect(recommendation.detail.toLowerCase(), isNot(contains('race notes')));
+      expect(recommendation.detail.toLowerCase(), contains('automatically'));
+    });
+
+    test('prefers existing analysis over another unanalyzed upload', () {
+      final recommendation = PassportAiRecommendation.build(
+        data: _baseData(
+          videos: [
+            SwimVideo(
+              id: 'video-done',
+              swimmer: 'Aspyn',
+              storagePath: 'Aspyn/done.mp4',
+              title: 'Fly 1',
+              stroke: 'Butterfly',
+              distance: '50',
+              course: 'LCM',
+            ),
+            SwimVideo(
+              id: 'video-pending',
+              swimmer: 'Aspyn',
+              storagePath: 'Aspyn/pending.mp4',
+              title: 'Fly 2',
+              stroke: 'Butterfly',
+              distance: '50',
+              course: 'LCM',
+            ),
+          ],
+          analyses: [
+            SwimVideoAnalysis(
+              swimVideoId: 'video-done',
+              swimmer: 'Aspyn',
+              summary: 'Elite butterfly report',
+              strengths: 'Timing looks connected',
+              improvements: 'Kick on entry',
+              techniqueScore: 82,
+              paceScore: 80,
+              overallScore: 81,
+              analysisJson: {
+                'engine': 'swimiq-elite-v2',
+                'event': '50 Butterfly LCM',
+                'top_3_priorities': ['Kick on entry'],
+                'sections': {
+                  'Quick pro from this video': 'Timing looks connected',
+                  'Quick con from this video': 'Kick on entry',
+                },
+              },
+            ),
+          ],
+        ),
+        swimmer: 'Aspyn',
+      );
+
+      expect(recommendation.headline, contains('AI Coach'));
+      expect(recommendation.destination, PassportHubDestination.aiCoach);
+      expect(recommendation.priorities, contains('Kick on entry'));
+      expect(recommendation.detail.toLowerCase(), isNot(contains('race notes')));
     });
 
     test('surfaces latest AI priorities when analysis exists', () {
