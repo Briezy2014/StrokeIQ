@@ -16,8 +16,6 @@ import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deflateRawSync } from 'node:zlib';
-
 const PROJECT_REF = 'bryurwyeosbffvfpdbv';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FUNCTIONS_DIR = path.join(ROOT, 'supabase', 'functions');
