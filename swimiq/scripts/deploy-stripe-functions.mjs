@@ -179,7 +179,7 @@ async function deployFunction(token, { slug, verifyJwt }) {
   );
   form.append(
     'file',
-    new Blob([zipBuf], { type: 'application/zip' }),
+    new Blob([new Uint8Array(zipBuf)], { type: 'application/zip' }),
     `${slug}.zip`,
   );
 
