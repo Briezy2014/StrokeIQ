@@ -47,7 +47,25 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
       theme: buildAppTheme(),
       home: authAsync.when(
         loading: () => const SplashScreen(),
-        error: (error, _) => _ConfigErrorScreen(message: error.toString()),
+        error: (error, _) => _AuthRecoveryScreen(
+          message: error.toString(),
+          onRetry: () async {
+            final auth = ref.read(authServiceProvider);
+            final refreshed = await auth.tryRefreshSession();
+            if (!refreshed) {
+              try {
+                await auth.signOutLocal();
+              } catch (_) {}
+            }
+            ref.invalidate(authStateProvider);
+          },
+          onContinueToLogin: () async {
+            try {
+              await ref.read(authServiceProvider).signOutLocal();
+            } catch (_) {}
+            ref.invalidate(authStateProvider);
+          },
+        ),
         data: (authState) {
           final session = authState.session;
           if (session == null) {
@@ -106,9 +124,7 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
 }
 
 class _ConfigErrorScreen extends StatelessWidget {
-  const _ConfigErrorScreen({this.message});
-
-  final String? message;
+  const _ConfigErrorScreen();
 
   @override
   Widget build(BuildContext context) {
@@ -128,16 +144,15 @@ class _ConfigErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                message ??
-                    (kDebugMode
-                        ? 'Local Chrome builds need Supabase keys.\n\n'
-                          '1. Copy .env.example to .env and add your keys\n'
-                          '2. Run: flutter pub get\n'
-                          '3. Run: flutter run -d chrome --dart-define-from-file=.env\n\n'
-                          'Or double-click LAUNCH-CHROME.bat / REVIEW-NOW.bat'
-                        : 'This build is missing its cloud connection settings. '
-                          'If you installed SwimIQ from the App Store, contact '
-                          'support@swimiqapp.com.'),
+                kDebugMode
+                    ? 'Local Chrome builds need Supabase keys.\n\n'
+                      '1. Copy .env.example to .env and add your keys\n'
+                      '2. Run: flutter pub get\n'
+                      '3. Run: flutter run -d chrome --dart-define-from-file=.env\n\n'
+                      'Or double-click LAUNCH-CHROME.bat / REVIEW-NOW.bat'
+                    : 'This build is missing its cloud connection settings. '
+                      'If you installed SwimIQ from the App Store, contact '
+                      'support@swimiqapp.com.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -147,5 +162,89 @@ class _ConfigErrorScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Recoverable auth/network failure — never confuse this with missing .env keys.
+class _AuthRecoveryScreen extends StatelessWidget {
+  const _AuthRecoveryScreen({
+    required this.message,
+    required this.onRetry,
+    required this.onContinueToLogin,
+  });
+
+  final String message;
+  final Future<void> Function() onRetry;
+  final Future<void> Function() onContinueToLogin;
+
+  @override
+  Widget build(BuildContext context) {
+    final friendly = _friendlyAuthError(message);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SwimIqFullLockup(width: 200, borderRadius: 16),
+              const SizedBox(height: 20),
+              Text(
+                'Connection hiccup',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                friendly,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textDark.withValues(alpha: 0.85),
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => onRetry(),
+                child: const Text('Retry connection'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: () => onContinueToLogin(),
+                child: const Text('Continue to sign in'),
+              ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textDark.withValues(alpha: 0.55),
+                      ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              const SwimIqCopyrightLine(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _friendlyAuthError(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('failed to fetch') ||
+        lower.contains('authretryablefetchexception') ||
+        lower.contains('clientexception') ||
+        lower.contains('socket') ||
+        lower.contains('network')) {
+      return 'SwimIQ could not refresh your session (network blip or '
+          'Supabase temporarily unreachable).\n\n'
+          'Check Wi‑Fi, then Retry — or Continue to sign in again.';
+    }
+    return 'SwimIQ hit a temporary sign-in problem.\n\n'
+        'Tap Retry, or Continue to sign in again.';
   }
 }
