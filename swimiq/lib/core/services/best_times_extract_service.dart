@@ -17,7 +17,11 @@ class BestTimesExtractException implements Exception {
   String toString() => message;
 }
 
-/// Reads many PB rows from a Best Times History screenshot via Elite/Gemini.
+/// Reads many PB rows from a Best Times History screenshot.
+///
+/// Prefer the Supabase Edge Function (works on swimiqapp.com and local without
+/// Elite). Fall back to the local Elite Gemini endpoint when the cloud path
+/// is unavailable.
 class BestTimesExtractService {
   BestTimesExtractService({
     http.Client? client,
@@ -41,30 +45,73 @@ class BestTimesExtractService {
     final mime = _mimeFromName(fileName);
     final imageBase64 = base64Encode(bytes);
 
+    BestTimesExtractException? edgeError;
+    try {
+      return await _extractViaEdge(
+        imageBase64: imageBase64,
+        mimeType: mime,
+        courseHint: courseHint,
+      );
+    } on BestTimesExtractException catch (e) {
+      // Auth / empty-photo errors should not silently fall through to Elite.
+      if (e.errorCode == 'AUTH_REQUIRED' ||
+          e.errorCode == 'NO_TIMES_FOUND' ||
+          e.errorCode == 'BAD_RESPONSE') {
+        rethrow;
+      }
+      edgeError = e;
+    } catch (e) {
+      edgeError = BestTimesExtractException(
+        'Cloud photo reader failed: $e',
+        errorCode: 'EDGE_FAILED',
+      );
+    }
+
+    BestTimesExtractException? eliteError;
     try {
       return await _extractViaElite(
         imageBase64: imageBase64,
         mimeType: mime,
         courseHint: courseHint,
       );
-    } on BestTimesExtractException catch (eliteError) {
-      // Fall through to Supabase edge function when Elite is offline.
-      if (eliteError.errorCode == 'SERVER_UNAVAILABLE' ||
-          eliteError.errorCode == 'AUTH_REQUIRED') {
-        try {
-          return await _extractViaEdge(
-            imageBase64: imageBase64,
-            mimeType: mime,
-            courseHint: courseHint,
-          );
-        } on BestTimesExtractException {
-          rethrow;
-        } catch (_) {
-          throw eliteError;
-        }
-      }
-      rethrow;
+    } on BestTimesExtractException catch (e) {
+      eliteError = e;
+    } catch (e) {
+      eliteError = BestTimesExtractException(
+        'Could not reach the Elite server to read this photo.',
+        errorCode: 'SERVER_UNAVAILABLE',
+      );
     }
+
+    throw BestTimesExtractException(
+      _combinedFailureMessage(edgeError: edgeError, eliteError: eliteError),
+      errorCode: edgeError.errorCode ?? eliteError.errorCode ?? 'EXTRACT_FAILED',
+    );
+  }
+
+  static String _combinedFailureMessage({
+    BestTimesExtractException? edgeError,
+    BestTimesExtractException? eliteError,
+  }) {
+    final edge = edgeError?.message.trim() ?? '';
+    final elite = eliteError?.message.trim() ?? '';
+    if (edge.isNotEmpty &&
+        (edge.toLowerCase().contains('gemini') ||
+            edge.toLowerCase().contains('not configured') ||
+            edge.toLowerCase().contains('deploy'))) {
+      return edge;
+    }
+    if (elite.isNotEmpty &&
+        eliteError?.errorCode != 'SERVER_UNAVAILABLE' &&
+        !elite.toLowerCase().contains('could not reach')) {
+      return elite;
+    }
+    return 'Could not read best times from this photo.\n\n'
+        '1. Deploy Supabase function extract-best-times '
+        '(GEMINI_API_KEY must be in Edge Function secrets), or\n'
+        '2. Run START-SWIMIQ-WITH-ELITE.bat and keep Elite open, then retry.\n\n'
+        '${edge.isNotEmpty ? 'Cloud: $edge\n' : ''}'
+        '${elite.isNotEmpty ? 'Elite: $elite' : ''}'.trim();
   }
 
   Future<BestTimesExtractResponse> _extractViaElite({
@@ -106,7 +153,7 @@ class BestTimesExtractService {
               if (courseHint != null) 'course_hint': courseHint,
             }),
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 12));
     } catch (_) {
       throw BestTimesExtractException(
         'Could not reach the Elite server to read this photo.',
@@ -122,20 +169,47 @@ class BestTimesExtractService {
     required String mimeType,
     String? courseHint,
   }) async {
-    final response = await _supabase.functions.invoke(
-      edgeFunctionName,
-      body: {
-        'image_base64': imageBase64,
-        'mime_type': mimeType,
-        if (courseHint != null) 'course_hint': courseHint,
-      },
-    );
+    FunctionResponse response;
+    try {
+      response = await _supabase.functions.invoke(
+        edgeFunctionName,
+        body: {
+          'image_base64': imageBase64,
+          'mime_type': mimeType,
+          if (courseHint != null) 'course_hint': courseHint,
+        },
+      );
+    } on FunctionException catch (e) {
+      final details = e.details;
+      String message = 'Cloud photo reader failed (${e.status}).';
+      if (details is Map) {
+        message = (details['message'] ?? details['error'] ?? message).toString();
+      } else if (details != null) {
+        message = details.toString();
+      }
+      if (e.status == 404 || message.toLowerCase().contains('not found')) {
+        throw BestTimesExtractException(
+          'Cloud photo reader is not deployed. '
+          'Run: supabase functions deploy extract-best-times',
+          errorCode: 'EDGE_NOT_DEPLOYED',
+        );
+      }
+      throw BestTimesExtractException(
+        _friendlyExtractMessage(message),
+        errorCode: 'EDGE_FAILED',
+      );
+    }
+
     if (response.status != 200) {
       final data = response.data;
       final message = data is Map
-          ? (data['message'] ?? data['error'] ?? 'Photo extract failed').toString()
+          ? (data['message'] ?? data['error'] ?? 'Photo extract failed')
+              .toString()
           : 'Photo extract failed (${response.status}).';
-      throw BestTimesExtractException(message, errorCode: 'EDGE_FAILED');
+      throw BestTimesExtractException(
+        _friendlyExtractMessage(message),
+        errorCode: 'EDGE_FAILED',
+      );
     }
     final data = response.data;
     if (data is! Map) {
@@ -218,13 +292,17 @@ class BestTimesExtractService {
         lower.contains('gemini-2.5-flash') ||
         lower.contains('gemini-2.0-flash')) {
       return 'Google retired the old Gemini model for photo reading. '
-          'Restart SwimIQ with START-SWIMIQ-WITH-ELITE.bat (pulls the fix that uses '
-          'gemini-3.5-flash), then tap Re-read photo.';
+          'Redeploy extract-best-times or restart Elite with the latest code.';
     }
     if (lower.contains('missing_api_key') ||
         lower.contains('gemini_api_key is not configured')) {
-      return 'GEMINI_API_KEY is not configured on the Elite server. '
-          'Add it to services/video_analysis/.env and restart Elite.';
+      return 'Add GEMINI_API_KEY to Supabase Edge Function secrets '
+          '(and services/video_analysis/.env for local Elite), then retry.';
+    }
+    if (lower.contains('failed to fetch') ||
+        lower.contains('clientexception') ||
+        lower.contains('network')) {
+      return 'Network error talking to the photo reader. Check Wi‑Fi and try again.';
     }
     return raw;
   }
