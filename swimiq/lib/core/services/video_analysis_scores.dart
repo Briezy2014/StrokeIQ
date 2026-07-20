@@ -103,26 +103,24 @@ abstract final class VideoAnalysisScores {
         'from an old attempt before the server was fixed.';
   }
 
-  /// Rewrites outdated server errors saved from older deploys (e.g. bogus GEMINI_MODEL advice).
+  /// Rewrites outdated/ops server errors into customer-safe copy.
   static String sanitizeStoredGeminiMessage(String raw) {
     final lower = raw.toLowerCase();
     if (lower.contains('worker_resource_limit') ||
         lower.contains('status: 546') ||
-        lower.contains('not having enough compute resources')) {
-      return 'Previous attempt failed (server was out of date). '
-          'If KARA-WHY-GEMINI-FAILS.bat shows stream-v5, tap Analyze again. '
-          'Use clips under 30 seconds / 25 MB.';
-    }
-    if (lower.contains('delete gemini_model') ||
+        lower.contains('not having enough compute resources') ||
+        lower.contains('delete gemini_model') ||
         lower.contains('gemini_model secret') ||
-        (lower.contains('model retired') && lower.contains('gemini-1.5'))) {
-      return 'This error is from an old server version — you do NOT need a GEMINI_MODEL secret. '
-          'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
-          'then tap Analyze again.';
-    }
-    if (lower.contains('gemini-1.5-flash') || lower.contains('gemini-1.5-pro')) {
-      return 'Your server tried retired gemini-1.5. Run KARA-GEMINI-FIX-NOW.bat, '
-          'wait 2 minutes, tap Analyze again (only GEMINI_API_KEY needed in Supabase).';
+        lower.contains('gemini-1.5') ||
+        lower.contains('server needs an update') ||
+        lower.contains('redeploy') ||
+        (lower.contains('gemini-2.0-flash') &&
+            (lower.contains('retired') || lower.contains('limit: 0'))) ||
+        lower.contains('.bat') ||
+        lower.contains('gemini_api_key')) {
+      return 'AI coaching is temporarily unavailable. '
+          'Try a clip under 30 seconds, then tap Analyze again. '
+          'If it keeps failing, email support@swimiqapp.com.';
     }
     if (lower.contains('high demand') ||
         lower.contains('503') ||
@@ -130,13 +128,12 @@ abstract final class VideoAnalysisScores {
         (lower.contains('unavailable') &&
             !lower.contains('video analysis was unavailable') &&
             !lower.contains('gemini video analysis was unavailable'))) {
-      return 'Google Gemini is temporarily busy. Wait 1-2 minutes and tap Analyze again — '
-          'the server tries multiple models with automatic retries.';
+      return 'AI coaching is temporarily busy. Wait 1–2 minutes and tap Analyze again.';
     }
-    if (lower.contains('gemini-2.0-flash') &&
-        (lower.contains('retired') || lower.contains('limit: 0'))) {
-      return 'Google retired gemini-2.0-flash. Run KARA-GEMINI-FIX-NOW.bat to deploy the '
-          'auto-model server, wait 2 minutes, then tap Analyze again.';
+    if (lower.contains('.bat') ||
+        lower.contains('127.0.0.1') ||
+        lower.contains('supabase secrets')) {
+      return 'Analysis is temporarily unavailable. Please try again shortly.';
     }
     return raw;
   }
@@ -159,17 +156,16 @@ abstract final class VideoAnalysisScores {
     VideoAnalysisServerHealth? serverHealth,
   }) {
     if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
-      return 'Ready — tap Run AI Swim Analysis above. Gemini will watch this clip; MediaPipe '
-          'will scan body lines in Chrome when available (rope/non-pool clips may skip pose).';
+      return 'Ready — tap Analyze above for AI coaching on this clip.';
     }
     return awaitingSummary;
   }
 
   static const awaitingSummary =
-      'Gemini has not watched this clip yet — complete server setup, then tap Analyze again.';
+      'AI has not watched this clip yet — tap Analyze to generate coaching.';
 
   static const awaitingLegend =
-      'Video not analyzed yet. Scores and coaching below are placeholders until Gemini runs on your server.';
+      'Video not analyzed yet. Scores below are placeholders until AI coaching runs.';
 
   static String legendFor(
     SwimVideoAnalysis analysis, {
@@ -177,8 +173,7 @@ abstract final class VideoAnalysisScores {
   }) {
     if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
       if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
-        return 'Server is fixed — old errors are saved from a previous try. '
-            'Tap Run AI Swim Analysis above for real Gemini + MediaPipe results.';
+        return 'A previous attempt did not finish. Tap Analyze above for a fresh AI coaching report.';
       }
       return awaitingLegend;
     }
@@ -186,17 +181,15 @@ abstract final class VideoAnalysisScores {
       return 'AI coach ratings from your video (0 = major limiters, 100 = elite D1-level execution).';
     }
     return 'Estimated ratings from your upload notes — not frame-by-frame video. '
-        'Add upload notes (start, strokes, finish) or deploy Gemini for video scores.';
+        'Add race notes or tap Analyze for AI video coaching.';
   }
 
   static const deployStepsBody =
-      'You do NOT need Android Studio. API key is from aistudio.google.com/apikey '
-      '(not Android Studio).\n\n'
-      'Step 1: FIX-VIDEO-DATABASE.bat or paste SQL in Supabase (once).\n\n'
-      'Step 2: GEMINI_API_KEY in Supabase secrets only — no GEMINI_MODEL.\n\n'
-      'Step 3: KARA-GEMINI-FIX-NOW.bat — must show server v5 after deploy.\n\n'
-      'Step 4: KARA-WHY-GEMINI-FAILS.bat if Analyze still fails.\n\n'
-      'Step 5: Tap Analyze again — clips under 25 MB / ~30 sec work best on web.';
+      'AI coaching is not ready for this clip yet.\n\n'
+      '• Use a short race clip (about 30 seconds or less)\n'
+      '• Keep the file under 25 MB when possible\n'
+      '• Stay signed in and tap Analyze again\n\n'
+      'If it still fails, email support@swimiqapp.com.';
 
   static String overallSummary(
     SwimVideoAnalysis analysis, {

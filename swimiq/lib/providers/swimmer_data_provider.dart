@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/coaching/elite_coach_report_mapper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/utils/supabase_table_errors.dart';
@@ -18,7 +17,6 @@ import '../data/models/swim_goal.dart';
 import '../data/models/swim_pose_metrics.dart';
 import '../data/models/swim_schedule_entry.dart';
 import '../data/models/swimmer_profile.dart';
-import '../data/models/video_engine_v2/analysis_results.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
 import 'app_providers.dart';
@@ -252,112 +250,56 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   String _friendlyGeminiFallbackMessage(String raw) {
     final extracted = _extractGeminiErrorDetail(raw);
     final lower = extracted.toLowerCase();
-    if (lower.contains('rejected model') ||
-        (lower.contains('tried:') && lower.contains('gemini-2.5'))) {
-      return 'Google rejected one Gemini model for your API key — the server tries others '
-          'automatically. Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v7, wait 2 minutes, '
-          'then tap Run AI Swim Analysis again. If it still fails, create a NEW key at '
-          'aistudio.google.com/apikey and update GEMINI_API_KEY in Supabase secrets.';
-    }
-    if (lower.contains('gemini_api_key is not configured') ||
-        lower.contains('gemini_api_key missing') ||
-        (lower.contains('not configured') && lower.contains('gemini_api_key'))) {
-      return 'Gemini is not configured yet — add GEMINI_API_KEY in Supabase '
-          '(see swimiq/docs/GEMINI_SETUP.md). Notes-based coaching saved for now.';
-    }
-    if (lower.contains('inline analysis') ||
-        lower.contains('max ~18') ||
-        lower.contains('max ~15')) {
-      return 'Video analysis server needs an update — redeploy the analyze-swim-video '
-          'edge function (see swimiq/docs/GEMINI_SETUP.md). After deploy, clips up to '
-          '~100 MB work automatically. Notes-based coaching saved for now.';
-    }
     if (lower.contains('too large')) {
-      return 'Video is too large for analysis (max ~50 MB). Trim the clip and re-run. '
-          'Notes-based coaching saved for now.';
+      return 'This video is too large for analysis. Trim it under about 50 MB '
+          'and try again. Notes-based coaching was saved for now.';
     }
-    if (lower.contains('timed out')) {
-      return 'Gemini took too long to process this clip — try a shorter video. '
-          'Notes-based coaching saved for now.';
+    if (lower.contains('timed out') ||
+        lower.contains('timeout') ||
+        lower.contains('idle_timeout') ||
+        lower.contains('504')) {
+      return 'Analysis took too long. Try a shorter clip (under 60 seconds) '
+          'and tap Analyze again. Notes-based coaching was saved for now.';
     }
     if (lower.contains('unauthorized') || lower.contains('authorization')) {
-      return 'Sign in again, then re-run analysis. Notes-based coaching saved for now.';
+      return 'Please sign in again, then re-run analysis. '
+          'Notes-based coaching was saved for now.';
     }
     if (lower.contains('could not download video')) {
-      return 'Could not load the video from storage for Gemini. Notes-based coaching saved for now.';
-    }
-    if (lower.contains('api key not valid') ||
-        lower.contains('api_key_invalid') ||
-        lower.contains('invalid api key')) {
-      return 'Your GEMINI_API_KEY is rejected by Google — create a new key at '
-          'aistudio.google.com/apikey and update Supabase Edge Function secrets.';
-    }
-    if (lower.contains('permission_denied') || lower.contains('billing')) {
-      return 'Google Gemini needs billing enabled on your Google Cloud project — '
-          'see Google AI Studio -> your key -> linked project billing.';
+      return 'Could not load this video for analysis. Try re-uploading, '
+          'then Analyze again. Notes-based coaching was saved for now.';
     }
     if (lower.contains('pgrst205') ||
-        lower.contains('swim_video_analyses') &&
-            lower.contains('could not find')) {
+        (lower.contains('swim_video_analyses') &&
+            lower.contains('could not find'))) {
       return SupabaseTableErrors.missingVideoAnalysesMessage();
-    }
-    if (lower.contains('worker_resource_limit') ||
-        lower.contains('not having enough compute resources') ||
-        lower.contains('status: 546')) {
-      return 'Your Supabase video server is OUT OF DATE (546 worker limit). '
-          'Double-click KARA-GEMINI-FIX-NOW.bat on your PC, wait for SUCCESS, '
-          'then trim clips to under 30 seconds / 25 MB and tap Analyze again. '
-          'No Android Studio needed.';
-    }
-    if (lower.contains('delete gemini_model') ||
-        lower.contains('gemini_model secret') ||
-        (lower.contains('model retired') && lower.contains('gemini-1.5'))) {
-      return 'Old server code gave bad advice — you do NOT need GEMINI_MODEL. '
-          'Only GEMINI_API_KEY in Supabase. Run KARA-GEMINI-FIX-NOW.bat, wait 2 minutes, '
-          'then tap Analyze again.';
-    }
-    if (lower.contains('timed out') || lower.contains('timeout') ||
-        lower.contains('idle_timeout') || lower.contains('504')) {
-      return 'Video analysis timed out on the server. Run KARA-GEMINI-FIX-NOW.bat to deploy '
-          'stream-v6 (async analysis), then try a clip under 60 seconds / 25 MB.';
     }
     if (lower.contains('high demand') ||
         lower.contains('unavailable') ||
         lower.contains('503') ||
-        lower.contains('is busy right now')) {
-      return 'Google Gemini is temporarily busy (high demand). '
-          'Wait 1-2 minutes and tap Analyze again — SwimIQ tries multiple models automatically.';
-    }
-    if (lower.contains('resource_exhausted') ||
+        lower.contains('is busy right now') ||
+        lower.contains('resource_exhausted') ||
         lower.contains('quota') ||
         lower.contains('rate limit') ||
-        lower.contains('limit: 0') ||
-        lower.contains('gemini-2.0-flash')) {
-      return 'Google Gemini rate limit on your API key. Wait 2-3 minutes, then tap Run AI Swim Analysis again. '
-          'If this keeps happening: create a NEW key at aistudio.google.com/apikey (fresh Google Cloud project) '
-          'and update GEMINI_API_KEY in Supabase Edge Function secrets.';
+        lower.contains('limit: 0')) {
+      return 'AI coaching is busy right now. Wait a minute or two, '
+          'then tap Analyze again.';
     }
-    if (lower.contains('gemini-1.5')) {
-      return 'Old error from a retired gemini-1.5 model — ignore this banner. '
-          'Run KARA-GEMINI-FIX-NOW.bat for sync-v9, wait 2 minutes, tap Run AI Swim Analysis again.';
+    if (lower.contains('worker_resource_limit') ||
+        lower.contains('not having enough compute resources') ||
+        lower.contains('status: 546') ||
+        (lower.contains('not found') && lower.contains('function')) ||
+        lower.contains('gemini_api_key') ||
+        lower.contains('api key') ||
+        lower.contains('permission_denied') ||
+        lower.contains('billing') ||
+        lower.contains('gemini')) {
+      return 'AI video analysis is temporarily unavailable. '
+          'Notes-based coaching was saved. Try again shortly, '
+          'or email support@swimiqapp.com if it keeps failing.';
     }
-    if (lower.contains('no longer available') ||
-        lower.contains('not_found') ||
-        lower.contains('tried:')) {
-      return 'Google rejected the Gemini model for your API key. '
-          'Run KARA-GEMINI-FIX-NOW.bat to deploy stream-v7, wait 2 minutes, tap Analyze again. '
-          'If needed: create a NEW key at aistudio.google.com/apikey and update '
-          'GEMINI_API_KEY in Supabase (no GEMINI_MODEL secret needed).';
-    }
-    if (lower.contains('gemini api error')) {
-      return 'Google Gemini rejected the request — see Technical error below. '
-          'Often a bad API key or billing on the Google project.';
-    }
-    if (lower.contains('not found') && lower.contains('function')) {
-      return 'analyze-swim-video is not deployed — double-click KARA-GEMINI-FIX-NOW.bat.';
-    }
-    return 'Gemini video analysis was unavailable — notes-based coaching saved. '
-        'Read the orange banner for fix steps, or Technical error below.';
+    return 'AI video analysis was unavailable — notes-based coaching was saved. '
+        'Try Analyze again in a few minutes.';
   }
 
   /// Pulls the nested `error:` text from Supabase FunctionException strings.
@@ -412,48 +354,6 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
         ),
       );
     }
-  }
-
-  /// Saves an Elite Video Lab coaching report into AI Coach history.
-  /// Race notes are not required — the Elite report is enough.
-  Future<void> persistEliteCoachReport(AnalysisResults results) async {
-    final current = state.value;
-    if (current == null) return;
-    final videoId = results.videoId?.trim();
-    if (videoId == null || videoId.isEmpty || !results.hasReport) return;
-
-    SwimVideo? video;
-    for (final candidate in current.videos) {
-      if (candidate.id == videoId) {
-        video = candidate;
-        break;
-      }
-    }
-    if (video == null) return;
-
-    final mapped = EliteCoachReportMapper.fromResults(
-      results: results,
-      swimmer: video.swimmer,
-    );
-    if (mapped == null) return;
-
-    final existing = current.analysisForVideo(videoId);
-    final existingJob =
-        existing?.analysisJson?['elite_job_id']?.toString();
-    if (existingJob != null &&
-        existingJob == results.jobId &&
-        existing?.id != null &&
-        !existing!.id!.startsWith('local-')) {
-      // Already synced this Elite job to Supabase.
-      _localAnalysesByVideoId[videoId] = existing;
-      return;
-    }
-
-    await _persistVideoAnalysis(
-      videoId: videoId,
-      video: video,
-      analysis: YouthFriendlyAnalysis.sanitizeAnalysis(mapped),
-    );
   }
 
   Future<void> refresh() async {

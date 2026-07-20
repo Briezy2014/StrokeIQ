@@ -19,10 +19,9 @@ class BestTimesExtractException implements Exception {
 
 /// Reads many PB rows from a Best Times History screenshot.
 ///
-/// Tries, in order:
-/// 1) Local Elite (`/v1/extract-best-times`) when `/health` is up — long timeout
-/// 2) Dedicated Edge Function `extract-best-times`
-/// 3) Already-deployed `analyze-swim-video` with `extract_best_times: true`
+/// Prefer the Supabase Edge Function (works on swimiqapp.com and local without
+/// Elite). Fall back to the local Elite Gemini endpoint when the cloud path
+/// is unavailable.
 class BestTimesExtractService {
   BestTimesExtractService({
     http.Client? client,
@@ -33,9 +32,6 @@ class BestTimesExtractService {
         _eliteBaseUrl = eliteBaseUrl;
 
   static const edgeFunctionName = 'extract-best-times';
-  static const analyzeFunctionName = 'analyze-swim-video';
-  static const eliteTimeout = Duration(seconds: 90);
-  static const edgeTimeout = Duration(seconds: 90);
 
   final http.Client _client;
   final SupabaseClient _supabase;
@@ -48,105 +44,71 @@ class BestTimesExtractService {
   }) async {
     final mime = _mimeFromName(fileName);
     final imageBase64 = base64Encode(bytes);
-    final errors = <String>[];
 
-    // 1) Local Elite — preferred on Windows when START-SWIMIQ-WITH-ELITE is open.
-    if (await _eliteHealthOk()) {
-      try {
-        return await _extractViaElite(
-          imageBase64: imageBase64,
-          mimeType: mime,
-          courseHint: courseHint,
-        );
-      } on BestTimesExtractException catch (e) {
-        if (e.errorCode == 'AUTH_REQUIRED' ||
-            e.errorCode == 'NO_TIMES_FOUND' ||
-            e.errorCode == 'BAD_RESPONSE') {
-          rethrow;
-        }
-        errors.add('Elite: ${e.message}');
-      } catch (e) {
-        errors.add('Elite: $e');
-      }
-    } else {
-      errors.add(
-        'Elite: not running on ${Env.analysisApiBaseUrl} '
-        '(start START-SWIMIQ-WITH-ELITE.bat).',
-      );
-    }
-
-    // 2) Dedicated extract-best-times Edge Function.
+    BestTimesExtractException? edgeError;
     try {
       return await _extractViaEdge(
-        functionName: edgeFunctionName,
         imageBase64: imageBase64,
         mimeType: mime,
         courseHint: courseHint,
       );
     } on BestTimesExtractException catch (e) {
+      // Auth / empty-photo errors should not silently fall through to Elite.
       if (e.errorCode == 'AUTH_REQUIRED' ||
           e.errorCode == 'NO_TIMES_FOUND' ||
           e.errorCode == 'BAD_RESPONSE') {
         rethrow;
       }
-      errors.add('Cloud extract-best-times: ${e.message}');
+      edgeError = e;
     } catch (e) {
-      errors.add('Cloud extract-best-times: $e');
+      edgeError = BestTimesExtractException(
+        'Cloud photo reader failed: $e',
+        errorCode: 'EDGE_FAILED',
+      );
     }
 
-    // 3) analyze-swim-video (usually already deployed with GEMINI_API_KEY).
+    BestTimesExtractException? eliteError;
     try {
-      return await _extractViaEdge(
-        functionName: analyzeFunctionName,
+      return await _extractViaElite(
         imageBase64: imageBase64,
         mimeType: mime,
         courseHint: courseHint,
-        viaAnalyzeSwimVideo: true,
       );
     } on BestTimesExtractException catch (e) {
-      if (e.errorCode == 'AUTH_REQUIRED' ||
-          e.errorCode == 'NO_TIMES_FOUND' ||
-          e.errorCode == 'BAD_RESPONSE') {
-        rethrow;
-      }
-      errors.add('Cloud analyze-swim-video: ${e.message}');
+      eliteError = e;
     } catch (e) {
-      errors.add('Cloud analyze-swim-video: $e');
+      eliteError = BestTimesExtractException(
+        'Could not reach the Elite server to read this photo.',
+        errorCode: 'SERVER_UNAVAILABLE',
+      );
     }
 
     throw BestTimesExtractException(
-      _combinedFailureMessage(errors),
-      errorCode: 'EXTRACT_FAILED',
+      _combinedFailureMessage(edgeError: edgeError, eliteError: eliteError),
+      errorCode: edgeError.errorCode ?? eliteError.errorCode ?? 'EXTRACT_FAILED',
     );
   }
 
-  static String _combinedFailureMessage(List<String> errors) {
-    return combinedFailureMessageForTest(errors);
-  }
-
-  /// Exposed for unit tests.
-  static String combinedFailureMessageForTest(List<String> errors) {
-    return 'Could not read best times from this photo.\n\n'
-        'Do this once:\n'
-        '1. Double-click swimiq\\DEPLOY-EXTRACT-BEST-TIMES.bat '
-        '(needs GEMINI_API_KEY in Supabase Edge secrets), OR\n'
-        '2. Keep START-SWIMIQ-WITH-ELITE.bat open with GEMINI_API_KEY in '
-        'services\\video_analysis\\.env, then retry '
-        '(reading a full Best Times page can take up to a minute).\n\n'
-        '${errors.join('\n')}';
-  }
-
-  Future<bool> _eliteHealthOk() async {
-    final base = (_eliteBaseUrl ?? Env.analysisApiBaseUrl).trim();
-    if (base.isEmpty) return false;
-    try {
-      final response = await _client
-          .get(Uri.parse('$base/health'))
-          .timeout(const Duration(seconds: 2));
-      return response.statusCode == 200;
-    } catch (_) {
-      return false;
+  static String _combinedFailureMessage({
+    BestTimesExtractException? edgeError,
+    BestTimesExtractException? eliteError,
+  }) {
+    final edge = edgeError?.message.trim() ?? '';
+    final elite = eliteError?.message.trim() ?? '';
+    if (edge.isNotEmpty &&
+        (edge.toLowerCase().contains('gemini') ||
+            edge.toLowerCase().contains('not configured') ||
+            edge.toLowerCase().contains('deploy'))) {
+      return edge;
     }
+    if (elite.isNotEmpty &&
+        eliteError?.errorCode != 'SERVER_UNAVAILABLE' &&
+        !elite.toLowerCase().contains('could not reach')) {
+      return elite;
+    }
+    return 'Could not read best times from this photo. '
+        'Try a clearer screenshot, or enter times manually. '
+        'If it keeps failing, email support@swimiqapp.com.';
   }
 
   Future<BestTimesExtractResponse> _extractViaElite({
@@ -169,7 +131,10 @@ class BestTimesExtractService {
       );
     }
 
-    final uri = Uri.parse('$base/v1/extract-best-times');
+    final uri = Uri.parse(
+      '${base.endsWith('/') ? base.substring(0, base.length - 1) : base}'
+      '/v1/extract-best-times',
+    );
     http.Response response;
     try {
       response = await _client
@@ -185,17 +150,8 @@ class BestTimesExtractService {
               if (courseHint != null) 'course_hint': courseHint,
             }),
           )
-          .timeout(eliteTimeout);
-    } on Exception catch (e) {
-      final text = e.toString().toLowerCase();
-      if (text.contains('timeout') || text.contains('timed out')) {
-        throw BestTimesExtractException(
-          'Elite is still reading the photo (timed out after '
-          '${eliteTimeout.inSeconds}s). Keep Elite open and retry — '
-          'large Best Times screenshots can take a minute.',
-          errorCode: 'TIMEOUT',
-        );
-      }
+          .timeout(const Duration(seconds: 12));
+    } catch (_) {
       throw BestTimesExtractException(
         'Could not reach the Elite server to read this photo.',
         errorCode: 'SERVER_UNAVAILABLE',
@@ -206,25 +162,20 @@ class BestTimesExtractService {
   }
 
   Future<BestTimesExtractResponse> _extractViaEdge({
-    required String functionName,
     required String imageBase64,
     required String mimeType,
     String? courseHint,
-    bool viaAnalyzeSwimVideo = false,
   }) async {
     FunctionResponse response;
     try {
-      response = await _supabase.functions
-          .invoke(
-            functionName,
-            body: {
-              if (viaAnalyzeSwimVideo) 'extract_best_times': true,
-              'image_base64': imageBase64,
-              'mime_type': mimeType,
-              if (courseHint != null) 'course_hint': courseHint,
-            },
-          )
-          .timeout(edgeTimeout);
+      response = await _supabase.functions.invoke(
+        edgeFunctionName,
+        body: {
+          'image_base64': imageBase64,
+          'mime_type': mimeType,
+          if (courseHint != null) 'course_hint': courseHint,
+        },
+      );
     } on FunctionException catch (e) {
       final details = e.details;
       String message = 'Cloud photo reader failed (${e.status}).';
@@ -235,34 +186,13 @@ class BestTimesExtractService {
       }
       if (e.status == 404 || message.toLowerCase().contains('not found')) {
         throw BestTimesExtractException(
-          'Cloud photo reader "$functionName" is not deployed yet. '
-          'Run swimiq\\DEPLOY-EXTRACT-BEST-TIMES.bat',
+          'Photo import is temporarily unavailable. '
+          'Please try again later or enter times manually.',
           errorCode: 'EDGE_NOT_DEPLOYED',
-        );
-      }
-      if (message.toLowerCase().contains('storage_path is required')) {
-        throw BestTimesExtractException(
-          'Cloud video function is outdated for photo upload. '
-          'Run swimiq\\DEPLOY-EXTRACT-BEST-TIMES.bat to update analyze-swim-video.',
-          errorCode: 'EDGE_OUTDATED',
         );
       }
       throw BestTimesExtractException(
         _friendlyExtractMessage(message),
-        errorCode: 'EDGE_FAILED',
-      );
-    } on Exception catch (e) {
-      final text = e.toString();
-      if (text.toLowerCase().contains('failed to fetch') ||
-          text.toLowerCase().contains('clientexception')) {
-        throw BestTimesExtractException(
-          'Could not reach cloud function "$functionName" (not deployed or network). '
-          'Run swimiq\\DEPLOY-EXTRACT-BEST-TIMES.bat',
-          errorCode: 'EDGE_NOT_DEPLOYED',
-        );
-      }
-      throw BestTimesExtractException(
-        _friendlyExtractMessage(text),
         errorCode: 'EDGE_FAILED',
       );
     }
@@ -273,13 +203,6 @@ class BestTimesExtractService {
           ? (data['message'] ?? data['error'] ?? 'Photo extract failed')
               .toString()
           : 'Photo extract failed (${response.status}).';
-      if (message.toLowerCase().contains('storage_path is required')) {
-        throw BestTimesExtractException(
-          'Cloud video function is outdated for photo upload. '
-          'Run swimiq\\DEPLOY-EXTRACT-BEST-TIMES.bat to update analyze-swim-video.',
-          errorCode: 'EDGE_OUTDATED',
-        );
-      }
       throw BestTimesExtractException(
         _friendlyExtractMessage(message),
         errorCode: 'EDGE_FAILED',
@@ -364,20 +287,22 @@ class BestTimesExtractService {
     if (lower.contains('no longer available') ||
         lower.contains('not_found') ||
         lower.contains('gemini-2.5-flash') ||
-        lower.contains('gemini-2.0-flash')) {
-      return 'Google retired the old Gemini model for photo reading. '
-          'Redeploy with DEPLOY-EXTRACT-BEST-TIMES.bat or restart Elite.';
-    }
-    if (lower.contains('missing_api_key') ||
-        lower.contains('gemini_api_key is not configured')) {
-      return 'Add GEMINI_API_KEY to Supabase Edge Function secrets '
-          '(and services/video_analysis/.env for local Elite), then retry.';
+        lower.contains('gemini-2.0-flash') ||
+        lower.contains('missing_api_key') ||
+        lower.contains('gemini_api_key')) {
+      return 'Photo import is temporarily unavailable. '
+          'Try again shortly, or enter times manually.';
     }
     if (lower.contains('failed to fetch') ||
         lower.contains('clientexception') ||
         lower.contains('network')) {
-      return 'Network error talking to the photo reader. '
-          'Deploy functions or start Elite, then retry.';
+      return 'Network error reading this photo. Check Wi‑Fi and try again.';
+    }
+    if (lower.contains('.bat') ||
+        lower.contains('supabase') ||
+        lower.contains('127.0.0.1')) {
+      return 'Could not read best times from this photo. '
+          'Try a clearer image or enter times manually.';
     }
     return raw;
   }

@@ -70,7 +70,7 @@ class SwimIqLoginBrand extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.all(12),
                     child: Text(
-                      'Missing Aspyn logo.\nRun COPY-LOGO.bat',
+                      'SwimIQ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,

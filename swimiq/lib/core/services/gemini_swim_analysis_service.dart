@@ -16,7 +16,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-sync-v11-best-times';
+  static const currentFunctionVersion = '2026-gemini-sync-v9';
   /// Sync server returns full analysis in one HTTP response (up to ~2 min).
   static const invokeTimeout = Duration(seconds: 150);
   static const pollInterval = Duration(seconds: 3);
@@ -52,14 +52,13 @@ class GeminiSwimAnalysisService {
         data is Map &&
         data['error']?.toString().contains('storage_path') == true) {
       return VideoAnalysisServerHealth.failed(
-        'Old video server still running — run KARA-GEMINI-FIX-NOW.bat to deploy '
-        'auto-model picking (you only need GEMINI_API_KEY, not GEMINI_MODEL).',
+        'AI coaching is updating. Please try again in a few minutes.',
       );
     }
 
     if (response.status == 404) {
       return VideoAnalysisServerHealth.failed(
-        'analyze-swim-video function not deployed — run KARA-GEMINI-FIX-NOW.bat.',
+        'AI coaching is temporarily unavailable. Please try again later.',
       );
     }
 
@@ -67,12 +66,12 @@ class GeminiSwimAnalysisService {
         data is Map &&
         data['error']?.toString().toLowerCase().contains('gemini_api_key') == true) {
       return VideoAnalysisServerHealth.failed(
-        'GEMINI_API_KEY missing in Supabase → Edge Functions → Secrets.',
+        'AI coaching is temporarily unavailable. Please try again later.',
       );
     }
 
     return VideoAnalysisServerHealth.failed(
-      'Server check failed (${response.status}). Deploy analyze-swim-video.',
+      'AI coaching check failed. Please try again shortly.',
     );
   }
 
@@ -99,8 +98,8 @@ class GeminiSwimAnalysisService {
           invokeTimeout,
           onTimeout: () {
             throw GeminiAnalysisException(
-              'Video analysis timed out after ${invokeTimeout.inSeconds} seconds. '
-              'Run KARA-GEMINI-FIX-NOW.bat to deploy sync-v9, then try a clip under 30 seconds / 25 MB.',
+              'Video analysis timed out. Try a shorter clip (under 30 seconds) '
+              'and tap Analyze again.',
             );
           },
         );
@@ -122,14 +121,14 @@ class GeminiSwimAnalysisService {
       }
       if (response.status == 504) {
         throw GeminiAnalysisException(
-          'Video server timed out (504). Run KARA-GEMINI-FIX-NOW.bat to deploy sync-v9, '
-          'then try again with a clip under 30 seconds / 25 MB.',
+          'Analysis timed out. Try a shorter clip (under 30 seconds / 25 MB) '
+          'and tap Analyze again.',
         );
       }
       if (response.status == 546) {
         throw GeminiAnalysisException(
-          'WORKER_RESOURCE_LIMIT (546): video server out of date or clip too large. '
-          'Run KARA-GEMINI-FIX-NOW.bat, then use clips under 25 MB.',
+          'This clip could not be processed right now. '
+          'Try a shorter video under 25 MB, then Analyze again.',
         );
       }
       throw GeminiAnalysisException(
@@ -305,16 +304,13 @@ class VideoAnalysisServerHealth {
     String? probeError,
   }) {
     if (!isCurrentVersion) {
-      return 'Video server may need an update (version ${version ?? "unknown"}). '
-          'Run KARA-GEMINI-FIX-NOW.bat if Analyze fails.';
+      return 'AI coaching may need a moment to finish updating. '
+          'If Analyze fails, wait a minute and try again.';
     }
     if (ok) {
-      return 'Video server ready (version $version, model $geminiModel, '
-          'max $maxVideoMb MB). Tap Analyze on your clip.';
+      return 'AI coaching is ready. Tap Analyze on your clip.';
     }
-    return probeError ??
-        'Gemini model probe failed. Create a NEW key at aistudio.google.com/apikey, '
-        'update GEMINI_API_KEY in Supabase, then run KARA-GEMINI-FIX-NOW.bat.';
+    return 'AI coaching is temporarily unavailable. Please try again shortly.';
   }
 
   factory VideoAnalysisServerHealth.failed(String message) {
