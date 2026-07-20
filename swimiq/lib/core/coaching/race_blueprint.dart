@@ -86,10 +86,8 @@ class RaceBlueprintBuilder {
     final measured = phases.any((p) => p.measured);
     final footer = _footer(cues, finishFades: finishFades);
     final caption = measured
-        ? 'Effort map for this race — phases use timing from your clip. '
-            'Tap a phase to jump in the video.'
-        : 'Effort map for phone race videos — start to wall coaching for parents & coaches. '
-            'Tap a phase to jump in the video when playback is ready.';
+        ? 'Tap a phase to jump to that part of the race.'
+        : 'Tap a phase to jump in the video when playback is ready.';
 
     return RaceBlueprint(
       caption: caption,

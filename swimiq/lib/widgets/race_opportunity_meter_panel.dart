@@ -95,19 +95,9 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            meter.modeSubtitle,
-            style: TextStyle(
-              color: AppColors.accent.withValues(alpha: 0.95),
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
             meter.caption,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.78),
+              color: Colors.white.withValues(alpha: 0.82),
               fontWeight: FontWeight.w600,
               fontSize: 12,
               height: 1.35,
@@ -166,7 +156,7 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
           ],
           const SizedBox(height: 2),
           Text(
-            'Tap any row for what happened + next-race cue + drills.',
+            'Tap a row for what happened, next race, and drills.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
               fontWeight: FontWeight.w600,
@@ -279,8 +269,7 @@ class RaceOpportunityMeterPanel extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Full-race potential from this scan: ${meter.potentialLabel}. '
-                      'Segment times are coaching estimates shared across the opportunities above.',
+                      'Full-race potential from this scan: ${meter.potentialLabel}.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             height: 1.35,

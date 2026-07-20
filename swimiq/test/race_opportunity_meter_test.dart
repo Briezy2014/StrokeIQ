@@ -44,12 +44,60 @@ void main() {
     expect(breathing.opportunityLabel, contains('~'));
     expect(breathing.drylandDrills, isNotEmpty);
     expect(breathing.swimDrills, isNotEmpty);
+    expect(
+      breathing.whatHappened.toLowerCase(),
+      contains('hips drop'),
+    );
+    expect(
+      breathing.nextRaceCue.toLowerCase(),
+      anyOf(contains('breathe'), contains('press'), contains('hips')),
+    );
+    expect(
+      breathing.nextRaceCue.toLowerCase(),
+      isNot(equals(breathing.whatHappened.toLowerCase())),
+    );
+    expect(breathing.nextRaceCue.toLowerCase(), isNot(contains('next race:')));
 
     final reaction = meter.segments.firstWhere((s) => s.id == 'reaction');
     expect(reaction.signal, OpportunitySignal.lockedIn);
     expect(reaction.opportunityLabel, 'Locked in');
     expect(meter.mode, RaceScanMode.phoneCoaching);
     expect(meter.modeBadge, 'Phone coaching');
+    expect(meter.caption.toLowerCase(), isNot(contains('phone race')));
+    expect(meter.modeSubtitle.toLowerCase(), isNot(contains('phone race')));
+  });
+
+  test('What happened is diagnosis and Next race is a distinct suggestion', () {
+    final meter = RaceOpportunityMeterBuilder.fromReport(
+      report: const AnalysisReport(
+        summary: 'Tempo focus',
+        priorityImprovements: [
+          PriorityImprovement(
+            title:
+                'Your second kick is late off the hand entry, so you lose speed between strokes. Kick as the hands enter.',
+            drills: [
+              'Swim: 8× 25 fly kick-on-entry focus, easy 25 back.',
+            ],
+          ),
+        ],
+        raceRecommendations: [
+          'Race cue: kick on entry, press the chest, breathe late and low.',
+        ],
+      ),
+      stroke: 'Butterfly',
+      distanceM: 50,
+    );
+
+    final tempo = meter.segments.firstWhere((s) => s.id == 'tempo');
+    expect(tempo.signal, OpportunitySignal.opportunity);
+    expect(tempo.whatHappened.toLowerCase(), contains('second kick'));
+    expect(tempo.nextRaceCue.toLowerCase(), contains('kick'));
+    expect(
+      tempo.nextRaceCue.toLowerCase(),
+      isNot(equals(tempo.whatHappened.toLowerCase())),
+    );
+    expect(tempo.nextRaceCue.toLowerCase(), isNot(startsWith('next race:')));
+    expect(tempo.nextRaceCue.toLowerCase(), isNot(contains('your second kick')));
   });
 
   test('sensor-boosted mode when underwater phase is present', () {
