@@ -7,7 +7,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import analysis, best_times, flutter_bridge, health, jobs
+from app.api.routes import (
+    analysis,
+    best_times,
+    flutter_bridge,
+    health,
+    highlight_reels,
+    jobs,
+)
 from app.config import get_settings
 from app.services.result_store import ResultStore
 from app.utils.logging import configure_logging, get_logger, log_stage
@@ -138,3 +145,4 @@ app.include_router(analysis.router)
 app.include_router(jobs.router)
 app.include_router(flutter_bridge.router)
 app.include_router(best_times.router)
+app.include_router(highlight_reels.router)

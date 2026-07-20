@@ -268,6 +268,26 @@ class VideoEngineV2Service {
     return url;
   }
 
+  /// Build a recruiting clip pack + auto-stitched MP4 reel on Elite.
+  Future<HighlightReelResult> createHighlightReel({
+    required List<Map<String, dynamic>> segments,
+    String title = 'Recruiting Highlight Reel',
+    int maxClipMs = 6000,
+  }) async {
+    final json = await _requestJson(
+      'POST',
+      '/v1/highlight-reels',
+      body: {
+        'title': title,
+        'max_clip_ms': maxClipMs,
+        'segments': segments,
+      },
+      expectedStatuses: const {200},
+      timeout: const Duration(seconds: 180),
+    );
+    return HighlightReelResult.fromJson(json);
+  }
+
   /// Maps backend / HTTP error codes to athlete-facing copy.
   static String userMessageForErrorCode(String? code, {String? fallback}) {
     switch ((code ?? '').toUpperCase()) {
@@ -323,6 +343,11 @@ class VideoEngineV2Service {
         return 'Results are not ready yet.';
       case 'VIDEO_TOO_LARGE':
         return 'This video is too large. Please upload a shorter or smaller file.';
+      case 'INVALID_SEGMENT':
+        return 'Tag at least one race moment before building your highlight reel.';
+      case 'REEL_BUILD_FAILED':
+      case 'FFMPEG_UNAVAILABLE':
+        return 'Could not build the highlight reel. Keep Elite running with FFmpeg installed, then try again.';
       default:
         return sanitizeUserFacingError(fallback) ??
             'Something went wrong with video analysis. Please try again.';
@@ -352,6 +377,7 @@ class VideoEngineV2Service {
     String path, {
     Map<String, dynamic>? body,
     Set<int> expectedStatuses = const {200},
+    Duration timeout = const Duration(seconds: 30),
   }) async {
     final token = await _accessTokenGetter();
     if (token == null || token.isEmpty) {
@@ -389,7 +415,7 @@ class VideoEngineV2Service {
             errorCode: 'ANALYSIS_FAILED',
           );
       }
-      response = await pending.timeout(const Duration(seconds: 30));
+      response = await pending.timeout(timeout);
     } catch (e) {
       if (e is VideoEngineV2Exception) rethrow;
       throw VideoEngineV2Exception(
@@ -497,4 +523,72 @@ class EliteServerHealth {
 
   bool get mediaToolsReady =>
       ffmpegAvailable == true && ffprobeAvailable == true;
+}
+
+/// Clip pack + auto-stitched recruiting reel from Elite.
+class HighlightReelResult {
+  const HighlightReelResult({
+    required this.reelId,
+    required this.title,
+    required this.reelUrl,
+    required this.downloadToken,
+    required this.message,
+    required this.clips,
+  });
+
+  final String reelId;
+  final String title;
+  final String reelUrl;
+  final String downloadToken;
+  final String message;
+  final List<HighlightReelClip> clips;
+
+  factory HighlightReelResult.fromJson(Map<String, dynamic> json) {
+    final clipsRaw = json['clips'];
+    final clips = <HighlightReelClip>[];
+    if (clipsRaw is List) {
+      for (final item in clipsRaw) {
+        if (item is Map) {
+          clips.add(HighlightReelClip.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
+    return HighlightReelResult(
+      reelId: json['reel_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? 'Recruiting Highlight Reel',
+      reelUrl: json['reel_url']?.toString() ?? '',
+      downloadToken: json['download_token']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
+      clips: clips,
+    );
+  }
+}
+
+class HighlightReelClip {
+  const HighlightReelClip({
+    required this.label,
+    required this.tag,
+    required this.startMs,
+    required this.endMs,
+    required this.fileName,
+    required this.downloadUrl,
+  });
+
+  final String label;
+  final String tag;
+  final int startMs;
+  final int endMs;
+  final String fileName;
+  final String downloadUrl;
+
+  factory HighlightReelClip.fromJson(Map<String, dynamic> json) {
+    return HighlightReelClip(
+      label: json['label']?.toString() ?? '',
+      tag: json['tag']?.toString() ?? '',
+      startMs: (json['start_ms'] as num?)?.round() ?? 0,
+      endMs: (json['end_ms'] as num?)?.round() ?? 0,
+      fileName: json['file_name']?.toString() ?? '',
+      downloadUrl: json['download_url']?.toString() ?? '',
+    );
+  }
 }

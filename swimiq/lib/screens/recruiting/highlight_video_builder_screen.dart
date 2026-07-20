@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/recruiting/highlight_reel_planner.dart';
+import '../../core/services/video_engine_v2_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/swim_video.dart';
+import '../../providers/app_providers.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimmer_screen.dart';
 
-/// Pro-tier highlight reel organizer (tag races, starts, turns, finishes).
+/// Pro-tier highlight reel organizer — tags moments, then Elite builds
+/// a clip pack + auto-stitched recruiting MP4.
 class HighlightVideoBuilderScreen extends ConsumerStatefulWidget {
   const HighlightVideoBuilderScreen({super.key});
 
@@ -29,6 +34,8 @@ class HighlightVideoBuilderScreen extends ConsumerStatefulWidget {
 class _HighlightVideoBuilderScreenState
     extends ConsumerState<HighlightVideoBuilderScreen> {
   final Map<String, Set<String>> _tagsByVideoId = {};
+  bool _building = false;
+  HighlightReelResult? _lastReel;
 
   String _videoKey(SwimVideo video) {
     final id = video.id?.trim();
@@ -47,7 +54,7 @@ class _HighlightVideoBuilderScreenState
         teaserFeatures: const [
           'Tag race videos for recruiting',
           'Mark best starts, turns & finishes',
-          'Build a highlight reel plan',
+          'Auto-build a shareable recruiting reel',
         ],
         child: SwimmerScreen(
           builder: (context, ref, data, swimmer) {
@@ -101,22 +108,50 @@ class _HighlightVideoBuilderScreenState
                   }),
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () => _buildReelPlan(context, videos),
-                  icon: const Icon(Icons.movie_creation_outlined),
-                  label: const Text('Preview highlight reel plan'),
+                  onPressed: _building || taggedCount == 0
+                      ? null
+                      : () => _generateReel(context, videos, swimmer),
+                  icon: _building
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    _building
+                        ? 'Building recruiting reel…'
+                        : 'Build recruiting reel',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: taggedCount == 0
+                      ? null
+                      : () => _previewPlan(context, videos),
+                  icon: const Icon(Icons.list_alt),
+                  label: const Text('Preview reel plan'),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   taggedCount == 0
-                      ? 'Tap tags on a video above, then preview your reel plan.'
-                      : '$taggedCount video${taggedCount == 1 ? '' : 's'} tagged for this session. '
-                          'Automatic reel stitching ships in a future update.',
+                      ? 'Tap tags on a video above, then build your recruiting reel.'
+                      : '$taggedCount video${taggedCount == 1 ? '' : 's'} tagged — '
+                          'Elite will cut a clip pack and stitch one shareable MP4.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textDark.withValues(alpha: 0.78),
                         fontWeight: FontWeight.w600,
                         height: 1.35,
                       ),
                 ),
+                if (_lastReel != null) ...[
+                  const SizedBox(height: 16),
+                  _ReelReadyCard(
+                    reel: _lastReel!,
+                    onOpenReel: () => _openUrl(_lastReel!.reelUrl),
+                    onOpenClip: _openUrl,
+                  ),
+                ],
               ],
             );
           },
@@ -125,42 +160,73 @@ class _HighlightVideoBuilderScreenState
     );
   }
 
-  void _buildReelPlan(BuildContext context, List<SwimVideo> videos) {
-    final titleByKey = <String, String>{
-      for (final video in videos) _videoKey(video): video.displayTitle,
-    };
-
-    final tagged = _tagsByVideoId.entries
-        .where((entry) => entry.value.isNotEmpty)
-        .toList();
-
-    if (tagged.isEmpty) {
-      showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Text('Tag a clip first'),
-          content: const Text(
-            'Tap one or more tags on a video card (Race, Best start, '
-            'Best turn, etc.), then press Preview again.',
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Got it'),
-            ),
-          ],
-        ),
+  Future<void> _generateReel(
+    BuildContext context,
+    List<SwimVideo> videos,
+    String swimmer,
+  ) async {
+    final segments = HighlightReelPlanner.buildSegments(
+      tagsByVideoId: _tagsByVideoId,
+      videos: videos,
+    );
+    if (segments.isEmpty) {
+      _showMessage(
+        title: 'Tag a clip first',
+        body:
+            'Tap one or more tags on a video card, then build again. '
+            'Videos need a Video Lab upload path.',
       );
       return;
     }
 
-    final lines = <String>[];
-    var step = 1;
-    for (final entry in tagged) {
-      final title = titleByKey[entry.key] ?? entry.key;
-      lines.add('$step. $title — ${entry.value.join(', ')}');
-      step += 1;
+    setState(() => _building = true);
+    try {
+      final health = await ref.read(videoEngineV2ServiceProvider).checkHealth();
+      if (!health.reachable || !health.mediaToolsReady) {
+        throw VideoEngineV2Exception(
+          health.reachable
+              ? 'Elite is up but FFmpeg is missing. Restart START-SWIMIQ-WITH-ELITE.bat.'
+              : health.message,
+          errorCode: 'SERVER_UNAVAILABLE',
+          retriable: true,
+        );
+      }
+
+      final result =
+          await ref.read(videoEngineV2ServiceProvider).createHighlightReel(
+                segments: segments.map((s) => s.toJson()).toList(),
+                title: '$swimmer Recruiting Reel',
+              );
+      if (!mounted) return;
+      setState(() => _lastReel = result);
+      _showReelSheet(result);
+    } on VideoEngineV2Exception catch (e) {
+      if (!mounted) return;
+      _showMessage(title: 'Reel not ready', body: e.message);
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage(
+        title: 'Reel not ready',
+        body:
+            'Could not reach Elite to build the reel. '
+            'Run START-SWIMIQ-WITH-ELITE.bat and try again. ($e)',
+      );
+    } finally {
+      if (mounted) setState(() => _building = false);
+    }
+  }
+
+  void _previewPlan(BuildContext context, List<SwimVideo> videos) {
+    final segments = HighlightReelPlanner.buildSegments(
+      tagsByVideoId: _tagsByVideoId,
+      videos: videos,
+    );
+    if (segments.isEmpty) {
+      _showMessage(
+        title: 'Tag a clip first',
+        body: 'Tap tags on a video card, then preview again.',
+      );
+      return;
     }
 
     showModalBottomSheet<void>(
@@ -192,7 +258,7 @@ class _HighlightVideoBuilderScreenState
                       ),
                 ),
                 const SizedBox(height: 16),
-                for (final line in lines) ...[
+                for (var i = 0; i < segments.length; i++) ...[
                   Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
@@ -204,7 +270,7 @@ class _HighlightVideoBuilderScreenState
                       ),
                     ),
                     child: Text(
-                      line,
+                      '${i + 1}. ${segments[i].label} — ${segments[i].tag}',
                       style: const TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w700,
@@ -215,8 +281,7 @@ class _HighlightVideoBuilderScreenState
                 ],
                 const SizedBox(height: 8),
                 Text(
-                  'Open Video Lab to export clips. Automatic reel generation '
-                  'is coming in a future Elite update.',
+                  'Tap Build recruiting reel to cut clips and stitch one shareable MP4.',
                   style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
                         color: AppColors.textDark.withValues(alpha: 0.7),
                         height: 1.35,
@@ -232,6 +297,111 @@ class _HighlightVideoBuilderScreenState
           ),
         );
       },
+    );
+  }
+
+  void _showReelSheet(HighlightReelResult reel) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Recruiting reel ready',
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryDeep,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  reel.message,
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textDark.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: () => _openUrl(reel.reelUrl),
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text('Open full highlight reel'),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Clip pack (${reel.clips.length})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final clip in reel.clips)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      '${clip.tag} — ${clip.label}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: Text(
+                      '${((clip.endMs - clip.startMs) / 1000.0).toStringAsFixed(1)}s clip',
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.download_outlined),
+                      onPressed: () => _openUrl(clip.downloadUrl),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      _showMessage(
+        title: 'Could not open link',
+        body: 'Copy this URL into Chrome:\n$url',
+      );
+    }
+  }
+
+  void _showMessage({
+    required String title,
+    required String body,
+  }) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -277,7 +447,7 @@ class _HighlightHeader extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Tag your best moments — SwimIQ helps assemble a recruiting highlight reel.',
+            'Tag your best moments — SwimIQ cuts a clip pack and stitches one shareable recruiting reel.',
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
@@ -286,6 +456,64 @@ class _HighlightHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReelReadyCard extends StatelessWidget {
+  const _ReelReadyCard({
+    required this.reel,
+    required this.onOpenReel,
+    required this.onOpenClip,
+  });
+
+  final HighlightReelResult reel;
+  final VoidCallback onOpenReel;
+  final Future<void> Function(String url) onOpenClip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Latest recruiting reel',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: AppColors.primaryDark,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${reel.clips.length} clips stitched · tap to download',
+              style: TextStyle(
+                color: AppColors.textDark.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onOpenReel,
+              icon: const Icon(Icons.movie_creation_outlined),
+              label: const Text('Open full reel'),
+            ),
+            const SizedBox(height: 8),
+            for (final clip in reel.clips.take(4))
+              TextButton(
+                onPressed: () => onOpenClip(clip.downloadUrl),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('${clip.tag} — ${clip.label}'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
