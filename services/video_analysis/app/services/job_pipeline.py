@@ -23,7 +23,12 @@ from app.utils.logging import get_logger, log_exception, log_stage
 logger = get_logger("video_analysis.pipeline")
 
 
-def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
+def resolve_local_path(
+    job: AnalysisJob,
+    *,
+    settings: Settings,
+    progress_callback=None,
+) -> Path:
     if job.local_path:
         return Path(job.local_path).expanduser().resolve()
     if job.storage_path:
@@ -42,6 +47,7 @@ def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
                 storage_path=job.storage_path,
                 dest=dest,
                 user_access_token=getattr(job, "download_access_token", None),
+                progress_callback=progress_callback,
             )
         except SupabaseBridgeError as exc:
             retriable = exc.code in {
@@ -84,7 +90,44 @@ def run_analysis_pipeline(
         return job
 
     try:
-        job.transition(JobStatus.validating, progress=0.08)
+        needs_download = bool(job.storage_path) and not job.local_path
+        if needs_download:
+            job.transition(JobStatus.downloading, progress=0.05)
+            store.save(job)
+            log_stage(
+                logger,
+                stage=job.stage,
+                job_id=job_id,
+                video_id=video_id,
+                message="Downloading video from storage",
+            )
+
+            def _on_download_progress(fraction: float, label: str) -> None:
+                clamped = max(0.0, min(1.0, float(fraction)))
+                # Keep download stage in the 5–11% band before validating.
+                progress = 0.05 + (clamped * 0.06)
+                previous = job.progress
+                job.transition(JobStatus.downloading, progress=progress)
+                store.save(job)
+                # Log sparsely so large files do not flood the Elite console.
+                if clamped >= 1.0 or progress - previous >= 0.03:
+                    log_stage(
+                        logger,
+                        stage=job.stage,
+                        job_id=job_id,
+                        video_id=video_id,
+                        message=label,
+                    )
+
+            path = resolve_local_path(
+                job,
+                settings=settings,
+                progress_callback=_on_download_progress,
+            )
+        else:
+            path = resolve_local_path(job, settings=settings)
+
+        job.transition(JobStatus.validating, progress=0.12)
         store.save(job)
         log_stage(
             logger,
@@ -93,8 +136,6 @@ def run_analysis_pipeline(
             video_id=video_id,
             message="Starting video validation",
         )
-
-        path = resolve_local_path(job, settings=settings)
         validated = validate_video(path, settings)
 
         if job.cancelled:

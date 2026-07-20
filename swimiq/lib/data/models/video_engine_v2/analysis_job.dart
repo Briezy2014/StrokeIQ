@@ -84,6 +84,8 @@ class AnalysisJob {
     switch (stage.trim().toLowerCase()) {
       case 'queued':
         return 'Queued';
+      case 'downloading':
+        return 'Downloading video';
       case 'validating':
         return 'Validating video';
       case 'preprocessing':

@@ -42,7 +42,12 @@ async def cancel_job(
         )
 
     job.cancelled = True
-    if job.status in {JobStatus.queued, JobStatus.validating, JobStatus.preprocessing}:
+    if job.status in {
+        JobStatus.queued,
+        JobStatus.downloading,
+        JobStatus.validating,
+        JobStatus.preprocessing,
+    }:
         job.mark_failed(
             error_code="CANCELLED",
             message="Job cancelled by client",

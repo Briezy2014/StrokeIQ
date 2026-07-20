@@ -317,13 +317,13 @@ void main() {
       var calls = 0;
       final service = serviceWith((request) async {
         calls++;
-        final stage = calls == 1 ? 'validating' : 'estimating_pose';
+        final stage = calls == 1 ? 'downloading' : 'estimating_pose';
         return http.Response(
           jsonEncode({
             'job_id': 'job-2',
             'status': stage,
             'stage': stage,
-            'progress': calls == 1 ? 0.1 : 0.4,
+            'progress': calls == 1 ? 0.08 : 0.4,
             'engine_version': 'elote-0.1.0',
             'video_id': 'vid-1',
             'created_at': '2026-07-17T00:00:00Z',
@@ -334,7 +334,7 @@ void main() {
       });
 
       final first = await service.getStatus('job-2');
-      expect(first.stageLabel, 'Validating video');
+      expect(first.stageLabel, 'Downloading video');
       final second = await service.getStatus('job-2');
       expect(second.stageLabel, 'Estimating pose');
       // Progress exists but UI must use stage text, not invent %.

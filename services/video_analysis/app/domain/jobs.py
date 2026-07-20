@@ -10,7 +10,17 @@ from app.api.schemas.responses import JobError, JobStatus
 
 
 ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
-    JobStatus.queued: {JobStatus.validating, JobStatus.failed, JobStatus.cancelled},
+    JobStatus.queued: {
+        JobStatus.downloading,
+        JobStatus.validating,
+        JobStatus.failed,
+        JobStatus.cancelled,
+    },
+    JobStatus.downloading: {
+        JobStatus.validating,
+        JobStatus.failed,
+        JobStatus.cancelled,
+    },
     JobStatus.validating: {
         JobStatus.preprocessing,
         JobStatus.failed,
@@ -69,7 +79,11 @@ ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
         JobStatus.failed,
         JobStatus.cancelled,
     },
-    JobStatus.failed: {JobStatus.queued, JobStatus.validating},
+    JobStatus.failed: {
+        JobStatus.queued,
+        JobStatus.downloading,
+        JobStatus.validating,
+    },
     JobStatus.completed: set(),
     JobStatus.completed_with_limitations: set(),
     JobStatus.cancelled: set(),

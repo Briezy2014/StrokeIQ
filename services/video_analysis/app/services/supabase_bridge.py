@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 from uuid import UUID
 
@@ -59,6 +60,7 @@ class SupabaseBridge:
         storage_path: str,
         dest: Path,
         user_access_token: str | None = None,
+        progress_callback: Callable[[float, str], None] | None = None,
     ) -> Path:
         """
         Download a private storage object.
@@ -66,6 +68,9 @@ class SupabaseBridge:
         Prefer the service-role key when configured. For local Windows Elite,
         fall back to the signed-in Flutter user's JWT + anon key so analysis
         works without putting SUPABASE_SERVICE_ROLE_KEY on the machine.
+
+        Streams to disk and optionally reports progress so large videos do not
+        appear stuck at a fixed validating percentage.
         """
         mode, headers = self._download_auth(user_access_token=user_access_token)
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -77,28 +82,97 @@ class SupabaseBridge:
                 f"{self.base}/storage/v1/object/authenticated/"
                 f"{bucket}/{storage_path}"
             )
+        timeout = httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0)
+        fallback = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
         try:
-            with httpx.Client(timeout=120.0) as client:
-                resp = client.get(url, headers=headers)
-                # Some projects still allow /object/ with a user JWT — try once.
-                if (
-                    mode == "user"
-                    and resp.status_code in {400, 401, 403}
-                    and user_access_token
-                ):
-                    fallback = f"{self.base}/storage/v1/object/{bucket}/{storage_path}"
-                    resp = client.get(fallback, headers=headers)
+            with httpx.Client(timeout=timeout) as client:
+                request = client.build_request("GET", url, headers=headers)
+                resp = client.send(request, stream=True)
+                try:
+                    # Some projects still allow /object/ with a user JWT — try once.
+                    if (
+                        mode == "user"
+                        and resp.status_code in {400, 401, 403}
+                        and user_access_token
+                    ):
+                        resp.close()
+                        request = client.build_request(
+                            "GET", fallback, headers=headers
+                        )
+                        resp = client.send(request, stream=True)
+                    self._write_streamed_response(
+                        resp,
+                        dest,
+                        progress_callback=progress_callback,
+                    )
+                finally:
+                    resp.close()
+        except SupabaseBridgeError:
+            raise
         except httpx.HTTPError as exc:
-            raise SupabaseBridgeError("UPLOAD_FAILED", f"Storage download failed: {exc}") from exc
+            raise SupabaseBridgeError(
+                "UPLOAD_FAILED", f"Storage download failed: {exc}"
+            ) from exc
+        return dest
+
+    def _write_streamed_response(
+        self,
+        resp: httpx.Response,
+        dest: Path,
+        *,
+        progress_callback: Callable[[float, str], None] | None = None,
+    ) -> None:
         if resp.status_code == 404:
             raise SupabaseBridgeError("INVALID_VIDEO", "Video object not found in storage")
         if resp.status_code >= 400:
+            # Body may still be streamed — read a short error snippet.
+            detail = ""
+            try:
+                detail = resp.read().decode("utf-8", errors="replace")[:180]
+            except Exception:
+                detail = resp.reason_phrase or ""
             raise SupabaseBridgeError(
                 "UPLOAD_FAILED",
-                f"Storage download HTTP {resp.status_code}: {resp.text[:180]}",
+                f"Storage download HTTP {resp.status_code}: {detail}",
             )
-        dest.write_bytes(resp.content)
-        return dest
+
+        total = int(resp.headers.get("content-length") or 0)
+        downloaded = 0
+        last_fraction_reported = -1.0
+        last_bytes_reported = 0
+        if progress_callback is not None:
+            progress_callback(0.0, "Downloading video from cloud")
+
+        with dest.open("wb") as handle:
+            for chunk in resp.iter_bytes(chunk_size=256 * 1024):
+                if not chunk:
+                    continue
+                handle.write(chunk)
+                downloaded += len(chunk)
+                if progress_callback is None:
+                    continue
+                if total > 0:
+                    fraction = min(1.0, downloaded / total)
+                    # Throttle UI/DB updates (~2% steps).
+                    if fraction - last_fraction_reported >= 0.02 or fraction >= 1.0:
+                        last_fraction_reported = fraction
+                        mb = downloaded / (1024 * 1024)
+                        total_mb = total / (1024 * 1024)
+                        progress_callback(
+                            fraction,
+                            f"Downloading video · {mb:.1f}/{total_mb:.1f} MB",
+                        )
+                elif downloaded - last_bytes_reported >= 2 * 1024 * 1024:
+                    # No Content-Length: heartbeat every ~2 MB.
+                    last_bytes_reported = downloaded
+                    mb = downloaded / (1024 * 1024)
+                    progress_callback(
+                        min(0.95, mb / 100.0),
+                        f"Downloading video · {mb:.1f} MB",
+                    )
+
+        if progress_callback is not None:
+            progress_callback(1.0, "Download complete")
 
     def _download_auth(
         self, *, user_access_token: str | None

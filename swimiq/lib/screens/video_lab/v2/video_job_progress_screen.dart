@@ -34,6 +34,13 @@ class _VideoJobProgressScreenState
     });
   }
 
+  bool _isEarlyFetchStage(AnalysisJob job) {
+    final stage = job.stage.trim().toLowerCase();
+    return stage == 'downloading' ||
+        stage == 'validating' ||
+        stage == 'queued';
+  }
+
   Future<void> _cancel() async {
     setState(() => _cancelling = true);
     try {
@@ -155,6 +162,19 @@ class _VideoJobProgressScreenState
                           '${job.progress != null ? ' · ${(job.progress! * 100).clamp(0, 100).round()}%' : ''}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                        if (_isEarlyFetchStage(job)) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            'Large videos can take a few minutes while Elite '
+                            'downloads from cloud storage. Keep the Elite '
+                            'server window open — the percent should move '
+                            'during download.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.black54,
+                                ),
+                          ),
+                        ],
                         if (job.errorMessage != null) ...[
                           const SizedBox(height: 12),
                           Text(

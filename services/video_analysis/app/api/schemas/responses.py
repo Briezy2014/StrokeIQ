@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class JobStatus(str, Enum):
     queued = "queued"
+    downloading = "downloading"
     validating = "validating"
     preprocessing = "preprocessing"
     detecting_swimmer = "detecting_swimmer"
