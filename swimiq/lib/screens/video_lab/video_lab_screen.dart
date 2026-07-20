@@ -294,9 +294,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       subscription: subscription,
     );
 
-    // Prefer local Elite CV whenever V2 is on - including swimiqapp.com -
-    // as long as Elite is running on this PC at 127.0.0.1:8080.
-    final preferLocalElite = v2Allowed && !forceLegacy;
+    // Local Elite CV only on this PC (not the public website). Website users
+    // get cloud AI coaching — never .bat / 127.0.0.1 instructions.
+    final preferLocalElite =
+        v2Allowed && !forceLegacy && !Env.isPublicHostedWeb;
     if (preferLocalElite) {
       final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
       final eliteReady = elite.reachable &&
@@ -310,35 +311,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         return;
       }
 
-      // On the public website, offer a clear choice instead of a dead-end banner.
-      if (Env.isPublicHostedWeb) {
-        if (!mounted) return;
-        final useCloud = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Elite analysis is not available right now'),
-            content: const Text(
-              'Full Elite analysis needs the SwimIQ Elite analysis server running '
-              'on this computer.\n\n'
-              'Start SwimIQ with Elite, leave that server window open, tap Recheck, '
-              'then try again.\n\n'
-              'Or continue with cloud coaching (no stroke-tracking overlay).',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Use cloud coaching'),
-              ),
-            ],
-          ),
-        );
-        if (useCloud != true || !mounted) return;
-        // Fall through to Gemini cloud path below.
-      } else if (!FeatureFlags.videoEngineLegacyEnabled) {
+      if (!FeatureFlags.videoEngineLegacyEnabled) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -453,15 +426,19 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final serverHealthAsync = ref.watch(videoServerHealthProvider);
         final serverHealth = serverHealthAsync.valueOrNull;
         final hosted = Env.isPublicHostedWeb;
-        final heroSubtitle = v2Allowed
-            ? (hosted
+        final heroSubtitle = hosted
+            ? (canRunAi || v2Allowed
+                ? 'Upload race video for AI coaching'
+                : hasPro
+                    ? 'Upload & review — AI coaching is Elite'
+                    : 'Pro unlocks video library')
+            : v2Allowed
                 ? 'Elite stroke analysis from your race footage'
-                : 'Elite stroke analysis from your race footage')
-            : canRunAi
-            ? 'AI coaching from your race footage'
-            : hasPro
-            ? 'Upload & review — AI analysis is Elite'
-            : 'Pro unlocks video library';
+                : canRunAi
+                    ? 'AI coaching from your race footage'
+                    : hasPro
+                        ? 'Upload & review — AI analysis is Elite'
+                        : 'Pro unlocks video library';
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -469,7 +446,9 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
           children: [
             SwimIqPageHero(
               showMark: false,
-              title: v2Allowed ? 'Elite Video Lab' : 'Video Lab',
+              title: hosted
+                  ? 'Video Lab'
+                  : (v2Allowed ? 'Elite Video Lab' : 'Video Lab'),
               subtitle: heroSubtitle,
               stats: [
                 SwimIqHeroStat('${videos.length} videos'),
@@ -478,25 +457,47 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 ),
               ],
             ),
-            if (v2Allowed) ...[
+            if (hosted && (canRunAi || v2Allowed)) ...[
+              const SizedBox(height: 12),
+              Material(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.cloud_done_outlined,
+                        color: Color(0xFF1B5E20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'AI coaching is ready in the cloud. '
+                          'Upload a race clip and tap Analyze — no software to install.',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF1B5E20),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            // Local Elite status banner only on this PC (not swimiqapp.com).
+            if (!hosted && v2Allowed) ...[
               const SizedBox(height: 12),
               _EliteServerStatusBanner(
                 health: serverHealth,
                 onRetry: () => ref.invalidate(videoServerHealthProvider),
               ),
               const SizedBox(height: 8),
-              if (hosted)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'Tip: for the most reliable Elite analysis, use the SwimIQ app '
-                    'running on this computer (127.0.0.1) with the Elite analysis '
-                    'server left open.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7280),
-                        ),
-                  ),
-                ),
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
