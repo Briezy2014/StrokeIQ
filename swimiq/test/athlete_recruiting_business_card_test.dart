@@ -15,6 +15,7 @@ void main() {
               swimIqScore: 550,
               highestCut: 'BB',
               team: 'Central Ohio Aquatics',
+              coach: 'Gunner Lehr',
               gpa: '3.85',
               website: 'https://swimiq.app/aspyn',
               email: 'aspyn@example.com',
@@ -36,12 +37,14 @@ void main() {
     expect(find.text('550'), findsOneWidget);
     expect(find.textContaining('Class of 2032'), findsOneWidget);
     expect(find.textContaining('Central Ohio Aquatics'), findsOneWidget);
+    expect(find.text('Gunner Lehr'), findsOneWidget);
     expect(find.text('https://swimiq.app/aspyn'), findsOneWidget);
     expect(find.text('aspyn@example.com'), findsOneWidget);
     expect(find.text('(614) 555-0199'), findsOneWidget);
-    expect(find.text('BB'), findsOneWidget);
-    expect(find.text('HIGHEST USA CUT'), findsOneWidget);
-    expect(find.text('Motivational standard'), findsOneWidget);
+    expect(find.text('BB'), findsWidgets);
+    expect(find.text('HIGHEST USA CUT'), findsNothing);
+    expect(find.text('Motivational standard'), findsNothing);
+    expect(find.text('TOP TIMES'), findsOneWidget);
     expect(find.textContaining('GPA 3.85'), findsOneWidget);
     expect(find.textContaining('50 Butterfly'), findsOneWidget);
     expect(find.textContaining('STATE QUALIFIER'), findsOneWidget);
@@ -60,9 +63,12 @@ void main() {
               swimIqScore: 550,
               highestCut: 'A',
               team: 'Central Ohio Aquatics',
+              coach: null,
               gpa: '4.0',
               website: null,
-              topEvents: const [],
+              topEvents: const [
+                '50 Butterfly 34.67',
+              ],
               onUploadPhoto: () => tapped = true,
             ),
           ),
@@ -71,8 +77,10 @@ void main() {
     );
 
     expect(find.text('Add photo'), findsOneWidget);
-    expect(find.text('A'), findsOneWidget);
-    expect(find.text('HIGHEST USA CUT'), findsOneWidget);
+    expect(find.text('Add coach'), findsOneWidget);
+    expect(find.text('A'), findsOneWidget); // cut beside the real top time
+    expect(find.text('HIGHEST USA CUT'), findsNothing);
+    expect(find.textContaining('50 Butterfly 34.67'), findsOneWidget);
     await tester.tap(find.text('Add photo'));
     expect(tapped, isTrue);
   });

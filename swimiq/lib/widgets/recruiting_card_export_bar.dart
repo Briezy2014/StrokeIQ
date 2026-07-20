@@ -19,6 +19,7 @@ class RecruitingCardSnapshot {
     this.website,
     this.email,
     this.phone,
+    this.coach,
     this.usaSwimmingId,
     this.profilePhotoUrl,
   });
@@ -34,6 +35,7 @@ class RecruitingCardSnapshot {
   final String? website;
   final String? email;
   final String? phone;
+  final String? coach;
   final String? usaSwimmingId;
   final String? profilePhotoUrl;
 }
@@ -75,6 +77,7 @@ class RecruitingCardExportBar extends StatelessWidget {
       website: snapshot.website,
       email: snapshot.email,
       phone: snapshot.phone,
+      coach: snapshot.coach,
       usaSwimmingId: snapshot.usaSwimmingId,
       profilePhotoBytes: photo,
     );

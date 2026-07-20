@@ -29,6 +29,7 @@ void main() {
       swimIqScore: 550,
       highestCut: 'BB',
       team: 'Central Ohio Aquatics',
+      coach: 'Gunner Lehr',
       website: 'https://swimiq.app/aspyn',
       email: 'aspyn@example.com',
       phone: '614-555-0199',
@@ -43,11 +44,10 @@ void main() {
     for (final needle in [
       '550',
       'BB',
-      'HIGHEST',
-      'USA',
-      'CUT',
-      'Motivational',
-      'standard',
+      'TOP',
+      'TIMES',
+      'Coach',
+      'Gunner',
       'Butterfly',
       'SWIMIQ',
       '2032',
@@ -59,6 +59,8 @@ void main() {
     ]) {
       expect(content, contains(needle), reason: '$needle missing from PDF stream');
     }
+    expect(content, isNot(contains('HIGHEST')));
+    expect(content, isNot(contains('Motivational')));
   });
 }
 
