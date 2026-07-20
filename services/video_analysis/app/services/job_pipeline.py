@@ -252,6 +252,31 @@ def run_analysis_pipeline(
                     )
                 )
                 pose_result = None
+            except Exception as pose_exc:  # noqa: BLE001
+                # Never let raw torch/mmpose import errors kill the coaching report.
+                log_exception(
+                    logger,
+                    stage=job.stage,
+                    job_id=job_id,
+                    video_id=video_id,
+                    error=pose_exc,
+                )
+                job.pose = {
+                    "stage": stage,
+                    "status": "skipped",
+                    "skip_reason": "POSE_SOFT_SKIP",
+                    "skip_message": str(pose_exc),
+                }
+                job.limitations = list(
+                    dict.fromkeys(
+                        [
+                            *job.limitations,
+                            "Pose enrichment skipped for this clip; "
+                            "continuing with phone coaching report.",
+                        ]
+                    )
+                )
+                pose_result = None
 
         if pose_result is not None:
             summary_path = pose_result.artifact_paths.get("pose_stage_summary")

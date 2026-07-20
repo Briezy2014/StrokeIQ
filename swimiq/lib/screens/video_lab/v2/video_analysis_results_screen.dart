@@ -193,8 +193,13 @@ class _VideoAnalysisResultsScreenState
     }
 
     if (results.isFailed && results.report == null) {
+      final code = (results.errorCode ?? '').toUpperCase();
+      final rawMessage = results.errorMessage ?? '';
+      final isPoseSoftIssue = code.contains('POSE') ||
+          rawMessage.toLowerCase().contains('pose dependency') ||
+          rawMessage.toLowerCase().contains('no module named');
       final friendly = VideoEngineV2Service.userMessageForErrorCode(
-        results.errorCode,
+        isPoseSoftIssue ? 'POSE_DEPS_MISSING' : results.errorCode,
         fallback: results.errorMessage ??
             'SwimIQ could not analyze this video. Please try again with a clearer side-view clip.',
       );
@@ -202,11 +207,13 @@ class _VideoAnalysisResultsScreenState
         padding: const EdgeInsets.all(16),
         children: [
           SwimIqScreenHeader(
-            title: 'This video could not be analyzed',
+            title: isPoseSoftIssue
+                ? 'Almost ready — retry for your coaching report'
+                : 'This video could not be analyzed',
             subtitle: friendly,
           ),
           const SizedBox(height: 16),
-          if (results.isClipQualityFailure) ...[
+          if (results.isClipQualityFailure && !isPoseSoftIssue) ...[
             Text(
               'Film from the side, keep the whole body in view, and hold the camera steady.',
               style: Theme.of(context).textTheme.bodyMedium,

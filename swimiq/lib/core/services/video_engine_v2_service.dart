@@ -284,7 +284,10 @@ class VideoEngineV2Service {
       case 'INSUFFICIENT_POSE':
       case 'POSE_FAILED':
       case 'INSUFFICIENT_POSE_EVIDENCE':
-        return 'Not enough clear pose data was detected to measure technique confidently.';
+      case 'POSE_DEPS_MISSING':
+      case 'POSE_SOFT_SKIP':
+        return 'Phone coaching is ready — tap Retry analysis. '
+            'Extra pose sensors are optional and will enrich the report when available.';
       case 'SERVER_UNAVAILABLE':
       case 'SERVICE_UNAVAILABLE':
         return 'The analysis service is temporarily unavailable. Please try again shortly.';
@@ -321,10 +324,27 @@ class VideoEngineV2Service {
       case 'VIDEO_TOO_LARGE':
         return 'This video is too large. Please upload a shorter or smaller file.';
       default:
-        return fallback?.trim().isNotEmpty == true
-            ? fallback!.trim()
-            : 'Something went wrong with video analysis. Please try again.';
+        return sanitizeUserFacingError(fallback) ??
+            'Something went wrong with video analysis. Please try again.';
     }
+  }
+
+  /// Never show torch/mmpose engineer text to athletes/parents.
+  static String? sanitizeUserFacingError(String? raw) {
+    final text = raw?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final lower = text.toLowerCase();
+    if (lower.contains('pose dependency') ||
+        lower.contains('no module named') ||
+        lower.contains('torch') ||
+        lower.contains('mmcv') ||
+        lower.contains('mmpose') ||
+        lower.contains('mmengine') ||
+        lower.contains('mmdet') ||
+        lower.contains('traceback')) {
+      return 'Phone coaching is ready — tap Retry analysis to finish this race report.';
+    }
+    return text;
   }
 
   Future<Map<String, dynamic>> _requestJson(

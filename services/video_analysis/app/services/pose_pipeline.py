@@ -184,8 +184,23 @@ def run_pose_stage(
     Prior-stage acceptance files are required for B and C.
     """
     require_prior_stage(settings, stage)
-    compat = assert_pose_stack_ready()
-    estimator = pose_estimator or build_pose_estimator(settings)
+    try:
+        compat = assert_pose_stack_ready()
+    except Exception as exc:  # noqa: BLE001
+        # Missing torch/mmpose must soft-skip — never hard-fail Elite coaching.
+        raise PoseStageError(
+            "POSE_DEPS_MISSING",
+            "Pose tools are not installed on this Elite PC yet. "
+            "Continuing with phone coaching from tracking.",
+        ) from exc
+    try:
+        estimator = pose_estimator or build_pose_estimator(settings)
+    except Exception as exc:  # noqa: BLE001
+        raise PoseStageError(
+            "POSE_DEPS_MISSING",
+            f"Pose tools could not start ({exc}). "
+            "Continuing with phone coaching from tracking.",
+        ) from exc
     if not estimator.is_loaded():
         estimator.load()
 

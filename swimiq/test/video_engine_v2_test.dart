@@ -120,7 +120,27 @@ void main() {
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('INSUFFICIENT_POSE'),
-        contains('pose'),
+        contains('Retry analysis'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('POSE_DEPS_MISSING'),
+        contains('Phone coaching'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode(
+          'INTERNAL_ERROR',
+          fallback:
+              "Pose dependency stack not ready: missing=['torch'] errors=[\"torch: No module named 'torch'\"]",
+        ),
+        contains('Phone coaching'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode(
+          'INTERNAL_ERROR',
+          fallback:
+              "Pose dependency stack not ready: missing=['torch'] errors=[\"torch: No module named 'torch'\"]",
+        ),
+        isNot(contains('No module named')),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('SERVER_UNAVAILABLE'),
