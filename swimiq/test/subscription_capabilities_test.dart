@@ -138,6 +138,25 @@ void main() {
     );
   });
 
+  test('built-in elite emails include master and demo', () {
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('briezy682014@gmail.com'),
+      isTrue,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('demo@swimiqapp.com'),
+      isTrue,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('briezy692014@gmail.com'),
+      isFalse,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('random@gmail.com'),
+      isFalse,
+    );
+  });
+
   test('founder elite state unlocks all features', () {
     const state = SubscriptionState(
       tier: SubscriptionTier.elite,

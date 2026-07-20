@@ -40,6 +40,16 @@ class SubscriptionCapabilities {
     }
   }
 
+  /// Pro tools for the signed-in user — master/founder/demo always true.
+  static bool canUseProFeaturesForEmail(
+    SubscriptionState? state,
+    String? email,
+  ) {
+    if (SubscriptionService.isBuiltInEliteEmail(email)) return true;
+    if (state == null) return false;
+    return canUseProFeatures(state);
+  }
+
   static bool hasEliteAccess(SubscriptionState state) {
     if (AppConstants.unlockAllTabsForPreview || state.isDemoMaster) {
       return true;

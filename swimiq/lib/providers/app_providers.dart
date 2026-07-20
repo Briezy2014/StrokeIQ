@@ -113,7 +113,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   @override
   Future<SubscriptionState> build() async {
     final service = ref.read(subscriptionServiceProvider);
+    // Prefer live auth email so master/founder Elite wins over a stale Basic
+    // SharedPreferences row from an earlier guest/basic session in this browser.
+    final email = _liveAuthEmail();
     var state = await service.load();
+    state = await service.ensureBuiltInEliteIfNeeded(state, email: email);
     if (!state.isDemoMaster &&
         !state.hasActiveServerPlan &&
         !state.hasUsedTrial &&
@@ -125,7 +129,19 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   Future<void> refreshFromServer() async {
     final service = ref.read(subscriptionServiceProvider);
-    state = AsyncData(await service.refreshFromServer());
+    final email = _liveAuthEmail();
+    var next = await service.refreshFromServer();
+    next = await service.ensureBuiltInEliteIfNeeded(next, email: email);
+    state = AsyncData(next);
+  }
+
+  String? _liveAuthEmail() {
+    try {
+      if (!Supabase.instance.isInitialized) return null;
+      return Supabase.instance.client.auth.currentUser?.email;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<String> startStripeCheckout(

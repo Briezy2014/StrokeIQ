@@ -9,6 +9,7 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swim_schedule_entry.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/common_widgets.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../widgets/meets_and_results_panel.dart';
@@ -39,8 +40,12 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
         final logs = data.raceLogs;
         final dateFormat = DateFormat.yMMMd();
         final subscription = ref.watch(subscriptionStateProvider).value;
-        final showProFeatures = subscription != null &&
-            SubscriptionCapabilities.canUseProFeatures(subscription);
+        final email = ref.watch(currentUserProvider)?.email;
+        final showProFeatures =
+            SubscriptionCapabilities.canUseProFeaturesForEmail(
+          subscription,
+          email,
+        );
         final snapshot = data.passportSnapshot(swimmer);
 
         return Column(

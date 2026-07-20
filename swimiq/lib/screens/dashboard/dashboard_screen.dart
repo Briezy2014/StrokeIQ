@@ -9,6 +9,7 @@ import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/dashboard_membership_plans_card.dart';
 import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
@@ -61,8 +62,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final personalBests = data.personalBests;
 
         final subscription = ref.watch(subscriptionStateProvider).value;
-        final showProFeatures = subscription != null &&
-            SubscriptionCapabilities.canUseProFeatures(subscription);
+        final email = ref.watch(currentUserProvider)?.email;
+        final showProFeatures =
+            SubscriptionCapabilities.canUseProFeaturesForEmail(
+          subscription,
+          email,
+        );
 
         final snapshot = data.passportSnapshot(swimmer);
         final daily = SwimIqDailyProgress.calculate(

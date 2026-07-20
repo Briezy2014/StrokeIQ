@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/services/subscription_service.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/swimmer_profile.dart';
@@ -14,6 +15,7 @@ import '../../widgets/next_cut_progress_strip.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
 import '../../providers/app_providers.dart';
+import '../../services/auth_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/personal_bests_action_bar.dart';
 import '../../widgets/swimiq_event_card.dart';
@@ -30,7 +32,10 @@ class PersonalBestsScreen extends ConsumerWidget {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final subscription = ref.watch(subscriptionStateProvider).value;
-        final showOfficial = subscription == null ||
+        final email = ref.watch(currentUserProvider)?.email;
+        // Master/founder/demo always see official PB upload — never Basic→Membership.
+        final showOfficial = SubscriptionService.isBuiltInEliteEmail(email) ||
+            subscription == null ||
             SubscriptionCapabilities.canAccessOfficialPbsAndStandards(
               subscription,
             );
