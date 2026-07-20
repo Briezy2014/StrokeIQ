@@ -4,18 +4,18 @@ SWIMIQ — STRIPE BILLING (ONLY)
 Goal: when someone clicks a plan on swimiqapp.com, Stripe checkout opens.
 
 You already said products + secrets are done. Good.
-What’s left is usually just 3 things below.
+Login already worked. We fixed the "Link project" error.
 
 
 ----------------------------------------
-STEP 1 — Get the Stripe turn-on file
+STEP 1 — Get the fixed Stripe turn-on file
 ----------------------------------------
 1. Open File Explorer
-2. Go to: Desktop → StrokeIQ
-   (if you use OneDrive: OneDrive → Desktop → StrokeIQ)
-3. Double-click:  GET-STRIPE-BILLING.bat
-4. Wait until it says OK
-5. It will open this instructions file again if needed
+2. Go to: OneDrive → Desktop → StrokeIQ
+   (or Desktop → StrokeIQ)
+3. Double-click:  GET-LATEST-FIXED-APP.bat
+4. Wait until it finishes
+5. You should now have the fixed TURN-ON-STRIPE-BILLING.bat
 
 
 ----------------------------------------
@@ -23,10 +23,11 @@ STEP 2 — Turn on Stripe checkout
 ----------------------------------------
 1. Still in the StrokeIQ folder
 2. Double-click:  TURN-ON-STRIPE-BILLING.bat
-3. A black window opens — press any key when it asks
-4. A browser may open — sign in to Supabase if asked
-5. Wait until you see:  [OK] Stripe functions deployed
-6. If you see [ERROR], take a photo of that window and send it
+3. Press any key when it asks
+4. Sign in to Supabase in the browser if asked
+5. You should see [1/3] [2/3] [3/3] — NOT "Link project"
+6. Wait for:  [OK] Stripe functions deployed
+7. If you see [ERROR], take a photo of that window and send it
 
 
 ----------------------------------------
