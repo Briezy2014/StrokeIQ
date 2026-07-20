@@ -24,11 +24,11 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
       minimumTier: SubscriptionTier.pro,
       title: 'Unlock SwimIQ Pro',
       message: 'The College Recruiting Hub is included with Pro — athlete passport, '
-          'résumé builder, career highlights, and highlight video organization.',
+          'career highlights, résumé builder, and highlight video organization.',
       teaserFeatures: const [
         'College Recruiting Hub & Athlete Passport',
-        'Best Times Résumé — export for coaches',
         'Career Highlights & lifetime progression',
+        'Best Times Résumé — export for coaches',
         'Highlight Video Builder',
       ],
       child: SwimmerScreen(
@@ -42,8 +42,8 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
             children: [
               const SwimIqPageHero(
                 title: 'College Recruiting Hub',
-                subtitle: 'Prepare your recruiting package — passport, résumé, '
-                    'career highlights & videos in one place.',
+                subtitle: 'Your recruiting story first — AI match, career highlights, '
+                    'then the résumé & video package coaches receive.',
               ),
               const SizedBox(height: 16),
               _ProfileSummaryCard(
@@ -62,6 +62,27 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               _HubTile(
+                emoji: '🤖',
+                title: 'AI Recruiting Intelligence',
+                subtitle: 'College Match, time projections & event recommendations',
+                badge: 'Elite',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RecruitingIntelligenceScreen(),
+                  ),
+                ),
+              ),
+              _HubTile(
+                emoji: '📅',
+                title: 'Career Highlights',
+                subtitle: 'Achievements, USA standards, drops & SwimIQ rating',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MeetHistoryScreen(),
+                  ),
+                ),
+              ),
+              _HubTile(
                 emoji: '📄',
                 title: 'Best Times Résumé',
                 subtitle: 'One-page recruiting résumé with top times, honors & academics',
@@ -72,33 +93,12 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
                 ),
               ),
               _HubTile(
-                emoji: '📅',
-                title: 'Career Highlights',
-                subtitle: 'Season bests, lifetime progression & top recruiting swims',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const MeetHistoryScreen(),
-                  ),
-                ),
-              ),
-              _HubTile(
                 emoji: '🎥',
                 title: 'Highlight Video Builder',
-                subtitle: 'Tag races, starts, turns & finishes for recruiting reels',
+                subtitle: 'Tag moments — build a clip pack & shareable recruiting reel',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const HighlightVideoBuilderScreen(),
-                  ),
-                ),
-              ),
-              _HubTile(
-                emoji: '🤖',
-                title: 'AI Recruiting Intelligence',
-                subtitle: 'College Match, time projections & event recommendations',
-                badge: 'Elite',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RecruitingIntelligenceScreen(),
                   ),
                 ),
               ),
