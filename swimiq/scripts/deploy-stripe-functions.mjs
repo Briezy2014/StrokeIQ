@@ -1,13 +1,10 @@
 /**
- * Deploy Stripe Edge Functions via Supabase Management API.
- * Kara pastes a Personal Access Token once (Windows Credential Manager
- * is not readable from Node after `supabase login`).
+ * Deploy Stripe Edge Functions via Supabase Management API + Windows curl.exe.
+ * Node FormData/fetch on Windows was returning UV_HANDLE_CLOSING 400s.
  *
  * Usage: node scripts/deploy-stripe-functions.mjs
  */
-import {
-  createInterface,
-} from 'node:readline/promises';
+import { createInterface } from 'node:readline/promises';
 import {
   existsSync,
   mkdirSync,
@@ -15,17 +12,18 @@ import {
   writeFileSync,
   rmSync,
 } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateRawSync } from 'node:zlib';
-import { execSync } from 'node:child_process';
 
 const PROJECT_REF = 'bryurwyeosbffvfpdbv';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FUNCTIONS_DIR = path.join(ROOT, 'supabase', 'functions');
 const TOKEN_FILE = path.join(os.homedir(), '.supabase', 'access-token');
 const IS_WIN = process.platform === 'win32';
+const TMP = path.join(os.tmpdir(), 'swimiq-stripe-deploy');
 
 const FUNCTIONS = [
   { slug: 'create-stripe-checkout', verifyJwt: true },
@@ -50,48 +48,47 @@ function saveToken(token) {
 
 async function ensureToken() {
   const existing = readSavedToken();
-  if (existing.startsWith('sbp_') || existing.length > 20) {
+  // Force a fresh token if the previous one may have been exposed on-screen.
+  const forceNew = process.env.SWIMIQ_FORCE_NEW_TOKEN === '1';
+  if (!forceNew && existing.length > 20) {
     console.log('[1/3] Using saved Supabase access token.');
     return existing;
   }
 
   const tokensUrl = 'https://supabase.com/dashboard/account/tokens';
   console.log('');
-  console.log('[1/3] We need a Supabase access token (one-time).');
+  console.log('[1/3] Create a NEW Supabase access token');
   console.log('');
-  console.log('1. A browser page will open.');
-  console.log('2. Click: Generate new token');
-  console.log('3. Name it: SwimIQ Stripe');
-  console.log('4. Copy the token (starts with sbp_)');
-  console.log('5. Paste it below and press Enter');
+  console.log('IMPORTANT: If you pasted a token earlier and it showed on screen,');
+  console.log('delete that token on the tokens page first.');
+  console.log('');
+  console.log('1. Browser will open the tokens page');
+  console.log('2. Generate new token  (name: SwimIQ Stripe)');
+  console.log('3. Copy it');
+  console.log('4. Right-click in THIS window → Paste → Enter');
   console.log('');
   console.log(tokensUrl);
   console.log('');
 
   try {
     if (IS_WIN) {
-      execSync(`cmd /c start "" "${tokensUrl}"`, { stdio: 'ignore' });
-    } else {
-      execSync(`xdg-open "${tokensUrl}"`, { stdio: 'ignore' });
+      execFileSync('cmd.exe', ['/c', 'start', '', tokensUrl], { stdio: 'ignore' });
     }
   } catch {
-    /* browser open is optional */
+    /* optional */
   }
 
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
   const pasted = (await rl.question('Paste token here: ')).trim();
   rl.close();
 
   if (!pasted || pasted.length < 20) {
-    console.error('[ERROR] That does not look like a token. Try again.');
+    console.error('[ERROR] That does not look like a token.');
     process.exit(1);
   }
 
   saveToken(pasted);
-  console.log(`[OK] Saved token to ${TOKEN_FILE}`);
+  console.log('[OK] Token saved (kept private on disk).');
   return pasted;
 }
 
@@ -108,10 +105,9 @@ function crc32(buf) {
 
 function zipOneFile(name, contentBuf) {
   const nameBuf = Buffer.from(name, 'utf8');
-  const compressed = deflateRawSync(contentBuf);
-  const useDeflate = compressed.length < contentBuf.length;
-  const payload = useDeflate ? compressed : contentBuf;
-  const method = useDeflate ? 8 : 0;
+  // Prefer store (method 0) — fewer unzip quirks on deploy servers.
+  const payload = contentBuf;
+  const method = 0;
   const crc = crc32(contentBuf);
 
   const local = Buffer.alloc(30 + nameBuf.length);
@@ -161,69 +157,121 @@ function zipOneFile(name, contentBuf) {
   return Buffer.concat([local, payload, central, end]);
 }
 
-async function deployFunction(token, { slug, verifyJwt }) {
-  const entry = path.join(FUNCTIONS_DIR, slug, 'index.ts');
-  if (!existsSync(entry)) {
-    throw new Error(`Missing ${entry}`);
+function findCurl() {
+  const candidates = [
+    path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe'),
+    'curl.exe',
+    'curl',
+  ];
+  for (const c of candidates) {
+    if (c === 'curl' || c === 'curl.exe' || existsSync(c)) return c;
   }
+  return null;
+}
 
-  const source = readFileSync(entry);
-  const zipBuf = zipOneFile('index.ts', source);
-  const tmpDir = path.join(os.tmpdir(), 'swimiq-stripe-deploy');
-  mkdirSync(tmpDir, { recursive: true });
-  const zipPath = path.join(tmpDir, `${slug}.zip`);
-  writeFileSync(zipPath, zipBuf);
+function deployWithCurl(token, { slug, verifyJwt }) {
+  const entry = path.join(FUNCTIONS_DIR, slug, 'index.ts');
+  if (!existsSync(entry)) throw new Error(`Missing ${entry}`);
 
-  const form = new FormData();
-  form.append(
-    'metadata',
+  mkdirSync(TMP, { recursive: true });
+  const zipPath = path.join(TMP, `${slug}.zip`);
+  const metaPath = path.join(TMP, `${slug}-meta.json`);
+  writeFileSync(zipPath, zipOneFile('index.ts', readFileSync(entry)));
+  writeFileSync(
+    metaPath,
     JSON.stringify({
       name: slug,
       entrypoint_path: 'index.ts',
       verify_jwt: verifyJwt,
     }),
   );
-  form.append(
-    'file',
-    new Blob([new Uint8Array(zipBuf)], { type: 'application/zip' }),
-    `${slug}.zip`,
-  );
+
+  const curl = findCurl();
+  if (!curl) {
+    throw new Error('curl.exe not found. Windows 10+ should include it.');
+  }
 
   const url =
     `https://api.supabase.com/v1/projects/${PROJECT_REF}` +
     `/functions/deploy?slug=${encodeURIComponent(slug)}`;
-  console.log(`Uploading ${slug} ...`);
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: form,
-  });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`${slug} deploy failed (${res.status}): ${text}`);
+  console.log(`Uploading ${slug} with curl.exe ...`);
+
+  // Write args to avoid cmd.exe mangling JSON quotes.
+  const out = execFileSync(
+    curl,
+    [
+      '-sS',
+      '-X',
+      'POST',
+      url,
+      '-H',
+      `Authorization: Bearer ${token}`,
+      '-F',
+      `metadata=<${metaPath};type=application/json`,
+      '-F',
+      `file=@${zipPath};type=application/zip`,
+      '-w',
+      '\nHTTP_STATUS:%{http_code}',
+    ],
+    {
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024,
+    },
+  );
+
+  const statusMatch = out.match(/HTTP_STATUS:(\d+)/);
+  const status = statusMatch ? Number(statusMatch[1]) : 0;
+  const body = out.replace(/\nHTTP_STATUS:\d+\s*$/, '').trim();
+
+  if (status < 200 || status >= 300) {
+    throw new Error(`${slug} deploy failed (${status}): ${body}`);
   }
+
   console.log(`[OK] ${slug}`);
+  if (body) {
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed.slug || parsed.name) {
+        console.log(`     version=${parsed.version ?? '?'} status=${parsed.status ?? '?'}`);
+      }
+    } catch {
+      console.log(body.slice(0, 200));
+    }
+  }
+
   try {
     rmSync(zipPath, { force: true });
+    rmSync(metaPath, { force: true });
   } catch {
     /* ignore */
   }
 }
 
 async function main() {
-  console.log('SwimIQ Stripe deploy');
+  console.log('SwimIQ Stripe deploy (curl upload)');
   console.log(`Project: ${PROJECT_REF}`);
   console.log(`Folder:  ${ROOT}`);
   console.log('');
 
+  // Always ask for a fresh token this run if saved token exists from the
+  // failed attempt that was visible on screen — safer default for Kara.
+  if (existsSync(TOKEN_FILE) && process.env.SWIMIQ_KEEP_TOKEN !== '1') {
+    console.log('For safety, create a NEW token (delete the old one first).');
+    try {
+      rmSync(TOKEN_FILE, { force: true });
+    } catch {
+      /* ignore */
+    }
+  }
+
   const token = await ensureToken();
 
   console.log('\n[2/3] Deploy create-stripe-checkout ...');
-  await deployFunction(token, FUNCTIONS[0]);
+  deployWithCurl(token, FUNCTIONS[0]);
 
   console.log('\n[3/3] Deploy stripe-webhook ...');
-  await deployFunction(token, FUNCTIONS[1]);
+  deployWithCurl(token, FUNCTIONS[1]);
 
   console.log(`
 [OK] Stripe functions deployed.
