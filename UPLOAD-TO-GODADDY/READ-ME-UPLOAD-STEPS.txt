@@ -1,4 +1,9 @@
-Upload ONLY: swimiq-web-godaddy.zip
-GoDaddy File Manager → public_html → Upload → Extract → Overwrite → Ctrl+Shift+R
+THIS FIXES ANALYZE.
 
-Analyze now auto-retries on brief AI hiccups (no instant "busy" fail).
+1) Upload swimiq-web-godaddy.zip into GoDaddy public_html
+2) Extract → Overwrite
+3) Ctrl+Shift+R on swimiqapp.com
+4) Denison 50 Fly → Run AI Swim Analysis
+5) Keep tab open up to 2 minutes
+
+Do this even if login already works — live site is still on an older Analyze build.

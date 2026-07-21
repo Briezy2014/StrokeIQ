@@ -1,1 +1,4 @@
-fix-ai-busy-retry 2026-07-21 — auto-retry on AI hiccups
+force-inline-analyze
+built for: reliable Analyze on live sync-v9
+shrink_target: 10 MB (inline Gemini path)
+features: auto-retry hiccups, no Gemini customer copy, login connected
