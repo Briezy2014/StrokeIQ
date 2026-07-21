@@ -31,7 +31,7 @@ End If
 uploadDir = root & "\UPLOAD-TO-GODADDY"
 If Not fso.FolderExists(uploadDir) Then fso.CreateFolder uploadDir
 
-zipPath = uploadDir & "\1-UPLOAD-THIS-TO-GODADDY.zip"
+zipPath = uploadDir & "\swimiq-web-godaddy.zip"
 howPath = uploadDir & "\READ-ME-UPLOAD-STEPS.txt"
 
 ' Prefer zip already in the repo (no network). Else copy. Else silent download.
@@ -40,7 +40,7 @@ If fso.FileExists(zipPath) Then
   If VerifyZipHasKeys(zipPath) Then found = True
 End If
 
-If Not found And fso.FileExists(root & "\UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip") Then
+If Not found And fso.FileExists(root & "\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip") Then
   ' already checked path
 End If
 
@@ -50,7 +50,7 @@ If Not found Then
   ps = "powershell -NoProfile -ExecutionPolicy Bypass -Command " & _
        """$ErrorActionPreference='Stop'; " & _
        "$zip='" & zipPath & "'; " & _
-       "$url='https://github.com/Briezy2014/StrokeIQ/releases/download/swimiq-web-LATEST/1-UPLOAD-THIS-TO-GODADDY.zip'; " & _
+       "$url='https://github.com/Briezy2014/StrokeIQ/releases/download/swimiq-web-LATEST/swimiq-web-godaddy.zip'; " & _
        "New-Item -ItemType Directory -Force -Path '" & uploadDir & "' | Out-Null; " & _
        "Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing; " & _
        "if ((Get-Item $zip).Length -lt 5000000) { throw 'too small' }; " & _
@@ -77,7 +77,7 @@ shell.Run "explorer.exe /select,""" & zipPath & """", 1, False
 
 MsgBox "READY." & vbCrLf & vbCrLf & _
        "1) Upload this file to GoDaddy public_html:" & vbCrLf & _
-       "   1-UPLOAD-THIS-TO-GODADDY.zip" & vbCrLf & vbCrLf & _
+       "   swimiq-web-godaddy.zip" & vbCrLf & vbCrLf & _
        "2) Extract → Overwrite ALL" & vbCrLf & vbCrLf & _
        "3) Then open swimiqapp.com and press Ctrl+Shift+R" & vbCrLf & vbCrLf & _
        "Your SwimIQ folder:" & vbCrLf & root, _
@@ -141,12 +141,12 @@ Sub WriteHow(path, zipFile)
   ts.WriteLine "==========================="
   ts.WriteLine ""
   ts.WriteLine "File:"
-  ts.WriteLine "  1-UPLOAD-THIS-TO-GODADDY.zip"
+  ts.WriteLine "  swimiq-web-godaddy.zip"
   ts.WriteLine ""
   ts.WriteLine "Steps:"
   ts.WriteLine "  1. GoDaddy File Manager already open? Use it."
   ts.WriteLine "  2. Open public_html"
-  ts.WriteLine "  3. Upload 1-UPLOAD-THIS-TO-GODADDY.zip"
+  ts.WriteLine "  3. Upload swimiq-web-godaddy.zip"
   ts.WriteLine "  4. Extract → Overwrite ALL"
   ts.WriteLine "  5. Ctrl+Shift+R on swimiqapp.com"
   ts.WriteLine ""

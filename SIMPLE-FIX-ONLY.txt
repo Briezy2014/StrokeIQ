@@ -1,16 +1,16 @@
-WHY "NOT CONNECTED" KEEPS HAPPENING
-===================================
-GoDaddy still has an OLD website zip with no login keys.
-I cannot press upload on your GoDaddy from here.
-A double-click on YOUR PC must place the CONNECTED zip, then you extract it in public_html once.
+THE FILE NAME IS:
 
-WHAT TO DOUBLE-CLICK
-====================
-DOUBLE-CLICK-ME.vbs   ← use this (OneDrive deletes many .bat files)
+  swimiq-web-godaddy.zip
 
-It opens UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip
+That is the website.
 
-Then: public_html → Upload that zip → Extract → Overwrite → Ctrl+Shift+R
+NOT Kara-DOUBLE-CLICK-STARTER.
+NOT DOUBLE-CLICK-ME.
+NOT anything from the build folder.
 
-If you have Desktop\StrokeIQ\StrokeIQ (folder inside folder),
-the real files are usually in the INNER StrokeIQ.
+In GoDaddy public_html:
+  Upload swimiq-web-godaddy.zip
+  Extract
+  Overwrite
+
+Then Ctrl+Shift+R on swimiqapp.com

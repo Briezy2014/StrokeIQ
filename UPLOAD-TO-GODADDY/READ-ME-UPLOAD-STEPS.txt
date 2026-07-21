@@ -1,21 +1,7 @@
-READ ME — DOUBLE CLICK ONLY
-===========================
+Upload this file to GoDaddy public_html:
 
-OneDrive often removes .bat files. Use the .vbs file instead.
+  swimiq-web-godaddy.zip
 
-1. Open Desktop\StrokeIQ
-   If you see ANOTHER folder also named StrokeIQ inside it, open THAT one.
+Extract → Overwrite.
 
-2. Double-click:  DOUBLE-CLICK-ME.vbs
-
-3. An upload folder opens with:
-   1-UPLOAD-THIS-TO-GODADDY.zip
-
-4. In GoDaddy File Manager → public_html
-   Upload that zip → Extract → Overwrite ALL
-
-5. On swimiqapp.com press Ctrl+Shift+R
-   You should get LOGIN (not "not connected").
-
-The connected website zip is stored in this project under:
-  UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip
+Do NOT upload Kara-DOUBLE-CLICK-STARTER.
