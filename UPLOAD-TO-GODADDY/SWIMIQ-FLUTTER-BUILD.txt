@@ -1,4 +1,3 @@
-force-inline-analyze + local double-click upload
-file: UPLOAD-TO-GODADDY/swimiq-web-godaddy.zip
-connected login + 10MB shrink + auto-retry
-NO GitHub download needed — double-click DOUBLE-CLICK-ME.vbs
+stop-analyze-fail-snackbars
+silent retries + emergency shrink
+no busy / unavailable customer copy

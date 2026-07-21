@@ -55,13 +55,13 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-findstr /C:"2026-gemini-sync-v11" "%INDEX%" >nul 2>&1
+findstr /C:"2026-gemini-sync-v12" "%INDEX%" >nul 2>&1
 if errorlevel 1 (
-  echo [FAIL] Downloaded file is not sync-v11.
+  echo [FAIL] Downloaded file is not sync-v12.
   pause
   exit /b 1
 )
-echo [OK] Local server code is 100 MB / sync-v11
+echo [OK] Local server code is 100 MB / sync-v12
 echo.
 
 echo [2/4] Supabase CLI via npx...

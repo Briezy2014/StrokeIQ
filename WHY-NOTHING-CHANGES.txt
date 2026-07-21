@@ -60,7 +60,7 @@ DO THIS EXACT SEQUENCE
 4) Raise the VIDEO SERVER limit (25 MB → 100 MB):
    Desktop\StrokeIQ\KARA-GEMINI-FIX-NOW.bat
    (same file also lives in Desktop\StrokeIQ\swimiq\ )
-   Must say sync-v11 success.
+   Must say sync-v12 success.
    If the file is missing: GET-LATEST failed (GitHub blocked) —
    use phone hotspot, then GET-LATEST again.
 

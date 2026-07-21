@@ -60,7 +60,7 @@ void main() {
     expect(VideoAnalysisScores.fallbackReason(notes), isNull);
     expect(
       VideoAnalysisScores.fallbackReason(awaiting),
-      contains('temporarily unavailable'),
+      contains('still working'),
     );
   });
 
@@ -69,36 +69,50 @@ void main() {
         'Gemini model is retired (often gemini-1.5-flash in Supabase secrets). '
         'Delete GEMINI_MODEL secret in Supabase, then run KARA-GEMINI-FIX-NOW.bat';
     final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(stale);
-    expect(rewritten, contains('temporarily unavailable'));
+    expect(rewritten, contains('still working'));
     expect(rewritten, isNot(contains('Delete GEMINI_MODEL')));
     expect(rewritten, isNot(contains('.bat')));
   });
 
-  test('rewrites 503 high demand errors with retry guidance', () {
+  test('rewrites 503 high demand errors with keep-trying guidance', () {
     const busy =
         'Gemini model "gemini-3.5-flash" is busy right now (Google high demand).';
     final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(busy);
-    expect(rewritten, contains('brief hiccup'));
+    expect(rewritten, contains('still working'));
     expect(
       VideoAnalysisScores.isTransientCloudBusyError(busy),
       isTrue,
     );
     expect(
+      VideoAnalysisScores.isRetriableAnalyzeError(busy),
+      isTrue,
+    );
+    expect(
       VideoAnalysisScores.friendlyCloudAnalyzeError(busy),
-      contains('brief hiccup'),
+      contains('still working'),
+    );
+    expect(
+      VideoAnalysisScores.friendlyCloudAnalyzeError(busy),
+      isNot(contains('busy right now')),
+    );
+    expect(
+      VideoAnalysisScores.friendlyCloudAnalyzeError(busy),
+      isNot(contains('temporarily unavailable')),
     );
   });
 
-  test('does not treat generic unavailable as busy', () {
-    const unavailable =
-        'AI video analysis was unavailable — notes-based coaching was saved.';
+  test('retries quota and timeout errors silently', () {
     expect(
-      VideoAnalysisScores.isTransientCloudBusyError(unavailable),
-      isFalse,
+      VideoAnalysisScores.isRetriableAnalyzeError('resource_exhausted quota'),
+      isTrue,
     );
     expect(
-      VideoAnalysisScores.friendlyCloudAnalyzeError(unavailable),
-      isNot(contains('busy right now')),
+      VideoAnalysisScores.isRetriableAnalyzeError('Analysis timed out 504'),
+      isTrue,
+    );
+    expect(
+      VideoAnalysisScores.isRetriableAnalyzeError('Unauthorized'),
+      isFalse,
     );
   });
 }

@@ -69,12 +69,14 @@
     var outName = 'output.mp4';
     ff.FS('writeFile', inName, await fetchFile(new Blob([videoBytes])));
 
-    // Aim for ≤10 MB so live sync-v9 uses the fast inline Gemini path (≤12 MB).
+    // Prefer tiny inline-safe clips. Emergency passes cut length hard.
     var runs = [
       ['-i', inName, '-vf', 'scale=854:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '600k', '-an', '-movflags', '+faststart', outName],
       ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '350k', '-an', '-movflags', '+faststart', outName],
-      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '250k', '-t', '45', '-an', '-movflags', '+faststart', outName],
-      ['-i', inName, '-vf', 'scale=480:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '180k', '-t', '35', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '250k', '-t', '40', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=480:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '180k', '-t', '30', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=426:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '140k', '-t', '25', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=320:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '100k', '-t', '20', '-an', '-movflags', '+faststart', outName],
     ];
 
     var last = null;

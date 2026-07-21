@@ -17,9 +17,9 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-sync-v11';
-  /// Sync server returns full analysis in one HTTP response (up to ~2 min).
-  static const invokeTimeout = Duration(seconds: 150);
+  static const currentFunctionVersion = '2026-gemini-sync-v12';
+  /// Sync server returns full analysis in one HTTP response (up to ~3 min).
+  static const invokeTimeout = Duration(seconds: 180);
   static const pollInterval = Duration(seconds: 3);
   static const pollMaxWait = Duration(minutes: 3);
 
@@ -29,7 +29,8 @@ class GeminiSwimAnalysisService {
     if (version == null || version.isEmpty) return false;
     if (version.contains('sync-v9') ||
         version.contains('sync-v10') ||
-        version.contains('sync-v11')) {
+        version.contains('sync-v11') ||
+        version.contains('sync-v12')) {
       return true;
     }
     return version.startsWith('2026-gemini');
@@ -63,7 +64,7 @@ class GeminiSwimAnalysisService {
 
     if (response.status == 404) {
       return VideoAnalysisServerHealth.failed(
-        'AI coaching is temporarily unavailable. Please try again later.',
+        'AI coaching is updating. Tap Analyze again in a moment.',
       );
     }
 
@@ -71,7 +72,7 @@ class GeminiSwimAnalysisService {
         data is Map &&
         data['error']?.toString().toLowerCase().contains('gemini_api_key') == true) {
       return VideoAnalysisServerHealth.failed(
-        'AI coaching is temporarily unavailable. Please try again later.',
+        'AI coaching is updating. Tap Analyze again in a moment.',
       );
     }
 

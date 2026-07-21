@@ -9,7 +9,7 @@ const MAX_INLINE_BYTES = 12 * 1024 * 1024;
  * Gemini File API supports much larger files; keep a practical product ceiling here.
  */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
-const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v11";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v12";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -245,30 +245,70 @@ async function buildVideoAnalysis(
       geminiJson = result.json;
       geminiModelUsed = result.model;
     } else {
-      const streamed = await openStorageVideoStream(admin, storagePath);
-      if (streamed.byteLength > MAX_FILE_API_BYTES) {
-        throw new Error(
-          `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
-        );
-      }
+      try {
+        const streamed = await openStorageVideoStream(admin, storagePath);
+        if (streamed.byteLength > MAX_FILE_API_BYTES) {
+          throw new Error(
+            `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
+          );
+        }
 
-      const uploaded = await uploadVideoStreamToGeminiFile(
-        geminiApiKey,
-        streamed.body,
-        streamed.byteLength,
-        mimeType,
-        displayName,
-      );
-      geminiFileName = uploaded.name;
-      await waitForGeminiFileActive(geminiApiKey, uploaded.name);
-      const result = await callGeminiGenerateContentWithFallback(
-        geminiApiKey,
-        { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
-        prompt,
-        MAX_VIDEO_GEMINI_MODELS,
-      );
-      geminiJson = result.json;
-      geminiModelUsed = result.model;
+        const uploaded = await uploadVideoStreamToGeminiFile(
+          geminiApiKey,
+          streamed.body,
+          streamed.byteLength,
+          mimeType,
+          displayName,
+        );
+        geminiFileName = uploaded.name;
+        await waitForGeminiFileActive(geminiApiKey, uploaded.name);
+        const result = await callGeminiGenerateContentWithFallback(
+          geminiApiKey,
+          { file_data: { mime_type: mimeType, file_uri: uploaded.uri } },
+          prompt,
+          MAX_VIDEO_GEMINI_MODELS,
+        );
+        geminiJson = result.json;
+        geminiModelUsed = result.model;
+      } catch (fileApiError) {
+        // Workaround: File API / worker limits → retry with capped inline bytes.
+        const message = fileApiError instanceof Error
+          ? fileApiError.message
+          : String(fileApiError);
+        const lower = message.toLowerCase();
+        const canInlineFallback = lower.includes("timed out") ||
+          lower.includes("timeout") ||
+          lower.includes("504") ||
+          lower.includes("546") ||
+          lower.includes("worker_resource") ||
+          lower.includes("overloaded") ||
+          lower.includes("503") ||
+          lower.includes("unavailable") ||
+          lower.includes("high demand") ||
+          lower.includes("resource_exhausted") ||
+          lower.includes("quota");
+        if (!canInlineFallback) throw fileApiError;
+
+        if (geminiFileName) {
+          await deleteGeminiFile(geminiApiKey, geminiFileName).catch(() => {});
+          geminiFileName = null;
+        }
+
+        uploadMethod = "inline";
+        const videoBytes = await downloadStorageVideoBytes(admin, storagePath);
+        const capped = videoBytes.length > MAX_INLINE_BYTES
+          ? videoBytes.subarray(0, MAX_INLINE_BYTES)
+          : videoBytes;
+        const base64 = bytesToBase64(capped);
+        const result = await callGeminiGenerateContentWithFallback(
+          geminiApiKey,
+          { inline_data: { mime_type: mimeType, data: base64 } },
+          prompt,
+          MAX_VIDEO_GEMINI_MODELS,
+        );
+        geminiJson = result.json;
+        geminiModelUsed = result.model;
+      }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

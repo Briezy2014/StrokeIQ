@@ -21,6 +21,7 @@ abstract final class VideoAnalysisScores {
     if (version.contains('sync-v9') ||
         version.contains('sync-v10') ||
         version.contains('sync-v11') ||
+        version.contains('sync-v12') ||
         version.contains('stream-v4') ||
         version.contains('stream-v5') ||
         version.contains('stream-v6') ||
@@ -105,79 +106,74 @@ abstract final class VideoAnalysisScores {
         'Older orange messages below are from a previous attempt.';
   }
 
-  /// True when the cloud AI hiccuped (503 / high demand) and a quick retry may work.
-  static bool isTransientCloudBusyError(String raw) {
+  /// True when silent auto-retry should keep going (no snackbar yet).
+  static bool isRetriableAnalyzeError(String raw) {
     final lower = raw.toLowerCase();
-    if (lower.contains('resource_exhausted') ||
-        lower.contains('quota') ||
-        lower.contains('rate limit') ||
-        lower.contains('limit: 0') ||
-        lower.contains('too large') ||
-        lower.contains('413') ||
-        lower.contains('timed out') ||
-        lower.contains('timeout') ||
-        lower.contains('unauthorized')) {
+    if (lower.contains('unauthorized') ||
+        lower.contains('authorization') ||
+        lower.contains('sign in') ||
+        lower.contains('api key not valid') ||
+        lower.contains('api_key_invalid') ||
+        lower.contains('pgrst205') ||
+        (lower.contains('swim_video_analyses') &&
+            lower.contains('could not find'))) {
       return false;
     }
+    // Size errors are handled by shrink-then-retry separately.
+    if (lower.contains('too large') ||
+        lower.contains('413') ||
+        (lower.contains('payload') && lower.contains('large'))) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Legacy name — busy/overload blips are retriable.
+  static bool isTransientCloudBusyError(String raw) {
+    final lower = raw.toLowerCase();
     return lower.contains('high demand') ||
         lower.contains('503') ||
         lower.contains('is busy right now') ||
         lower.contains('overloaded') ||
         lower.contains('try again in') ||
-        lower.contains('temporarily busy');
+        lower.contains('temporarily busy') ||
+        lower.contains('brief hiccup') ||
+        lower.contains('resource_exhausted') ||
+        lower.contains('quota') ||
+        lower.contains('rate limit') ||
+        lower.contains('timed out') ||
+        lower.contains('timeout') ||
+        lower.contains('504') ||
+        lower.contains('546') ||
+        lower.contains('worker_resource_limit') ||
+        lower.contains('502') ||
+        lower.contains('unavailable');
   }
 
   /// Customer-safe copy for live Analyze failures (and snackbars).
+  /// Never say "busy" or "temporarily unavailable" — keep them trying.
   static String friendlyCloudAnalyzeError(String raw) {
     final lower = raw.toLowerCase();
-    if (lower.contains('too large') ||
-        lower.contains('413') ||
-        (lower.contains('payload') && lower.contains('large'))) {
-      return 'This video was too large for the server. SwimIQ is shrinking it — '
-          'tap Analyze again and keep the tab open for up to 2 minutes.';
-    }
-    if (lower.contains('timed out') ||
-        lower.contains('timeout') ||
-        lower.contains('idle_timeout') ||
-        lower.contains('504')) {
-      return 'Analysis took too long. Try a shorter clip (under 60 seconds) '
-          'and tap Analyze again. Notes-based coaching was saved for now.';
-    }
     if (lower.contains('unauthorized') || lower.contains('authorization')) {
-      return 'Please sign in again, then re-run analysis. '
-          'Notes-based coaching was saved for now.';
+      return 'Please sign in again, then tap Analyze once more.';
     }
     if (lower.contains('could not download video')) {
-      return 'Could not load this video for analysis. Try re-uploading, '
-          'then Analyze again. Notes-based coaching was saved for now.';
+      return 'Could not load this video. Re-upload the clip, then tap Analyze.';
     }
     if (lower.contains('pgrst205') ||
         (lower.contains('swim_video_analyses') &&
             lower.contains('could not find'))) {
       return SupabaseTableErrors.missingVideoAnalysesMessage();
     }
-    if (isTransientCloudBusyError(raw)) {
-      return 'AI coaching had a brief hiccup. Tap Analyze again — '
-          'it usually works on the next try.';
+    if (lower.contains('too large') ||
+        lower.contains('413') ||
+        (lower.contains('payload') && lower.contains('large'))) {
+      return 'SwimIQ is preparing a smaller version of this clip. '
+          'Tap Analyze again and keep this tab open for up to 2 minutes.';
     }
-    if (lower.contains('resource_exhausted') ||
-        lower.contains('quota') ||
-        lower.contains('rate limit') ||
-        lower.contains('limit: 0') ||
-        lower.contains('worker_resource_limit') ||
-        lower.contains('not having enough compute resources') ||
-        lower.contains('status: 546') ||
-        lower.contains('gemini_api_key') ||
-        lower.contains('api key') ||
-        lower.contains('permission_denied') ||
-        lower.contains('billing') ||
-        (lower.contains('not found') && lower.contains('function'))) {
-      return 'AI video analysis is temporarily unavailable. '
-          'Notes-based coaching was saved. Try again shortly, '
-          'or email support@swimiqapp.com if it keeps failing.';
-    }
-    return 'AI video analysis was unavailable — notes-based coaching was saved. '
-        'Try Analyze again in a few minutes.';
+    // One calm message for timeout / quota / overload / worker limits.
+    return 'SwimIQ is still working on this clip. Tap Analyze again and '
+        'keep this tab open — the next try usually finishes.';
   }
 
   /// Rewrites outdated/ops server errors into customer-safe copy.
@@ -202,22 +198,16 @@ abstract final class VideoAnalysisScores {
         (lower.contains('gemini-2.0-flash') &&
             (lower.contains('retired') || lower.contains('limit: 0'))) ||
         lower.contains('.bat') ||
-        lower.contains('gemini_api_key')) {
-      return 'AI coaching is temporarily unavailable. '
-          'Try a clip under 30 seconds, then tap Analyze again. '
-          'If it keeps failing, email support@swimiqapp.com.';
-    }
-    if (isTransientCloudBusyError(raw) ||
+        lower.contains('gemini_api_key') ||
         lower.contains('high demand') ||
         lower.contains('503') ||
-        lower.contains('is busy right now')) {
-      return 'AI coaching had a brief hiccup. Tap Analyze again — '
-          'it usually works on the next try.';
-    }
-    if (lower.contains('.bat') ||
+        lower.contains('is busy right now') ||
+        lower.contains('temporarily unavailable') ||
+        lower.contains('busy right now') ||
         lower.contains('127.0.0.1') ||
         lower.contains('supabase secrets')) {
-      return 'Analysis is temporarily unavailable. Please try again shortly.';
+      return 'SwimIQ is still working on this clip. Tap Analyze again and '
+          'keep this tab open — the next try usually finishes.';
     }
     return raw;
   }

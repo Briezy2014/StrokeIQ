@@ -4,7 +4,7 @@
 param(
     [string]$SwimIqRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$Branch = 'cursor/dryland-power-index-b7ef',
-    [string]$RequiredVersion = '2026-gemini-sync-v11'
+    [string]$RequiredVersion = '2026-gemini-sync-v12'
 )
 
 $ErrorActionPreference = 'Continue'
@@ -74,7 +74,7 @@ if (Sync-FromGit) {
 Write-Host 'Git sync failed - downloading from GitHub (no git needed)...'
 try {
     if (Sync-FromGitHubRaw) {
-        Write-Host 'OK - Downloaded sync-v11 from GitHub.'
+        Write-Host 'OK - Downloaded sync-v12 from GitHub.'
         exit 0
     }
 }

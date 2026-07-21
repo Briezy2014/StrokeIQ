@@ -8,6 +8,12 @@ import 'video_cloud_fit_stub.dart'
 /// Analyze avoids the flaky File API path until sync-v11 is redeployed.
 const int kCloudAnalyzeSafeBytes = 10 * 1024 * 1024;
 
+/// Emergency shrink after a failed Analyze attempt — shorter / smaller clip.
+const int kCloudAnalyzeEmergencyBytes = 6 * 1024 * 1024;
+
+/// Last-resort shrink — first ~25s at very low bitrate for inline Gemini.
+const int kCloudAnalyzeLastResortBytes = 4 * 1024 * 1024;
+
 Future<Uint8List> fitVideoBytesForCloud(
   Uint8List bytes, {
   String? fileName,

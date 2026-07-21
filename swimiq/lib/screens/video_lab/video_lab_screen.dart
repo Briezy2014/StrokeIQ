@@ -353,10 +353,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Analyzing your clip (usually under 2 minutes). Keep this tab open. '
-            'Big phone clips may prepare for a moment first.',
+            'Analyzing your clip — keep this tab open. SwimIQ will keep trying '
+            'automatically (can take up to 3 minutes on a big phone video).',
           ),
-          duration: Duration(seconds: 20),
+          duration: Duration(seconds: 30),
         ),
       );
     }

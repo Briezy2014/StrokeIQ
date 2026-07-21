@@ -270,12 +270,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     SwimPoseMetrics? poseMetrics,
     required String videoId,
   }) async {
-    const maxAttempts = 3;
-    GeminiAnalysisException? lastBusy;
+    const maxAttempts = 6;
+    var videoForAttempt = video;
+    GeminiAnalysisException? lastError;
+
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
-              video: video,
+              video: videoForAttempt,
               raceLogs: raceLogs,
               goals: goals,
               profile: profile,
@@ -283,17 +285,56 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               pollForResult: () => _pollVideoAnalysisResult(videoId),
             );
       } on GeminiAnalysisException catch (error) {
-        final transient =
+        lastError = error;
+        final lower = error.message.toLowerCase();
+        final tooLarge = lower.contains('too large') ||
+            lower.contains('413') ||
+            (lower.contains('payload') && lower.contains('large'));
+        final retriable = tooLarge ||
+            VideoAnalysisScores.isRetriableAnalyzeError(error.message) ||
             VideoAnalysisScores.isTransientCloudBusyError(error.message);
-        if (!transient || attempt >= maxAttempts) {
+
+        if (!retriable || attempt >= maxAttempts) {
           rethrow;
         }
-        lastBusy = error;
-        await Future<void>.delayed(Duration(seconds: 3 * attempt));
+
+        // After early failures, force a smaller/shorter clip and keep going
+        // silently — do not show busy/unavailable snackbars mid-run.
+        if (canFitVideoBytesForCloud && attempt >= 2) {
+          final targetBytes = attempt >= 4
+              ? kCloudAnalyzeLastResortBytes
+              : kCloudAnalyzeEmergencyBytes;
+          try {
+            final storage = ref.read(videoStorageServiceProvider);
+            final original =
+                await storage.downloadVideoBytes(videoForAttempt.storagePath);
+            final shrunk = await fitVideoBytesForCloud(
+              original,
+              fileName: videoForAttempt.title ?? 'swim.mov',
+              maxBytes: targetBytes,
+            );
+            if (shrunk.lengthInBytes < original.lengthInBytes) {
+              videoForAttempt = await storage.replaceSwimVideoBytes(
+                video: videoForAttempt,
+                bytes: shrunk,
+                contentType: 'video/mp4',
+                fileNameHint: '${videoForAttempt.title ?? 'swim'}.mp4',
+              );
+            }
+          } catch (_) {
+            // Keep retrying with the current clip.
+          }
+        }
+
+        await Future<void>.delayed(Duration(seconds: 4 * attempt));
       }
     }
-    throw lastBusy ??
-        GeminiAnalysisException('AI coaching is temporarily unavailable.');
+
+    throw lastError ??
+        GeminiAnalysisException(
+          'SwimIQ is still working on this clip. Tap Analyze again and '
+          'keep this tab open — the next try usually finishes.',
+        );
   }
 
   Future<void> _persistVideoAnalysis({
