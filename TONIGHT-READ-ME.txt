@@ -1,57 +1,26 @@
-TONIGHT — COACH DEMO (READ THIS)
-================================
+TONIGHT — STOP USING swimiqapp.com FOR THE COACH
+================================================
 
-I was telling you about files your PC does not have.
-That stops now.
+Why nothing worked:
+- Your Desktop folder never got the GoDaddy helper files I named
+- The live website Analyze is broken on Google's AI key/server
+- Yesterday worked on THIS PC at 127.0.0.1 — not the public site
 
-The public site (swimiqapp.com) is still on an OLD Analyze build.
-That is why it keeps saying busy / unavailable.
-Do NOT use swimiqapp.com for the coach tonight.
+DO THIS ONLY:
 
-Use the LOCAL app on this PC (what worked before).
+1. Close every swimiqapp.com tab
+2. Start menu → type: powershell → Enter
+3. Open PASTE-IN-POWERSHELL-TONIGHT.txt
+4. Copy the WHOLE script (from $ErrorActionPreference to the end)
+5. Paste into PowerShell → Enter
+6. Wait for Chrome. Address must be 127.0.0.1
+7. Video Lab → Denison 50 Fly → Run AI Swim Analysis
+8. Leave the Elite window open
 
+OPTIONAL (fixes the public website for later — 5 minutes):
+1. https://aistudio.google.com/apikey → Create API key in NEW project
+2. Supabase → Project → Edge Functions → Secrets
+3. Update GEMINI_API_KEY to the new key
+4. Then Analyze on the website may work again
 
-WHAT TO DO (matches your Desktop folder):
-
-1. Open Desktop\StrokeIQ
-
-2. Open the folder named:   swimiq
-   (you already have this folder)
-
-3. Find:   TONIGHT-COACH-DEMO.ps1
-   Right-click it → Run with PowerShell
-
-   If you do not see .ps1 yet, try:
-   START-SWIMIQ-WITH-ELITE.bat
-   or start_swimiq.ps1
-
-4. Leave the "Elite" window OPEN
-
-5. Wait for Chrome. Address must say:
-      127.0.0.1
-   NOT swimiqapp.com
-
-6. Video Lab → Denison 50 Fly → Run AI Swim Analysis
-
-
-COPY-PASTE (if you cannot find the script):
-
-1. Click Start → type:  powershell
-2. Open Windows PowerShell
-3. Paste this whole block and press Enter:
-
-$paths = @(
-  "$env:USERPROFILE\Desktop\StrokeIQ\swimiq",
-  "$env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ\swimiq",
-  "$env:OneDrive\Desktop\StrokeIQ\swimiq",
-  "$env:OneDrive\Desktop\StrokeIQ\StrokeIQ\swimiq"
-)
-$swimiq = $paths | Where-Object { Test-Path "$_\pubspec.yaml" } | Select-Object -First 1
-if (-not $swimiq) { Write-Host "swimiq folder not found"; pause; exit }
-cd $swimiq
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-elite-and-wait.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\start_swimiq.ps1
-
-
-After the coach demo works, we set up ambassadors.
-Do not fight GoDaddy tonight.
+Ambassadors = after coach demo works on 127.0.0.1
