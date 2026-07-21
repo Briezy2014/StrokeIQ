@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
@@ -47,6 +48,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _dominantHandController;
   late final TextEditingController _imxController;
   late final TextEditingController _imrController;
+  late final TextEditingController _swimioUrlController;
 
   DateTime? _birthday;
   bool _isSaving = false;
@@ -77,6 +79,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _dominantHandController = TextEditingController();
     _imxController = TextEditingController();
     _imrController = TextEditingController();
+    _swimioUrlController = TextEditingController();
   }
 
   @override
@@ -102,6 +105,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _dominantHandController.dispose();
     _imxController.dispose();
     _imrController.dispose();
+    _swimioUrlController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -160,7 +164,30 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _dominantHandController.text = profile?.dominantHand ?? '';
     _imxController.text = profile?.imxScore ?? '';
     _imrController.text = profile?.imrScore ?? '';
+    _swimioUrlController.text = profile?.swimioUrl ?? '';
     _birthday = profile?.birthday;
+  }
+
+  Future<void> _openSwimio() async {
+    final raw = _swimioUrlController.text.trim().isNotEmpty
+        ? _swimioUrlController.text.trim()
+        : 'https://www.myswimio.com/';
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !(uri.isScheme('http') || uri.isScheme('https'))) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a full Swimio link starting with https://'),
+        ),
+      );
+      return;
+    }
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Swimio in the browser.')),
+      );
+    }
   }
 
   Future<void> _pickBirthday() async {
@@ -216,6 +243,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         otherInterests: _interestsController.text,
         imxScore: _imxController.text,
         imrScore: _imrController.text,
+        swimioUrl: _swimioUrlController.text,
         notes: _notesController.text,
       ),
     );
@@ -387,6 +415,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'USA Swimming Profile',
               lines: [
                 'USA Swimming ID: ${_passportLabel(profile?.usaSwimmingId)}',
+                'Swimio: ${_passportLabel(profile?.swimioUrl)}',
                 'IMX Score: ${_passportLabel(profile?.imxScore)}',
                 'IMR Score: ${_passportLabel(profile?.imrScore)}',
                 'Club Team: ${_passportLabel(profile?.team)}',
@@ -495,31 +524,46 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'IMX / IMR (from Swimio or USA Swimming)',
+                        'IMX / IMR from Swimio',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'SwimIQ cannot pull these automatically yet. Open Swimio '
-                        '(or USA Swimming) for this athlete, copy the IMX and IMR '
-                        'scores, and paste them here.',
+                        'Paste the athlete’s Swimio page link below, open it, copy '
+                        'the IMX and IMR numbers, then paste them here and Save. '
+                        'Example: https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               height: 1.35,
                             ),
                       ),
                       const SizedBox(height: 12),
                       _field(
+                        controller: _swimioUrlController,
+                        label: 'Swimio profile URL',
+                        hint:
+                            'https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
+                        keyboardType: TextInputType.url,
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _openSwimio,
+                          icon: const Icon(Icons.open_in_new, size: 18),
+                          label: const Text('Open Swimio page'),
+                        ),
+                      ),
+                      _field(
                         controller: _imxController,
                         label: 'IMX Score',
-                        hint: 'From Swimio / USA Swimming',
+                        hint: 'Paste from Swimio',
                         keyboardType: TextInputType.number,
                       ),
                       _field(
                         controller: _imrController,
                         label: 'IMR Score',
-                        hint: 'From Swimio / USA Swimming',
+                        hint: 'Paste from Swimio',
                         keyboardType: TextInputType.number,
                       ),
                       _field(

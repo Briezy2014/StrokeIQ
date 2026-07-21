@@ -29,6 +29,8 @@ void main() {
           otherInterests: 'Piano, NHS, water polo',
           imxScore: '2840',
           imrScore: '1950',
+          swimioUrl:
+              'https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
         ),
       );
 
@@ -37,6 +39,10 @@ void main() {
       expect(profile.otherInterests, 'Piano, NHS, water polo');
       expect(profile.imxScore, '2840');
       expect(profile.imrScore, '1950');
+      expect(
+        profile.swimioUrl,
+        'https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
+      );
     });
 
     test('round-trips structured athlete notes metadata', () {
