@@ -21,16 +21,16 @@ if not exist ".git" (
 
 echo Closing old Chrome SwimIQ tabs is recommended.
 echo.
-echo Switching to the Elite dashboard branch...
+echo Switching to the Dryland + Power Index branch...
 git fetch origin
 git merge --abort >nul 2>&1
-git checkout -f cursor/elite-video-on-dashboard-b7ef
+git checkout -f cursor/dryland-power-index-b7ef
 if errorlevel 1 (
   echo [FAIL] Could not switch branch.
   pause
   exit /b 1
 )
-git reset --hard origin/cursor/elite-video-on-dashboard-b7ef
+git reset --hard origin/cursor/dryland-power-index-b7ef
 if errorlevel 1 (
   echo [FAIL] Could not update from GitHub.
   pause

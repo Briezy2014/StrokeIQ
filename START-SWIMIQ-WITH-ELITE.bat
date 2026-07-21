@@ -17,12 +17,12 @@ echo Log: %LOG%
 echo.
 
 echo [1/4] Updating folder from GitHub...
-git -C "%CD%" fetch origin cursor/elite-video-on-dashboard-b7ef >> "%LOG%" 2>&1
+git -C "%CD%" fetch origin cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
 if errorlevel 1 (
   echo [WARN] git fetch failed - using files already on disk.
 ) else (
-  git -C "%CD%" checkout -f cursor/elite-video-on-dashboard-b7ef >> "%LOG%" 2>&1
-  if not errorlevel 1 git -C "%CD%" reset --hard origin/cursor/elite-video-on-dashboard-b7ef >> "%LOG%" 2>&1
+  git -C "%CD%" checkout -f cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
+  if not errorlevel 1 git -C "%CD%" reset --hard origin/cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
 )
 echo [OK] Ready.
 echo.

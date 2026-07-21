@@ -65,10 +65,10 @@ if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your
 Write-Host 'Pulling fixed app branch (dashboard + Elite Video)...' -ForegroundColor Yellow
 Push-Location (Split-Path $paths.WorkDir -Parent)
 try {
-    git fetch origin cursor/elite-video-on-dashboard-b7ef 2>$null
-    git checkout -f cursor/elite-video-on-dashboard-b7ef 2>$null
-    git reset --hard origin/cursor/elite-video-on-dashboard-b7ef 2>$null
-    Write-Host '[OK] On cursor/elite-video-on-dashboard-b7ef' -ForegroundColor Green
+    git fetch origin cursor/dryland-power-index-b7ef 2>$null
+    git checkout -f cursor/dryland-power-index-b7ef 2>$null
+    git reset --hard origin/cursor/dryland-power-index-b7ef 2>$null
+    Write-Host '[OK] On cursor/dryland-power-index-b7ef' -ForegroundColor Green
 } catch {
     Write-Host '[WARN] Git update skipped - using local copy.' -ForegroundColor Yellow
 } finally {

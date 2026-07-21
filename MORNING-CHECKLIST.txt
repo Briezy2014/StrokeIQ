@@ -1,54 +1,50 @@
-SWIMIQ — DO THIS IN THE MORNING
-================================
+SWIMIQ — REPUBLISH NOW (CRITICAL)
+=================================
 
-Overnight we activated:
-- AI Dryland Coach (Passport + Recruiting Hub)
-- Power Index (live score, not "coming soon")
-- Highlight package on the website (copy/share clip order)
-- Password reset completion + customer-safe billing/AI errors (prior pass)
+Why the last republish looked the same:
+  PUBLISH-SWIMIQAPP-COM.bat was still resetting to the OLD
+  elite-video branch BEFORE building — so it erased Dryland
+  + Power Index every time you published.
 
-------------------------------------------------
-1) GET THE LATEST FILES
-------------------------------------------------
-Open: Desktop\StrokeIQ
-Double-click: GET-LATEST-FIXED-APP.bat
+That publish script is now fixed.
 
 ------------------------------------------------
-2) REPUBLISH THE WEBSITE
+DO THIS EXACTLY (3 steps)
 ------------------------------------------------
-Double-click: PUBLISH-SWIMIQAPP-COM.bat
-Wait for the zip.
-GoDaddy File Manager → public_html → upload/extract:
-  swimiq\build\swimiq-web-godaddy.zip
-Hard refresh swimiqapp.com (Ctrl+F5)
+1) Desktop\StrokeIQ → double-click GET-LATEST-FIXED-APP.bat
+   Wait until it finishes. You want branch:
+     cursor/dryland-power-index-b7ef
+
+2) Double-click PUBLISH-SWIMIQAPP-COM.bat
+   Watch for:
+     [OK] On branch: cursor/dryland-power-index-b7ef
+   Wait for the NEW zip to finish building.
+
+3) GoDaddy → public_html → upload/extract ONLY:
+     swimiq\build\swimiq-web-godaddy.zip
+   Then hard refresh swimiqapp.com (Ctrl+Shift+R)
 
 ------------------------------------------------
-3) SUPABASE (ONE-TIME CHECK)
+PROOF IT WORKED
 ------------------------------------------------
-Auth → URL Configuration:
-  Site URL = https://swimiqapp.com
-  Redirect URLs include https://swimiqapp.com/**
+Passport / Recruiting Hub / Best Times Résumé:
+  Power Index shows a number like 78 / 100
+  (NOT "Coming soon")
 
-------------------------------------------------
-4) 5-MINUTE SMOKE TEST
-------------------------------------------------
-Signed-in Pro/Elite account:
-  [ ] Login works
-  [ ] Passport → AI Dryland Coach opens a real plan
-  [ ] Passport / Recruiting Hub shows Power Index number (needs birthday + gender + PBs)
-  [ ] Recruiting Hub → Best Times Résumé shows Power Index (not coming soon)
-  [ ] Highlight Video Builder → tag clips → Build highlight package → copies plan
-  [ ] Membership Choose / Stripe still works
-  [ ] Forgot password email opens "Choose a new password"
+Passport Command Center:
+  AI Dryland Coach opens a real workout plan
+
+Highlight Video Builder:
+  Button says "Build highlight package"
 
 If Power Index says "Add birthday and gender":
-  Passport profile → set birthday + gender → save → refresh
+  Passport profile → set birthday + gender → save
 
 ------------------------------------------------
-5) WHAT YOU SHOULD SEE
+SMOKE CHECK (2 minutes)
 ------------------------------------------------
-Power Index: score like "78 / 100 · Highly competitive"
-Dryland: strength / core / mobility (+ technique block if AI analysis exists)
-No "coming soon" on Power Index or Dryland
-
-Questions / bugs → reply in Cursor with a screenshot.
+[ ] Login
+[ ] Passport → AI Dryland Coach
+[ ] Power Index visible (not coming soon)
+[ ] Highlight package builds/copies
+[ ] Membership / Stripe Choose still works
