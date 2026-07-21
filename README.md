@@ -23,6 +23,17 @@ flutter run
 
 See [swimiq/README.md](swimiq/README.md) for full setup.
 
+### Website (Flutter in the browser)
+
+- Status / SSL fix: [swimiq/docs/WEB_SITE_STATUS.md](swimiq/docs/WEB_SITE_STATUS.md)
+- GoDaddy upload: [swimiq/docs/WALKTHROUGH_SWIMIQAPP_COM.md](swimiq/docs/WALKTHROUGH_SWIMIQAPP_COM.md)
+- GitHub Pages auto-deploy: [swimiq/docs/WEB_DEPLOY.md](swimiq/docs/WEB_DEPLOY.md)
+
+### Android Play launch
+
+- [swimiq/docs/ANDROID_LAUNCH_CHECKLIST.md](swimiq/docs/ANDROID_LAUNCH_CHECKLIST.md)
+- [swimiq/docs/ANDROID_RELEASE.md](swimiq/docs/ANDROID_RELEASE.md)
+
 ## Quick start — Streamlit reference app
 
 ```bash

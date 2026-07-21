@@ -38,6 +38,17 @@ cd swimiq
 
 See **[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)** for inviting parents via **TestFlight** (iOS beta).
 
+### Website + Android launch
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/WEB_SITE_STATUS.md](docs/WEB_SITE_STATUS.md) | Why https may fail + fix SSL |
+| [docs/WALKTHROUGH_SWIMIQAPP_COM.md](docs/WALKTHROUGH_SWIMIQAPP_COM.md) | Put Flutter on GoDaddy |
+| [docs/WEB_DEPLOY.md](docs/WEB_DEPLOY.md) | GitHub Pages auto-deploy |
+| [docs/ANDROID_LAUNCH_CHECKLIST.md](docs/ANDROID_LAUNCH_CHECKLIST.md) | Pre-Play checklist |
+| [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md) | Signed AAB + keystore |
+| [docs/KARA_START_HERE.md](docs/KARA_START_HERE.md) | Simple plan for Kara |
+
 ### Everyone else
 
 ```bash

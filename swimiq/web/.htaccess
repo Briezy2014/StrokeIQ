@@ -10,6 +10,11 @@ DirectoryIndex index.html
   RewriteEngine On
   RewriteBase /
   RewriteRule ^index\.html$ - [L]
+  # Pretty legal URLs without breaking Flutter SPA routes
+  RewriteRule ^privacy/?$ privacy.html [L]
+  RewriteRule ^terms/?$ terms.html [L]
+  RewriteRule ^ai/?$ ai.html [L]
+  RewriteRule ^delete-account/?$ delete-account.html [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]

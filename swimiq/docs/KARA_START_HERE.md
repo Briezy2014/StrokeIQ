@@ -1,149 +1,103 @@
 # Kara’s simple plan — website + app (read top to bottom)
 
+## Start here this week
+
+1. **Website broken on https?** → Read **[WEB_SITE_STATUS.md](WEB_SITE_STATUS.md)** and fix GoDaddy SSL first.  
+2. **Want auto browser app?** → **[WEB_DEPLOY.md](WEB_DEPLOY.md)** (GitHub Pages + Actions).  
+3. **Android in a few days?** → **[ANDROID_LAUNCH_CHECKLIST.md](ANDROID_LAUNCH_CHECKLIST.md)** + **[ANDROID_RELEASE.md](ANDROID_RELEASE.md)**.
+
+---
+
 ## The one thing that confuses everyone (plain English)
 
 | Thing | What it is | Where people get it |
 |-------|------------|---------------------|
-| **Website** | A brochure in the browser — features, updates, “coming soon” | **swimiqapp.com** (GoDaddy) |
-| **Mobile app** | The real SwimIQ on a phone | **Google Play** (Android) or **App Store** (iPhone) — **not ready to install yet** |
+| **Website app** | The **real SwimIQ Flutter app** in Chrome/Safari | **swimiqapp.com** (GoDaddy) or GitHub Pages after setup |
+| **Brochure pages** | Optional features/legal HTML in `website/` | Only if you upload those files **alongside** the Flutter build |
+| **Mobile app** | SwimIQ on a phone | **Google Play** (Android soon) / **App Store** (iPhone later) |
 
-**The website does NOT open the app today.**  
-It **shows** what the app does so people get excited.  
-When the app launches, we add **Download** buttons to the same website.
+**Parents should be able to log in and click around in the browser.**  
+That means uploading **`build/web`** (Flutter), not only the small `website/` folder.
 
 ---
 
 ## What you tell people TODAY (copy/paste)
 
-> Hi! SwimIQ is the app Aspyn and I are building for competitive swimmers (ages 13–30) — training log, meet results, personal bests, USA time standards, Athlete Passport, and SwimIQ AI video coaching.
+> Hi! SwimIQ is the app Aspyn and I are building for competitive swimmers — training log, meet results, personal bests, USA time standards, Athlete Passport, and SwimIQ AI video coaching.
 >
-> **See everything we’re building:** https://swimiqapp.com  
+> **Try it in your browser:** https://swimiqapp.com  
 >
-> **Android app:** coming in the next few weeks  
-> **iPhone app:** coming September (Apple store)  
+> **Android app:** launching on Google Play soon  
+> **iPhone app:** coming later (App Store)  
 >
-> Want an email when it’s ready? Write **support@swimiqapp.com** with subject **SwimIQ waitlist** and tell me Android or iPhone.
+> Want an email when the phone app is ready? Write **support@swimiqapp.com** with subject **SwimIQ waitlist** and say Android or iPhone.
 >
 > — Kara
 
-That’s a complete, honest answer. No app install link needed yet.
+If https shows a security warning, tell them to use **http://swimiqapp.com** until SSL is fixed (see WEB_SITE_STATUS.md).
 
 ---
 
-# PHASE 1 — THIS WEEK (website only)
+# PHASE 1 — WEBSITE = FLUTTER APP IN THE BROWSER
 
-**Goal:** People open **https://swimiqapp.com** and **use the real SwimIQ app in their browser** (Flutter web).
+**Goal:** https://swimiqapp.com opens SwimIQ login (no certificate warning).
 
-👉 **Follow:** [docs/WALKTHROUGH_SWIMIQAPP_COM.md](docs/WALKTHROUGH_SWIMIQAPP_COM.md) (step-by-step)
+1. Fix SSL — **[WEB_SITE_STATUS.md](WEB_SITE_STATUS.md)**  
+2. Build + upload Flutter web — **[WALKTHROUGH_SWIMIQAPP_COM.md](WALKTHROUGH_SWIMIQAPP_COM.md)**  
+3. Optional backup URL — **[WEB_DEPLOY.md](WEB_DEPLOY.md)**
 
-Quick version:
-1. `git pull origin main`
-2. `powershell -ExecutionPolicy Bypass -File scripts\build-web-godaddy.ps1`
-3. Upload **everything inside** `build\web\` to GoDaddy **`public_html`**
+```powershell
+S:
+cd swimiq
+git pull origin main
+powershell -ExecutionPolicy Bypass -File scripts\build-web-godaddy.ps1
+```
 
-The static `website/` folder is optional marketing pages only. **For “see the app work,” use Flutter web (`build/web`), not `website/`.**
+Upload **everything inside** `build\web\` to GoDaddy **`public_html`**.
 
-1. Open PowerShell
-2. Run:
-   ```powershell
-   S:
-   cd swimiq
-   git pull
-   ```
-3. Open folder **`S:\swimiq\website`** in File Explorer  
-   You should see `index.html`, `privacy.html`, `terms.html`, `ai.html`, and folder `css`
-
-### Step 2 — Put them on GoDaddy (one time)
-
-**If this feels hard, call GoDaddy and say:**  
-*“Please help me upload HTML files to public_html for swimiqapp.com.”*
-
-**If you want to try yourself:**
-
-1. Go to **godaddy.com** → Sign in  
-2. **My Products** → **swimiqapp.com** → **Manage**  
-3. Open **Hosting** / **cPanel** → **File Manager**  
-4. Open folder **`public_html`**  
-5. Click **Upload**  
-6. Upload from `S:\swimiq\website\`:
-   - `index.html`
-   - `privacy.html`
-   - `terms.html`
-   - `ai.html`
-7. Create folder **`css`** inside `public_html`  
-8. Upload **`site.css`** into that `css` folder  
-
-### Step 3 — Check
-
-Open **https://swimiqapp.com** — you should see:
-- “When is the app available?”
-- Android / iPhone timeline
-- Feature cards
-- Latest updates
-
-**Phase 1 done.** You can text parents the link.
-
-More detail: **docs/GODADDY_WEBSITE_UPLOAD.md**
+Also upload legal helpers if missing:
+- `website/privacy.html`, `terms.html`, `ai.html`, `delete-account.html`
 
 ---
 
-# PHASE 2 — NEXT FEW WEEKS (Android app)
+# PHASE 2 — ANDROID (NEXT FEW DAYS)
 
-**Goal:** Real app on Google Play. Website gets a **Download for Android** button.
+**Goal:** Signed app on Google Play Internal testing → Production.
 
-You (or help) will:
-1. Build Android app from Flutter (`flutter build appbundle`)
-2. Create **Google Play Developer** account ($25 one-time)
-3. Upload to Play Console
-4. Add link on swimiqapp.com: `https://play.google.com/store/apps/details?id=...`
+1. Create keystore: `CREATE-KEYSTORE.bat`  
+2. Fill `android/key.properties`  
+3. Build AAB: `BUILD-ANDROID-NOW.bat`  
+4. Follow **[ANDROID_LAUNCH_CHECKLIST.md](ANDROID_LAUNCH_CHECKLIST.md)**
 
-**Website still on GoDaddy.** Only add one button when Play link exists.
-
----
-
-# PHASE 3 — SEPTEMBER (iPhone app)
-
-**Goal:** App on Apple App Store when you have the Mac laptop.
-
-1. Apple Developer account ($99/year)  
-2. Build on Mac → upload to App Store Connect  
-3. Add **Download on the App Store** button on swimiqapp.com  
+Paid subscriptions on the phone wait for Google Play Billing. Trial + coach codes work now. Stripe stays on the website.
 
 ---
 
-# What you do NOT need to worry about now
+# PHASE 3 — IPHONE (LATER)
 
-- Uploading Flutter code to GoDaddy  
-- Making the website “run” the app (impossible until store links exist)  
-- TestFlight (optional; September + Mac is your iPhone path)  
-- Every domain — just forward .net etc. to swimiqapp.com later  
+Needs Mac + Apple Developer account. See **[TESTFLIGHT.md](TESTFLIGHT.md)**.
 
 ---
 
 # Checklist (print this)
 
-**This week**
-- [ ] Pull latest code to `S:\swimiq`
-- [ ] Upload `website` folder to GoDaddy `public_html`
-- [ ] Open swimiqapp.com and confirm it looks right
-- [ ] Set up email forward: support@swimiqapp.com → your inbox
-- [ ] Send the copy/paste message above to interested parents
+**Website**
+- [ ] Trusted SSL on swimiqapp.com (not self-signed)
+- [ ] Flutter `build/web` on `public_html`
+- [ ] Incognito: login screen loads on **https**
+- [ ] support@swimiqapp.com forwards to your inbox
+- [ ] (Optional) GitHub Pages Flutter deploy live
 
-**Few weeks**
-- [ ] Android on Google Play
-- [ ] Add Android download button to website
-
-**September**
-- [ ] Mac laptop → iPhone build
-- [ ] Apple App Store
-- [ ] Add iPhone download button to website
+**Android**
+- [ ] Keystore + key.properties
+- [ ] Signed AAB with Supabase keys
+- [ ] Internal testing pass
+- [ ] Privacy + delete-account URLs work
+- [ ] Production release
 
 ---
 
-# If GoDaddy is still confusing
+# If GoDaddy is confusing
 
-**Plan B:** GoDaddy phone support (number on your account).  
-**Plan C:** Ask a tech-savvy friend for 30 minutes to upload `S:\swimiq\website` to `public_html`.  
-**Plan D:** Hire a one-time task on Fiverr: “Upload static HTML to GoDaddy” (~$20–50).
-
-You already own the domain and the files are ready — it’s just **moving 5 files** to the right folder.
+Call GoDaddy and say:  
+*“Please install a trusted SSL certificate for swimiqapp.com and help me confirm public_html is serving my uploaded files.”*

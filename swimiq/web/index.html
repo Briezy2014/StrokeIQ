@@ -18,6 +18,8 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
   <meta name="description" content="SwimIQ — athlete swim performance app. Training log, meet results, USA standards, Athlete Passport, SwimIQ AI.">
 
   <!-- iOS meta tags & icons -->
@@ -31,8 +33,85 @@
 
   <title>SwimIQ</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(160deg, #0B2D4D 0%, #0B5CAD 45%, #009CFF 100%);
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      color: #fff;
+    }
+    #swimiq-boot {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    #swimiq-boot h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      font-weight: 900;
+    }
+    #swimiq-boot p {
+      margin: 0;
+      opacity: 0.92;
+      max-width: 28rem;
+      line-height: 1.4;
+    }
+    #swimiq-boot .pulse {
+      width: 42px;
+      height: 42px;
+      margin: 22px auto 0;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #swimiq-boot.hidden { display: none; }
+  </style>
 </head>
 <body>
+  <div id="swimiq-boot">
+    <h1>SWIMIQ</h1>
+    <p>Loading your swim performance app…</p>
+    <div class="pulse" aria-hidden="true"></div>
+    <p id="swimiq-boot-hint" style="margin-top:18px;font-size:0.9rem;opacity:0.8;">
+      If this stays here more than a minute, press Ctrl+Shift+R to refresh, or try again in a moment.
+    </p>
+  </div>
+  <noscript>© 2026 SwimIQ — enable JavaScript to use the app.</noscript>
+  <script>
+    (function () {
+      var boot = document.getElementById('swimiq-boot');
+      var hint = document.getElementById('swimiq-boot-hint');
+      var hidden = false;
+      function hideBoot() {
+        if (hidden || !boot) return;
+        hidden = true;
+        boot.classList.add('hidden');
+      }
+      var observer = new MutationObserver(function () {
+        if (document.querySelector('flt-glass-pane, flutter-view, canvas')) {
+          hideBoot();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(function () {
+        if (!hidden && hint) {
+          hint.textContent =
+            'Still loading. Press Ctrl+Shift+R (or Cmd+Shift+R on Mac) to hard refresh, then try again.';
+        }
+      }, 45000);
+      window.addEventListener('flutter-first-frame', hideBoot);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
