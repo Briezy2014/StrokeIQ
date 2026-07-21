@@ -1,7 +1,4 @@
-Upload this file to GoDaddy public_html:
+Upload ONLY: swimiq-web-godaddy.zip
+GoDaddy File Manager → public_html → Upload → Extract → Overwrite → Ctrl+Shift+R
 
-  swimiq-web-godaddy.zip
-
-Extract → Overwrite.
-
-Do NOT upload Kara-DOUBLE-CLICK-STARTER.
+Loading screen now says "Analyzing your clip..." (no Gemini wording).

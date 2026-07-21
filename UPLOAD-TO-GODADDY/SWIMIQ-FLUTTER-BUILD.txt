@@ -1,10 +1,1 @@
-SwimIQ Flutter web build
-branch=cursor/dryland-power-index-b7ef
-commit=ec37460
-built_at_utc=2026-07-21T17:50:00Z
-built_by=cursor-cloud-agent
-supabase=connected
-feature=auto-shrink-phone-videos
-tag=swimiq-web-LATEST
-proof=Phone race clips up to|Build highlight package|National caliber|supabase-anon-baked-in
-note=If you see this on swimiqapp.com, login works. Upload 1-UPLOAD-THIS-TO-GODADDY.zip only.
+hide-gemini-customer-copy 2026-07-21T19:16:00Z — Analyzing your clip (no Gemini customer copy)
