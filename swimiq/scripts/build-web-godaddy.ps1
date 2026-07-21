@@ -104,11 +104,11 @@ if (-not (Test-Path (Join-Path $webOut 'main.dart.js'))) {
     exit 1
 }
 
-# Prove this is the NEW Dryland/Power Index / 25MB-messaging build.
+# Prove this is the NEW Dryland/Power Index / 100MB phone-clip build.
 $mainText = Get-Content -LiteralPath $mainJs -Raw -ErrorAction Stop
 $mustHave = @(
     'Build highlight package',
-    '720p',
+    'Phone race clips up to',
     'National caliber'
 )
 $mustNotHave = @(
@@ -163,7 +163,7 @@ $stamp = @(
     ('branch=' + $gitBranch)
     ('commit=' + $gitCommit)
     ('built_at=' + (Get-Date -Format o))
-    'proof=Build highlight package|720p|National caliber'
+    'proof=Build highlight package|Phone race clips up to|National caliber'
     'forbidden_absent=under about 50 MB|coming soon (Elite)'
 ) -join "`r`n"
 Set-Content -LiteralPath (Join-Path $webOut 'SWIMIQ-FLUTTER-BUILD.txt') -Value $stamp -Encoding ascii

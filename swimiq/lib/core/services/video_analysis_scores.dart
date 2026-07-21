@@ -108,9 +108,10 @@ abstract final class VideoAnalysisScores {
     if (lower.contains('too large') ||
         lower.contains('413') ||
         (lower.contains('payload') && lower.contains('large'))) {
-      return 'This video file is too large for AI analysis. '
-          'Even short 4K phone clips can exceed ${AppConstants.maxGeminiVideoMb} MB — '
-          're-export at 720p under ${AppConstants.maxGeminiVideoMb} MB, then Analyze again.';
+      return 'This video file is too large for AI analysis '
+          '(max ${AppConstants.maxGeminiVideoMb} MB). '
+          'Trim the clip or re-export under ${AppConstants.maxGeminiVideoMb} MB, '
+          'then Analyze again.';
     }
     if (lower.contains('worker_resource_limit') ||
         lower.contains('status: 546') ||
@@ -192,8 +193,8 @@ abstract final class VideoAnalysisScores {
 
   static const deployStepsBody =
       'AI coaching is not ready for this clip yet.\n\n'
-      '• Use a short race clip (about 30 seconds or less)\n'
-      '• Keep the file under 25 MB when possible\n'
+      '• Use a short race clip (about 30–60 seconds)\n'
+      '• Keep the file under 100 MB when possible\n'
       '• Stay signed in and tap Analyze again\n\n'
       'If it still fails, email support@swimiqapp.com.';
 

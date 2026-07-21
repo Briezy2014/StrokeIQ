@@ -1019,8 +1019,8 @@ class _AnalysisInProgressCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'Gemini is watching your video on the server. This usually finishes '
-                  'in under 2 minutes — keep this tab open. Keep files under '
-                  '${AppConstants.maxGeminiVideoMb} MB (720p works best — short 4K clips can still be too large).',
+                  'in under 2 minutes — keep this tab open. Phone race clips up to '
+                  '${AppConstants.maxGeminiVideoMb} MB are supported.',
                   style: TextStyle(
                     color: Colors.grey.shade800,
                     height: 1.4,

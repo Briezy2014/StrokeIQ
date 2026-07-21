@@ -122,7 +122,7 @@ class GeminiSwimAnalysisService {
       }
       if (response.status == 504) {
         throw GeminiAnalysisException(
-          'Analysis timed out. Try a shorter clip (under 30 seconds / '
+          'Analysis timed out. Try a shorter clip (under 60 seconds / '
           '${AppConstants.maxGeminiVideoMb} MB) '
           'and tap Analyze again.',
         );

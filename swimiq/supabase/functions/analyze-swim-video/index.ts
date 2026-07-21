@@ -3,8 +3,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const BUCKET = "swim-videos";
 /** Inline Gemini for clips ≤12 MB — skips File API upload wait (fixes 504 IDLE_TIMEOUT). */
 const MAX_INLINE_BYTES = 12 * 1024 * 1024;
-/** Edge-safe max clip size (Supabase worker memory limit). */
-const MAX_FILE_API_BYTES = 25 * 1024 * 1024;
+/**
+ * Streamed Gemini File API path — does not base64 the whole clip in Edge memory.
+ * Phone race clips (even ~15–60s at high bitrate) commonly land in the 30–80 MB range.
+ * Gemini File API supports much larger files; keep a practical product ceiling here.
+ */
+const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v11";
+/** Never call these — retired or wrong for new API keys. */
+const BLOCKED_GEMINI_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+];
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
@@ -13,15 +26,6 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
-];
-const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v10";
-/** Never call these — retired or wrong for new API keys. */
-const BLOCKED_GEMINI_MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-pro",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
 ];
 const GEMINI_RETRY_DELAYS_MS = [1500, 3000, 5000];
 const GEMINI_FILE_POLL_MS = 2000;
@@ -208,7 +212,7 @@ async function buildVideoAnalysis(
   const objectSize = await getStorageObjectSize(admin, storagePath);
   if (objectSize > MAX_FILE_API_BYTES) {
     throw new Error(
-      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB; yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Even short 4K phone clips can exceed this — re-export at 720p and try again.`,
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB; yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
     );
   }
 
@@ -237,7 +241,7 @@ async function buildVideoAnalysis(
       const streamed = await openStorageVideoStream(admin, storagePath);
       if (streamed.byteLength > MAX_FILE_API_BYTES) {
         throw new Error(
-          `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Even short 4K phone clips can exceed this — re-export at 720p and try again.`,
+          `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
         );
       }
 
@@ -590,7 +594,7 @@ async function openStorageVideoStream(
   const byteLength = lengthHeader ? Number(lengthHeader) : 0;
   if (Number.isFinite(byteLength) && byteLength > MAX_FILE_API_BYTES) {
     throw new Error(
-      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Re-export at 720p and try again.`,
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
     );
   }
 
@@ -610,7 +614,7 @@ async function downloadStorageVideoBytes(
   const bytes = new Uint8Array(await data.arrayBuffer());
   if (bytes.length > MAX_FILE_API_BYTES) {
     throw new Error(
-      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Re-export at 720p and try again.`,
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Trim or re-export under that size and try again.`,
     );
   }
   return bytes;
