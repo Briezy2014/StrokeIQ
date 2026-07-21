@@ -1,0 +1,19 @@
+SIMPLE FIX — DO ONLY THIS
+==========================
+
+1) Open this link in Chrome:
+   https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-autoshink-20260721
+
+2) Download:  swimiq-web-godaddy.zip
+
+3) GoDaddy File Manager → public_html
+   Upload the zip → Extract → Overwrite all
+
+4) Proof: open
+   https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
+   Hard refresh the app: Ctrl+Shift+R
+
+5) Open your video → Run AI Swim Analysis
+   Large phone clips are auto-shrunk in Chrome — no bats needed.
+
+No GET-LATEST. No Gemini bat. No build folder.

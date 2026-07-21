@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/services/gemini_swim_analysis_service.dart';
+import '../core/services/video_cloud_fit.dart';
 import '../core/utils/supabase_table_errors.dart';
 import '../core/utils/youth_friendly_analysis.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
@@ -260,11 +261,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       final theirs = sizeMatch?.group(1);
       final sizeHint = theirs != null ? ' (yours is about $theirs MB)' : '';
       return 'This video file is too large for AI analysis$sizeHint. '
-          'Cloud analysis accepts files up to '
-          '${AppConstants.maxGeminiVideoMb} MB — typical phone race clips fit. '
-          'If yours is larger, trim or re-export under '
-          '${AppConstants.maxGeminiVideoMb} MB, then Analyze again. '
-          'Notes-based coaching was saved for now.';
+          'SwimIQ will try to shrink phone clips automatically — tap Analyze again. '
+          'If it still fails, trim a shorter section and re-upload.';
     }
     if (lower.contains('timed out') ||
         lower.contains('timeout') ||
@@ -542,8 +540,28 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
-    if (bytes.length > AppConstants.maxGeminiVideoBytes) {
-      final mb = (bytes.length / (1024 * 1024)).ceil();
+
+    var payload = Uint8List.fromList(bytes);
+    var uploadName = fileName;
+    if (payload.lengthInBytes > kCloudAnalyzeSafeBytes) {
+      try {
+        payload = await fitVideoBytesForCloud(
+          payload,
+          fileName: fileName,
+          maxBytes: kCloudAnalyzeSafeBytes,
+        );
+        if (!uploadName.toLowerCase().endsWith('.webm')) {
+          uploadName = '$fileName.webm';
+        }
+      } catch (error) {
+        final mb = (bytes.length / (1024 * 1024)).ceil();
+        return 'This video is about $mb MB. SwimIQ tried to shrink it for '
+            'analysis but could not. ${error.toString()}';
+      }
+    }
+
+    if (payload.lengthInBytes > AppConstants.maxGeminiVideoBytes) {
+      final mb = (payload.lengthInBytes / (1024 * 1024)).ceil();
       return 'This video file is about $mb MB. AI analysis accepts up to '
           '${AppConstants.maxGeminiVideoMb} MB (typical phone race clips fit). '
           'Trim or re-export under ${AppConstants.maxGeminiVideoMb} MB, '
@@ -553,8 +571,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     try {
       final inserted = await ref.read(videoStorageServiceProvider).uploadSwimVideo(
             swimmer: swimmer,
-            fileName: fileName,
-            bytes: Uint8List.fromList(bytes),
+            fileName: uploadName,
+            bytes: payload,
             title: title,
             stroke: stroke,
             distance: distance,
@@ -768,10 +786,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       SwimVideoAnalysis analysis;
       String? fallbackNotice;
+      var videoForAnalysis = video;
 
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
-              video: video,
+              video: videoForAnalysis,
               raceLogs: current.raceLogs,
               goals: current.goals,
               profile: current.profile,
@@ -779,16 +798,75 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               pollForResult: () => _pollVideoAnalysisResult(videoId),
             );
       } on GeminiAnalysisException catch (error) {
-        final friendly = _friendlyGeminiFallbackMessage(error.message);
-        analysis = _fallbackVideoAnalysis(
-          video: video,
-          current: current,
-          poseMetrics: poseMetrics,
-          geminiFallbackReason: friendly,
-          geminiErrorRaw: error.message,
-        );
-        // Keep raw detail in analysis JSON for support; never show it in the SnackBar.
-        fallbackNotice = friendly;
+        final raw = error.message;
+        final lower = raw.toLowerCase();
+        final tooLarge = lower.contains('too large') ||
+            lower.contains('413') ||
+            (lower.contains('payload') && lower.contains('large'));
+
+        if (tooLarge && canFitVideoBytesForCloud) {
+          try {
+            final storage = ref.read(videoStorageServiceProvider);
+            final original = await storage.downloadVideoBytes(
+              videoForAnalysis.storagePath,
+            );
+            final shrunk = await fitVideoBytesForCloud(
+              original,
+              fileName: videoForAnalysis.title ?? 'swim.webm',
+              maxBytes: kCloudAnalyzeSafeBytes,
+            );
+            videoForAnalysis = await storage.replaceSwimVideoBytes(
+              video: videoForAnalysis,
+              bytes: shrunk,
+              contentType: 'video/webm',
+              fileNameHint: '${videoForAnalysis.title ?? 'swim'}.webm',
+            );
+            analysis = await ref
+                .read(geminiSwimAnalysisServiceProvider)
+                .analyzeVideo(
+                  video: videoForAnalysis,
+                  raceLogs: current.raceLogs,
+                  goals: current.goals,
+                  profile: current.profile,
+                  poseMetrics: poseMetrics,
+                  pollForResult: () => _pollVideoAnalysisResult(videoId),
+                );
+          } on GeminiAnalysisException catch (retryError) {
+            final friendly = _friendlyGeminiFallbackMessage(retryError.message);
+            analysis = _fallbackVideoAnalysis(
+              video: videoForAnalysis,
+              current: current,
+              poseMetrics: poseMetrics,
+              geminiFallbackReason: friendly,
+              geminiErrorRaw: retryError.message,
+            );
+            fallbackNotice = friendly;
+          } catch (shrinkError) {
+            final friendly = _friendlyGeminiFallbackMessage(raw);
+            analysis = _fallbackVideoAnalysis(
+              video: video,
+              current: current,
+              poseMetrics: poseMetrics,
+              geminiFallbackReason: friendly,
+              geminiErrorRaw: '$raw | shrink: $shrinkError',
+            );
+            fallbackNotice =
+                'This clip was too large for analysis. SwimIQ tried to shrink '
+                'it automatically but could not finish. Trim a shorter section '
+                'and upload again.';
+          }
+        } else {
+          final friendly = _friendlyGeminiFallbackMessage(raw);
+          analysis = _fallbackVideoAnalysis(
+            video: video,
+            current: current,
+            poseMetrics: poseMetrics,
+            geminiFallbackReason: friendly,
+            geminiErrorRaw: raw,
+          );
+          // Keep raw detail in analysis JSON for support; never show it in the SnackBar.
+          fallbackNotice = friendly;
+        }
       } catch (error) {
         final raw = error.toString();
         final friendly = _friendlyGeminiFallbackMessage(raw);
@@ -804,7 +882,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
       await _persistVideoAnalysis(
         videoId: videoId,
-        video: video,
+        video: videoForAnalysis,
         analysis: analysis,
         skipIfAlreadySaved: analysis.id != null && !analysis.id!.startsWith('local-'),
       );

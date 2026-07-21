@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/services/gemini_swim_analysis_service.dart';
@@ -95,7 +96,8 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
         ],
         if (fallbackReason != null) ...[
           _FallbackBanner(message: fallbackReason),
-          if (technicalError != null) ...[
+          // Never show FunctionException / raw server dumps on the public site.
+          if (kDebugMode && technicalError != null) ...[
             const SizedBox(height: 8),
             _TechnicalErrorBanner(error: technicalError),
           ],

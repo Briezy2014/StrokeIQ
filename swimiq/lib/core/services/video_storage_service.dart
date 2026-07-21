@@ -62,6 +62,57 @@ class VideoStorageService {
     return _repository.insertSwimVideo(video);
   }
 
+  /// Overwrite an existing storage object (used after auto-shrink for 413 retries).
+  Future<SwimVideo> replaceSwimVideoBytes({
+    required SwimVideo video,
+    required Uint8List bytes,
+    String contentType = 'video/webm',
+    String? fileNameHint,
+  }) async {
+    final oldPath = video.storagePath.trim();
+    if (oldPath.isEmpty) {
+      throw StateError('Video has no storage path to replace.');
+    }
+
+    final userId = _client.auth.currentUser?.id;
+    final ext = contentType.contains('webm')
+        ? '.webm'
+        : (p.extension(fileNameHint ?? oldPath).isEmpty
+            ? '.mp4'
+            : p.extension(fileNameHint ?? oldPath));
+    final storagePath = userId != null && userId.isNotEmpty
+        ? '$userId/${_uuid.v4()}$ext'
+        : '${video.swimmer}/${_uuid.v4()}$ext';
+
+    await _client.storage.from(bucketName).uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: contentType,
+          ),
+        );
+
+    final publicUrl =
+        _client.storage.from(bucketName).getPublicUrl(storagePath);
+
+    // Best-effort cleanup of the oversized original.
+    if (oldPath != storagePath) {
+      try {
+        await _client.storage.from(bucketName).remove([oldPath]);
+      } catch (_) {}
+    }
+
+    final updated = video.copyWith(
+      storagePath: storagePath,
+      videoUrl: publicUrl,
+    );
+    if (video.id != null && video.id!.isNotEmpty) {
+      return _repository.updateSwimVideo(updated);
+    }
+    return updated;
+  }
+
   Future<Uint8List> downloadVideoBytes(String storagePath) async {
     return _client.storage.from(bucketName).download(storagePath);
   }

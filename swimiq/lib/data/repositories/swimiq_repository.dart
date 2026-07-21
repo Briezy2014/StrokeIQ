@@ -215,6 +215,26 @@ class SwimIqRepository {
     }
   }
 
+  Future<SwimVideo> updateSwimVideo(SwimVideo video) async {
+    final id = video.id;
+    if (id == null || id.isEmpty) {
+      throw StateError('Cannot update a video without an id.');
+    }
+    final payload = <String, dynamic>{
+      'storage_path': video.storagePath,
+      'video_url': video.videoUrl,
+      if (video.title != null) 'title': video.title,
+      if (video.notes != null) 'notes': video.notes,
+    };
+    final response = await _client
+        .from('swim_videos')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+    return SwimVideo.fromJson(supabaseRowToMap(response));
+  }
+
   Future<SwimVideo> _insertSwimVideoRow(
     Map<String, dynamic> payload, {
     required SwimVideo fallback,
