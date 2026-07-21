@@ -16,7 +16,7 @@ if exist "swimiq\lib\core\recruiting\recruiting_business_card_pdf.dart" (
   echo [BAD] Passport card file MISSING - wrong app copy
 )
 echo.
-echo If branch is NOT cursor/elite-video-on-dashboard-b7ef, run FORCE-FIXED-APP.bat
+echo If branch is NOT cursor/dryland-power-index-b7ef, run GET-LATEST-FIXED-APP.bat
 echo from the StrokeIQ folder.
 echo.
 pause
