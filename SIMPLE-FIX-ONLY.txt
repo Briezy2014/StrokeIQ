@@ -1,24 +1,18 @@
-SIMPLE FIX — DOUBLE CLICK ONLY
-==============================
+WHY YOU STILL SEE "NOT CONNECTED"
+=================================
+Live swimiqapp.com is still running an OLD broken zip (no login keys).
+The CONNECTED zip exists on GitHub. It is not on GoDaddy yet.
 
-ONE TIME (if DOUBLE-CLICK-ME.bat is not in your StrokeIQ folder yet):
-
-1. Open:
+DO THIS
+=======
+1) Download Kara-DOUBLE-CLICK-STARTER.zip from:
    https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST
-
-2. Download:  Kara-DOUBLE-CLICK-STARTER.zip
-
-3. Extract it into:
-   Desktop\StrokeIQ
-   (overwrite if asked)
-
-EVERY TIME after that:
-
-1. Double-click:  DOUBLE-CLICK-ME.bat
-2. An UPLOAD-TO-GODADDY folder opens
-3. Upload swimiq-web-godaddy.zip → public_html → Extract → Overwrite
-4. Proof must say supabase=connected:
+2) Extract into Desktop\StrokeIQ
+3) Double-click DOUBLE-CLICK-ME.bat
+4) Upload ONLY: UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip
+   into GoDaddy public_html → Extract → Overwrite ALL
+5) Proof MUST say supabase=connected:
    https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
-5. Ctrl+Shift+R → log in → Analyze
+6) Ctrl+Shift+R → you should see LOGIN
 
-No typing URLs. No build folder. No Gemini bats for this step.
+If proof does not say supabase=connected, the wrong zip is still live.
