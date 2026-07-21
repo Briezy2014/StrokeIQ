@@ -2,7 +2,7 @@
 title SwimIQ - KARA fix Gemini video (all steps)
 cd /d "%~dp0"
 set "SUPABASE_CMD=npx supabase"
-set "BRANCH=cursor/dashboard-rope-schedule-fix-17e8"
+set "BRANCH=cursor/dryland-power-index-b7ef"
 set "PROJECT_REF=bryurwyeosbffvfpdpbv"
 
 call :EnsureVideoDbFixFiles

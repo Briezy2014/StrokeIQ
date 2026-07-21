@@ -35,6 +35,8 @@ set MISSING=0
 
 call :CheckFile "WHY-NOTHING-CHANGES.txt"
 call :CheckFile "FIX-NETWORK-NOW.bat"
+call :CheckFile "KARA-GEMINI-FIX-NOW.bat"
+call :CheckFile "swimiq\KARA-GEMINI-FIX-NOW.bat"
 call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
 call :CheckFile "GOOD-MORNING-KARA.txt"
@@ -67,7 +69,8 @@ echo   1) Make sure https://pub.dev opens in Chrome
 echo   2) Double-click PUBLISH-SWIMIQAPP-COM.bat
 echo   3) Wait for BUILD + ZIP DONE
 echo   4) Upload swimiq\build\swimiq-web-godaddy.zip
-echo   5) Run KARA-GEMINI-FIX-NOW.bat (raises video limit to 100 MB)
+echo   5) Run KARA-GEMINI-FIX-NOW.bat in Desktop\StrokeIQ
+echo      (raises video limit to 100 MB)
 echo.
 if exist "%CD%\WHY-NOTHING-CHANGES.txt" start "" notepad "%CD%\WHY-NOTHING-CHANGES.txt"
 if exist "%CD%\MORNING-CHECKLIST.txt" start "" notepad "%CD%\MORNING-CHECKLIST.txt"

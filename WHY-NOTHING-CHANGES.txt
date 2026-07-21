@@ -51,8 +51,11 @@ DO THIS EXACT SEQUENCE
    Extract into GoDaddy public_html (overwrite all)
 
 4) Raise the VIDEO SERVER limit (25 MB → 100 MB):
-   Desktop\StrokeIQ\swimiq\KARA-GEMINI-FIX-NOW.bat
+   Desktop\StrokeIQ\KARA-GEMINI-FIX-NOW.bat
+   (same file also lives in Desktop\StrokeIQ\swimiq\ )
    Must say sync-v11 success.
+   If the file is missing: GET-LATEST failed (GitHub blocked) —
+   use phone hotspot, then GET-LATEST again.
 
 5) Proof it worked — open in Chrome:
      https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt

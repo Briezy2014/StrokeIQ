@@ -32,7 +32,7 @@ echo Next:
 echo   1) GET-LATEST-FIXED-APP.bat
 echo   2) PUBLISH-SWIMIQAPP-COM.bat  (need BUILD + ZIP DONE)
 echo   3) Upload swimiq\build\swimiq-web-godaddy.zip to GoDaddy
-echo   4) swimiq\KARA-GEMINI-FIX-NOW.bat  (100 MB video server)
+echo   4) KARA-GEMINI-FIX-NOW.bat  (100 MB video server)
 echo.
 pause
 exit /b 0
