@@ -1,17 +1,24 @@
-SIMPLE FIX — DO ONLY THIS
-==========================
+SIMPLE FIX — DOUBLE CLICK ONLY
+==============================
 
-1) Open:
-   https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-CONNECTED-20260721
+ONE TIME (if DOUBLE-CLICK-ME.bat is not in your StrokeIQ folder yet):
 
-2) Download: swimiq-web-godaddy.zip
+1. Open:
+   https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST
 
-3) GoDaddy → public_html → Upload zip → Extract → Overwrite ALL
+2. Download:  Kara-DOUBLE-CLICK-STARTER.zip
 
-4) Proof must say supabase=connected:
+3. Extract it into:
+   Desktop\StrokeIQ
+   (overwrite if asked)
+
+EVERY TIME after that:
+
+1. Double-click:  DOUBLE-CLICK-ME.bat
+2. An UPLOAD-TO-GODADDY folder opens
+3. Upload swimiq-web-godaddy.zip → public_html → Extract → Overwrite
+4. Proof must say supabase=connected:
    https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
+5. Ctrl+Shift+R → log in → Analyze
 
-5) Hard refresh: Ctrl+Shift+R
-   Then log in and Analyze again.
-
-Ignore older release zips. This one has cloud keys.
+No typing URLs. No build folder. No Gemini bats for this step.
