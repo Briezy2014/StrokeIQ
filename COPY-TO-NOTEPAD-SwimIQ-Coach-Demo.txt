@@ -1,0 +1,95 @@
+SAVE THIS AS A FILE ON YOUR DESKTOP
+===================================
+
+1. Open this file (or copy everything below the line)
+2. Notepad → Paste
+3. File → Save As → Desktop
+4. File name:  SwimIQ-Coach-Demo.ps1
+5. Save as type:  All files  (not .txt)
+6. Encoding: UTF-8 is fine
+
+AFTER RESTART:
+  Right-click Desktop\SwimIQ-Coach-Demo.ps1
+  → Run with PowerShell
+
+Close swimiqapp.com first. Chrome must say 127.0.0.1
+
+----------------------------------------
+FULL SCRIPT (copy everything below):
+----------------------------------------
+
+# SwimIQ — COACH DEMO (LOCAL)
+$ErrorActionPreference = 'Continue'
+$paths = @(
+  "$env:USERPROFILE\Desktop\StrokeIQ",
+  "$env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ",
+  "$env:OneDrive\Desktop\StrokeIQ",
+  "$env:OneDrive\Desktop\StrokeIQ\StrokeIQ"
+)
+$root = $null
+foreach ($p in $paths) {
+  if ($p -and (Test-Path "$p\swimiq\pubspec.yaml")) { $root = $p; break }
+}
+if (-not $root) {
+  Write-Host 'ERROR: Desktop\StrokeIQ\swimiq not found' -ForegroundColor Red
+  Read-Host 'Press Enter'
+  exit 1
+}
+
+$swimiq = Join-Path $root 'swimiq'
+$elite  = Join-Path $root 'services\video_analysis'
+Write-Host "FOUND: $root" -ForegroundColor Green
+
+$eliteCmd = @"
+`$ErrorActionPreference='Continue'
+Set-Location '$elite'
+Write-Host 'Elite — KEEP THIS WINDOW OPEN' -ForegroundColor Cyan
+if (Test-Path '.\.venv\Scripts\python.exe') { `$py = '.\.venv\Scripts\python.exe' } else { `$py = 'python' }
+& `$py -m uvicorn app.main:app --host 127.0.0.1 --port 8080
+"@
+Start-Process powershell -ArgumentList @('-NoExit','-ExecutionPolicy','Bypass','-Command', $eliteCmd)
+
+Write-Host 'Waiting for Elite...'
+$ready = $false
+for ($i = 1; $i -le 40; $i++) {
+  Start-Sleep -Seconds 3
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8080/health' -TimeoutSec 2
+    if ($r.StatusCode -eq 200) { $ready = $true; break }
+  } catch {}
+  Write-Host "  try $i/40..."
+}
+if (-not $ready) {
+  Write-Host 'Elite failed — read the other window. Try: winget install Gyan.FFmpeg' -ForegroundColor Yellow
+  Read-Host 'Press Enter'
+  exit 1
+}
+
+Set-Location $swimiq
+if (-not (Test-Path '.\.env')) {
+  Write-Host 'ERROR: swimiq\.env missing' -ForegroundColor Red
+  Read-Host 'Press Enter'
+  exit 1
+}
+
+$envMap = @{}
+Get-Content '.\.env' | ForEach-Object {
+  if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
+  $k,$v = $_.Split('=',2)
+  $envMap[$k.Trim()] = $v.Trim().Trim('"').Trim("'")
+}
+$url = $envMap['SUPABASE_URL']
+$key = $envMap['SUPABASE_ANON_KEY']
+$api = $envMap['ANALYSIS_API_BASE_URL']
+if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://127.0.0.1:8080' }
+$v2 = $envMap['VIDEO_ENGINE_V2']
+if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'true' }
+
+Write-Host 'Starting Chrome on 127.0.0.1 (first compile can take a few minutes)...'
+flutter pub get
+flutter run -d chrome `
+  --dart-define="SUPABASE_URL=$url" `
+  --dart-define="SUPABASE_ANON_KEY=$key" `
+  --dart-define="VIDEO_ENGINE_V2=$v2" `
+  --dart-define="ANALYSIS_API_BASE_URL=$api" `
+  --dart-define=VIDEO_ENGINE_V2_DUAL_RUN=false
