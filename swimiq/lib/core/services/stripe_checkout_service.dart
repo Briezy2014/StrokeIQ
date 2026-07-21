@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/subscription_plan.dart';
-import 'stripe_checkout_support.dart';
 
 /// Starts a Stripe Checkout session via Supabase Edge Function.
 class StripeCheckoutService {
