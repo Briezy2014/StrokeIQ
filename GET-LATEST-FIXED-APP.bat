@@ -35,6 +35,7 @@ set MISSING=0
 
 call :CheckFile "WHY-NOTHING-CHANGES.txt"
 call :CheckFile "FIX-NETWORK-NOW.bat"
+call :CheckFile "FIX-VIDEO-413-NOW.bat"
 call :CheckFile "KARA-GEMINI-FIX-NOW.bat"
 call :CheckFile "swimiq\KARA-GEMINI-FIX-NOW.bat"
 call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"

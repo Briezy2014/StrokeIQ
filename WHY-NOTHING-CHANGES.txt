@@ -25,6 +25,13 @@ LIVE SITE PROOF (still old until A+B are fixed)
   missing: real Power Index scores / 100 MB phone clips
 
 ------------------------------------------------
+FAST FIX FOR VIDEO 413 (25 MB server)
+------------------------------------------------
+Double-click: FIX-VIDEO-413-NOW.bat
+  Downloads 100 MB server code + deploys to Supabase.
+  Does NOT need a full git pull if GitHub raw works.
+
+------------------------------------------------
 DO THIS EXACT SEQUENCE
 ------------------------------------------------
 0) FIX NETWORK FIRST
