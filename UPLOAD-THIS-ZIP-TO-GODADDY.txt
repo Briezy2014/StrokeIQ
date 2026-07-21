@@ -1,35 +1,18 @@
-============================================================
-  STEP-BY-STEP: Upload SwimIQ zip to GoDaddy
-============================================================
+UPLOAD THIS ZIP TO GODADDY
+==========================
 
-STOP — only upload after Publish says BUILD + ZIP DONE.
-If Publish said BUILD FAILED / pub.dev error, there is NO
-new zip. Uploading again will change NOTHING on the site.
+File name (only this one):
+  swimiq-web-godaddy.zip
 
-PART A - Make the zip on your PC
---------------------------------
-1. Open Chrome → https://pub.dev  (must load)
-2. Open folder:  Desktop\StrokeIQ
-3. Double-click:  GET-LATEST-FIXED-APP.bat
-4. Double-click:  PUBLISH-SWIMIQAPP-COM.bat
-5. Wait until you see:
-     [OK] New-build proof strings found in main.dart.js
-     BUILD + ZIP DONE
-6. File Explorer should highlight:
+Where it is on your PC:
+  Desktop\StrokeIQ\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip
 
-     Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+Or double-click:
+  DOUBLE-CLICK-ME.vbs
+  (also copies the zip to your Desktop)
 
+Then in GoDaddy:
+  public_html → Upload → Extract → Overwrite
+  Ctrl+Shift+R on the app
 
-PART B - Upload to GoDaddy public_html
---------------------------------------
-7. GoDaddy File Manager → public_html
-8. Upload that zip → Extract → overwrite all
-9. Open: https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
-   It must show TODAY's commit.
-10. Hard refresh the app: Ctrl+Shift+R
-
-
-PART C - 15-second video still failing?
----------------------------------------
-File size must be under 25 MB (720p). Duration alone is not enough.
-============================================================
+Do NOT download from GitHub.

@@ -1,24 +1,17 @@
 @echo off
-setlocal EnableExtensions
-title SwimIQ - DO THIS ONE THING
+title SwimIQ - one click upload helper
 cd /d "%~dp0"
-
 echo.
-echo ############################################################
-echo #  SwimIQ — update website (double-click path)             #
-echo ############################################################
+echo Opening local website zip (no GitHub)...
 echo.
-
-REM Preferred path: download READY connected zip (no git / no flutter build).
+if exist "%~dp0DOUBLE-CLICK-ME.vbs" (
+  wscript "%~dp0DOUBLE-CLICK-ME.vbs"
+  exit /b 0
+)
 if exist "%~dp0DOUBLE-CLICK-ME.bat" (
   call "%~dp0DOUBLE-CLICK-ME.bat"
-  exit /b %ERRORLEVEL%
+  exit /b 0
 )
-
-echo [FAIL] DOUBLE-CLICK-ME.bat missing.
-echo Download the starter pack from:
-echo   https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST
-echo Extract into Desktop\StrokeIQ, then double-click DOUBLE-CLICK-ME.bat
-start "" "https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST"
+echo [FAIL] DOUBLE-CLICK-ME.vbs missing.
+echo Open UPLOAD-TO-GODADDY and upload swimiq-web-godaddy.zip
 pause
-exit /b 1

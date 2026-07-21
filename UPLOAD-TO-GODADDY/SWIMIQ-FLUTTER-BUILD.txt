@@ -1,4 +1,4 @@
-force-inline-analyze
-built for: reliable Analyze on live sync-v9
-shrink_target: 10 MB (inline Gemini path)
-features: auto-retry hiccups, no Gemini customer copy, login connected
+force-inline-analyze + local double-click upload
+file: UPLOAD-TO-GODADDY/swimiq-web-godaddy.zip
+connected login + 10MB shrink + auto-retry
+NO GitHub download needed — double-click DOUBLE-CLICK-ME.vbs

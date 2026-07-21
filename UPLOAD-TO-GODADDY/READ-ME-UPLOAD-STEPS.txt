@@ -1,9 +1,21 @@
-THIS FIXES ANALYZE.
+UPLOAD THIS FILE TO GODADDY
+===========================
 
-1) Upload swimiq-web-godaddy.zip into GoDaddy public_html
-2) Extract → Overwrite
-3) Ctrl+Shift+R on swimiqapp.com
-4) Denison 50 Fly → Run AI Swim Analysis
-5) Keep tab open up to 2 minutes
+ONLY this file:
+  swimiq-web-godaddy.zip
 
-Do this even if login already works — live site is still on an older Analyze build.
+Do NOT use GitHub.
+Do NOT use Kara-DOUBLE-CLICK-STARTER.
+Do NOT use anything from build\web.
+
+Steps:
+  1. GoDaddy File Manager → public_html
+  2. Upload swimiq-web-godaddy.zip
+     (from Desktop OR from this UPLOAD-TO-GODADDY folder)
+  3. Extract → Overwrite ALL
+  4. Open the app → Ctrl+Shift+R
+  5. Denison 50 Fly → Run AI Swim Analysis
+     Keep tab open up to 2 minutes
+
+Tip: double-click DOUBLE-CLICK-ME.vbs (or FIX.vbs) in the StrokeIQ folder
+to highlight this zip and copy it to your Desktop.
