@@ -1,0 +1,53 @@
+WHY NOTHING CHANGES ON SWIMIQAPP.COM
+====================================
+
+I checked the LIVE site. Your uploads are working, but you keep
+uploading the SAME OLD zip.
+
+Proof:
+  live main.dart.js is byte-identical to earlier today
+  (same file hash / same size 4,857,492 bytes)
+  still contains: "under about 50 MB" and "coming soon (Elite)"
+  missing: "720p" and "Build highlight package"
+
+What happens:
+  1) Publish starts
+  2) flutter pub get fails (pub.dev / Wi-Fi)
+  3) BUILD FAILED
+  4) Old swimiq-web-godaddy.zip is still sitting in the build folder
+  5) That OLD zip gets uploaded again
+  6) Site "updates" timestamp, but content is unchanged
+
+------------------------------------------------
+DO THIS EXACT SEQUENCE
+------------------------------------------------
+1) Open Chrome and go to:  https://pub.dev
+   It MUST load. If it does not, fix Wi-Fi/DNS first.
+
+2) Desktop\StrokeIQ → GET-LATEST-FIXED-APP.bat
+   Wait until finished.
+
+3) Desktop\StrokeIQ → PUBLISH-SWIMIQAPP-COM.bat
+   You MUST see:
+     [OK] On branch: cursor/dryland-power-index-b7ef
+     [OK] New-build proof strings found in main.dart.js
+     BUILD + ZIP DONE
+   If you see BUILD FAILED / pub.dev error:
+     STOP. Do not upload anything. Fix Wi-Fi and retry.
+
+4) Only AFTER "BUILD + ZIP DONE":
+   Upload:
+     Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+   Extract into GoDaddy public_html (overwrite all)
+
+5) Proof it worked — open this in Chrome:
+     https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
+   It must show TODAY'S commit (not an old date only).
+   Then hard refresh the app: Ctrl+Shift+R
+
+------------------------------------------------
+15-SECOND VIDEO ERROR
+------------------------------------------------
+Even after the site updates, a 15s phone clip can still fail if
+the FILE is over 25 MB (common with 4K).
+Re-export at 720p under 25 MB, then Analyze again.

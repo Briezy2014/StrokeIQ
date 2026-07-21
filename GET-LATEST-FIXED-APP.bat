@@ -28,6 +28,8 @@ echo   File check after update
 echo ============================================
 set MISSING=0
 
+call :CheckFile "WHY-NOTHING-CHANGES.txt"
+call :CheckFile "PUBLISH-SWIMIQAPP-COM.bat"
 call :CheckFile "START-SWIMIQ-WITH-ELITE.bat"
 call :CheckFile "GOOD-MORNING-KARA.txt"
 call :CheckFile "swimiq\scripts\start-elite-and-wait.ps1"
@@ -48,17 +50,25 @@ echo.
 if "%MISSING%"=="1" goto :MissingFiles
 
 echo ============================================
-echo Stripe billing files are ready.
-echo For billing: open STRIPE-BILLING-STEPS.txt
-echo Or double-click TURN-ON-STRIPE-BILLING.bat
+echo Latest files are ready.
 echo ============================================
 echo.
-echo NEXT: starting Elite + Chrome for you now
+echo READ THIS FIRST:
+echo   WHY-NOTHING-CHANGES.txt
 echo.
-if exist "%CD%\STRIPE-BILLING-STEPS.txt" start "" notepad "%CD%\STRIPE-BILLING-STEPS.txt"
-if exist "%CD%\GOOD-MORNING-KARA.txt" start "" notepad "%CD%\GOOD-MORNING-KARA.txt"
-call "%CD%\START-SWIMIQ-WITH-ELITE.bat"
-exit /b %ERRORLEVEL%
+echo To update the WEBSITE:
+echo   1) Make sure https://pub.dev opens in Chrome
+echo   2) Double-click PUBLISH-SWIMIQAPP-COM.bat
+echo   3) Wait for BUILD + ZIP DONE
+echo   4) Upload swimiq\build\swimiq-web-godaddy.zip
+echo.
+if exist "%CD%\WHY-NOTHING-CHANGES.txt" start "" notepad "%CD%\WHY-NOTHING-CHANGES.txt"
+if exist "%CD%\MORNING-CHECKLIST.txt" start "" notepad "%CD%\MORNING-CHECKLIST.txt"
+echo.
+echo To open the local Elite app afterward, run START-SWIMIQ-WITH-ELITE.bat
+echo.
+pause
+exit /b 0
 
 :CheckFile
 if exist "%~1" (

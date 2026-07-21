@@ -16,6 +16,16 @@ Write-Host ''
 & powershell -NoProfile -ExecutionPolicy Bypass -File $buildScript
 if ($LASTEXITCODE -ne 0) {
     Write-Host 'BUILD FAILED.' -ForegroundColor Red
+    Write-Host ''
+    Write-Host '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' -ForegroundColor Red
+    Write-Host ' DO NOT UPLOAD ANY ZIP TO GODADDY' -ForegroundColor Red
+    Write-Host ' The old zip was deleted so you cannot' -ForegroundColor Red
+    Write-Host ' accidentally re-upload yesterday''s build.' -ForegroundColor Red
+    Write-Host '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' -ForegroundColor Red
+    Write-Host ''
+    Write-Host 'If you saw pub.dev / Failed host lookup:' -ForegroundColor Yellow
+    Write-Host '  1) Open https://pub.dev in Chrome' -ForegroundColor Yellow
+    Write-Host '  2) When it loads, run PUBLISH-SWIMIQAPP-COM.bat again' -ForegroundColor Yellow
     Read-Host 'Press Enter to close'
     exit $LASTEXITCODE
 }
@@ -53,17 +63,22 @@ Write-Host '========================================' -ForegroundColor Green
 Write-Host ' BUILD + ZIP DONE - next upload to GoDaddy' -ForegroundColor Green
 Write-Host '========================================' -ForegroundColor Green
 Write-Host ''
+$marker = Join-Path $webOut 'SWIMIQ-FLUTTER-BUILD.txt'
+if (Test-Path -LiteralPath $marker) {
+    Write-Host 'BUILD STAMP (must match live site after upload):' -ForegroundColor Cyan
+    Get-Content -LiteralPath $marker | ForEach-Object { Write-Host ('  ' + $_) -ForegroundColor Green }
+    Write-Host ''
+}
 Write-Host '1. GoDaddy -> My Products -> swimiqapp.com -> Hosting -> File Manager' -ForegroundColor Cyan
 Write-Host '2. Open public_html' -ForegroundColor Cyan
-Write-Host '3. DELETE or rename old index.html (the marketing homepage)' -ForegroundColor Cyan
-Write-Host '4. Upload ONE file:' -ForegroundColor Cyan
+Write-Host '3. Upload ONE file:' -ForegroundColor Cyan
 Write-Host ('   ' + $zipPath) -ForegroundColor Green
-Write-Host '5. Right-click zip -> Extract -> overwrite everything' -ForegroundColor Cyan
-Write-Host '6. Confirm public_html contains main.dart.js and SWIMIQ-FLUTTER-BUILD.txt' -ForegroundColor Cyan
-Write-Host '7. Open https://swimiqapp.com in Incognito - you should see LOGIN' -ForegroundColor Cyan
+Write-Host '4. Right-click zip -> Extract -> overwrite everything' -ForegroundColor Cyan
+Write-Host '5. Confirm public_html/SWIMIQ-FLUTTER-BUILD.txt shows TODAY commit' -ForegroundColor Cyan
+Write-Host '6. Open https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt' -ForegroundColor Cyan
+Write-Host '7. Hard refresh login page Ctrl+Shift+R (or Incognito)' -ForegroundColor Cyan
 Write-Host ''
-Write-Host 'If you still see the old brochure site: wrong files were uploaded, or cache.' -ForegroundColor Yellow
-Write-Host 'Hard refresh Ctrl+F5. public_html must have main.dart.js (Flutter).' -ForegroundColor Yellow
+Write-Host 'PROOF live updated: that .txt file commit changes, and Video errors say 720p/25 MB (not 50 MB).' -ForegroundColor Yellow
 Write-Host ''
 try { explorer.exe /select,$zipPath } catch {}
 Read-Host 'Press Enter to close'

@@ -1,50 +1,20 @@
-SWIMIQ — REPUBLISH NOW (CRITICAL)
-=================================
+SWIMIQ — FIX PUBLISH NOW
+========================
 
-Why the last republish looked the same:
-  PUBLISH-SWIMIQAPP-COM.bat was still resetting to the OLD
-  elite-video branch BEFORE building — so it erased Dryland
-  + Power Index every time you published.
+Nothing changed on the live site because Publish was FAILING at
+pub.dev, then the OLD zip kept getting uploaded.
 
-That publish script is now fixed.
+1) Open https://pub.dev in Chrome (must load)
+2) GET-LATEST-FIXED-APP.bat
+3) PUBLISH-SWIMIQAPP-COM.bat
+   Need to see: BUILD + ZIP DONE
+   and: New-build proof strings found
+4) Upload ONLY the new:
+   swimiq\build\swimiq-web-godaddy.zip
+5) Proof: open
+   https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
+   Must show today's commit.
 
-------------------------------------------------
-DO THIS EXACTLY (3 steps)
-------------------------------------------------
-1) Desktop\StrokeIQ → double-click GET-LATEST-FIXED-APP.bat
-   Wait until it finishes. You want branch:
-     cursor/dryland-power-index-b7ef
+If BUILD FAILED appears: stop. Do not upload. Fix Wi-Fi first.
 
-2) Double-click PUBLISH-SWIMIQAPP-COM.bat
-   Watch for:
-     [OK] On branch: cursor/dryland-power-index-b7ef
-   Wait for the NEW zip to finish building.
-
-3) GoDaddy → public_html → upload/extract ONLY:
-     swimiq\build\swimiq-web-godaddy.zip
-   Then hard refresh swimiqapp.com (Ctrl+Shift+R)
-
-------------------------------------------------
-PROOF IT WORKED
-------------------------------------------------
-Passport / Recruiting Hub / Best Times Résumé:
-  Power Index shows a number like 78 / 100
-  (NOT "Coming soon")
-
-Passport Command Center:
-  AI Dryland Coach opens a real workout plan
-
-Highlight Video Builder:
-  Button says "Build highlight package"
-
-If Power Index says "Add birthday and gender":
-  Passport profile → set birthday + gender → save
-
-------------------------------------------------
-SMOKE CHECK (2 minutes)
-------------------------------------------------
-[ ] Login
-[ ] Passport → AI Dryland Coach
-[ ] Power Index visible (not coming soon)
-[ ] Highlight package builds/copies
-[ ] Membership / Stripe Choose still works
+15s video tip: file must be under 25 MB (720p). Length is not enough.
