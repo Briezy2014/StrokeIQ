@@ -199,7 +199,7 @@ class SubscriptionCapabilities {
       return 'Coach Elite sneak peek ended. Upgrade to Elite for AI Stroke Analysis, '
           'Race Intelligence, and AI performance reports.';
     }
-    return 'SwimIQ Elite unlocks AI Video Stroke Analysis (Gemini + MediaPipe), '
+    return 'SwimIQ Elite unlocks AI Video Stroke Analysis, '
         'Race Intelligence, AI Performance Reports, race strategy, season insights, '
         'and AI Recruiting Intelligence.';
   }

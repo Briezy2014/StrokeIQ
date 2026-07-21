@@ -111,7 +111,7 @@ abstract final class SubscriptionCatalog {
       badgeLabel: 'Advanced AI Performance',
       features: [
         'Everything in Pro',
-        'AI Video Stroke Analysis (Gemini + MediaPipe) — mechanics, kick, catch, turns & underwater',
+        'AI Video Stroke Analysis — mechanics, kick, catch, turns & underwater',
         'Pros/cons coach summary with youth-friendly notes & estimated time savings',
         'Race Intelligence — pacing, split analysis, tempo shifts & fatigue detection',
         'AI Performance Reports with your top improvement priorities',

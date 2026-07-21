@@ -227,7 +227,7 @@ void main() {
     expect(pro.badgeLabel, 'Most Popular');
     expect(elite.name, 'SwimIQ Elite');
     expect(elite.badgeLabel, 'Advanced AI Performance');
-    expect(elite.features.any((f) => f.contains('Gemini + MediaPipe')), isTrue);
+    expect(elite.features.any((f) => f.contains('AI Video Stroke Analysis')), isTrue);
     expect(elite.features.any((f) => f.contains('AI Recruiting Intelligence')), isTrue);
     expect(basic.priceLabel(BillingCycle.annual), '\$39.99/yr');
     expect(pro.priceLabel(BillingCycle.annual), '\$89.99/yr');

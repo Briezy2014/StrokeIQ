@@ -237,10 +237,10 @@ abstract final class VideoAnalysisScores {
       return null;
     }
     if (awaitingGeminiVideoRead(analysis, serverHealth: serverHealth)) {
-      return 'Until Gemini runs, coaching cannot match your footage. Follow the steps in the orange banner.';
+      return 'Until AI analysis runs, coaching cannot match your footage. Follow the steps in the orange banner.';
     }
     if (analysis.hasPoseMetrics) {
-      return 'MediaPipe body-line data was captured, but Gemini could not watch the '
+      return 'Body-line data was captured, but AI could not watch the '
           'full video — ratings below are from your notes plus pose estimates.';
     }
     return null;

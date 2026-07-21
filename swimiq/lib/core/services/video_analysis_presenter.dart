@@ -74,10 +74,10 @@ abstract final class VideoAnalysisPresenter {
 
   static String? analysisEngineLabel(SwimVideoAnalysis analysis) {
     return switch (analysis.analysisEngine) {
-      'swimiq-v2-gemini-mediapipe' => 'Gemini + MediaPipe — frame-by-frame video analysis',
-      'swimiq-v2-gemini' => 'Gemini — frame-by-frame video analysis',
-      'swimiq-v1-notes-mediapipe' => 'Notes + MediaPipe estimate (Gemini unavailable)',
-      'swimiq-v1-notes' => 'Notes-based estimate (Gemini unavailable — see setup guide)',
+      'swimiq-v2-gemini-mediapipe' => 'AI video analysis — frame-by-frame coaching',
+      'swimiq-v2-gemini' => 'AI video analysis — frame-by-frame coaching',
+      'swimiq-v1-notes-mediapipe' => 'Notes + body-line estimate (AI video unavailable)',
+      'swimiq-v1-notes' => 'Notes-based estimate (AI video unavailable)',
       _ => null,
     };
   }

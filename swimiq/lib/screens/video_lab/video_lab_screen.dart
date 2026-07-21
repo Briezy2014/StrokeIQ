@@ -353,8 +353,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Sending your clip to Gemini for AI coaching (usually under 2 minutes). '
-            'Keep this tab open.',
+            'Analyzing your clip (usually under 2 minutes). Keep this tab open.',
           ),
           duration: Duration(seconds: 8),
         ),
@@ -1018,9 +1017,7 @@ class _AnalysisInProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Gemini is watching your video on the server. This usually finishes '
-                  'in under 2 minutes — keep this tab open. Phone race clips up to '
-                  '${AppConstants.maxGeminiVideoMb} MB are supported.',
+                  'This usually finishes in under 2 minutes — keep this tab open.',
                   style: TextStyle(
                     color: Colors.grey.shade800,
                     height: 1.4,

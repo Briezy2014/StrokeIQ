@@ -12,7 +12,7 @@ import '../../data/models/swimmer_profile.dart';
 /// Local fallback when Gemini edge analysis is unavailable.
 class AiSwimAnalysisService {
   static const disclaimer =
-      'Notes-based coaching — Elite AI uses Gemini and MediaPipe for frame-by-frame video read.';
+      'Notes-based coaching — Elite AI uses frame-by-frame video analysis.';
 
   SwimVideoAnalysis analyze({
     required SwimVideo video,

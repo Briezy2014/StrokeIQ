@@ -202,7 +202,7 @@ class _MediaPipeBodyMechanicsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'MediaPipe body mechanics',
+            'Body mechanics',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: AppColors.primaryDeep,

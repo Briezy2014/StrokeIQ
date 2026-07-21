@@ -239,7 +239,7 @@ class _GeminiSummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Gemini recruiting read',
+              'AI recruiting read',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: AppColors.primaryDeep,
