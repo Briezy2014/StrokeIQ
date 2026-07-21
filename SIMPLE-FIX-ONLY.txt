@@ -1,18 +1,16 @@
-WHY YOU STILL SEE "NOT CONNECTED"
-=================================
-Live swimiqapp.com is still running an OLD broken zip (no login keys).
-The CONNECTED zip exists on GitHub. It is not on GoDaddy yet.
+WHY "NOT CONNECTED" KEEPS HAPPENING
+===================================
+GoDaddy still has an OLD website zip with no login keys.
+I cannot press upload on your GoDaddy from here.
+A double-click on YOUR PC must place the CONNECTED zip, then you extract it in public_html once.
 
-DO THIS
-=======
-1) Download Kara-DOUBLE-CLICK-STARTER.zip from:
-   https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST
-2) Extract into Desktop\StrokeIQ
-3) Double-click DOUBLE-CLICK-ME.bat
-4) Upload ONLY: UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip
-   into GoDaddy public_html → Extract → Overwrite ALL
-5) Proof MUST say supabase=connected:
-   https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
-6) Ctrl+Shift+R → you should see LOGIN
+WHAT TO DOUBLE-CLICK
+====================
+DOUBLE-CLICK-ME.vbs   ← use this (OneDrive deletes many .bat files)
 
-If proof does not say supabase=connected, the wrong zip is still live.
+It opens UPLOAD-TO-GODADDY\1-UPLOAD-THIS-TO-GODADDY.zip
+
+Then: public_html → Upload that zip → Extract → Overwrite → Ctrl+Shift+R
+
+If you have Desktop\StrokeIQ\StrokeIQ (folder inside folder),
+the real files are usually in the INNER StrokeIQ.

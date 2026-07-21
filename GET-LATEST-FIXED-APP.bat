@@ -62,6 +62,12 @@ echo ============================================
 echo Latest files are ready.
 echo ============================================
 echo.
+echo NEXT: double-click DOUBLE-CLICK-ME.vbs
+if exist "%CD%\DOUBLE-CLICK-ME.vbs" (
+  wscript "%CD%\DOUBLE-CLICK-ME.vbs"
+  exit /b 0
+)
+echo.
 echo READ THIS FIRST:
 echo   WHY-NOTHING-CHANGES.txt
 echo.
