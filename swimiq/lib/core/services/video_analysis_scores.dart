@@ -87,20 +87,18 @@ abstract final class VideoAnalysisScores {
     SwimVideoAnalysis analysis, {
     VideoAnalysisServerHealth? serverHealth,
   }) {
-    if (serverIsStreamReady(serverHealth) && hasStaleSavedFailure(analysis)) {
-      return null;
-    }
-    final raw = analysis.analysisJson?['gemini_error_raw']?.toString();
-    if (raw == null || raw.trim().isEmpty) return null;
-    return sanitizeStoredGeminiMessage(raw.trim());
+    // Raw backend detail stays in analysis JSON for support — never show it in UI.
+    return null;
   }
 
   static String? serverReadyBanner(VideoAnalysisServerHealth? serverHealth) {
     if (!serverIsStreamReady(serverHealth)) return null;
     final version = serverHealth!.functionVersion ?? 'stream';
-    return 'Video server is ready ($version). Tap Run AI Swim Analysis above — Gemini watches '
-        'your clip and MediaPipe scans body lines when available. Any orange errors below are '
-        'from an old attempt before the server was fixed.';
+    if (version.contains('cloud')) {
+      return 'AI coaching is ready. Upload a race clip and tap Analyze.';
+    }
+    return 'AI coaching is ready. Tap Analyze above to review this clip. '
+        'Older orange messages below are from a previous attempt.';
   }
 
   /// Rewrites outdated/ops server errors into customer-safe copy.

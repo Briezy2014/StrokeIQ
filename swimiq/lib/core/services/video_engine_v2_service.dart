@@ -356,6 +356,7 @@ class VideoEngineV2Service {
   }
 
   /// Never show torch/mmpose engineer text to athletes/parents.
+  /// On the public website, also hide local .bat / localhost setup copy.
   static String? sanitizeUserFacingError(String? raw) {
     final text = raw?.trim() ?? '';
     if (text.isEmpty) return null;
@@ -369,6 +370,14 @@ class VideoEngineV2Service {
         lower.contains('mmdet') ||
         lower.contains('traceback')) {
       return 'Phone coaching is ready — tap Retry analysis to finish this race report.';
+    }
+    if (Env.isPublicHostedWeb &&
+        (lower.contains('.bat') ||
+            lower.contains('127.0.0.1') ||
+            lower.contains('localhost') ||
+            lower.contains('services/video_analysis'))) {
+      return 'Elite analysis is not ready yet. Please try again in a moment, '
+          'or email support@swimiqapp.com if it keeps failing.';
     }
     return text;
   }

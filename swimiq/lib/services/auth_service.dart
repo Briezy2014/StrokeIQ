@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -49,7 +50,18 @@ class AuthService {
 
   /// Sends a password-reset email via Supabase Auth.
   Future<void> resetPassword({required String email}) {
-    return _client.auth.resetPasswordForEmail(email.trim());
+    final redirectTo = kIsWeb
+        ? '${Uri.base.origin}/'
+        : 'https://swimiqapp.com/';
+    return _client.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: redirectTo,
+    );
+  }
+
+  /// Completes password recovery after the email reset link is opened.
+  Future<UserResponse> updatePassword({required String password}) {
+    return _client.auth.updateUser(UserAttributes(password: password));
   }
 
   /// Best-effort token refresh after a transient network failure.

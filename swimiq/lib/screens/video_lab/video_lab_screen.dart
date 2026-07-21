@@ -267,16 +267,21 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       );
     } on VideoEngineV2Exception catch (e) {
       if (!mounted) return;
+      final message =
+          VideoEngineV2Service.sanitizeUserFacingError(e.message) ?? e.message;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(message),
           duration: const Duration(seconds: 12),
         ),
       );
     } catch (e) {
       if (!mounted) return;
+      final raw = e.toString();
+      final message =
+          VideoEngineV2Service.sanitizeUserFacingError(raw) ?? raw;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _analyzingVideoId = null);
@@ -427,7 +432,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final serverHealth = serverHealthAsync.valueOrNull;
         final hosted = Env.isPublicHostedWeb;
         final heroSubtitle = hosted
-            ? (canRunAi || v2Allowed
+            ? (canRunAi
                 ? 'Upload race video for AI coaching'
                 : hasPro
                     ? 'Upload & review — AI coaching is Elite'
@@ -457,7 +462,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 ),
               ],
             ),
-            if (hosted && (canRunAi || v2Allowed)) ...[
+            // Public website: only promise cloud AI when the account can run it.
+            if (hosted && canRunAi) ...[
               const SizedBox(height: 12),
               Material(
                 color: const Color(0xFFE8F5E9),
@@ -514,11 +520,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                 ),
               ),
             ],
-            // Never show Elite upgrade ads during closed testing / demo unlock.
+            // Pro users without Elite should still see the upgrade path on web.
             if (!AppConstants.unlockAllTabsForPreview &&
                 hasPro &&
                 !canRunAi &&
-                !v2Allowed) ...[
+                (hosted || !v2Allowed)) ...[
               const SizedBox(height: 12),
               _VideoLabEliteBanner(subscription: subscription),
             ],
@@ -606,7 +612,8 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   onLegacyAnalyze: dualRun
                       ? () => _runAnalysis(video, forceLegacy: true)
                       : null,
-                  v2Primary: v2Allowed,
+                  // Public website uses cloud AI labeling, not local "Elite Analysis".
+                  v2Primary: !hosted && v2Allowed,
                   motivationalCut: _videoMotivationalCut(data, video),
                   onCoachNotesChanged: video.id == null
                       ? null

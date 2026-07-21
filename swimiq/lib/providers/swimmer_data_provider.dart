@@ -771,7 +771,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           geminiFallbackReason: friendly,
           geminiErrorRaw: error.message,
         );
-        fallbackNotice = '$friendly\n\nTechnical error: ${error.message}';
+        // Keep raw detail in analysis JSON for support; never show it in the SnackBar.
+        fallbackNotice = friendly;
       } catch (error) {
         final raw = error.toString();
         final friendly = _friendlyGeminiFallbackMessage(raw);
@@ -782,7 +783,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           geminiFallbackReason: friendly,
           geminiErrorRaw: raw,
         );
-        fallbackNotice = '$friendly\n\nTechnical error: $raw';
+        fallbackNotice = friendly;
       }
 
       await _persistVideoAnalysis(

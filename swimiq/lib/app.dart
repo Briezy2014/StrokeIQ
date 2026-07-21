@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/env.dart';
 import 'core/theme/app_theme.dart';
@@ -9,6 +10,7 @@ import 'providers/swimmer_data_provider.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/auth/update_password_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/swimiq_logo.dart';
@@ -24,9 +26,14 @@ class SwimIqApp extends ConsumerStatefulWidget {
 
 class _SwimIqAppState extends ConsumerState<SwimIqApp> {
   bool _showSignup = false;
+  bool _passwordRecovery = false;
 
   void _toggleAuthMode() {
     setState(() => _showSignup = !_showSignup);
+  }
+
+  void _finishPasswordRecovery() {
+    setState(() => _passwordRecovery = false);
   }
 
   @override
@@ -67,11 +74,29 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
           },
         ),
         data: (authState) {
+          final recoveryFromUrl = kIsWeb &&
+              (Uri.base.queryParameters['type'] == 'recovery' ||
+                  Uri.base.fragment.contains('type=recovery'));
+          if (authState.event == AuthChangeEvent.passwordRecovery ||
+              recoveryFromUrl) {
+            if (!_passwordRecovery) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) setState(() => _passwordRecovery = true);
+              });
+            }
+          }
+
           final session = authState.session;
           if (session == null) {
             return _showSignup
                 ? SignupScreen(onSwitchToLogin: _toggleAuthMode)
                 : LoginScreen(onSwitchToSignup: _toggleAuthMode);
+          }
+
+          if (_passwordRecovery ||
+              authState.event == AuthChangeEvent.passwordRecovery ||
+              recoveryFromUrl) {
+            return UpdatePasswordScreen(onFinished: _finishPasswordRecovery);
           }
 
           final swimmerKey = AuthService.swimmerKeyForUser(session.user);

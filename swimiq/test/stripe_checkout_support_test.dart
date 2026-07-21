@@ -9,12 +9,23 @@ void main() {
     expect(StripeCheckoutUrls.cancelUrl(), contains('checkout=cancel'));
   });
 
-  test('failed fetch maps to deploy guidance', () {
+  test('failed fetch maps to customer-safe billing copy', () {
     final message = StripeCheckoutErrors.message(
       Exception('ClientException: Failed to fetch'),
     );
-    expect(message, contains('STRIPE_SETUP'));
-    expect(message, contains('create-stripe-checkout'));
+    expect(message, contains('Billing is temporarily unavailable'));
+    expect(message, contains('support@swimiqapp.com'));
+    expect(message, isNot(contains('STRIPE_SETUP')));
+    expect(message, isNot(contains('create-stripe-checkout')));
+  });
+
+  test('missing stripe secrets map to customer-safe checkout copy', () {
+    final message = StripeCheckoutErrors.message(
+      Exception('STRIPE_SECRET_KEY is not configured'),
+    );
+    expect(message, contains('Checkout is not ready yet'));
+    expect(message, isNot(contains('Edge Function')));
+    expect(message, isNot(contains('STRIPE_SECRET_KEY')));
   });
 
   test('founder accounts cannot start checkout', () {

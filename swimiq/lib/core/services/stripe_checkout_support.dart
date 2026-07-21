@@ -33,15 +33,16 @@ abstract final class StripeCheckoutErrors {
         text.contains('connection') ||
         text.contains('socketexception') ||
         text.contains('network')) {
-      return 'Billing server could not be reached. Stripe checkout must be deployed '
-          'on Supabase first (see swimiq/docs/STRIPE_SETUP.md). '
-          'Deploy: create-stripe-checkout + stripe-webhook, then add Stripe secrets.';
+      return 'Billing is temporarily unavailable. '
+          'Please try again in a few minutes, or email support@swimiqapp.com.';
     }
     if (text.contains('stripe_secret_key') ||
         text.contains('not configured') ||
-        text.contains('missing stripe price')) {
-      return 'Stripe is not fully configured on the server yet. '
-          'Add STRIPE_SECRET_KEY and all six price IDs in Supabase Edge Function secrets.';
+        text.contains('missing stripe price') ||
+        text.contains('create-stripe-checkout') ||
+        text.contains('edge function')) {
+      return 'Checkout is not ready yet. '
+          'Please try again shortly, or email support@swimiqapp.com.';
     }
     if (text.contains('unauthorized') || text.contains('401')) {
       return 'Please sign in again, then try checkout.';
@@ -50,11 +51,8 @@ abstract final class StripeCheckoutErrors {
       return 'Could not start checkout for that plan. Try again or contact support.';
     }
 
-    final raw = error.toString().replaceFirst('Exception: ', '');
-    if (raw.length > 180) {
-      return '${raw.substring(0, 177)}...';
-    }
-    return raw;
+    return 'Could not start checkout. Please try again, '
+        'or email support@swimiqapp.com if it keeps failing.';
   }
 }
 

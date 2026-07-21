@@ -31,8 +31,7 @@ class StripeCheckoutService {
         throw Exception(data['error'].toString());
       }
       throw Exception(
-        'Checkout failed (${response.status}). '
-        'Confirm create-stripe-checkout is deployed on Supabase.',
+        'Checkout failed (${response.status}). Please try again shortly.',
       );
     }
 
