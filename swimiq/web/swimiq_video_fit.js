@@ -1,14 +1,12 @@
-// SwimIQ — shrink large phone clips in Chrome before cloud Gemini analysis.
-// Loaded from index.html; called from Dart via swimiqFitVideoForCloud().
+// SwimIQ — shrink large phone clips (incl. iPhone HEVC/MOV) for cloud Gemini.
 (function () {
   'use strict';
 
+  var ffmpegLoading = null;
+  var ffmpegInstance = null;
+
   function pickMime() {
-    var types = [
-      'video/webm;codecs=vp9',
-      'video/webm;codecs=vp8',
-      'video/webm',
-    ];
+    var types = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm'];
     for (var i = 0; i < types.length; i++) {
       if (window.MediaRecorder && MediaRecorder.isTypeSupported(types[i])) {
         return types[i];
@@ -23,26 +21,85 @@
     });
   }
 
-  /**
-   * @param {Uint8Array} videoBytes
-   * @param {number} maxBytes target ceiling (e.g. 22MB for live 25MB Edge Function)
-   * @returns {Promise<Uint8Array>}
-   */
-  window.swimiqFitVideoForCloud = async function swimiqFitVideoForCloud(
-    videoBytes,
-    maxBytes
-  ) {
-    maxBytes = maxBytes || 22 * 1024 * 1024;
-    if (!videoBytes || videoBytes.byteLength <= maxBytes) {
-      return videoBytes;
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) {
+        resolve();
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () {
+        reject(new Error('Could not load video shrink engine. Check internet and try again.'));
+      };
+      document.head.appendChild(s);
+    });
+  }
+
+  function getFFmpeg() {
+    if (ffmpegInstance) return Promise.resolve(ffmpegInstance);
+    if (ffmpegLoading) return ffmpegLoading;
+    // 0.11 UMD API is reliable from a plain script tag.
+    ffmpegLoading = loadScript(
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js'
+    ).then(async function () {
+      if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+        throw new Error('FFmpeg failed to load');
+      }
+      var createFFmpeg = window.FFmpeg.createFFmpeg;
+      var fetchFile = window.FFmpeg.fetchFile;
+      var ff = createFFmpeg({
+        log: false,
+        corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+      });
+      await ff.load();
+      ffmpegInstance = { ff: ff, fetchFile: fetchFile };
+      return ffmpegInstance;
+    });
+    return ffmpegLoading;
+  }
+
+  async function shrinkWithFfmpeg(videoBytes, maxBytes) {
+    var pack = await getFFmpeg();
+    var ff = pack.ff;
+    var fetchFile = pack.fetchFile;
+    var inName = 'input.mov';
+    var outName = 'output.mp4';
+    ff.FS('writeFile', inName, await fetchFile(new Blob([videoBytes])));
+
+    var runs = [
+      ['-i', inName, '-vf', 'scale=1280:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '1000k', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=854:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '600k', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '350k', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '250k', '-t', '40', '-an', '-movflags', '+faststart', outName],
+    ];
+
+    var last = null;
+    for (var i = 0; i < runs.length; i++) {
+      try {
+        try { ff.FS('unlink', outName); } catch (_) {}
+        await ff.run.apply(ff, runs[i]);
+        last = ff.FS('readFile', outName);
+        if (last && last.byteLength > 0 && last.byteLength <= maxBytes) {
+          return last;
+        }
+      } catch (err) {
+        // try next compress level
+      }
     }
-    if (!window.MediaRecorder) {
-      throw new Error('This browser cannot shrink videos. Use Chrome on desktop.');
-    }
+    if (last && last.byteLength > 0) return last;
+    throw new Error(
+      'Could not shrink this clip under ' +
+        Math.round(maxBytes / (1024 * 1024)) +
+        ' MB'
+    );
+  }
+
+  async function shrinkWithRecorder(videoBytes, maxBytes) {
     var mime = pickMime();
-    if (!mime) {
-      throw new Error('This browser cannot shrink videos. Use Chrome on desktop.');
-    }
+    if (!mime) throw new Error('no recorder');
 
     var blob = new Blob([videoBytes], { type: 'video/mp4' });
     var url = URL.createObjectURL(blob);
@@ -55,66 +112,57 @@
     try {
       await new Promise(function (resolve, reject) {
         var t = setTimeout(function () {
-          reject(new Error('Video took too long to load for shrinking.'));
-        }, 45000);
+          reject(new Error('decode timeout'));
+        }, 15000);
         video.onloadedmetadata = function () {
           clearTimeout(t);
           resolve();
         };
         video.onerror = function () {
           clearTimeout(t);
-          reject(new Error('Could not read this video for shrinking.'));
+          reject(new Error('decode failed'));
         };
       });
 
-      var maxW = 1280;
+      var maxW = 960;
       var scale = Math.min(1, maxW / (video.videoWidth || maxW));
-      var w = Math.max(2, Math.round((video.videoWidth || 1280) * scale / 2) * 2);
-      var h = Math.max(2, Math.round((video.videoHeight || 720) * scale / 2) * 2);
+      var w = Math.max(2, Math.round((video.videoWidth || 960) * scale / 2) * 2);
+      var h = Math.max(2, Math.round((video.videoHeight || 540) * scale / 2) * 2);
       var canvas = document.createElement('canvas');
       canvas.width = w;
       canvas.height = h;
       var ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not prepare video shrink canvas.');
+      if (!ctx) throw new Error('no canvas');
 
-      var bitrates = [2500000, 1500000, 900000, 500000];
+      var bitrates = [1000000, 600000, 350000, 220000];
       var last = null;
-
       for (var b = 0; b < bitrates.length; b++) {
-        var bitrate = bitrates[b];
         video.currentTime = 0;
         await new Promise(function (resolve) {
           if (video.readyState >= 2) resolve();
           else video.oncanplay = function () { resolve(); };
         });
-
-        var stream = canvas.captureStream(30);
+        var stream = canvas.captureStream(24);
         var recorder = new MediaRecorder(stream, {
           mimeType: mime,
-          videoBitsPerSecond: bitrate,
+          videoBitsPerSecond: bitrates[b],
         });
         var chunks = [];
         recorder.ondataavailable = function (ev) {
           if (ev.data && ev.data.size) chunks.push(ev.data);
         };
-
         var stopped = new Promise(function (resolve) {
           recorder.onstop = function () { resolve(); };
         });
-
-        recorder.start(250);
+        recorder.start(200);
         await video.play();
-
         var drawing = true;
-        var draw = function () {
+        function draw() {
           if (!drawing) return;
           ctx.drawImage(video, 0, 0, w, h);
-          if (!video.paused && !video.ended) {
-            requestAnimationFrame(draw);
-          }
-        };
+          if (!video.paused && !video.ended) requestAnimationFrame(draw);
+        }
         draw();
-
         await new Promise(function (resolve) {
           video.onended = function () { resolve(); };
           video.onerror = function () { resolve(); };
@@ -123,25 +171,32 @@
         if (recorder.state !== 'inactive') recorder.stop();
         await stopped;
         stream.getTracks().forEach(function (t) { t.stop(); });
-
-        var outBlob = new Blob(chunks, { type: mime.split(';')[0] });
-        last = await blobToUint8(outBlob);
-        if (last.byteLength > 0 && last.byteLength <= maxBytes) {
-          return last;
-        }
+        last = await blobToUint8(new Blob(chunks, { type: mime.split(';')[0] }));
+        if (last.byteLength > 0 && last.byteLength <= maxBytes) return last;
       }
-
-      if (last && last.byteLength > 0 && last.byteLength < videoBytes.byteLength) {
-        return last;
-      }
-      throw new Error(
-        'Could not shrink this clip under ' +
-          Math.round(maxBytes / (1024 * 1024)) +
-          ' MB. Trim a shorter section and try again.'
-      );
+      if (last && last.byteLength > 0) return last;
+      throw new Error('recorder failed');
     } finally {
       try { video.pause(); } catch (_) {}
       URL.revokeObjectURL(url);
     }
+  }
+
+  window.swimiqFitVideoForCloud = async function swimiqFitVideoForCloud(
+    videoBytes,
+    maxBytes
+  ) {
+    maxBytes = maxBytes || 18 * 1024 * 1024;
+    if (!videoBytes || videoBytes.byteLength <= maxBytes) {
+      return videoBytes;
+    }
+
+    try {
+      var rec = await shrinkWithRecorder(videoBytes, maxBytes);
+      if (rec && rec.byteLength > 0 && rec.byteLength <= maxBytes) return rec;
+      if (rec && rec.byteLength > 0) videoBytes = rec;
+    } catch (_) {}
+
+    return shrinkWithFfmpeg(videoBytes, maxBytes);
   };
 })();

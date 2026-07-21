@@ -5,7 +5,7 @@ bool get canFitVideoBytesForCloudImpl => false;
 Future<Uint8List> fitVideoBytesForCloudImpl(
   Uint8List bytes, {
   String? fileName,
-  int maxBytes = 22 * 1024 * 1024,
+  int maxBytes = 18 * 1024 * 1024,
 }) async {
   if (bytes.lengthInBytes <= maxBytes) return bytes;
   throw StateError(

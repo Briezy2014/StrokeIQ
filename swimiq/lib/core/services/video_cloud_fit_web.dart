@@ -2,13 +2,18 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
-bool get canFitVideoBytesForCloudImpl =>
-    globalContext.has('swimiqFitVideoForCloud');
+bool get canFitVideoBytesForCloudImpl {
+  try {
+    return globalContext.has('swimiqFitVideoForCloud');
+  } catch (_) {
+    return false;
+  }
+}
 
 Future<Uint8List> fitVideoBytesForCloudImpl(
   Uint8List bytes, {
   String? fileName,
-  int maxBytes = 22 * 1024 * 1024,
+  int maxBytes = 18 * 1024 * 1024,
 }) async {
   if (bytes.lengthInBytes <= maxBytes) return bytes;
 

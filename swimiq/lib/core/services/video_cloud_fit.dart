@@ -5,7 +5,7 @@ import 'video_cloud_fit_stub.dart'
 
 /// Live Edge Function is still ~25 MB until redeployed. Shrink phone clips
 /// under this ceiling so Analyze works without bats/CLI.
-const int kCloudAnalyzeSafeBytes = 22 * 1024 * 1024;
+const int kCloudAnalyzeSafeBytes = 18 * 1024 * 1024;
 
 Future<Uint8List> fitVideoBytesForCloud(
   Uint8List bytes, {

@@ -260,9 +260,8 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       ).firstMatch(extracted);
       final theirs = sizeMatch?.group(1);
       final sizeHint = theirs != null ? ' (yours is about $theirs MB)' : '';
-      return 'This video file is too large for AI analysis$sizeHint. '
-          'SwimIQ will try to shrink phone clips automatically — tap Analyze again. '
-          'If it still fails, trim a shorter section and re-upload.';
+      return 'This video was too large for the server. SwimIQ is shrinking it — '
+          'tap Analyze again and keep the tab open for up to 2 minutes.';
     }
     if (lower.contains('timed out') ||
         lower.contains('timeout') ||
@@ -788,6 +787,36 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       String? fallbackNotice;
       var videoForAnalysis = video;
 
+      // Shrink large phone clips BEFORE the first cloud call (live server ~25 MB).
+      if (canFitVideoBytesForCloud) {
+        try {
+          final storage = ref.read(videoStorageServiceProvider);
+          final original =
+              await storage.downloadVideoBytes(videoForAnalysis.storagePath);
+          if (original.lengthInBytes > kCloudAnalyzeSafeBytes) {
+            final shrunk = await fitVideoBytesForCloud(
+              original,
+              fileName: videoForAnalysis.title ?? 'swim.mov',
+              maxBytes: kCloudAnalyzeSafeBytes,
+            );
+            if (shrunk.lengthInBytes < original.lengthInBytes) {
+              videoForAnalysis = await storage.replaceSwimVideoBytes(
+                video: videoForAnalysis,
+                bytes: shrunk,
+                contentType: shrunk.lengthInBytes > 4 &&
+                        shrunk[0] == 0x1A &&
+                        shrunk[1] == 0x45
+                    ? 'video/webm'
+                    : 'video/mp4',
+                fileNameHint: '${videoForAnalysis.title ?? 'swim'}.mp4',
+              );
+            }
+          }
+        } catch (_) {
+          // Fall through to analyze; 413 handler may retry shrink again.
+        }
+      }
+
       try {
         analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
               video: videoForAnalysis,
@@ -812,14 +841,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             );
             final shrunk = await fitVideoBytesForCloud(
               original,
-              fileName: videoForAnalysis.title ?? 'swim.webm',
+              fileName: videoForAnalysis.title ?? 'swim.mov',
               maxBytes: kCloudAnalyzeSafeBytes,
             );
             videoForAnalysis = await storage.replaceSwimVideoBytes(
               video: videoForAnalysis,
               bytes: shrunk,
-              contentType: 'video/webm',
-              fileNameHint: '${videoForAnalysis.title ?? 'swim'}.webm',
+              contentType: 'video/mp4',
+              fileNameHint: '${videoForAnalysis.title ?? 'swim'}.mp4',
             );
             analysis = await ref
                 .read(geminiSwimAnalysisServiceProvider)
@@ -842,18 +871,19 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             );
             fallbackNotice = friendly;
           } catch (shrinkError) {
-            final friendly = _friendlyGeminiFallbackMessage(raw);
             analysis = _fallbackVideoAnalysis(
               video: video,
               current: current,
               poseMetrics: poseMetrics,
-              geminiFallbackReason: friendly,
+              geminiFallbackReason:
+                  'This phone clip is too large for cloud analysis right now. '
+                  'Wait for the shrink to finish (first try can take 1–2 minutes), '
+                  'then tap Analyze again.',
               geminiErrorRaw: '$raw | shrink: $shrinkError',
             );
             fallbackNotice =
-                'This clip was too large for analysis. SwimIQ tried to shrink '
-                'it automatically but could not finish. Trim a shorter section '
-                'and upload again.';
+                'Shrinking this phone clip… tap Analyze again in a moment. '
+                'First shrink can take 1–2 minutes on a big iPhone video.';
           }
         } else {
           final friendly = _friendlyGeminiFallbackMessage(raw);
@@ -864,7 +894,6 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
             geminiFallbackReason: friendly,
             geminiErrorRaw: raw,
           );
-          // Keep raw detail in analysis JSON for support; never show it in the SnackBar.
           fallbackNotice = friendly;
         }
       } catch (error) {
