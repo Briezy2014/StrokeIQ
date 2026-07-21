@@ -1,18 +1,27 @@
-UPLOAD THIS ZIP TO GODADDY
-==========================
+READ THIS — you are in the OUTER folder
+======================================
 
-File name (only this one):
-  swimiq-web-godaddy.zip
+The zip is NOT this text file.
 
-Where it is on your PC:
-  Desktop\StrokeIQ\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip
+Do these in order:
 
-Or double-click:
-  DOUBLE-CLICK-ME.vbs
-  (also copies the zip to your Desktop)
+1) Double-click the FOLDER named:
+     StrokeIQ
+   (the one INSIDE this folder — same name, nested)
 
-Then in GoDaddy:
-  public_html → Upload → Extract → Overwrite
-  Ctrl+Shift+R on the app
+2) Inside that inner StrokeIQ, open:
+     UPLOAD-TO-GODADDY
 
-Do NOT download from GitHub.
+3) Upload this file to GoDaddy public_html:
+     swimiq-web-godaddy.zip
+   Extract → Overwrite → Ctrl+Shift+R
+
+OR if you already see swimiq-web-godaddy.zip in THIS outer folder,
+upload THAT zip (Compressed Folder icon — not a text file).
+
+OR open the swimiq folder and look for:
+     swimiq-web-godaddy.zip
+     or UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip
+
+Do NOT upload this .txt file.
+Do NOT upload Kara-DOUBLE-CLICK-STARTER.

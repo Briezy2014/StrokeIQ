@@ -1,0 +1,7 @@
+YOU ARE IN THE OUTER FOLDER
+
+Double-click the INNER folder named StrokeIQ
+(same name, sitting inside this folder).
+
+Then open UPLOAD-TO-GODADDY
+and upload swimiq-web-godaddy.zip to GoDaddy.
