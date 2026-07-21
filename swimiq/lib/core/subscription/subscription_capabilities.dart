@@ -111,6 +111,10 @@ class SubscriptionCapabilities {
   static bool canAccessAiDrylandCoach(SubscriptionState state, {String? email}) =>
       hasProAccess(state, email: email);
 
+  /// Power Index is active for Pro+ (résumé, Passport, Recruiting Hub).
+  static bool canAccessPowerIndex(SubscriptionState state, {String? email}) =>
+      hasProAccess(state, email: email);
+
   static bool canAccessMotivationalCuts(SubscriptionState state, {String? email}) =>
       hasProAccess(state, email: email);
 

@@ -69,6 +69,7 @@ void main() {
       swimIqScore: 620,
       highestCut: 'AA',
       championshipsQualified: const ['State Championships'],
+      powerIndexLine: '78 / 100 (Highly competitive) · 100 Fly SCY',
     );
 
     expect(text, contains('Test Swimmer'.toUpperCase()));
@@ -77,6 +78,8 @@ void main() {
     expect(text, contains('3.9'));
     expect(text, contains('1300'));
     expect(text, contains('100 Fly'));
+    expect(text, contains('Power Index: 78 / 100'));
+    expect(text.toLowerCase(), isNot(contains('coming soon')));
   });
 
   test('career highlights ignore uploaded best times as meets', () {
@@ -115,6 +118,7 @@ void main() {
       swimIqScore: 620,
       highestCut: 'AA',
       championshipsQualified: const ['State Championships'],
+      powerIndexLine: '78 / 100 (Highly competitive)',
     );
     expect(bytes.length, greaterThan(500));
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');

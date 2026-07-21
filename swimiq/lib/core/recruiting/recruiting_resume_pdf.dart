@@ -15,6 +15,7 @@ class RecruitingResumePdf {
     required int swimIqScore,
     required String highestCut,
     required List<String> championshipsQualified,
+    String? powerIndexLine,
   }) async {
     final doc = pw.Document();
     final name = profile?.displayName ?? displayName;
@@ -77,7 +78,9 @@ class RecruitingResumePdf {
             else
               pw.Text('SwimIQ Score: not yet calculated'),
             pw.Text('Highest USA cut: $highestCut'),
-            pw.Text('Power Index: coming soon (Elite)'),
+            pw.Text(
+              'Power Index: ${powerIndexLine?.trim().isNotEmpty == true ? powerIndexLine : 'Add official PBs and birthday/gender to calculate'}',
+            ),
           ]),
           _section('Awards & Honors', [
             if (profile?.athleticHonors != null)

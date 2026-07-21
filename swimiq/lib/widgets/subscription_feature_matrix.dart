@@ -15,6 +15,7 @@ class SubscriptionFeatureMatrix extends StatelessWidget {
     _MatrixRow('Official PBs, meet results & USA standards', pro: true, elite: true),
     _MatrixRow('Athlete Passport / Recruiting Snapshot', pro: true, elite: true),
     _MatrixRow('AI Dryland Coach', pro: true, elite: true),
+    _MatrixRow('Power Index', pro: true, elite: true),
     _MatrixRow('Video Lab (upload & organize videos)', pro: true, elite: true),
     _MatrixRow('Video Lab AI Stroke Analysis (Gemini + MediaPipe)', elite: true),
     _MatrixRow('Race Intelligence', elite: true),

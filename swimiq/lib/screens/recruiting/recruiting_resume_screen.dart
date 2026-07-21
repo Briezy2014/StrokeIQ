@@ -30,6 +30,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
   List<PersonalBestEntry> _personalBests = const [];
   int _swimIqScore = 0;
   String _highestCut = '';
+  String _powerIndexLine = '';
   List<String> _championshipTags = const [];
 
   @override
@@ -52,6 +53,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
               highestCut: snapshot.highestCut,
               personalBests: data.personalBests,
             );
+            final powerIndexLine = snapshot.powerIndex.resumeValue;
             final resume = RecruitingResumeBuilder.buildText(
               profile: data.profile,
               displayName: data.displayName(swimmer),
@@ -59,6 +61,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
               swimIqScore: snapshot.swimIqScore,
               highestCut: snapshot.highestCut,
               championshipsQualified: tags,
+              powerIndexLine: powerIndexLine,
             );
 
             _resumeText = resume;
@@ -67,6 +70,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
             _personalBests = data.personalBests;
             _swimIqScore = snapshot.swimIqScore;
             _highestCut = snapshot.highestCut;
+            _powerIndexLine = powerIndexLine;
             _championshipTags = tags;
 
             return ListView(
@@ -81,6 +85,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
                   personalBests: data.personalBests,
                   swimIqScore: snapshot.swimIqScore,
                   highestCut: snapshot.highestCut,
+                  powerIndexLine: powerIndexLine,
                   championshipTags: tags,
                 ),
                 const SizedBox(height: 16),
@@ -145,6 +150,7 @@ class _RecruitingResumeScreenState extends ConsumerState<RecruitingResumeScreen>
       swimIqScore: _swimIqScore,
       highestCut: _highestCut,
       championshipsQualified: _championshipTags,
+      powerIndexLine: _powerIndexLine,
     );
     return Uint8List.fromList(bytes);
   }
@@ -247,6 +253,7 @@ class _ResumeDocument extends StatelessWidget {
     required this.personalBests,
     required this.swimIqScore,
     required this.highestCut,
+    required this.powerIndexLine,
     required this.championshipTags,
   });
 
@@ -255,6 +262,7 @@ class _ResumeDocument extends StatelessWidget {
   final List<PersonalBestEntry> personalBests;
   final int swimIqScore;
   final String highestCut;
+  final String powerIndexLine;
   final List<String> championshipTags;
 
   @override
@@ -313,7 +321,7 @@ class _ResumeDocument extends StatelessWidget {
                       _SnapshotStrip(
                         swimIqScore: swimIqScore,
                         highestCut: highestCut,
-                        eventCount: personalBests.length,
+                        powerIndexLine: powerIndexLine,
                       ),
                       const SizedBox(height: 16),
                       _HonorsColumn(
@@ -338,7 +346,7 @@ class _ResumeDocument extends StatelessWidget {
                     _SnapshotStrip(
                       swimIqScore: swimIqScore,
                       highestCut: highestCut,
-                      eventCount: personalBests.length,
+                      powerIndexLine: powerIndexLine,
                     ),
                     const SizedBox(height: 16),
                     _HonorsColumn(
@@ -694,15 +702,20 @@ class _SnapshotStrip extends StatelessWidget {
   const _SnapshotStrip({
     required this.swimIqScore,
     required this.highestCut,
-    required this.eventCount,
+    required this.powerIndexLine,
   });
 
   final int swimIqScore;
   final String highestCut;
-  final int eventCount;
+  final String powerIndexLine;
 
   @override
   Widget build(BuildContext context) {
+    final powerLabel = powerIndexLine.trim().isEmpty
+        ? '—'
+        : (powerIndexLine.contains('/')
+            ? powerIndexLine.split('·').first.trim()
+            : powerIndexLine);
     return _ResumeSection(
       title: 'Performance snapshot',
       child: Row(
@@ -723,8 +736,8 @@ class _SnapshotStrip extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _MetricTile(
-              label: 'Events',
-              value: '$eventCount',
+              label: 'Power Index',
+              value: powerLabel,
             ),
           ),
         ],

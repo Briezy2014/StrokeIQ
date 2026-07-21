@@ -7,6 +7,7 @@ import '../core/utils/passport_metrics.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../screens/ai_coach/ai_coach_screen.dart';
+import '../screens/dryland/ai_dryland_coach_screen.dart';
 import '../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../screens/race_intelligence/race_intelligence_screen.dart';
 import '../screens/swim_dna/swim_dna_screen.dart';
@@ -62,6 +63,10 @@ class PassportHub extends ConsumerWidget {
     _PassportModule(
       label: 'USA Standards',
       destination: PassportHubDestination.usaStandards,
+    ),
+    _PassportModule(
+      label: 'AI Dryland Coach',
+      destination: PassportHubDestination.drylandCoach,
     ),
   ];
 
@@ -160,6 +165,10 @@ class PassportHub extends ConsumerWidget {
             ),
           );
         }
+      case PassportHubDestination.drylandCoach:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AiDrylandCoachScreen()),
+        );
     }
   }
 }

@@ -1,0 +1,54 @@
+SWIMIQ — DO THIS IN THE MORNING
+================================
+
+Overnight we activated:
+- AI Dryland Coach (Passport + Recruiting Hub)
+- Power Index (live score, not "coming soon")
+- Highlight package on the website (copy/share clip order)
+- Password reset completion + customer-safe billing/AI errors (prior pass)
+
+------------------------------------------------
+1) GET THE LATEST FILES
+------------------------------------------------
+Open: Desktop\StrokeIQ
+Double-click: GET-LATEST-FIXED-APP.bat
+
+------------------------------------------------
+2) REPUBLISH THE WEBSITE
+------------------------------------------------
+Double-click: PUBLISH-SWIMIQAPP-COM.bat
+Wait for the zip.
+GoDaddy File Manager → public_html → upload/extract:
+  swimiq\build\swimiq-web-godaddy.zip
+Hard refresh swimiqapp.com (Ctrl+F5)
+
+------------------------------------------------
+3) SUPABASE (ONE-TIME CHECK)
+------------------------------------------------
+Auth → URL Configuration:
+  Site URL = https://swimiqapp.com
+  Redirect URLs include https://swimiqapp.com/**
+
+------------------------------------------------
+4) 5-MINUTE SMOKE TEST
+------------------------------------------------
+Signed-in Pro/Elite account:
+  [ ] Login works
+  [ ] Passport → AI Dryland Coach opens a real plan
+  [ ] Passport / Recruiting Hub shows Power Index number (needs birthday + gender + PBs)
+  [ ] Recruiting Hub → Best Times Résumé shows Power Index (not coming soon)
+  [ ] Highlight Video Builder → tag clips → Build highlight package → copies plan
+  [ ] Membership Choose / Stripe still works
+  [ ] Forgot password email opens "Choose a new password"
+
+If Power Index says "Add birthday and gender":
+  Passport profile → set birthday + gender → save → refresh
+
+------------------------------------------------
+5) WHAT YOU SHOULD SEE
+------------------------------------------------
+Power Index: score like "78 / 100 · Highly competitive"
+Dryland: strength / core / mobility (+ technique block if AI analysis exists)
+No "coming soon" on Power Index or Dryland
+
+Questions / bugs → reply in Cursor with a screenshot.

@@ -7,6 +7,7 @@ import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_page_hero.dart';
+import '../dryland/ai_dryland_coach_screen.dart';
 import 'highlight_video_builder_screen.dart';
 import 'meet_history_screen.dart';
 import 'recruiting_resume_screen.dart';
@@ -102,6 +103,16 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              _HubTile(
+                emoji: '💪',
+                title: 'AI Dryland Coach',
+                subtitle: 'Strength, core, mobility & recovery matched to your stroke',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AiDrylandCoachScreen(),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               Card(
                 child: Padding(
@@ -116,9 +127,22 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
                             ),
                       ),
                       const SizedBox(height: 8),
-                      Text('SwimIQ ${snapshot.swimIqScore} · ${snapshot.highestCut}'),
+                      Text(
+                        'SwimIQ ${snapshot.swimIqScore} · '
+                        'Power Index ${snapshot.powerIndex.hasEnoughData ? snapshot.powerIndex.score : '—'} · '
+                        '${snapshot.highestCut}',
+                      ),
                       Text('${data.personalBests.length} official PBs · '
                           '${data.meetResults.length} meet swims'),
+                      if (snapshot.powerIndex.hasEnoughData) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          snapshot.powerIndex.summary,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                height: 1.35,
+                              ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

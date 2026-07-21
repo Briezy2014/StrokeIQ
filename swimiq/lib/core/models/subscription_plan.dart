@@ -95,6 +95,7 @@ abstract final class SubscriptionCatalog {
         'Best Times Résumé, Meet History & recruiting snapshot exports',
         'Video Lab — upload, tag & organize race & technique videos',
         'AI Dryland Coach — strength, core, mobility & injury prevention (5–15 min sessions)',
+        'Power Index — competitive score from USA cuts, PBs, and progression',
         'Event-specific improvement tips tied to your actual times',
         'Goal progression analytics powered by meet results & training logs',
         'Built for USA Swimming athletes chasing cuts, PRs & college interest',

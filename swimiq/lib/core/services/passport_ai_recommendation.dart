@@ -9,6 +9,7 @@ enum PassportHubDestination {
   raceIntelligence,
   swimDna,
   recruitingCenter,
+  drylandCoach,
 }
 
 class PassportAiRecommendation {

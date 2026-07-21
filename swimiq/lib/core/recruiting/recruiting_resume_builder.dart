@@ -13,6 +13,7 @@ class RecruitingResumeBuilder {
     required int swimIqScore,
     required String highestCut,
     required List<String> championshipsQualified,
+    String? powerIndexLine,
   }) {
     final buffer = StringBuffer();
     final name = profile?.displayName ?? displayName;
@@ -61,7 +62,13 @@ class RecruitingResumeBuilder {
     _section(buffer, 'Performance Snapshot');
     _line(buffer, 'SwimIQ Score', swimIqScore > 0 ? '$swimIqScore' : null);
     _line(buffer, 'Highest USA cut', highestCut);
-    _line(buffer, 'Power Index', 'Coming soon — Elite feature');
+    _line(
+      buffer,
+      'Power Index',
+      (powerIndexLine != null && powerIndexLine.trim().isNotEmpty)
+          ? powerIndexLine
+          : 'Add official PBs and birthday/gender to calculate',
+    );
     buffer.writeln();
 
     _section(buffer, 'Awards & Honors');

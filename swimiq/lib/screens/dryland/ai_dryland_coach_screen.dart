@@ -41,8 +41,16 @@ class AiDrylandCoachScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _FocusCard(
                 title: 'Primary stroke focus',
-                body: plan.primaryStroke,
+                body: '${plan.primaryStroke} · ${plan.focusEvent}',
                 icon: Icons.fitness_center,
+              ),
+              const SizedBox(height: 12),
+              _FocusCard(
+                title: 'This week’s pool load',
+                body: plan.sessionsThisWeek == 0
+                    ? 'No logged sessions this week yet — keep dryland short and crisp.'
+                    : '${plan.sessionsThisWeek} logged session${plan.sessionsThisWeek == 1 ? '' : 's'} this week. Recovery guidance below matches that load.',
+                icon: Icons.pool_outlined,
               ),
               const SizedBox(height: 12),
               ...plan.workoutBlocks.map(

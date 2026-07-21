@@ -17,9 +17,9 @@ git fetch origin
 if errorlevel 1 goto :FetchFail
 
 git merge --abort >nul 2>&1
-git checkout -f cursor/final-qa-sanitize-b7ef
+git checkout -f cursor/dryland-power-index-b7ef
 if errorlevel 1 goto :UpdateFail
-git reset --hard origin/cursor/final-qa-sanitize-b7ef
+git reset --hard origin/cursor/dryland-power-index-b7ef
 if errorlevel 1 goto :UpdateFail
 
 echo.

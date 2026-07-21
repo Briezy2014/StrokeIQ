@@ -69,6 +69,7 @@ void main() {
     expect(SubscriptionCapabilities.canAccessDashboardGamification(state), isTrue);
     expect(SubscriptionCapabilities.canAccessOfficialPbsAndStandards(state), isFalse);
     expect(SubscriptionCapabilities.canAccessAiDrylandCoach(state), isFalse);
+    expect(SubscriptionCapabilities.canAccessPowerIndex(state), isFalse);
     expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isFalse);
   });
 
@@ -95,6 +96,7 @@ void main() {
     expect(SubscriptionCapabilities.canAccessOfficialPbsAndStandards(state), isTrue);
     expect(SubscriptionCapabilities.canAccessMeetResults(state), isTrue);
     expect(SubscriptionCapabilities.canAccessAiDrylandCoach(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessPowerIndex(state), isTrue);
     expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isFalse);
     expect(SubscriptionCapabilities.canUseRaceIntelligence(state), isFalse);
   });

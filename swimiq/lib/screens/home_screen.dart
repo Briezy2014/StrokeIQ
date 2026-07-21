@@ -34,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     'Athlete Passport & College Recruiting Hub — your digital swim résumé',
     'Video Lab — upload, tag & organize race & technique videos',
     'AI Dryland Coach — 5–15 min strength, core & mobility sessions',
+    'Power Index — competitive score from USA cuts, PBs & progression',
   ];
 
   Widget _proGate(Widget child) {

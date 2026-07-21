@@ -1,4 +1,5 @@
 import '../../core/recruiting/meet_history_analytics.dart';
+import '../../core/recruiting/power_index.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
@@ -24,6 +25,7 @@ class PassportSnapshot {
     required this.highestCut,
     required this.nextMeet,
     required this.imxScore,
+    required this.powerIndex,
     required this.readiness,
     required this.nextFocus,
     required this.personalBests,
@@ -43,6 +45,7 @@ class PassportSnapshot {
   final String highestCut;
   final String nextMeet;
   final String imxScore;
+  final PowerIndexSnapshot powerIndex;
   final String readiness;
   final String nextFocus;
   final List<String> personalBests;
@@ -119,6 +122,13 @@ class PassportMetrics {
         now: now,
       ),
       imxScore: imxScore(raceLogs),
+      powerIndex: PowerIndex.calculate(
+        personalBests: meetPbs,
+        profile: profile,
+        catalog: motivationalStandards,
+        meetResults: meetResults,
+        analyses: userAnalyses,
+      ),
       readiness: readiness(
         raceLogs: raceLogs,
         goals: goals,
