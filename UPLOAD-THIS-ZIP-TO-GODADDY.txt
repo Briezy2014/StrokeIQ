@@ -1,27 +1,6 @@
-READ THIS — you are in the OUTER folder
-======================================
+TONIGHT — open the swimiq folder, then right-click
+TONIGHT-COACH-DEMO.ps1 → Run with PowerShell.
 
-The zip is NOT this text file.
-
-Do these in order:
-
-1) Double-click the FOLDER named:
-     StrokeIQ
-   (the one INSIDE this folder — same name, nested)
-
-2) Inside that inner StrokeIQ, open:
-     UPLOAD-TO-GODADDY
-
-3) Upload this file to GoDaddy public_html:
-     swimiq-web-godaddy.zip
-   Extract → Overwrite → Ctrl+Shift+R
-
-OR if you already see swimiq-web-godaddy.zip in THIS outer folder,
-upload THAT zip (Compressed Folder icon — not a text file).
-
-OR open the swimiq folder and look for:
-     swimiq-web-godaddy.zip
-     or UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip
-
-Do NOT upload this .txt file.
-Do NOT upload Kara-DOUBLE-CLICK-STARTER.
+Use 127.0.0.1 in Chrome — NOT swimiqapp.com.
+Leave the Elite window open.
+Denison 50 Fly → Run AI Swim Analysis.

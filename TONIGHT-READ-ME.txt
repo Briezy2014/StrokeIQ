@@ -1,0 +1,57 @@
+TONIGHT — COACH DEMO (READ THIS)
+================================
+
+I was telling you about files your PC does not have.
+That stops now.
+
+The public site (swimiqapp.com) is still on an OLD Analyze build.
+That is why it keeps saying busy / unavailable.
+Do NOT use swimiqapp.com for the coach tonight.
+
+Use the LOCAL app on this PC (what worked before).
+
+
+WHAT TO DO (matches your Desktop folder):
+
+1. Open Desktop\StrokeIQ
+
+2. Open the folder named:   swimiq
+   (you already have this folder)
+
+3. Find:   TONIGHT-COACH-DEMO.ps1
+   Right-click it → Run with PowerShell
+
+   If you do not see .ps1 yet, try:
+   START-SWIMIQ-WITH-ELITE.bat
+   or start_swimiq.ps1
+
+4. Leave the "Elite" window OPEN
+
+5. Wait for Chrome. Address must say:
+      127.0.0.1
+   NOT swimiqapp.com
+
+6. Video Lab → Denison 50 Fly → Run AI Swim Analysis
+
+
+COPY-PASTE (if you cannot find the script):
+
+1. Click Start → type:  powershell
+2. Open Windows PowerShell
+3. Paste this whole block and press Enter:
+
+$paths = @(
+  "$env:USERPROFILE\Desktop\StrokeIQ\swimiq",
+  "$env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ\swimiq",
+  "$env:OneDrive\Desktop\StrokeIQ\swimiq",
+  "$env:OneDrive\Desktop\StrokeIQ\StrokeIQ\swimiq"
+)
+$swimiq = $paths | Where-Object { Test-Path "$_\pubspec.yaml" } | Select-Object -First 1
+if (-not $swimiq) { Write-Host "swimiq folder not found"; pause; exit }
+cd $swimiq
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-elite-and-wait.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_swimiq.ps1
+
+
+After the coach demo works, we set up ambassadors.
+Do not fight GoDaddy tonight.
