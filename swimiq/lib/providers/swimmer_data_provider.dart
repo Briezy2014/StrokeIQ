@@ -250,9 +250,21 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   String _friendlyGeminiFallbackMessage(String raw) {
     final extracted = _extractGeminiErrorDetail(raw);
     final lower = extracted.toLowerCase();
-    if (lower.contains('too large')) {
-      return 'This video is too large for analysis. Trim it under about 50 MB '
-          'and try again. Notes-based coaching was saved for now.';
+    if (lower.contains('too large') ||
+        lower.contains('413') ||
+        lower.contains('payload')) {
+      final sizeMatch = RegExp(
+        r'yours is\s*~?\s*(\d+)\s*MB',
+        caseSensitive: false,
+      ).firstMatch(extracted);
+      final theirs = sizeMatch?.group(1);
+      final sizeHint = theirs != null ? ' (yours is about $theirs MB)' : '';
+      return 'This video file is too large for AI analysis$sizeHint. '
+          'Length is not the issue — phone 4K clips can exceed '
+          '${AppConstants.maxGeminiVideoMb} MB in under 20 seconds. '
+          'Re-export or re-record under ${AppConstants.maxGeminiVideoMb} MB '
+          '(720p works well), then Analyze again. '
+          'Notes-based coaching was saved for now.';
     }
     if (lower.contains('timed out') ||
         lower.contains('timeout') ||
@@ -531,7 +543,11 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null) return 'No swimmer selected.';
     if (bytes.length > AppConstants.maxGeminiVideoBytes) {
-      return 'Video is too large (max ~50 MB). Trim the clip and try again.';
+      final mb = (bytes.length / (1024 * 1024)).ceil();
+      return 'This video file is about $mb MB. AI analysis accepts up to '
+          '${AppConstants.maxGeminiVideoMb} MB — even a short 4K clip can be '
+          'too big. Re-export or re-record at 720p under '
+          '${AppConstants.maxGeminiVideoMb} MB, then upload again.';
     }
 
     try {

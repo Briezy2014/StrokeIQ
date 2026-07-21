@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 import '../../data/models/swim_video_analysis.dart';
 import 'gemini_swim_analysis_service.dart';
@@ -104,6 +105,13 @@ abstract final class VideoAnalysisScores {
   /// Rewrites outdated/ops server errors into customer-safe copy.
   static String sanitizeStoredGeminiMessage(String raw) {
     final lower = raw.toLowerCase();
+    if (lower.contains('too large') ||
+        lower.contains('413') ||
+        (lower.contains('payload') && lower.contains('large'))) {
+      return 'This video file is too large for AI analysis. '
+          'Even short 4K phone clips can exceed ${AppConstants.maxGeminiVideoMb} MB — '
+          're-export at 720p under ${AppConstants.maxGeminiVideoMb} MB, then Analyze again.';
+    }
     if (lower.contains('worker_resource_limit') ||
         lower.contains('status: 546') ||
         lower.contains('not having enough compute resources') ||

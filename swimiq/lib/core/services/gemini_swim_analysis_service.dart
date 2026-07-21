@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
@@ -121,14 +122,15 @@ class GeminiSwimAnalysisService {
       }
       if (response.status == 504) {
         throw GeminiAnalysisException(
-          'Analysis timed out. Try a shorter clip (under 30 seconds / 25 MB) '
+          'Analysis timed out. Try a shorter clip (under 30 seconds / '
+          '${AppConstants.maxGeminiVideoMb} MB) '
           'and tap Analyze again.',
         );
       }
       if (response.status == 546) {
         throw GeminiAnalysisException(
           'This clip could not be processed right now. '
-          'Try a shorter video under 25 MB, then Analyze again.',
+          'Try a shorter video under ${AppConstants.maxGeminiVideoMb} MB, then Analyze again.',
         );
       }
       throw GeminiAnalysisException(
@@ -172,7 +174,7 @@ class GeminiSwimAnalysisService {
 
     throw GeminiAnalysisException(
       'Video analysis is taking longer than expected. Wait 1 minute, refresh the Video tab, '
-      'or try a shorter clip (under 60 seconds / 25 MB).',
+      'or try a shorter clip (under 60 seconds / ${AppConstants.maxGeminiVideoMb} MB).',
     );
   }
 

@@ -12,8 +12,10 @@ class AppConstants {
   static const founder = '';
   static const copyright = '© 2026 SwimIQ LLC';
 
-  /// Max swim clip size for Gemini File API analysis (matches edge function cap).
-  static const maxGeminiVideoBytes = 50 * 1024 * 1024;
+  /// Max swim clip size for Gemini analysis — must match Edge Function
+  /// `MAX_FILE_API_BYTES` (25 MB). Short clips can still exceed this at 4K.
+  static const maxGeminiVideoBytes = 25 * 1024 * 1024;
+  static const maxGeminiVideoMb = 25;
 
   /// When true, all plan gates are open (dev only). Keep false in production so
   /// Basic / Pro / Elite users only see features included in their plan.

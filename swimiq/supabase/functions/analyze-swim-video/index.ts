@@ -208,7 +208,7 @@ async function buildVideoAnalysis(
   const objectSize = await getStorageObjectSize(admin, storagePath);
   if (objectSize > MAX_FILE_API_BYTES) {
     throw new Error(
-      `Video is too large for analysis (max ~25 MB on server, yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Trim the clip and try again.`,
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB; yours is ~${Math.ceil(objectSize / (1024 * 1024))} MB). Even short 4K phone clips can exceed this — re-export at 720p and try again.`,
     );
   }
 
@@ -237,7 +237,7 @@ async function buildVideoAnalysis(
       const streamed = await openStorageVideoStream(admin, storagePath);
       if (streamed.byteLength > MAX_FILE_API_BYTES) {
         throw new Error(
-          "Video is too large for analysis (max ~25 MB on server). Trim the clip and try again.",
+          `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Even short 4K phone clips can exceed this — re-export at 720p and try again.`,
         );
       }
 
@@ -590,7 +590,7 @@ async function openStorageVideoStream(
   const byteLength = lengthHeader ? Number(lengthHeader) : 0;
   if (Number.isFinite(byteLength) && byteLength > MAX_FILE_API_BYTES) {
     throw new Error(
-      "Video is too large for analysis (max ~50 MB on server). Trim the clip and try again.",
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Re-export at 720p and try again.`,
     );
   }
 
@@ -610,7 +610,7 @@ async function downloadStorageVideoBytes(
   const bytes = new Uint8Array(await data.arrayBuffer());
   if (bytes.length > MAX_FILE_API_BYTES) {
     throw new Error(
-      "Video is too large for analysis (max ~25 MB on server). Trim the clip and try again.",
+      `Video file is too large for AI analysis (max ${Math.round(MAX_FILE_API_BYTES / (1024 * 1024))} MB). Re-export at 720p and try again.`,
     );
   }
   return bytes;
