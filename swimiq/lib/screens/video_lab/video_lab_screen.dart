@@ -353,9 +353,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Analyzing your clip (usually under 2 minutes). Keep this tab open.',
+            'Analyzing your clip (usually under 2 minutes). Keep this tab open. '
+            'Big phone clips may prepare for a moment first.',
           ),
-          duration: Duration(seconds: 8),
+          duration: Duration(seconds: 20),
         ),
       );
     }
@@ -1017,7 +1018,8 @@ class _AnalysisInProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'This usually finishes in under 2 minutes — keep this tab open.',
+                  'Preparing and analyzing your clip. First try on a big '
+                  'phone video can take up to 2 minutes — keep this tab open.',
                   style: TextStyle(
                     color: Colors.grey.shade800,
                     height: 1.4,

@@ -69,11 +69,12 @@
     var outName = 'output.mp4';
     ff.FS('writeFile', inName, await fetchFile(new Blob([videoBytes])));
 
+    // Aim for ≤10 MB so live sync-v9 uses the fast inline Gemini path (≤12 MB).
     var runs = [
-      ['-i', inName, '-vf', 'scale=1280:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '1000k', '-an', '-movflags', '+faststart', outName],
       ['-i', inName, '-vf', 'scale=854:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '600k', '-an', '-movflags', '+faststart', outName],
       ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '350k', '-an', '-movflags', '+faststart', outName],
-      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '250k', '-t', '40', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=640:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '250k', '-t', '45', '-an', '-movflags', '+faststart', outName],
+      ['-i', inName, '-vf', 'scale=480:-2', '-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '180k', '-t', '35', '-an', '-movflags', '+faststart', outName],
     ];
 
     var last = null;
@@ -186,7 +187,7 @@
     videoBytes,
     maxBytes
   ) {
-    maxBytes = maxBytes || 18 * 1024 * 1024;
+    maxBytes = maxBytes || 10 * 1024 * 1024;
     if (!videoBytes || videoBytes.byteLength <= maxBytes) {
       return videoBytes;
     }

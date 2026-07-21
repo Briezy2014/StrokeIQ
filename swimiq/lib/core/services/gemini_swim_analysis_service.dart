@@ -17,7 +17,7 @@ class GeminiSwimAnalysisService {
   GeminiSwimAnalysisService(this._client);
 
   static const functionName = 'analyze-swim-video';
-  static const currentFunctionVersion = '2026-gemini-sync-v9';
+  static const currentFunctionVersion = '2026-gemini-sync-v11';
   /// Sync server returns full analysis in one HTTP response (up to ~2 min).
   static const invokeTimeout = Duration(seconds: 150);
   static const pollInterval = Duration(seconds: 3);
@@ -27,7 +27,11 @@ class GeminiSwimAnalysisService {
 
   static bool isSupportedFunctionVersion(String? version) {
     if (version == null || version.isEmpty) return false;
-    if (version.contains('sync-v9')) return true;
+    if (version.contains('sync-v9') ||
+        version.contains('sync-v10') ||
+        version.contains('sync-v11')) {
+      return true;
+    }
     return version.startsWith('2026-gemini');
   }
 

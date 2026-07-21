@@ -18,14 +18,14 @@ const BLOCKED_GEMINI_MODELS = [
   "gemini-2.0-flash",
   "gemini-2.0-flash-lite",
 ];
-const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 /** Tried in order when ListModels is unavailable; otherwise only API-listed models are used. */
 const PREFERRED_GEMINI_MODELS = [
-  "gemini-3.5-flash",
-  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
 ];
 const GEMINI_RETRY_DELAYS_MS = [2000, 4000, 7000];
 const GEMINI_FILE_POLL_MS = 2000;
@@ -135,14 +135,21 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as AnalyzeRequest;
 
     if (body.health_check === true) {
-      const model = DEFAULT_GEMINI_MODEL;
       let modelProbeOk = false;
       let modelProbeError: string | null = null;
-      try {
-        await probeGeminiModel(geminiApiKey, model);
-        modelProbeOk = true;
-      } catch (error) {
-        modelProbeError = error instanceof Error ? error.message : String(error);
+      let model = DEFAULT_GEMINI_MODEL;
+      for (const candidate of getModelCandidates(geminiApiKey)) {
+        try {
+          await probeGeminiModel(geminiApiKey, candidate);
+          modelProbeOk = true;
+          model = candidate;
+          modelProbeError = null;
+          break;
+        } catch (error) {
+          modelProbeError = error instanceof Error
+            ? error.message
+            : String(error);
+        }
       }
       return new Response(
         JSON.stringify({
@@ -153,7 +160,7 @@ Deno.serve(async (req) => {
           available_models: PREFERRED_GEMINI_MODELS,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
-          max_video_mb: 25,
+          max_video_mb: Math.round(MAX_FILE_API_BYTES / (1024 * 1024)),
           inline_max_mb: Math.round(MAX_INLINE_BYTES / (1024 * 1024)),
         }),
         {
