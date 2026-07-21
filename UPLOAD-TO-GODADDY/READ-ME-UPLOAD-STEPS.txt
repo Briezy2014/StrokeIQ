@@ -1,4 +1,4 @@
 Upload ONLY: swimiq-web-godaddy.zip
 GoDaddy File Manager → public_html → Upload → Extract → Overwrite → Ctrl+Shift+R
 
-Loading screen now says "Analyzing your clip..." (no Gemini wording).
+Analyze now auto-retries on brief AI hiccups (no instant "busy" fail).
