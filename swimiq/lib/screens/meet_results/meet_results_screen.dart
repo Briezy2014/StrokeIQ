@@ -153,7 +153,17 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
           children: [
             SwimIqScreenHeader(
               title: 'Meet Results',
-              subtitle: 'Latest meet: ${snapshot.nextMeet}',
+              subtitle:
+                  'Official times after you swim (feeds PBs & cuts). '
+                  'Latest: ${snapshot.latestMeet}',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Need to plan a future meet? Use Log → Upcoming schedule. '
+              'This screen is for past race times only.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    height: 1.35,
+                  ),
             ),
             const SizedBox(height: 16),
             Form(

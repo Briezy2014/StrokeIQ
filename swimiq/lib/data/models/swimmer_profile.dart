@@ -20,7 +20,7 @@ class SwimmerProfile {
   });
 
   static final _structuredNotesLine = RegExp(
-    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|Athlete Website|Other Interests):\s*(.+)$',
+    r'^(Gender|Height|Weight|Dominant Hand|Training Group|Profile Photo|GPA|Athlete Website|Other Interests|IMX Score|IMR Score):\s*(.+)$',
   );
 
   final int? id;
@@ -68,6 +68,10 @@ class SwimmerProfile {
   String? get gpa => _structuredNotesValue('GPA');
   String? get athleteWebsite => _structuredNotesValue('Athlete Website');
   String? get otherInterests => _structuredNotesValue('Other Interests');
+
+  /// Official USA Swimming IMX / IMR scores (enter from Swimio / USA Swimming).
+  String? get imxScore => _structuredNotesValue('IMX Score');
+  String? get imrScore => _structuredNotesValue('IMR Score');
 
   /// Free-text notes with structured prefix lines removed.
   String? get notesBody {
@@ -176,6 +180,8 @@ class SwimmerProfile {
     String? gpa,
     String? athleteWebsite,
     String? otherInterests,
+    String? imxScore,
+    String? imrScore,
     String? notes,
   }) {
     final parts = <String>[];
@@ -195,6 +201,8 @@ class SwimmerProfile {
     addLine('GPA', gpa);
     addLine('Athlete Website', athleteWebsite);
     addLine('Other Interests', otherInterests);
+    addLine('IMX Score', imxScore);
+    addLine('IMR Score', imrScore);
 
     final body = notes?.trim();
     if (body != null && body.isNotEmpty) {

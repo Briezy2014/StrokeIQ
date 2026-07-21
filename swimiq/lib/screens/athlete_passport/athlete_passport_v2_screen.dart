@@ -45,6 +45,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _dominantHandController;
+  late final TextEditingController _imxController;
+  late final TextEditingController _imrController;
 
   DateTime? _birthday;
   bool _isSaving = false;
@@ -73,6 +75,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController = TextEditingController();
     _weightController = TextEditingController();
     _dominantHandController = TextEditingController();
+    _imxController = TextEditingController();
+    _imrController = TextEditingController();
   }
 
   @override
@@ -96,6 +100,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.dispose();
     _weightController.dispose();
     _dominantHandController.dispose();
+    _imxController.dispose();
+    _imrController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -152,6 +158,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
     _heightController.text = profile?.height ?? '';
     _weightController.text = profile?.weight ?? '';
     _dominantHandController.text = profile?.dominantHand ?? '';
+    _imxController.text = profile?.imxScore ?? '';
+    _imrController.text = profile?.imrScore ?? '';
     _birthday = profile?.birthday;
   }
 
@@ -206,6 +214,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         gpa: _gpaController.text,
         athleteWebsite: _websiteController.text,
         otherInterests: _interestsController.text,
+        imxScore: _imxController.text,
+        imrScore: _imrController.text,
         notes: _notesController.text,
       ),
     );
@@ -377,6 +387,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               title: 'USA Swimming Profile',
               lines: [
                 'USA Swimming ID: ${_passportLabel(profile?.usaSwimmingId)}',
+                'IMX Score: ${_passportLabel(profile?.imxScore)}',
+                'IMR Score: ${_passportLabel(profile?.imrScore)}',
                 'Club Team: ${_passportLabel(profile?.team)}',
                 'Coach: ${_passportLabel(profile?.coachName)}',
                 'Primary Stroke: ${_passportLabel(profile?.primaryStroke)}',
@@ -480,6 +492,35 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                         controller: _usaIdController,
                         label: 'USA Swimming ID',
                         hint: 'Example: 1234ABCD',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'IMX / IMR (from Swimio or USA Swimming)',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'SwimIQ cannot pull these automatically yet. Open Swimio '
+                        '(or USA Swimming) for this athlete, copy the IMX and IMR '
+                        'scores, and paste them here.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              height: 1.35,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      _field(
+                        controller: _imxController,
+                        label: 'IMX Score',
+                        hint: 'From Swimio / USA Swimming',
+                        keyboardType: TextInputType.number,
+                      ),
+                      _field(
+                        controller: _imrController,
+                        label: 'IMR Score',
+                        hint: 'From Swimio / USA Swimming',
+                        keyboardType: TextInputType.number,
                       ),
                       _field(
                         controller: _schoolController,

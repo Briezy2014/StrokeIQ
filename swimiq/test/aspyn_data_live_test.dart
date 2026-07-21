@@ -152,10 +152,11 @@ void main() {
         data.personalBests.length > 6 ? 6 : data.personalBests.length,
       );
 
-      // Meet Results
+      // Meet Results (latest past result) + next upcoming schedule label
       final latestMeet = [...data.meetResults]
         ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
-      expect(snapshot.nextMeet, latestMeet.first.meetName);
+      expect(snapshot.latestMeet, latestMeet.first.meetName);
+      expect(snapshot.nextMeet, isNotEmpty);
 
       // USA Standards
       expect(snapshot.usaStandardsSummary, isNotEmpty);

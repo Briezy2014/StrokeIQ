@@ -8,7 +8,7 @@ import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import '../widgets/swimiq_ui.dart';
 
-/// Shared form + list for practice/meet/race schedule uploads.
+/// Upcoming meets & practices (schedule). Official race times go on the Meets tab.
 class ScheduleDepositorySection extends ConsumerStatefulWidget {
   const ScheduleDepositorySection({
     super.key,
@@ -34,7 +34,7 @@ class _ScheduleDepositorySectionState
   final _notesController = TextEditingController();
 
   String _scheduleType = SwimScheduleEntry.typeMeet;
-  DateTime _scheduleDate = DateTime.now();
+  DateTime _scheduleDate = DateTime.now().add(const Duration(days: 7));
   bool _isSaving = false;
   bool _showForm = false;
   final _saveSectionKey = GlobalKey();
@@ -53,8 +53,9 @@ class _ScheduleDepositorySectionState
     final picked = await showDatePicker(
       context: context,
       initialDate: _scheduleDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      firstDate: DateTime.now().subtract(const Duration(days: 7)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'Upcoming meet or practice date',
     );
     if (picked != null) setState(() => _scheduleDate = picked);
   }
@@ -63,6 +64,9 @@ class _ScheduleDepositorySectionState
     setState(() {
       _scheduleType = type;
       _showForm = true;
+      if (_scheduleDate.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+        _scheduleDate = DateTime.now().add(const Duration(days: 7));
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final target = _saveSectionKey.currentContext;
@@ -75,6 +79,10 @@ class _ScheduleDepositorySectionState
         );
       }
     });
+  }
+
+  void _openMeetResultsTab() {
+    ref.read(homeTabIndexProvider.notifier).state = HomeTab.meetResults;
   }
 
   Future<void> _save() async {
@@ -113,8 +121,8 @@ class _ScheduleDepositorySectionState
       SnackBar(
         content: Text(
           error ??
-              '${_typeLabel(_scheduleType)} saved. '
-              'You can add another or switch tabs.',
+              '${_typeLabel(_scheduleType)} saved to your upcoming schedule. '
+              'After the meet, log official times on the Meets tab.',
         ),
         backgroundColor: error != null ? Colors.red.shade700 : null,
       ),
@@ -161,6 +169,18 @@ class _ScheduleDepositorySectionState
     final data = ref.watch(swimmerDataProvider).value;
     final schedules = data?.schedules ?? const <SwimScheduleEntry>[];
     final dateFormat = DateFormat.yMMMd();
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+    final upcoming = schedules
+        .where(
+          (entry) => !DateTime(
+            entry.scheduleDate.year,
+            entry.scheduleDate.month,
+            entry.scheduleDate.day,
+          ).isBefore(startOfToday),
+        )
+        .toList()
+      ..sort((a, b) => a.scheduleDate.compareTo(b.scheduleDate));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -169,7 +189,7 @@ class _ScheduleDepositorySectionState
           children: [
             Expanded(
               child: Text(
-                widget.compact ? 'Quick schedule upload' : 'Schedule & meet depot',
+                widget.compact ? 'Upcoming schedule' : 'Upcoming meets & practices',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -185,8 +205,8 @@ class _ScheduleDepositorySectionState
         ),
         const SizedBox(height: 6),
         Text(
-          'Add meets, practices, and race results (what she swam and her times). '
-          'Tap a button below, fill the form, then tap Save.',
+          'Plan what is coming up (meets and practices). '
+          'This is NOT where official race times go — use the Meets tab for results after you swim.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textDark.withValues(alpha: 0.7),
                 height: 1.4,
@@ -197,20 +217,20 @@ class _ScheduleDepositorySectionState
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton.tonalIcon(
+            FilledButton.icon(
               onPressed: () => _openForm(SwimScheduleEntry.typeMeet),
               icon: const Icon(Icons.emoji_events_outlined, size: 18),
-              label: const Text('Add meet'),
+              label: const Text('Add upcoming meet'),
             ),
             FilledButton.tonalIcon(
               onPressed: () => _openForm(SwimScheduleEntry.typePractice),
               icon: const Icon(Icons.pool_outlined, size: 18),
               label: const Text('Add practice'),
             ),
-            FilledButton.tonalIcon(
-              onPressed: () => _openForm(SwimScheduleEntry.typeRace),
+            OutlinedButton.icon(
+              onPressed: _openMeetResultsTab,
               icon: const Icon(Icons.timer_outlined, size: 18),
-              label: const Text('Add race result'),
+              label: const Text('Log meet results (Meets tab)'),
             ),
           ],
         ),
@@ -241,12 +261,10 @@ class _ScheduleDepositorySectionState
                           value: SwimScheduleEntry.typePractice,
                           label: Text('Practice'),
                         ),
-                        ButtonSegment(
-                          value: SwimScheduleEntry.typeRace,
-                          label: Text('Result'),
-                        ),
                       ],
-                      selected: {_scheduleType},
+                      selected: {_scheduleType == SwimScheduleEntry.typeRace
+                          ? SwimScheduleEntry.typeMeet
+                          : _scheduleType},
                       onSelectionChanged: (values) {
                         setState(() => _scheduleType = values.first);
                       },
@@ -269,16 +287,14 @@ class _ScheduleDepositorySectionState
                       trailing: const Icon(Icons.calendar_today),
                       onTap: _pickDate,
                     ),
-                    if (_scheduleType != SwimScheduleEntry.typeRace) ...[
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _startTimeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Start / warm-up time (optional)',
-                          hintText: '9:30 AM warm-up',
-                        ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _startTimeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Start / warm-up time (optional)',
+                        hintText: '9:30 AM warm-up',
                       ),
-                    ],
+                    ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _locationController,
@@ -294,18 +310,13 @@ class _ScheduleDepositorySectionState
                         hintText: _eventsFieldHint(),
                       ),
                       maxLines: 4,
-                      validator: _scheduleType == SwimScheduleEntry.typeRace
-                          ? (value) => value?.trim().isEmpty == true
-                              ? 'Add at least one event and result time'
-                              : null
-                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _notesController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Notes (optional)',
-                        hintText: _notesFieldHint(),
+                        hintText: 'Heat sheet, lane, or coach notes',
                       ),
                       maxLines: 3,
                     ),
@@ -316,7 +327,7 @@ class _ScheduleDepositorySectionState
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           SwimIqSaveButton(
-                            label: 'Save',
+                            label: 'Save upcoming ${_typeLabel(_scheduleType)}',
                             isSaving: _isSaving,
                             onPressed: _save,
                           ),
@@ -337,15 +348,15 @@ class _ScheduleDepositorySectionState
           ),
         ],
         const SizedBox(height: 16),
-        if (schedules.isEmpty)
+        if (upcoming.isEmpty)
           Text(
-            'No schedules saved yet. Add a meet or practice to unlock Race Intelligence.',
+            'No upcoming meets or practices yet. Tap “Add upcoming meet” above.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textDark.withValues(alpha: 0.65),
                 ),
           )
         else
-          ...schedules.map(
+          ...upcoming.map(
             (entry) => Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
@@ -374,69 +385,41 @@ class _ScheduleDepositorySectionState
       case SwimScheduleEntry.typeMeet:
         return 'meet';
       case SwimScheduleEntry.typeRace:
-        return 'race result';
+        return 'meet';
       default:
         return 'practice';
     }
   }
 
   String _titleFieldLabel() {
-    switch (_scheduleType) {
-      case SwimScheduleEntry.typePractice:
-        return 'Practice name';
-      case SwimScheduleEntry.typeRace:
-        return 'Meet or session name';
-      default:
-        return 'Meet name';
-    }
+    return _scheduleType == SwimScheduleEntry.typePractice
+        ? 'Practice name'
+        : 'Meet name';
   }
 
   String _titleFieldHint() {
-    switch (_scheduleType) {
-      case SwimScheduleEntry.typePractice:
-        return 'Saturday AM aerobic';
-      case SwimScheduleEntry.typeRace:
-        return 'Central Regional Champs';
-      default:
-        return 'Central Regional Champs';
-    }
+    return _scheduleType == SwimScheduleEntry.typePractice
+        ? 'Saturday AM aerobic'
+        : 'Central Regional Champs';
   }
 
   String _eventsFieldLabel() {
-    switch (_scheduleType) {
-      case SwimScheduleEntry.typeRace:
-        return 'Events & result times';
-      case SwimScheduleEntry.typeMeet:
-        return 'Events she is swimming (optional)';
-      default:
-        return 'Workout focus (optional)';
-    }
+    return _scheduleType == SwimScheduleEntry.typePractice
+        ? 'Workout focus (optional)'
+        : 'Events she will swim (optional)';
   }
 
   String _eventsFieldHint() {
-    switch (_scheduleType) {
-      case SwimScheduleEntry.typeRace:
-        return '50 Fly — 28.45\n100 Free — 1:02.34\n(one event + time per line)';
-      case SwimScheduleEntry.typeMeet:
-        return '50 Fly, 100 IM, 200 Free\n(one per line)';
-      default:
-        return 'IM focus, kick set, etc.';
-    }
-  }
-
-  String _notesFieldHint() {
-    if (_scheduleType == SwimScheduleEntry.typeRace) {
-      return 'Finals notes, splits, or coach feedback';
-    }
-    return 'Heat sheet, lane, or coach notes';
+    return _scheduleType == SwimScheduleEntry.typePractice
+        ? 'IM focus, kick set, etc.'
+        : '50 Fly, 100 IM, 200 Free\n(one per line)';
   }
 
   static IconData _iconForType(String type) {
     switch (type) {
       case SwimScheduleEntry.typeMeet:
-        return Icons.emoji_events_outlined;
       case SwimScheduleEntry.typeRace:
-        return Icons.timer_outlined;
+        return Icons.emoji_events_outlined;
       default:
         return Icons.pool_outlined;
     }
