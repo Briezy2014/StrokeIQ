@@ -1,49 +1,73 @@
-OPEN THIS ON YOUR PHONE — COPY ALL — PASTE INTO NOTEPAD ON THE PC
+SWIMIQ COACH DEMO (UPDATED — searches whole Desktop)
 ================================================================
-1) On phone: select all → copy
-2) On PC: open Notepad → paste
-3) Save As on Desktop as: SwimIQ-Coach-Demo.ps1
-   Save as type: All files
-4) Right-click that file → Run with PowerShell
+On phone: open → select all → copy
+On PC: Notepad → paste → Save As Desktop\SwimIQ-Coach-Demo.ps1
+  (Save as type: All files)
+Then right-click → Run with PowerShell
 
-===== SCRIPT STARTS BELOW =====
+===== SCRIPT =====
 
-# SwimIQ — COACH DEMO (LOCAL)
-# ============================
-# SAVE THIS FILE:
-#   1. Select ALL (Ctrl+A) → Copy (Ctrl+C)
-#   2. Open Notepad → Paste
-#   3. File → Save As
-#   4. Save on Desktop as:  SwimIQ-Coach-Demo.ps1
-#      (Important: change "Save as type" to "All files")
-#
-# TO RUN (anytime, including after restart):
-#   Right-click SwimIQ-Coach-Demo.ps1 → Run with PowerShell
-#   OR Start → powershell → then type:
-#      powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\SwimIQ-Coach-Demo.ps1"
-#
-# Close swimiqapp.com tabs first. Chrome must open on 127.0.0.1
+# SwimIQ Coach Demo — finds StrokeIQ anywhere on Desktop/OneDrive/Documents
+# Save as Desktop\SwimIQ-Coach-Demo.ps1  (All files)
+# Right-click → Run with PowerShell
 
 $ErrorActionPreference = 'Continue'
-$paths = @(
-  "$env:USERPROFILE\Desktop\StrokeIQ",
-  "$env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ",
-  "$env:OneDrive\Desktop\StrokeIQ",
-  "$env:OneDrive\Desktop\StrokeIQ\StrokeIQ"
-)
-$root = $null
-foreach ($p in $paths) {
-  if ($p -and (Test-Path "$p\swimiq\pubspec.yaml")) { $root = $p; break }
+Write-Host 'Looking for swimiq\pubspec.yaml ...' -ForegroundColor Cyan
+
+$searchRoots = @(
+  "$env:USERPROFILE\Desktop",
+  "$env:USERPROFILE\OneDrive\Desktop",
+  "$env:OneDrive\Desktop",
+  "$env:USERPROFILE\Documents",
+  "$env:USERPROFILE\OneDrive\Documents",
+  'C:\SwimIQWork'
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
+
+$swimiq = $null
+foreach ($r in $searchRoots) {
+  $hit = Get-ChildItem -Path $r -Filter 'pubspec.yaml' -Recurse -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.Directory.Name -eq 'swimiq' -and
+      (Test-Path (Join-Path $_.DirectoryName 'lib\main.dart'))
+    } |
+    Select-Object -First 1
+  if ($hit) {
+    $swimiq = $hit.DirectoryName
+    break
+  }
 }
-if (-not $root) {
-  Write-Host 'ERROR: Desktop\StrokeIQ\swimiq not found' -ForegroundColor Red
+
+if (-not $swimiq) {
+  Write-Host 'ERROR: Could not find swimiq\pubspec.yaml automatically.' -ForegroundColor Red
+  Write-Host ''
+  Write-Host 'Do this:'
+  Write-Host '  1) File Explorer → search This PC for: pubspec.yaml'
+  Write-Host '  2) Open that file location'
+  Write-Host '  3) Copy the address bar path (should end in \swimiq)'
+  Write-Host '  4) Paste it below'
+  Write-Host ''
+  $typed = Read-Host 'Paste full path to swimiq folder'
+  $typed = $typed.Trim().Trim('"')
+  if ($typed -and (Test-Path (Join-Path $typed 'pubspec.yaml'))) {
+    $swimiq = $typed
+  } else {
+    Write-Host 'That path is not a swimiq folder.' -ForegroundColor Red
+    Read-Host 'Press Enter'
+    exit 1
+  }
+}
+
+$root = Split-Path $swimiq -Parent
+$elite = Join-Path $root 'services\video_analysis'
+Write-Host "FOUND swimiq: $swimiq" -ForegroundColor Green
+Write-Host "Repo root:    $root"
+
+if (-not (Test-Path $elite)) {
+  Write-Host "ERROR: Missing Elite folder: $elite" -ForegroundColor Red
+  Write-Host 'Your StrokeIQ copy is incomplete (needs services\video_analysis).'
   Read-Host 'Press Enter'
   exit 1
 }
-
-$swimiq = Join-Path $root 'swimiq'
-$elite  = Join-Path $root 'services\video_analysis'
-Write-Host "FOUND: $root" -ForegroundColor Green
 
 $eliteCmd = @"
 `$ErrorActionPreference='Continue'
@@ -72,7 +96,7 @@ if (-not $ready) {
 
 Set-Location $swimiq
 if (-not (Test-Path '.\.env')) {
-  Write-Host 'ERROR: swimiq\.env missing' -ForegroundColor Red
+  Write-Host 'ERROR: swimiq\.env missing (Supabase keys).' -ForegroundColor Red
   Read-Host 'Press Enter'
   exit 1
 }
@@ -90,7 +114,7 @@ if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://127.0.0.1:8080' }
 $v2 = $envMap['VIDEO_ENGINE_V2']
 if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'true' }
 
-Write-Host 'Starting Chrome on 127.0.0.1 (first compile can take a few minutes)...'
+Write-Host 'Starting Chrome on 127.0.0.1 ...'
 flutter pub get
 flutter run -d chrome `
   --dart-define="SUPABASE_URL=$url" `
