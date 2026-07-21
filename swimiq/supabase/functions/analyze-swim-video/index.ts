@@ -27,7 +27,7 @@ const PREFERRED_GEMINI_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
 ];
-const GEMINI_RETRY_DELAYS_MS = [1500, 3000, 5000];
+const GEMINI_RETRY_DELAYS_MS = [2000, 4000, 7000];
 const GEMINI_FILE_POLL_MS = 2000;
 const GEMINI_FILE_MAX_WAIT_MS = 90_000;
 const MAX_VIDEO_GEMINI_MODELS = 6;
@@ -861,7 +861,8 @@ async function probeGeminiModel(apiKey: string, model: string): Promise<void> {
 
 function isRetriableModelError(message: string): boolean {
   const lower = message.toLowerCase();
-  if (isQuotaError(lower)) return false;
+  // Per-model quota/rate limits — still try the next preferred model.
+  if (isQuotaError(lower)) return true;
   return isTransientGeminiError(lower) ||
     lower.includes("not_found") ||
     lower.includes("no longer available") ||
@@ -912,8 +913,8 @@ function friendlyGeminiHttpError(
       + "Google Cloud project and update GEMINI_API_KEY in Supabase Edge Function secrets.";
   }
   if (status === 503 || isTransientGeminiError(lower)) {
-    return `Gemini model "${model}" is busy right now (Google high demand). `
-      + `SwimIQ will try another model automatically — tap Analyze again in 1-2 minutes.`;
+    return `AI coaching is briefly overloaded (model ${model}). `
+      + `SwimIQ will try another model automatically — tap Analyze again in about a minute if needed.`;
   }
   if (lower.includes("api key not valid") || lower.includes("api_key_invalid")) {
     return "GEMINI_API_KEY is invalid. Create a new key at aistudio.google.com/apikey "

@@ -250,65 +250,7 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
 
   String _friendlyGeminiFallbackMessage(String raw) {
     final extracted = _extractGeminiErrorDetail(raw);
-    final lower = extracted.toLowerCase();
-    if (lower.contains('too large') ||
-        lower.contains('413') ||
-        lower.contains('payload')) {
-      final sizeMatch = RegExp(
-        r'yours is\s*~?\s*(\d+)\s*MB',
-        caseSensitive: false,
-      ).firstMatch(extracted);
-      final theirs = sizeMatch?.group(1);
-      final sizeHint = theirs != null ? ' (yours is about $theirs MB)' : '';
-      return 'This video was too large for the server. SwimIQ is shrinking it — '
-          'tap Analyze again and keep the tab open for up to 2 minutes.';
-    }
-    if (lower.contains('timed out') ||
-        lower.contains('timeout') ||
-        lower.contains('idle_timeout') ||
-        lower.contains('504')) {
-      return 'Analysis took too long. Try a shorter clip (under 60 seconds) '
-          'and tap Analyze again. Notes-based coaching was saved for now.';
-    }
-    if (lower.contains('unauthorized') || lower.contains('authorization')) {
-      return 'Please sign in again, then re-run analysis. '
-          'Notes-based coaching was saved for now.';
-    }
-    if (lower.contains('could not download video')) {
-      return 'Could not load this video for analysis. Try re-uploading, '
-          'then Analyze again. Notes-based coaching was saved for now.';
-    }
-    if (lower.contains('pgrst205') ||
-        (lower.contains('swim_video_analyses') &&
-            lower.contains('could not find'))) {
-      return SupabaseTableErrors.missingVideoAnalysesMessage();
-    }
-    if (lower.contains('high demand') ||
-        lower.contains('unavailable') ||
-        lower.contains('503') ||
-        lower.contains('is busy right now') ||
-        lower.contains('resource_exhausted') ||
-        lower.contains('quota') ||
-        lower.contains('rate limit') ||
-        lower.contains('limit: 0')) {
-      return 'AI coaching is busy right now. Wait a minute or two, '
-          'then tap Analyze again.';
-    }
-    if (lower.contains('worker_resource_limit') ||
-        lower.contains('not having enough compute resources') ||
-        lower.contains('status: 546') ||
-        (lower.contains('not found') && lower.contains('function')) ||
-        lower.contains('gemini_api_key') ||
-        lower.contains('api key') ||
-        lower.contains('permission_denied') ||
-        lower.contains('billing') ||
-        lower.contains('gemini')) {
-      return 'AI video analysis is temporarily unavailable. '
-          'Notes-based coaching was saved. Try again shortly, '
-          'or email support@swimiqapp.com if it keeps failing.';
-    }
-    return 'AI video analysis was unavailable — notes-based coaching was saved. '
-        'Try Analyze again in a few minutes.';
+    return VideoAnalysisScores.friendlyCloudAnalyzeError(extracted);
   }
 
   /// Pulls the nested `error:` text from Supabase FunctionException strings.
@@ -318,6 +260,40 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       caseSensitive: false,
     ).firstMatch(raw);
     return match?.group(1)?.trim() ?? raw;
+  }
+
+  Future<SwimVideoAnalysis> _analyzeVideoWithBusyRetries({
+    required SwimVideo video,
+    required List<RaceLog> raceLogs,
+    required List<SwimGoal> goals,
+    SwimmerProfile? profile,
+    SwimPoseMetrics? poseMetrics,
+    required String videoId,
+  }) async {
+    const maxAttempts = 3;
+    GeminiAnalysisException? lastBusy;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
+              video: video,
+              raceLogs: raceLogs,
+              goals: goals,
+              profile: profile,
+              poseMetrics: poseMetrics,
+              pollForResult: () => _pollVideoAnalysisResult(videoId),
+            );
+      } on GeminiAnalysisException catch (error) {
+        final transient =
+            VideoAnalysisScores.isTransientCloudBusyError(error.message);
+        if (!transient || attempt >= maxAttempts) {
+          rethrow;
+        }
+        lastBusy = error;
+        await Future<void>.delayed(Duration(seconds: 3 * attempt));
+      }
+    }
+    throw lastBusy ??
+        GeminiAnalysisException('AI coaching is temporarily unavailable.');
   }
 
   Future<void> _persistVideoAnalysis({
@@ -818,14 +794,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
       }
 
       try {
-        analysis = await ref.read(geminiSwimAnalysisServiceProvider).analyzeVideo(
-              video: videoForAnalysis,
-              raceLogs: current.raceLogs,
-              goals: current.goals,
-              profile: current.profile,
-              poseMetrics: poseMetrics,
-              pollForResult: () => _pollVideoAnalysisResult(videoId),
-            );
+        analysis = await _analyzeVideoWithBusyRetries(
+          video: videoForAnalysis,
+          raceLogs: current.raceLogs,
+          goals: current.goals,
+          profile: current.profile,
+          poseMetrics: poseMetrics,
+          videoId: videoId,
+        );
       } on GeminiAnalysisException catch (error) {
         final raw = error.message;
         final lower = raw.toLowerCase();
@@ -850,16 +826,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               contentType: 'video/mp4',
               fileNameHint: '${videoForAnalysis.title ?? 'swim'}.mp4',
             );
-            analysis = await ref
-                .read(geminiSwimAnalysisServiceProvider)
-                .analyzeVideo(
-                  video: videoForAnalysis,
-                  raceLogs: current.raceLogs,
-                  goals: current.goals,
-                  profile: current.profile,
-                  poseMetrics: poseMetrics,
-                  pollForResult: () => _pollVideoAnalysisResult(videoId),
-                );
+            analysis = await _analyzeVideoWithBusyRetries(
+              video: videoForAnalysis,
+              raceLogs: current.raceLogs,
+              goals: current.goals,
+              profile: current.profile,
+              poseMetrics: poseMetrics,
+              videoId: videoId,
+            );
           } on GeminiAnalysisException catch (retryError) {
             final friendly = _friendlyGeminiFallbackMessage(retryError.message);
             analysis = _fallbackVideoAnalysis(

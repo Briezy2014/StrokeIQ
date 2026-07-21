@@ -78,6 +78,27 @@ void main() {
     const busy =
         'Gemini model "gemini-3.5-flash" is busy right now (Google high demand).';
     final rewritten = VideoAnalysisScores.sanitizeStoredGeminiMessage(busy);
-    expect(rewritten, contains('temporarily busy'));
+    expect(rewritten, contains('brief hiccup'));
+    expect(
+      VideoAnalysisScores.isTransientCloudBusyError(busy),
+      isTrue,
+    );
+    expect(
+      VideoAnalysisScores.friendlyCloudAnalyzeError(busy),
+      contains('brief hiccup'),
+    );
+  });
+
+  test('does not treat generic unavailable as busy', () {
+    const unavailable =
+        'AI video analysis was unavailable — notes-based coaching was saved.';
+    expect(
+      VideoAnalysisScores.isTransientCloudBusyError(unavailable),
+      isFalse,
+    );
+    expect(
+      VideoAnalysisScores.friendlyCloudAnalyzeError(unavailable),
+      isNot(contains('busy right now')),
+    );
   });
 }
