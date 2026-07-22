@@ -1,12 +1,13 @@
-"""Elote Video Lab analysis service — Milestone 1 entrypoint."""
+"""Elite Video Lab analysis service — Milestone 9 entrypoint."""
 
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import analysis, health, jobs
+from app.api.routes import analysis, flutter_bridge, health, jobs
 from app.config import get_settings
 from app.services.result_store import ResultStore
 from app.utils.logging import configure_logging, get_logger, log_stage
@@ -25,22 +26,34 @@ async def lifespan(app: FastAPI):
     log_stage(
         logger,
         stage="startup",
-        message="Elote Video Lab analysis service started",
+        message="Elite Video Lab analysis service started",
         engine_version=settings.engine_version,
+        engine_name=settings.video_engine_name,
     )
     yield
 
 
 app = FastAPI(
-    title="Elote Video Lab Analysis Service",
-    version="0.1.0",
+    title="Elite Video Lab Analysis Service",
+    version="0.9.0",
     description=(
-        "Milestone 3: validation, RTMDet tracking, RTMPose WholeBody pose stages "
-        "A/B/C via MMPose. No biomechanics metrics or Gemini yet."
+        "Elite Video Lab Video Engine V2: FastAPI CV pipeline + Gemini coaching "
+        "reports. Flutter connects via authenticated /v1 APIs. Secrets stay server-side."
     ),
     lifespan=lifespan,
+)
+
+_settings = get_settings()
+_origins = [o.strip() for o in (_settings.cors_allow_origins or "*").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins if _origins != ["*"] else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(health.router)
 app.include_router(analysis.router)
 app.include_router(jobs.router)
+app.include_router(flutter_bridge.router)

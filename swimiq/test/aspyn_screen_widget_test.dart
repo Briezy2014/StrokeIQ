@@ -19,6 +19,7 @@ import 'package:swimiq/screens/meet_results/meet_results_screen.dart';
 import 'package:swimiq/screens/personal_bests/personal_bests_screen.dart';
 import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
+import 'package:swimiq/services/auth_service.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 import 'support/subscription_test_helper.dart';
@@ -141,6 +142,7 @@ Widget _screenHarness(Widget screen) {
     overrides: [
       activeSwimmerProvider.overrideWith((ref) => _fixture['swimmer'] as String),
       swimmerDataProvider.overrideWith(_HarnessSwimmerDataNotifier.new),
+      currentUserProvider.overrideWith((ref) => null),
       ...subscriptionTestOverrides,
     ],
     child: MaterialApp(

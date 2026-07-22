@@ -22,6 +22,7 @@ class JobStatus(str, Enum):
     completed = "completed"
     completed_with_limitations = "completed_with_limitations"
     failed = "failed"
+    cancelled = "cancelled"
 
 
 class HealthResponse(BaseModel):

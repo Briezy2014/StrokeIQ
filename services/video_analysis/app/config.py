@@ -1,4 +1,4 @@
-"""Environment-driven settings for the Elote Video Lab analysis service."""
+"""Environment-driven settings for the Elite Video Lab analysis service."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.4.0"
+    engine_version: str = "elote-0.9.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     min_height: int = 240
     min_fps: float = 15.0
     min_duration_ms: int = 200
+    # Product ceiling: Elite Video Lab targets race clips of 2 minutes or less.
+    max_duration_ms: int = 120_000
     ffprobe_path: str = "ffprobe"
     ffmpeg_path: str = "ffmpeg"
     log_level: str = "INFO"
@@ -64,6 +66,45 @@ class Settings(BaseSettings):
     usable_frame_min_confidence: float = 0.20
     overlay_min_draw_confidence: float = 0.25
     diagnostic_frame_count: int = 12
+
+    # Milestone 5 — butterfly surface-stroke analysis
+    butterfly_analysis_enabled: bool = False
+    butterfly_min_cycle_duration_s: float = 0.70
+    butterfly_max_cycle_duration_s: float = 2.20
+    butterfly_min_peak_prominence: float = 0.08
+    butterfly_min_bilateral_sync: float = 0.25
+    pool_distance_calibrated: bool = False
+
+    # Milestone 6 — underwater / dolphin-kick / breakout
+    underwater_analysis_enabled: bool = False
+    underwater_min_kick_interval_s: float = 0.28
+    underwater_max_kick_interval_s: float = 1.10
+    underwater_kick_prominence_px: float = 4.0
+    underwater_min_duration_s: float = 0.40
+
+    # Milestone 7 — turn / finish event framework
+    turn_analysis_enabled: bool = False
+    finish_analysis_enabled: bool = False
+
+    # Milestone 8 — Gemini coaching report (structured results only; never raw video)
+    gemini_report_enabled: bool = False
+    gemini_api_key: str | None = None  # backend env only (GEMINI_API_KEY)
+    gemini_model_name: str = "gemini-2.5-flash"
+    gemini_timeout_s: float = 45.0
+    gemini_max_regenerate_attempts: int = 2
+    gemini_attach_evidence_images: bool = False
+
+    # Milestone 9 — Flutter / Supabase integration (secrets backend-only)
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+    supabase_service_role_key: str | None = None  # NEVER expose to Flutter
+    supabase_auth_required: bool = False  # True in production Flutter deployments
+    supabase_persist_results: bool = False
+    supabase_signed_url_ttl_s: int = 3600
+    video_engine_name: str = "video_engine_v2"
+    cors_allow_origins: str = "*"
+    # Comma-separated emails; empty = all authenticated users (matches Flutter).
+    video_engine_v2_allowlist: str = ""
 
     def ensure_dirs(self) -> None:
         self.artifact_root.mkdir(parents=True, exist_ok=True)

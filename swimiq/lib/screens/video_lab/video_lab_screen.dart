@@ -4,16 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../config/feature_flags.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
+import '../../core/services/video_analytics_service.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/ai_data_consent_dialog.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
+import 'v2/video_analysis_results_screen.dart';
+import 'v2/video_engine_v2_setup_sheet.dart';
 
 class VideoLabScreen extends ConsumerStatefulWidget {
   const VideoLabScreen({super.key});
@@ -88,6 +93,11 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
 
     setState(() => _uploading = true);
+    final analytics = ref.read(videoAnalyticsServiceProvider);
+    analytics.logEvent(VideoAnalyticsService.uploadStarted, {
+      'file_name': fileName,
+      'byte_length': file.bytes!.length,
+    });
     final distance = int.tryParse(_distanceController.text.trim()) ?? 50;
     final error = await ref.read(swimmerDataProvider.notifier).uploadVideo(
           fileName: fileName,
@@ -104,6 +114,17 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     if (!mounted) return;
     setState(() => _uploading = false);
 
+    if (error == null) {
+      analytics.logEvent(VideoAnalyticsService.uploadSucceeded, {
+        'file_name': fileName,
+      });
+    } else {
+      analytics.logEvent(VideoAnalyticsService.uploadFailed, {
+        'file_name': fileName,
+        'error': error,
+      });
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error ?? 'Video uploaded.'),
@@ -116,7 +137,7 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     }
   }
 
-  Future<void> _runAnalysis(SwimVideo video) async {
+  Future<void> _runAnalysis(SwimVideo video, {bool forceLegacy = false}) async {
     final videoId = video.id;
     if (videoId == null) return;
 
@@ -135,12 +156,37 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
     final consented = await AiDataConsentDialog.ensureGranted(context);
     if (!consented || !mounted) return;
 
+    final email = ref.read(currentUserProvider)?.email;
+    final v2Allowed = FeatureFlags.isVideoEngineV2Allowed(
+      email: email,
+      subscription: subscription,
+    );
+    if (v2Allowed && !forceLegacy) {
+      final swimmer = ref.read(activeSwimmerProvider);
+      if (!mounted) return;
+      await VideoEngineV2SetupSheet.open(
+        context,
+        video: video,
+        swimmerKey: swimmer ?? video.swimmer,
+        displayName: swimmer ?? video.swimmer,
+      );
+      return;
+    }
+
+    // Legacy Edge Function path (only when V2 is off or dual-run forced).
     setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
     setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? 'AI analysis saved.')),
+      SnackBar(
+        content: Text(
+          error == null
+              ? 'AI analysis saved.'
+              : 'Analysis failed: $error',
+        ),
+        backgroundColor: error == null ? null : Colors.red.shade700,
+      ),
     );
   }
 
@@ -177,16 +223,42 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
         final dateFormat = DateFormat.yMMMd();
         final videos = data.userFacingVideos;
         final snapshot = data.passportSnapshot(swimmer);
+        final email = ref.watch(currentUserProvider)?.email;
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final v2Allowed = FeatureFlags.isVideoEngineV2Allowed(
+          email: email,
+          subscription: subscription,
+        );
+        final dualRun = v2Allowed && FeatureFlags.videoEngineLegacyEnabled;
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
-              title: 'Video Lab',
+              title: v2Allowed ? 'Elite Video Lab' : 'Video Lab',
               subtitle:
                   '${videos.length} videos · ${data.userFacingVideoAnalyses.length} analyses for ${data.displayName(swimmer)}',
             ),
+            if (v2Allowed) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => VideoAnalysisHistoryScreen(
+                          swimmerKey: swimmer,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.history),
+                  label: const Text('Analysis history'),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,
@@ -256,6 +328,10 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
                   dateFormat: dateFormat,
                   analyzing: _analyzingVideoId == video.id,
                   onAnalyze: () => _runAnalysis(video),
+                  onLegacyAnalyze: dualRun
+                      ? () => _runAnalysis(video, forceLegacy: true)
+                      : null,
+                  v2Primary: v2Allowed,
                   motivationalCut: _videoMotivationalCut(data, video),
                 ),
               ),
@@ -266,13 +342,15 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
   }
 }
 
-class _VideoCard extends StatefulWidget {
+class _VideoCard extends ConsumerStatefulWidget {
   const _VideoCard({
     required this.video,
     required this.analysis,
     required this.dateFormat,
     required this.analyzing,
     required this.onAnalyze,
+    this.onLegacyAnalyze,
+    this.v2Primary = false,
     this.motivationalCut,
   });
 
@@ -281,13 +359,15 @@ class _VideoCard extends StatefulWidget {
   final DateFormat dateFormat;
   final bool analyzing;
   final VoidCallback onAnalyze;
+  final VoidCallback? onLegacyAnalyze;
+  final bool v2Primary;
   final String? motivationalCut;
 
   @override
-  State<_VideoCard> createState() => _VideoCardState();
+  ConsumerState<_VideoCard> createState() => _VideoCardState();
 }
 
-class _VideoCardState extends State<_VideoCard> {
+class _VideoCardState extends ConsumerState<_VideoCard> {
   VideoPlayerController? _controller;
 
   @override
@@ -297,11 +377,26 @@ class _VideoCardState extends State<_VideoCard> {
   }
 
   Future<void> _initPlayer() async {
-    final url = widget.video.videoUrl;
-    if (url == null || url.isEmpty) return;
+    String? url = widget.video.videoUrl;
+    try {
+      url = await ref
+          .read(videoStorageServiceProvider)
+          .resolvePlaybackUrl(widget.video);
+    } catch (_) {
+      // Widget tests / pre-Supabase boot: keep stored URL fallback.
+    }
+    if (!mounted || url == null || url.isEmpty) return;
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    await controller.initialize();
-    if (!mounted) return;
+    try {
+      await controller.initialize();
+    } catch (_) {
+      await controller.dispose();
+      return;
+    }
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
     setState(() => _controller = controller);
   }
 
@@ -313,6 +408,8 @@ class _VideoCardState extends State<_VideoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryLabel =
+        widget.v2Primary ? 'Run Elite Analysis' : 'Run AI Swim Analysis';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -354,7 +451,7 @@ class _VideoCardState extends State<_VideoCard> {
                 ],
               ),
             ],
-            if (widget.analysis == null)
+            if (widget.analysis == null) ...[
               FilledButton.tonal(
                 onPressed: widget.analyzing ? null : widget.onAnalyze,
                 child: widget.analyzing
@@ -363,9 +460,16 @@ class _VideoCardState extends State<_VideoCard> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Run AI Swim Analysis'),
-              )
-            else ...[
+                    : Text(primaryLabel),
+              ),
+              if (widget.onLegacyAnalyze != null) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: widget.analyzing ? null : widget.onLegacyAnalyze,
+                  child: const Text('Run legacy analysis'),
+                ),
+              ],
+            ] else ...[
               if (widget.analysis!.disclaimer != null) ...[
                 const SizedBox(height: 8),
                 Text(

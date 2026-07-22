@@ -63,11 +63,32 @@ class AnalysisOptions(BaseModel):
     view_hint: ViewHint = "unknown"
     generate_overlay: bool = True
     generate_gemini_report: bool = False
+    report_options: dict | None = Field(
+        default=None,
+        description=(
+            "Optional M8 report controls: authorize_age_group, "
+            "authorize_previous_results, previous_athlete_results, "
+            "approved_standards, evidence_frame_paths, attach_evidence_images. "
+            "Never include API keys. Gemini never receives raw video."
+        ),
+    )
     # Milestone 3 — run exactly one pose stage when enabled (no auto-advance).
     run_pose_stage: bool = False
     pose_stage: Literal["A", "B", "C"] | None = None
     pose_source_path: str | None = None
     write_pose_acceptance: bool = True
+    # Milestone 5 — butterfly surface analysis (requires smoothed poses)
+    run_butterfly_analysis: bool = False
+    run_underwater_analysis: bool = False
+    run_turn_analysis: bool = False
+    run_finish_analysis: bool = False
+    pool_distance_calibrated: bool = False
+    # Milestone 7 wall calibration inputs (optional)
+    manual_wall_line: dict | None = None
+    pool_geometry: dict | None = None
+    lane_line_termination_x: float | None = None
+    starting_block_x: float | None = None
+    turn_type_hint: str | None = None  # flip | open | unknown
 
 
 class CreateAnalysisRequest(BaseModel):

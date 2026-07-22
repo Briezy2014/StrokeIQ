@@ -1,1 +1,5 @@
-"""Placeholder module reserved for a later milestone. Not used in Milestone 1."""
+"""Back-compat export for Milestone 8 ReportGenerator."""
+
+from app.services.report import ReportGenerator, ReportGenerationResult
+
+__all__ = ["ReportGenerator", "ReportGenerationResult"]

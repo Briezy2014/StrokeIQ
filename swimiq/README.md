@@ -14,7 +14,7 @@ Cross-platform swim performance tracker for **Android** and **iOS**, connected t
 | Goals with progress + edit/delete | Done |
 | Meet results + edit/delete | Done |
 | Athlete passport (swimmer profile) | Done |
-| Video Lab + Gemini AI video analysis | Done — [deploy setup](docs/GEMINI_SETUP.md) |
+| Elite Video Lab (Elote metrics + Gemini plan) | Done — [V2 launch](docs/VIDEO_ENGINE_V2_MORNING_LAUNCH.md) |
 | Settings (account, sign out) | Done |
 | Auto-link auth user to swimmer profile | Done |
 

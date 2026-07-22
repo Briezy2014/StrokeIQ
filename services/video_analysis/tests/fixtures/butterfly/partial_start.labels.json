@@ -1,0 +1,51 @@
+{
+  "name": "partial_start",
+  "view": "side",
+  "fps": 30.0,
+  "n_cycles": 3,
+  "entry_frames": [
+    14,
+    50,
+    86,
+    122
+  ],
+  "cycles": [
+    {
+      "cycle_index": 0,
+      "start_frame": 14,
+      "end_frame": 50,
+      "start_ms": -13.333333333333307,
+      "end_ms": 1186.6666666666667,
+      "duration_s": 1.2000000000000002
+    },
+    {
+      "cycle_index": 1,
+      "start_frame": 50,
+      "end_frame": 86,
+      "start_ms": 1186.6666666666667,
+      "end_ms": 2386.6666666666665,
+      "duration_s": 1.2
+    },
+    {
+      "cycle_index": 2,
+      "start_frame": 86,
+      "end_frame": 122,
+      "start_ms": 2386.6666666666665,
+      "end_ms": 3586.6666666666665,
+      "duration_s": 1.1999999999999997
+    }
+  ],
+  "breath_frames": [
+    26,
+    27,
+    28,
+    62,
+    63,
+    64,
+    98,
+    99,
+    100
+  ],
+  "breath_every": 1,
+  "notes": "Manually defined synthetic butterfly kinematics with labeled entry boundaries."
+}

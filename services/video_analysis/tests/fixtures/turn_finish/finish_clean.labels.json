@@ -1,0 +1,27 @@
+{
+  "name": "finish_clean",
+  "kind": "finish",
+  "fps": 30.0,
+  "frame_width": 640,
+  "wall_x": 620.0,
+  "stroke": "butterfly",
+  "view": "side",
+  "manual_wall_line": {
+    "x": 620.0,
+    "confidence": 0.95
+  },
+  "finish_contact_frame": 70,
+  "final_complete_stroke_cycle_frame": 48,
+  "final_hand_entry_frame": 64,
+  "final_stroke_boundary_frame": 64,
+  "surface_stroke_entry_frames": [
+    0,
+    16,
+    32,
+    48,
+    64
+  ],
+  "clip_ends_before_contact": false,
+  "contact_not_visible": false,
+  "notes": "Manually labeled synthetic finish sequence."
+}
