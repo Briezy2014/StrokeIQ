@@ -6,6 +6,8 @@ People cannot install the iPhone/Android app yet, but they **can use SwimIQ in C
 
 That is how they **see and try the functionality** before the app stores launch.
 
+> **If https://swimiqapp.com shows a security / certificate warning:** the Flutter files may already be uploaded — fix SSL first. See **[WEB_SITE_STATUS.md](WEB_SITE_STATUS.md)**.
+
 ---
 
 ## What “route to the Flutter app” actually means
@@ -147,6 +149,7 @@ Every time you change the app and want the website updated:
 
 | Problem | Fix |
 |---------|-----|
+| Certificate / “Your connection is not private” on https | Install trusted SSL in GoDaddy cPanel (AutoSSL) — see WEB_SITE_STATUS.md |
 | “SwimIQ is not connected” on swimiqapp.com | `.env` keys wrong; rebuild with script |
 | Blank white page | Upload incomplete — need ALL of `build/web`, including `canvaskit` folder |
 | Old page still shows | Hard refresh Ctrl+F5; wait 10 min |
