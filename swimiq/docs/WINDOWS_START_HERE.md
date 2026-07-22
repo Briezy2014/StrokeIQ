@@ -1,71 +1,47 @@
-# Windows — Start SwimIQ (Elite Video Lab)
+# Windows — Start SwimIQ (after PR #84 on main)
 
-Use this on the **Kara Williams** Windows PC.
+**Do not use** `Desktop\StrokeIQ` in PowerShell. That folder often does not exist on this PC (OneDrive / renamed folders). That wrong path is why `cd` keeps failing.
 
-## One-time folder setup
+## Find your real folder first
 
-1. Use the clean clone folder: `Desktop\StrokeIQ-Elite`
-2. In File Explorer open: `StrokeIQ-Elite\swimiq\scripts`
-3. Double-click `setup-short-path.bat` (creates drive `S:`)
-
-## Every time you want the app
-
-### A) Make sure `.env` exists
-
-In File Explorer open `StrokeIQ-Elite\swimiq` and double-click:
-
-`make-env.bat`
-
-Put real Supabase values:
-
-```env
-SUPABASE_URL=https://YOURPROJECT.supabase.co
-SUPABASE_ANON_KEY=eyJ...your_anon_key...
-ANALYSIS_API_BASE_URL=http://localhost:8080
-VIDEO_ENGINE_V2=true
-VIDEO_ENGINE_V2_ALLOWLIST=
-VIDEO_ENGINE_V2_DUAL_RUN=false
-```
-
-Save and close Notepad.
-
-### B) Launch
-
-Double-click:
-
-`START-SWIMIQ.bat`
-
-Or in PowerShell:
+1. In File Explorer, open your SwimIQ / StrokeIQ project folder (search This PC for `pubspec.yaml` inside a `swimiq` folder).
+2. Or from the repo root, double-click **`FIND-SWIMIQ-FOLDER.bat`** (searches the PC and opens the real `swimiq` folder).
+3. Or in PowerShell (from any folder):
 
 ```powershell
-S:
-cd swimiq
-.\START-SWIMIQ.bat
+Get-ChildItem -Path $env:USERPROFILE -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match '\\swimiq\\pubspec\.yaml$' } |
+  Select-Object -ExpandProperty DirectoryName
 ```
 
-### C) What “good” looks like
+Then:
 
-In the black/PowerShell window you must see:
+```powershell
+cd "PASTE_THE_PATH_IT_PRINTED"
+git checkout main
+git pull origin main
+dir
+```
 
-1. `[OK] .env looks usable`
-2. `Got dependencies!` ← this is only halfway
-3. `Starting Chrome NOW with dart-defines...`
-4. `Launching lib\main.dart on Chrome...`
-5. Browser shows **login**, not the gray gear
+If you already use drive **`S:`**:
 
-Then sign in as `briezy682014@gmail.com` → Video tab → **Elite Video Lab**
+```powershell
+cd S:\swimiq
+git pull origin main
+```
 
-## Important
+## Every launch (on main after #84)
 
-- `Got dependencies!` alone means packages installed. It is **not** the app.
-- Do **not** run only `flutter pub get`.
-- Do **not** run plain `flutter run -d chrome` without the launcher (keys won’t load on web).
-- Ignore “31 packages have newer versions…” — that is a notice, not a failure.
+1. Double-click **`swimiq\START-SWIMIQ.bat`** (this is what exists on `main`).
+2. For Elite/Elote local analysis, follow **`docs/VIDEO_ENGINE_V2_MORNING_LAUNCH.md`**.
+3. Prefer **localhost** for Elite. Public **swimiqapp.com** cannot reach Elote on your laptop until Elote is hosted.
 
-## Accounts
+## Important: bats that are NOT on main
 
-| Role | Login / code |
-|------|----------------|
-| Master | `briezy682014@gmail.com` |
-| Demo | `demo@swimiqapp.com` / `SwimIQ` |
-| Coach | Redeem `COACH-EVAL-14` (or `COACH-TRIAL-30`) in Settings → Plans |
+| File | On `main`? |
+|------|------------|
+| `swimiq\START-SWIMIQ.bat` | Yes |
+| `START-SWIMIQ-WITH-ELITE.bat` | No (older branch only) |
+| `DEPLOY-GEMINI-VIDEO.bat` | No (stopgap PR #87 only) |
+
+If a guide tells you to open a bat and File Explorer does not show it, you are either in the wrong folder or on a branch that never had that file — do not keep retrying `Desktop\StrokeIQ`.
