@@ -1,0 +1,46 @@
+RUN FLUTTER NOW (Elite already OK — no new API key)
+====================================================
+
+Your Elite window said READY. Keep that window OPEN.
+Do NOT make another API key.
+Do NOT close Elite.
+
+The red error was: launcher looked in C:\FlutterWork
+(that folder is the Flutter SDK, not SwimIQ).
+
+
+OPTION A — easiest (double-click)
+---------------------------------
+1) File Explorer → open your SwimIQ folder
+   (try S:\swimiq  or  C:\SwimIQWork  first)
+2) Double-click:  RUN-FLUTTER-NOW.bat
+3) Wait 2–4 minutes for Chrome
+4) Address bar must say 127.0.0.1  (not swimiqapp.com)
+
+
+OPTION B — paste in PowerShell
+------------------------------
+Open PowerShell and paste this whole block:
+
+cd S:\swimiq
+if (-not (Test-Path .\pubspec.yaml)) { cd C:\SwimIQWork }
+if (-not (Test-Path .\pubspec.yaml)) { cd C:\SwimIQWork\swimiq }
+if (-not (Test-Path .\pubspec.yaml)) {
+  Write-Host "Still no pubspec.yaml. Search This PC for pubspec.yaml and cd into that folder."
+} else {
+  Write-Host "OK folder: $PWD"
+  powershell -ExecutionPolicy Bypass -File .\RUN-FLUTTER-NOW.ps1
+}
+
+
+If RUN-FLUTTER-NOW.ps1 is missing, use this instead:
+
+powershell -ExecutionPolicy Bypass -File .\start_swimiq.ps1
+
+
+Leave open
+----------
+- Elite Video Lab window
+- The Flutter/Chrome server window
+
+Then Analyze in the local app (127.0.0.1).

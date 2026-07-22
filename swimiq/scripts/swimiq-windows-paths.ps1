@@ -15,13 +15,21 @@ function Get-SubstMapping {
     return $map
 }
 
+function Test-IsFlutterSdkDir {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+    $p = $Path.TrimEnd('\')
+    if ($p -ieq 'C:\FlutterWork' -or $p -match '[\\/]FlutterWork$') { return $true }
+    return (Test-Path -LiteralPath (Join-Path $p 'bin\flutter.bat'))
+}
+
 function Get-PhysicalRootPath {
     param([string]$Path)
     if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
 
     $normalized = $Path.TrimEnd('\')
-    # Match normal drive paths like S:\swimiq (old regex wrongly required a hyphen).
-    if ($normalized -match '^([A-Z]):(\\.*)-$') {
+    # Match drive paths like S:\ or S:\swimiq (do NOT require a trailing hyphen).
+    if ($normalized -match '^([A-Z]):(?:\\(.*))?$') {
         $letter = $matches[1]
         $rest = ''
         if ($matches.Count -ge 3 -and $matches[2]) {
@@ -29,8 +37,17 @@ function Get-PhysicalRootPath {
         }
         $subst = Get-SubstMapping
         if ($subst.ContainsKey($letter)) {
-            if ([string]::IsNullOrEmpty($rest)) { return $subst[$letter].TrimEnd('\') }
-            return (Join-Path $subst[$letter] $rest)
+            $base = $subst[$letter].TrimEnd('\')
+            if ([string]::IsNullOrEmpty($rest)) { return $base }
+            # If S: already points at ...\swimiq, do not turn S:\swimiq into ...\swimiq\swimiq.
+            $baseLeaf = Split-Path -Leaf $base
+            if ($rest -ieq $baseLeaf) { return $base }
+            if ($baseLeaf -and $rest.StartsWith("$baseLeaf\", [StringComparison]::OrdinalIgnoreCase)) {
+                $tail = $rest.Substring($baseLeaf.Length).TrimStart('\')
+                if ([string]::IsNullOrEmpty($tail)) { return $base }
+                return (Join-Path $base $tail)
+            }
+            return (Join-Path $base $rest)
         }
     }
 
@@ -224,17 +241,55 @@ function Initialize-SwimIqWindowsPaths {
     } else {
         $workDir = Join-Path $strokeLink 'swimiq'
     }
-    $workDir = (Get-PhysicalRootPath $workDir).TrimEnd('\')
+    # Prefer the real project folder (must contain pubspec.yaml). Never use Flutter SDK path.
+    # projectRoot (parent of scripts/) is usually correct — check it first.
+    $workCandidates = @(
+        $projectRoot,
+        (Join-Path $projectRoot 'swimiq'),
+        $workDir,
+        (Join-Path $strokeLink 'swimiq'),
+        $strokeLink,
+        'S:\swimiq',
+        'C:\SwimIQWork\swimiq',
+        'C:\SwimIQWork'
+    ) | Select-Object -Unique
+
+    $resolvedWork = $null
+    foreach ($candidate in $workCandidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        if (Test-IsFlutterSdkDir $candidate) { continue }
+        if (-not (Test-Path -LiteralPath (Join-Path $candidate 'pubspec.yaml'))) { continue }
+        $physical = (Get-PhysicalRootPath $candidate).TrimEnd('\')
+        if (Test-IsFlutterSdkDir $physical) { continue }
+        if (-not (Test-Path -LiteralPath (Join-Path $physical 'pubspec.yaml'))) { continue }
+        $resolvedWork = $physical
+        break
+    }
+    if (-not $resolvedWork) {
+        throw @"
+SwimIQ folder looks wrong (no pubspec.yaml).
+C:\FlutterWork is the Flutter SDK — not the app.
+Tried: $($workCandidates -join ', ')
+Elite may already be running — leave it open, then double-click:
+  RUN-FLUTTER-NOW.bat
+Or PowerShell:
+  cd S:\swimiq
+  if (-not (Test-Path .\pubspec.yaml)) { cd C:\SwimIQWork }
+  powershell -ExecutionPolicy Bypass -File .\RUN-FLUTTER-NOW.ps1
+"@
+    }
+    $workDir = $resolvedWork
 
     $flutterRootPhysical = Find-FlutterRoot
     if (-not $flutterRootPhysical) {
         throw 'Flutter not found. Install to C:\flutter or C:\Users\Kara Williams\flutter'
     }
-    Write-Host "Physical Flutter: $flutterRootPhysical"
+    Write-Host "Physical Flutter SDK: $flutterRootPhysical"
 
     $flutterRoot = $flutterRootPhysical
     $flutterBat = Join-Path $flutterRoot 'bin\flutter.bat'
 
+    # C:\FlutterWork is ONLY a short path to the Flutter SDK — never the app project.
     if ($flutterRootPhysical -match ' ') {
         $flutterRoot = Ensure-DirectoryJunction -LinkPath 'C:\FlutterWork' -TargetPath $flutterRootPhysical
         $flutterBat = Join-Path $flutterRoot 'bin\flutter.bat'
@@ -254,8 +309,11 @@ function Initialize-SwimIqWindowsPaths {
     if (-not (Test-Path -LiteralPath $workDir)) {
         throw "SwimIQ folder not found at $workDir"
     }
+    if (Test-IsFlutterSdkDir $workDir) {
+        throw "Refusing to use Flutter SDK folder as SwimIQ project: $workDir`nDouble-click RUN-FLUTTER-NOW.bat in your SwimIQ folder instead."
+    }
     if (-not (Test-Path -LiteralPath (Join-Path $workDir 'pubspec.yaml'))) {
-        throw "SwimIQ folder looks wrong (no pubspec.yaml): $workDir"
+        throw "SwimIQ folder looks wrong (no pubspec.yaml): $workDir`nC:\FlutterWork is the SDK. Use S:\swimiq or C:\SwimIQWork and RUN-FLUTTER-NOW.bat"
     }
 
     if ($CleanDartTool) {

@@ -1,0 +1,67 @@
+FIX FLUTTER ANALYZE (ignore GoDaddy SSL for now)
+=================================================
+
+Goal: Website + future Android Analyze both work.
+They use the SAME cloud path. Fix that once.
+
+Ignore Cloudflare / paid SSL until Analyze works.
+
+
+ONLY 3 THINGS TO DO
+
+
+1) NEW GOOGLE AI KEY
+--------------------
+Open: https://aistudio.google.com/apikey
+→ Create API key
+→ Create API key in a NEW project
+→ Copy the AIza... key
+
+
+2) SAVE KEY IN SUPABASE
+-----------------------
+Open: https://supabase.com/dashboard
+→ Project for SwimIQ (bryurwyeosbffvfpdpbv)
+→ Edge Functions → Secrets
+→ GEMINI_API_KEY = paste new AIza key → Save
+→ Do NOT add GEMINI_MODEL
+
+
+3) DEPLOY VIDEO SERVER (required)
+---------------------------------
+On the Windows PC, open PowerShell, paste ALL of this:
+
+cd $env:USERPROFILE\Desktop\StrokeIQ\swimiq
+if (-not (Test-Path .\pubspec.yaml)) {
+  cd $env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ\swimiq
+}
+Write-Host "Folder: $PWD"
+npx --yes supabase login
+npx --yes supabase link --project-ref bryurwyeosbffvfpdpbv
+npx --yes supabase functions deploy analyze-swim-video --project-ref bryurwyeosbffvfpdpbv
+
+When it works you want: 2026-gemini-sync-v12
+(Live right now is still old: sync-v9 — that is why Analyze fails)
+
+
+4) TEST
+-------
+https://swimiqapp.com → Ctrl+Shift+R
+Video Lab → Denison 50 Fly → Run AI Swim Analysis
+Keep tab open up to 3 minutes
+
+Success = real coaching notes/scores
+Failure = send me the exact banner text
+
+
+ANDROID
+-------
+Same cloud path. When Step 3 is done, Android Analyze
+will use the fixed server too. No separate Analyze fix.
+
+
+LOCAL PC DEMO ONLY (optional)
+-----------------------------
+If you need a coach demo BEFORE cloud deploy finishes,
+use 127.0.0.1 Elite (SwimIQ-Coach-Demo.ps1).
+That does NOT fix the website or Android.
