@@ -23,29 +23,92 @@ class GeminiSwimAnalysisService {
     SwimmerProfile? profile,
     SwimPoseMetrics? poseMetrics,
   }) async {
-    final response = await _client.functions.invoke(
-      functionName,
-      body: buildRequestBody(
-        video: video,
-        raceLogs: raceLogs,
-        goals: goals,
-        profile: profile,
-        poseMetrics: poseMetrics,
-      ),
-    );
-
-    final data = response.data;
-    if (data is Map && data['error'] != null) {
-      throw GeminiAnalysisException(data['error'].toString());
-    }
-
-    if (data is! Map) {
-      throw GeminiAnalysisException(
-        'Unexpected response from $functionName.',
+    try {
+      final response = await _client.functions.invoke(
+        functionName,
+        body: buildRequestBody(
+          video: video,
+          raceLogs: raceLogs,
+          goals: goals,
+          profile: profile,
+          poseMetrics: poseMetrics,
+        ),
       );
-    }
 
-    return parseAnalysisResponse(Map<String, dynamic>.from(data));
+      final data = response.data;
+      if (data is Map && data['error'] != null) {
+        throw GeminiAnalysisException(
+          _friendlyMessage(data['error'].toString()),
+        );
+      }
+
+      if (data is! Map) {
+        throw GeminiAnalysisException(
+          'Unexpected response from AI analysis. '
+          'Confirm the analyze-swim-video Edge Function is deployed.',
+        );
+      }
+
+      return parseAnalysisResponse(Map<String, dynamic>.from(data));
+    } on GeminiAnalysisException {
+      rethrow;
+    } on FunctionException catch (error) {
+      throw GeminiAnalysisException(_friendlyMessage(_functionExceptionText(error)));
+    } catch (error) {
+      throw GeminiAnalysisException(_friendlyMessage(error.toString()));
+    }
+  }
+
+  static String _functionExceptionText(FunctionException error) {
+    final details = error.details;
+    if (details is Map && details['error'] != null) {
+      return details['error'].toString();
+    }
+    if (details != null) return details.toString();
+    return error.toString();
+  }
+
+  /// Turns raw Edge/Gemini failures into a clear next step for parents.
+  static String _friendlyMessage(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('too large') ||
+        lower.contains('413') ||
+        lower.contains('payload')) {
+      return 'This video file is too large for AI analysis (cloud limit is about '
+          '100 MB after the server update). Trim or re-export a shorter clip, '
+          'then tap Analyze again.';
+    }
+    if (lower.contains('timed out') ||
+        lower.contains('timeout') ||
+        lower.contains('idle_timeout') ||
+        lower.contains('504')) {
+      return 'Analysis timed out. Use a clip under 2 minutes (ideally under 60 '
+          'seconds), keep this tab open, and try again.';
+    }
+    if (lower.contains('gemini_api_key') ||
+        lower.contains('api key') ||
+        lower.contains('not configured')) {
+      return 'AI analysis is not configured on the server yet '
+          '(missing GEMINI_API_KEY). Email support@swimiqapp.com.';
+    }
+    if (lower.contains('not found') && lower.contains('function')) {
+      return 'AI analysis server function is not deployed. '
+          'Run DEPLOY-GEMINI-VIDEO.bat, then try Analyze again.';
+    }
+    if (lower.contains('resource_exhausted') ||
+        lower.contains('quota') ||
+        lower.contains('rate limit') ||
+        lower.contains('high demand') ||
+        lower.contains('503')) {
+      return 'AI coaching is busy right now. Wait one or two minutes, '
+          'then tap Analyze again.';
+    }
+    if (lower.contains('unauthorized') || lower.contains('jwt')) {
+      return 'Please sign out, sign back in, then tap Analyze again.';
+    }
+    return raw.trim().isEmpty
+        ? 'AI analysis failed. Try again in a minute.'
+        : raw.trim();
   }
 
   static Map<String, dynamic> buildRequestBody({

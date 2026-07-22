@@ -1,11 +1,13 @@
 # Gemini Video Analysis Setup
 
-SwimIQ Video Lab sends uploaded swim clips to **Google Gemini 2.0 Flash** through a Supabase Edge Function. Your API key stays on the server — never in the Flutter app.
+SwimIQ Video Lab sends uploaded swim clips to **Google Gemini** through a Supabase Edge Function. Your API key stays on the server — never in the Flutter app.
 
-## 1. Add your API key to Supabase (on a computer)
+**Phone clips:** after deploying the current function, analysis accepts files up to about **100 MB** (File API). Prefer clips **under 2 minutes**.
+
+## 1. Add your API key to Supabase
 
 1. Open [Supabase Dashboard](https://supabase.com/dashboard) → your project  
-2. **Project Settings** → **Edge Functions** → **Secrets** (or **Manage secrets**)  
+2. **Project Settings** → **Edge Functions** → **Secrets**  
 3. Add:
 
 | Name | Value |
@@ -14,37 +16,48 @@ SwimIQ Video Lab sends uploaded swim clips to **Google Gemini 2.0 Flash** throug
 
 Do **not** commit the key to git or paste it in chat.
 
-## 2. Deploy the Edge Function
+## 2. Deploy the Edge Function (Windows)
 
-Install the [Supabase CLI](https://supabase.com/docs/guides/cli) on a computer, then:
+**Easiest:** double-click `swimiq\DEPLOY-GEMINI-VIDEO.bat`
+
+Or with Supabase CLI:
 
 ```bash
 cd swimiq
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy analyze-swim-video
+npx --yes supabase login
+npx --yes supabase link --project-ref bryurwyeosbffvfpdpbv
+npx --yes supabase functions deploy analyze-swim-video
 ```
 
-`YOUR_PROJECT_REF` is in Supabase → Project Settings → General → Reference ID.
+## 3. Rebuild + upload the website
 
-## 3. Use Video Lab in the app
+Server deploy alone is not enough if GoDaddy still has an old Flutter build:
 
-1. Run the Flutter app (`flutter run`)  
-2. Open the **Video** tab  
-3. Upload a swim clip (**keep under ~18 MB** for now)  
-4. Tap **Analyze** — Gemini watches the video and saves the report  
+```powershell
+S:
+cd swimiq
+powershell -ExecutionPolicy Bypass -File .\scripts\build-web-godaddy.ps1
+```
 
-If the function is not deployed yet, the app falls back to the V1 notes-based report.
+Upload **all** of `build\web` to GoDaddy `public_html`.
+
+## 4. Test
+
+1. Open Video Lab  
+2. Upload a short swim clip  
+3. Tap **Analyze** — wait up to ~2 minutes with the tab open  
+
+Full checklist: **[FIX_ANALYSIS_TODAY.md](FIX_ANALYSIS_TODAY.md)**
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| `GEMINI_API_KEY is not configured` | Add the secret in Supabase and redeploy the function |
-| `Video is too large` | Trim the clip to under ~18 MB |
-| `Unauthorized` | Sign in with email/password first |
-| Analysis uses notes only | Edge function not deployed — follow step 2 |
+| `GEMINI_API_KEY is not configured` | Add the secret, redeploy the function |
+| `Video is too large` / 413 | Redeploy current function; or trim clip under ~100 MB |
+| `Unauthorized` | Sign in again |
+| Notes-based / temporarily unavailable | Old server or old website — do steps 2 and 3 again |
 
 ## Cost note
 
-Gemini charges per API use. Enable billing on your Google Cloud project linked to AI Studio for production video volume.
+Gemini charges per API use. Enable billing on the Google Cloud project linked to AI Studio for production volume.
