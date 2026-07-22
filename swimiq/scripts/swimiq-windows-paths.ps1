@@ -213,18 +213,68 @@ function Initialize-SwimIqWindowsPaths {
     $projectRoot = Get-PhysicalRootPath (Split-Path -Parent $ScriptsRoot)
     $strokeRoot = Get-PhysicalRootPath (Split-Path -Parent $projectRoot)
 
-    Write-Host "Physical SwimIQ:  $projectRoot"
-    Write-Host "Physical StrokeIQ: $strokeRoot"
+    # If S: was mapped directly to the Flutter project, parent(drive root) == drive root.
+    # Detect the real Flutter folder by finding pubspec.yaml.
+    $flutterProjectCandidates = @(
+        $projectRoot,
+        (Join-Path $strokeRoot 'swimiq'),
+        $strokeRoot,
+        (Join-Path $projectRoot 'swimiq')
+    ) | Select-Object -Unique
+
+    $resolvedFlutterProject = $null
+    foreach ($candidate in $flutterProjectCandidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        $pub = Join-Path $candidate 'pubspec.yaml'
+        if (Test-Path -LiteralPath $pub) {
+            $resolvedFlutterProject = (Get-PhysicalRootPath $candidate).TrimEnd('\')
+            break
+        }
+    }
+
+    if (-not $resolvedFlutterProject) {
+        throw @"
+SwimIQ folder looks wrong (no pubspec.yaml).
+Checked:
+  $($flutterProjectCandidates -join "`n  ")
+
+In PowerShell run:
+  subst
+  dir S:\pubspec.yaml
+  dir S:\swimiq\pubspec.yaml
+Then tell Aspyn which one exists.
+"@
+    }
+
+    # Repo root is the parent of the Flutter project when that parent contains START bat / services.
+    $resolvedRepoRoot = Get-PhysicalRootPath (Split-Path -Parent $resolvedFlutterProject)
+    if (-not (Test-Path -LiteralPath (Join-Path $resolvedRepoRoot 'services\video_analysis'))) {
+        if (Test-Path -LiteralPath (Join-Path $resolvedFlutterProject 'services\video_analysis')) {
+            $resolvedRepoRoot = $resolvedFlutterProject
+        }
+    }
+
+    Write-Host "Physical SwimIQ:  $resolvedFlutterProject"
+    Write-Host "Physical StrokeIQ: $resolvedRepoRoot"
     Write-Host ''
 
-    $strokeLink = Ensure-DirectoryJunction -LinkPath 'C:\SwimIQWork' -TargetPath $strokeRoot
-    # StrokeIQ root + \swimiq. If junction was wrongly pointed at swimiq already, don't nest.
-    if ((Split-Path -Leaf $strokeRoot) -ieq 'swimiq') {
-        $workDir = $strokeLink
-    } else {
+    # Junction must point at the PHYSICAL path (not S:\...). Junctions to subst
+    # letters often hide files and cause "no pubspec.yaml" false errors.
+    $strokeLink = Ensure-DirectoryJunction -LinkPath 'C:\SwimIQWork' -TargetPath $resolvedRepoRoot
+    if ((Split-Path -Leaf $resolvedFlutterProject) -ieq 'swimiq' -and
+        (Split-Path -Leaf $resolvedRepoRoot) -ine 'swimiq') {
         $workDir = Join-Path $strokeLink 'swimiq'
+    } else {
+        $workDir = $strokeLink
     }
-    $workDir = (Get-PhysicalRootPath $workDir).TrimEnd('\')
+
+    # Prefer the resolved physical Flutter project for the actual working directory.
+    # The junction is only to avoid spaces in some tool paths.
+    if (Test-Path -LiteralPath (Join-Path $resolvedFlutterProject 'pubspec.yaml')) {
+        $workDir = $resolvedFlutterProject
+    } else {
+        $workDir = (Get-PhysicalRootPath $workDir).TrimEnd('\')
+    }
 
     $flutterRootPhysical = Find-FlutterRoot
     if (-not $flutterRootPhysical) {
