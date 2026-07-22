@@ -49,7 +49,11 @@ class RecruitingResumePdf {
             _line('Club team', profile?.team),
             _line('High school', profile?.school),
             _line('Coach', profile?.coachName),
-            _line('Coach contact', profile?.coachEmail ?? profile?.recruitingEmail),
+            _line('Coach contact', profile?.coachEmail),
+            _line(
+              'Athlete email',
+              profile?.athleteEmail ?? profile?.recruitingEmail,
+            ),
             _line('USA Swimming ID', profile?.usaSwimmingId),
             _line('Primary stroke', profile?.primaryStroke),
             _line('Favorite event', profile?.favoriteEvent),

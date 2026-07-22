@@ -272,8 +272,7 @@ class _ResumeDocument extends StatelessWidget {
     final website = profile?.athleteWebsite?.trim();
     final email = profile?.athleteEmail?.trim();
     final phone = profile?.athletePhone?.trim();
-    final coachEmail =
-        (profile?.coachEmail ?? profile?.recruitingEmail)?.trim();
+    final coachEmail = profile?.coachEmail?.trim();
 
     return Card(
       color: Colors.white,

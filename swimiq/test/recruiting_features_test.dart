@@ -139,11 +139,36 @@ void main() {
     expect(report.recruitingLevel, isNotEmpty);
     expect(report.strengths, isNotEmpty);
     expect(report.milestones, isNotEmpty);
+    expect(
+      report.milestones.any((line) => line.toLowerCase().contains('regional')),
+      isFalse,
+    );
     expect(report.divisionFit, isNotEmpty);
     expect(report.genericReachSchools, isNotEmpty);
     expect(report.genericTargetSchools, isNotEmpty);
     expect(report.genericLikelySchools, isNotEmpty);
     expect(report.timeProjections, isNotEmpty);
     expect(report.usedNamedSchoolMatching, isTrue);
+  });
+
+  test('coach email is not replaced by athlete recruiting email', () {
+    final athleteOnly = SwimmerProfile(
+      swimmerName: 'Test Swimmer',
+      athleteNotes: SwimmerProfile.composeAthleteNotes(
+        athleteEmail: 'me@family.com',
+        recruitingEmail: 'me@family.com',
+      ),
+    );
+    expect(athleteOnly.coachEmail, isNull);
+
+    final withCoach = SwimmerProfile(
+      swimmerName: 'Test Swimmer',
+      athleteNotes: SwimmerProfile.composeAthleteNotes(
+        athleteEmail: 'me@family.com',
+        coachEmail: 'coach@club.org',
+      ),
+    );
+    expect(withCoach.coachEmail, 'coach@club.org');
+    expect(withCoach.athleteEmail, 'me@family.com');
   });
 }

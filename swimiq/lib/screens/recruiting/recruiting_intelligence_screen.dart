@@ -79,6 +79,7 @@ class _RecruitingIntelligenceScreenState
           videoCount: data.userFacingVideos.length,
           passportComplete: passportComplete,
           benchmarkCatalog: catalog,
+          standardsCatalog: data.motivationalStandards,
           geminiCoachSummary: geminiSummary,
         );
         _loading = false;
@@ -93,6 +94,7 @@ class _RecruitingIntelligenceScreenState
           meetCount: data.meetResults.map((m) => m.meetName).toSet().length,
           videoCount: data.userFacingVideos.length,
           passportComplete: passportComplete,
+          standardsCatalog: data.motivationalStandards,
         );
         _loading = false;
       });
@@ -129,8 +131,9 @@ class _RecruitingIntelligenceScreenState
             children: [
               const SwimIqPageHero(
                 title: 'AI Recruiting Intelligence',
-                subtitle: 'Named schools matched to your official times — verify '
-                    'every list with coaches before contacting programs.',
+                subtitle: 'Named U.S. / Central U.S. schools matched to your official '
+                    'times — written for swimmers, club coaches, and families. '
+                    'Always verify with coaches before contacting programs.',
               ),
               const SizedBox(height: 16),
               _AssistantCard(report: report),
@@ -143,26 +146,30 @@ class _RecruitingIntelligenceScreenState
                 emoji: '🎯',
                 title: 'College Match AI',
                 lines: [
-                  'Based on your times and improvement rate, you are currently '
-                  'competitive for:',
+                  'Division fit based on your SwimIQ profile (projection):',
                   ...report.divisionFit.map((d) => '• $d'),
-                  '',
-                  'Division overview — reach / target / likely (projections):',
-                  'Reach schools:',
-                  ...report.genericReachSchools,
-                  'Target schools:',
-                  ...report.genericTargetSchools,
-                  'Likely schools:',
-                  ...report.genericLikelySchools,
                   if (report.usedNamedSchoolMatching) ...[
                     '',
-                    'Named schools matched to your official times (Ohio & Midwest benchmarks):',
-                    'Reach schools (need faster times):',
+                    'Named schools matched to your official times '
+                        '(Central U.S. & U.S. benchmarks):',
+                    'Reach schools (need faster times — still worth watching):',
                     ...report.reachSchools,
                     'Target schools (close to recruit range):',
                     ...report.targetSchools,
-                    'Likely schools (times already in range):',
+                    'Likely schools (times already in illustrative range):',
                     ...report.likelySchools,
+                  ] else ...[
+                    '',
+                    'Add official PBs (and College Interests like “Central US” '
+                        'in Passport) to unlock named school matches.',
+                    '',
+                    'Division overview while we wait for named matches:',
+                    'Reach:',
+                    ...report.genericReachSchools,
+                    'Target:',
+                    ...report.genericTargetSchools,
+                    'Likely:',
+                    ...report.genericLikelySchools,
                   ],
                 ],
               ),

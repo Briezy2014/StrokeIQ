@@ -12,20 +12,24 @@ void main() {
     await loadTestMotivationalCatalog();
   });
 
-  test('matches named Ohio schools for 200 Fly LCM', () async {
+  test('matches named Central US schools for 100 Fly SCY', () async {
     final catalog = await CollegeRecruitingBenchmarkCatalog.loadFromAssets();
     final profile = SwimmerProfile(
       swimmerName: 'Aspyn',
-      athleteNotes: SwimmerProfile.composeAthleteNotes(gender: 'Female'),
+      birthday: DateTime(2010, 6, 1),
+      athleteNotes: SwimmerProfile.composeAthleteNotes(
+        gender: 'Female',
+        collegeInterests: 'Central US',
+      ),
     );
     final pbs = [
       PersonalBestEntry(
         stroke: 'Butterfly',
-        distance: 200,
-        course: 'LCM',
-        timeSeconds: 190.0,
+        distance: 100,
+        course: 'SCY',
+        timeSeconds: 58.5,
         date: DateTime(2026, 7, 6),
-        eventLabel: '200 Butterfly',
+        eventLabel: '100 Butterfly',
         source: PersonalBestSource.meet,
         meetName: 'Summer Invite',
       ),
@@ -38,8 +42,27 @@ void main() {
 
     expect(matches, isNotEmpty);
     expect(
-      matches.any((match) => match.school.contains('Wilmington')),
+      matches.any((match) => match.region.contains('Central')),
       isTrue,
+    );
+    expect(
+      matches.any(
+        (match) =>
+            match.school.contains('Miami') ||
+            match.school.contains('Cincinnati') ||
+            match.school.contains('Ohio'),
+      ),
+      isTrue,
+    );
+    // Unrealistic power-conference reaches should be filtered out.
+    expect(
+      matches.any(
+        (match) =>
+            match.school.contains('Michigan') &&
+            match.tier == CollegeMatchTier.reach &&
+            match.gapToTargetSeconds > 10,
+      ),
+      isFalse,
     );
 
     final report = RecruitingIntelligenceEngine.build(
@@ -50,25 +73,44 @@ void main() {
       videoCount: 0,
       passportComplete: true,
       benchmarkCatalog: catalog,
+      standardsCatalog: testMotivationalCatalog,
     );
 
     expect(report.usedNamedSchoolMatching, isTrue);
+    expect(report.milestones, isNotEmpty);
     expect(
-      report.targetSchools.any((line) => line.contains('Wilmington')),
+      report.milestones.any((line) => line.toLowerCase().contains('regional')),
+      isFalse,
+    );
+    expect(
+      report.milestones.any(
+        (line) =>
+            line.contains('Earn ') ||
+            line.contains('AAAA') ||
+            line.contains('AA') ||
+            line.contains('AAA') ||
+            line.contains('BB') ||
+            line.contains('drop'),
+      ),
       isTrue,
     );
     expect(report.timeProjections.first.targetSchoolName, isNotNull);
     expect(report.divisionFit, isNotEmpty);
-    expect(report.genericReachSchools, isNotEmpty);
-    expect(report.genericTargetSchools, isNotEmpty);
-    expect(report.genericLikelySchools, isNotEmpty);
-    expect(
-      report.genericReachSchools.any((line) => line.contains('D1')),
-      isTrue,
+  });
+
+  test('does not treat athlete email as coach contact fallback in résumé text',
+      () {
+    final profile = SwimmerProfile(
+      swimmerName: 'Aspyn',
+      athleteNotes: SwimmerProfile.composeAthleteNotes(
+        gender: 'Female',
+        athleteEmail: 'athlete@example.com',
+        recruitingEmail: 'athlete@example.com',
+        coachEmail: null,
+      ),
     );
-    expect(
-      report.genericLikelySchools.any((line) => line.contains('D2') || line.contains('NAIA')),
-      isTrue,
-    );
+
+    expect(profile.coachEmail, isNull);
+    expect(profile.recruitingEmail, 'athlete@example.com');
   });
 }
