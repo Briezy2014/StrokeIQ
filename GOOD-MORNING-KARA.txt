@@ -1,0 +1,20 @@
+============================================================
+  GOOD MORNING - Elite analysis
+============================================================
+
+RIGHT NOW (works on this PC, no GoDaddy needed):
+
+  1. CLOSE every swimiqapp.com tab
+  2. Double-click START-SWIMIQ-WITH-ELITE.bat
+  3. Address bar MUST say 127.0.0.1  (not swimiqapp.com)
+  4. Elite tab -> Run Elite Analysis
+  5. Leave the Elite black window OPEN
+
+If you see "workstation" text, you are on swimiqapp.com.
+Close that tab. That is the old website.
+
+TO UPDATE THE PUBLIC WEBSITE later:
+  Double-click DO-THIS-ONE-THING.bat
+  Upload the zip to GoDaddy (see UPLOAD-THIS-ZIP-TO-GODADDY.txt)
+  Elite subtitle must say: build Jul19-a
+============================================================

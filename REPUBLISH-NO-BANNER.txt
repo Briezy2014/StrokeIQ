@@ -1,0 +1,13 @@
+============================================================
+  REMOVE blue banner + let Run Analysis work on website
+============================================================
+
+1) Desktop\StrokeIQ\GET-LATEST-FIXED-APP.bat
+2) Desktop\StrokeIQ\PUBLISH-SWIMIQAPP-COM.bat  (wait for zip)
+3) GoDaddy File Manager → public_html → upload zip → Extract → overwrite
+4) Incognito Ctrl+Shift+R → https://swimiqapp.com
+5) Elite tab — blue workstation banner should be GONE
+6) Run Elite Analysis should start (cloud analysis on the website)
+
+Also finish the upload SQL fix if upload still fails:
+  OPEN-UPLOAD-SQL.bat → paste into Supabase → Run → Success

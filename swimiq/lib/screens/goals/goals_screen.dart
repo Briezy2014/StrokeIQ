@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swim_analytics.dart';
-import '../../core/utils/swim_event_parser.dart';
+import '../../core/utils/goal_progress_analytics.dart';
+import '../../core/utils/swim_event_options.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/swim_goal.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
-import '../../widgets/swimmer_screen.dart';
+import '../../widgets/goal_progress_visuals.dart';
+import '../../widgets/goals_progress_chart.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
+import '../../widgets/swimmer_screen.dart';
 
 class GoalsScreen extends ConsumerStatefulWidget {
   const GoalsScreen({super.key});
@@ -24,21 +25,39 @@ class GoalsScreen extends ConsumerStatefulWidget {
 class _GoalsScreenState extends ConsumerState<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _timeController = TextEditingController();
-  final _strokeController =
-      TextEditingController(text: AppConstants.strokes.first);
-  final _courseController =
-      TextEditingController(text: AppConstants.courses.first);
 
-  int _distance = 100;
+  String _course = AppConstants.courses.first;
+  SwimEventOption? _selectedEvent;
   DateTime _targetDate = DateTime.now();
   bool _isSaving = false;
+  bool _showAddForm = false;
 
   @override
   void dispose() {
     _timeController.dispose();
-    _strokeController.dispose();
-    _courseController.dispose();
     super.dispose();
+  }
+
+  List<SwimEventOption> _eventOptions(SwimmerData data) {
+    return SwimEventOptions.forProfile(
+      catalog: data.motivationalStandards,
+      profile: data.profile,
+      course: _course,
+    );
+  }
+
+  SwimEventOption? _matchingSelection(List<SwimEventOption> options) {
+    if (options.isEmpty) return null;
+    final selected = _selectedEvent;
+    if (selected == null) return options.first;
+    for (final option in options) {
+      if (option.distance == selected.distance &&
+          option.stroke == selected.stroke &&
+          option.course == selected.course) {
+        return option;
+      }
+    }
+    return options.first;
   }
 
   Future<void> _pickDate() async {
@@ -48,33 +67,33 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2045),
     );
-    if (picked != null) {
-      setState(() => _targetDate = picked);
-    }
+    if (picked != null) setState(() => _targetDate = picked);
   }
 
-  Future<void> _saveGoal() async {
+  Future<void> _saveGoal(SwimmerData data, String swimmer) async {
     if (!_formKey.currentState!.validate()) return;
 
-    final swimmer = ref.read(activeSwimmerProvider);
-    if (swimmer == null) return;
+    final event = _matchingSelection(_eventOptions(data));
+    if (event == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pick a USA Swimming event from the list so cuts can track correctly.',
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
     try {
-      final stroke = _strokeController.text.trim().isEmpty
-          ? AppConstants.strokes.first
-          : _strokeController.text.trim();
-      final course = _courseController.text.trim().isEmpty
-          ? AppConstants.courses.first
-          : _courseController.text.trim();
-
       final goalTime = SwimTime.toSeconds(_timeController.text);
       final goal = SwimGoal(
         swimmerName: swimmer,
-        event: '$_distance $stroke',
+        event: event.meetResultEvent,
         goalTime: goalTime,
-        course: course,
+        course: _course,
         targetDate: _targetDate,
       );
 
@@ -91,6 +110,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           const SnackBar(content: Text('Goal saved.')),
         );
         _timeController.clear();
+        setState(() {
+          _showAddForm = false;
+          _selectedEvent = event;
+        });
       }
     } on FormatException {
       if (mounted) {
@@ -139,167 +162,199 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     );
   }
 
-  String _progressText(SwimGoal goal, SwimmerData data) {
-    final best = SwimAnalytics.bestTimeForGoal(
-      goal: goal,
-      raceLogs: data.raceLogs,
-    );
-    final toGoal = SwimAnalytics.secondsToGoal(
-      goal: goal,
-      raceLogs: data.raceLogs,
-    );
-
-    if (best == null) return 'No swims logged for this event yet';
-    if (toGoal != null && toGoal <= 0) {
-      return 'Goal achieved! PB: ${SwimTime.fromSeconds(best)}';
-    }
-    if (toGoal != null) {
-      return 'Current: ${SwimTime.fromSeconds(best)} · '
-          '${SwimTime.fromSeconds(toGoal)} to go';
-    }
-    return 'Current: ${SwimTime.fromSeconds(best)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final dateFormat = DateFormat.yMMMd();
+        final snapshots = buildGoalSnapshots(data);
+        final achieved = snapshots
+            .where((s) => s.status == GoalProgressStatus.achieved)
+            .length;
+        final showForm = _showAddForm || data.goals.isEmpty;
+        final snapshot = data.passportSnapshot(swimmer);
+        final eventOptions = _eventOptions(data);
+        final currentSelection = _matchingSelection(eventOptions);
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'Swimmer Goals',
-              subtitle: 'Target times for ${data.displayName(swimmer)}',
+            SwimIqPageHero(
+              showMark: false,
+              title: 'Goals',
+              subtitle:
+                  'Targets, progress & USA cuts for ${data.displayName(swimmer)}',
+              stats: [
+                SwimIqHeroStat('${data.goals.length} active goals'),
+                if (achieved > 0) SwimIqHeroStat('$achieved achieved'),
+                SwimIqHeroStat('Top cut: ${snapshot.highestCut}'),
+              ],
             ),
             const SizedBox(height: 16),
-            Form(
-              key: _formKey,
+            if (data.goals.isNotEmpty) ...[
+              GoalsCutsBanner(snapshots: snapshots),
+              const SizedBox(height: 16),
+              GoalsProgressChart(snapshots: snapshots),
+              const SizedBox(height: 16),
+              Text(
+                'Your goals',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Charts use training swims and official meet results from Log.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              ...snapshots.map(
+                (snapshot) => GoalProgressCard(
+                  snapshot: snapshot,
+                  onDelete: () => _deleteGoal(snapshot.goal),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ] else
+              const EmptyStateMessage(
+                message:
+                    'Set a goal below, then log swims on the Log tab. '
+                    'Progress charts and USA cuts update automatically.',
+              ),
+            const SizedBox(height: 16),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _strokeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Stroke',
-                      hintText:
-                          'Freestyle, Backstroke, Breaststroke, Butterfly, or IM',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    initialValue: '$_distance',
-                    decoration:
-                        const InputDecoration(labelText: 'Goal Distance'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      final parsed = int.tryParse(value);
-                      if (parsed != null && parsed >= 25) {
-                        setState(() => _distance = parsed);
-                      }
-                    },
-                    validator: (value) {
-                      final parsed = int.tryParse(value ?? '');
-                      if (parsed == null || parsed < 25) {
-                        return 'Distance must be at least 25';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _timeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Target Time',
-                      hintText: 'Example: 35.43 or 1:24.32',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Target time is required';
-                      }
-                      try {
-                        SwimTime.toSeconds(value);
-                      } on FormatException {
-                        return 'Use 35.43 or M:SS.hh format';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _courseController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Course',
-                      hintText: 'SCY, SCM, or LCM',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Target Date'),
-                    subtitle: Text(dateFormat.format(_targetDate)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _pickDate,
+                    title: const Text(
+                      'Set a new goal',
+                      style: TextStyle(fontWeight: FontWeight.w900),
                     ),
+                    subtitle: const Text(
+                      'Pick a USA event + course so progress and cuts match Log & PBs.',
+                    ),
+                    trailing: Icon(
+                      showForm ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    onTap: () => setState(() => _showAddForm = !_showAddForm),
                   ),
-                  const SizedBox(height: 20),
-                  SwimIqSaveButton(
-                    label: 'Save Goal',
-                    isSaving: _isSaving,
-                    onPressed: _saveGoal,
-                  ),
+                  if (showForm)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              key: ValueKey('goal-course-$_course'),
+                              initialValue: _course,
+                              decoration: const InputDecoration(
+                                labelText: 'Course',
+                              ),
+                              items: AppConstants.courses
+                                  .map(
+                                    (course) => DropdownMenuItem(
+                                      value: course,
+                                      child: Text(course),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: _isSaving
+                                  ? null
+                                  : (value) {
+                                      if (value == null) return;
+                                      setState(() {
+                                        _course = value;
+                                        _selectedEvent = null;
+                                      });
+                                    },
+                            ),
+                            const SizedBox(height: 12),
+                            if (eventOptions.isEmpty)
+                              Text(
+                                'Official USA events could not load for this course. '
+                                'Check birthday and gender in Athlete Passport, then try again.',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: Colors.grey.shade700),
+                              )
+                            else
+                              DropdownButtonFormField<SwimEventOption>(
+                                key: ValueKey(
+                                  'goal-event-$_course-${currentSelection?.label}',
+                                ),
+                                initialValue: currentSelection,
+                                decoration: const InputDecoration(
+                                  labelText: 'Event',
+                                  helperText:
+                                      'Same USA Swimming events used for cuts on PBs & Dashboard',
+                                ),
+                                isExpanded: true,
+                                items: eventOptions
+                                    .map(
+                                      (option) => DropdownMenuItem(
+                                        value: option,
+                                        child: Text(option.label),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: _isSaving
+                                    ? null
+                                    : (value) =>
+                                        setState(() => _selectedEvent = value),
+                                validator: (value) =>
+                                    value == null ? 'Pick an event' : null,
+                              ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _timeController,
+                              decoration: const InputDecoration(
+                                labelText: 'Target time',
+                                hintText: 'Example: 35.43 or 1:24.32',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Target time is required';
+                                }
+                                try {
+                                  SwimTime.toSeconds(value);
+                                } on FormatException {
+                                  return 'Use 35.43 or M:SS.hh format';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Target date'),
+                              subtitle: Text(dateFormat.format(_targetDate)),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.calendar_today),
+                                onPressed: _pickDate,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SwimIqSaveButton(
+                              label: 'Save goal',
+                              isSaving: _isSaving,
+                              onPressed: () => _saveGoal(data, swimmer),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-            Text(
-              'Goal Progress',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            if (data.goals.isEmpty)
-              const EmptyStateMessage(message: 'No goals yet.')
-            else
-              ...data.goals.map((goal) {
-                final parts = SwimEventParser.parse(goal.event);
-                final cut = parts == null
-                    ? null
-                    : MotivationalCut.labelForSwim(
-                        catalog: data.motivationalStandards,
-                        profile: data.profile,
-                        stroke: parts.stroke,
-                        distance: parts.distance,
-                        course: goal.course,
-                        timeSeconds: goal.goalTime,
-                      );
-                final progress = _progressText(goal, data);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    title: Text('${goal.event} (${goal.course})'),
-                    subtitle: Text(
-                      'Target ${SwimTime.fromSeconds(goal.goalTime)} · '
-                      '${cut ?? 'Below B'} cut\n$progress',
-                    ),
-                    isThreeLine: true,
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'delete') _deleteGoal(goal);
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                    ),
-                  ),
-                );
-              }),
           ],
         );
       },

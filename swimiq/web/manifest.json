@@ -1,11 +1,11 @@
 {
-    "name": "swimiq",
-    "short_name": "swimiq",
+    "name": "SwimIQ",
+    "short_name": "SwimIQ",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0B5CAD",
+    "theme_color": "#0B5CAD",
+    "description": "SwimIQ — athlete swim performance app. Training log, meet results, USA standards, Athlete Passport, SwimIQ AI.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

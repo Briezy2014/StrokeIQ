@@ -1,0 +1,13 @@
+UPLOAD THIS FILE TO GODADDY
+===========================
+
+ONLY this file:
+  swimiq-web-godaddy.zip
+
+Double-click DOUBLE-CLICK-ME.vbs in the StrokeIQ folder first
+(it highlights this zip and copies it to Desktop).
+
+GoDaddy → public_html → Upload → Extract → Overwrite → Ctrl+Shift+R
+
+Then Denison 50 Fly → Run AI Swim Analysis → keep tab open up to 3 minutes.
+SwimIQ now keeps trying automatically — no busy/unavailable spam.

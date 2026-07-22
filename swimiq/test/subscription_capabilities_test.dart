@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/constants/founder_account_constants.dart';
 import 'package:swimiq/core/models/subscription_plan.dart';
 import 'package:swimiq/core/services/subscription_service.dart';
 import 'package:swimiq/core/subscription/subscription_capabilities.dart';
+import 'package:swimiq/providers/app_providers.dart';
 
 void main() {
   test('coach preview grants elite peek then pro only', () {
@@ -42,5 +44,202 @@ void main() {
     expect(SubscriptionCatalog.isCoachAccessCode('COACH-EVAL-14'), isTrue);
     expect(SubscriptionCatalog.isCoachAccessCode('coach-trial-30'), isTrue);
     expect(SubscriptionCatalog.isCoachAccessCode('INVALID'), isFalse);
+  });
+
+  test('basic tier unlocks goals, pbs tab, log and dashboard', () {
+    const state = SubscriptionState(
+      tier: SubscriptionTier.basic,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+    );
+
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.dashboard, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.personalBests, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.trainingLog, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, state), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, state), isFalse);
+    expect(SubscriptionCapabilities.canAccessGoals(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessBasicPersonalBests(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessWeeklyProgressReport(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessDashboardGamification(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessOfficialPbsAndStandards(state), isFalse);
+    expect(SubscriptionCapabilities.canAccessAiDrylandCoach(state), isFalse);
+    expect(SubscriptionCapabilities.canAccessPowerIndex(state), isFalse);
+    expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isFalse);
+  });
+
+  test('subscription loading locks pro tabs until loaded', () {
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.dashboard, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.goals, null), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, null), isFalse);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, null), isFalse);
+  });
+
+  test('pro tier unlocks competitive tools but not elite ai', () {
+    const state = SubscriptionState(
+      tier: SubscriptionTier.pro,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+      serverStatus: 'active',
+    );
+
+    expect(SubscriptionCapabilities.canUseProFeatures(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessOfficialPbsAndStandards(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessMeetResults(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessAiDrylandCoach(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessPowerIndex(state), isTrue);
+    expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isFalse);
+    expect(SubscriptionCapabilities.canUseRaceIntelligence(state), isFalse);
+  });
+
+  test('elite tier unlocks ai stroke analysis and race intelligence', () {
+    const state = SubscriptionState(
+      tier: SubscriptionTier.elite,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+      serverStatus: 'active',
+    );
+
+    expect(SubscriptionCapabilities.canUseProFeatures(state), isTrue);
+    expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isTrue);
+    expect(SubscriptionCapabilities.canUseRaceIntelligence(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessAiPerformanceReports(state), isTrue);
+  });
+
+  test('founder emails are recognized', () {
+    expect(FounderAccountConstants.isFounderEmail('briezy682014@gmail.com'), isTrue);
+    expect(FounderAccountConstants.isFounderEmail('owner@swimiqapp.com'), isTrue);
+    expect(FounderAccountConstants.isFounderEmail('random@gmail.com'), isFalse);
+  });
+
+  test('coach admin codes visible only for Briezy login', () {
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('briezy682014@gmail.com'),
+      isTrue,
+    );
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('owner@swimiqapp.com'),
+      isFalse,
+    );
+    expect(
+      FounderAccountConstants.canViewCoachAdminCodes('aspyn@example.com'),
+      isFalse,
+    );
+  });
+
+  test('built-in elite emails include master and demo', () {
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('briezy682014@gmail.com'),
+      isTrue,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('demo@swimiqapp.com'),
+      isTrue,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('briezy692014@gmail.com'),
+      isFalse,
+    );
+    expect(
+      SubscriptionService.isBuiltInEliteEmail('random@gmail.com'),
+      isFalse,
+    );
+  });
+
+  test('master email unlocks passport and elite home tabs even on basic state', () {
+    const basic = SubscriptionState(
+      tier: SubscriptionTier.basic,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+    );
+
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.passport,
+        basic,
+        email: 'briezy682014@gmail.com',
+      ),
+      isTrue,
+    );
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.videoLab,
+        basic,
+        email: 'briezy682014@gmail.com',
+      ),
+      isTrue,
+    );
+    expect(
+      SubscriptionCapabilities.canAccessHomeTab(
+        HomeTab.passport,
+        basic,
+        email: 'random@gmail.com',
+      ),
+      isFalse,
+    );
+  });
+
+  test('founder elite state unlocks all features', () {
+    const state = SubscriptionState(
+      tier: SubscriptionTier.elite,
+      billingCycle: BillingCycle.monthly,
+      trialEndsAt: null,
+      coachTrialEndsAt: null,
+      coachTrialStartedAt: null,
+      coachAiAnalysesUsed: 0,
+      hasUsedTrial: true,
+      serverStatus: 'active',
+      isDemoMaster: true,
+    );
+
+    expect(SubscriptionCapabilities.canUseProFeatures(state), isTrue);
+    expect(SubscriptionCapabilities.canRunSwimIqAiAnalysis(state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.videoLab, state), isTrue);
+    expect(SubscriptionCapabilities.canAccessHomeTab(HomeTab.passport, state), isTrue);
+  });
+
+  test('plan catalog uses updated tier names and badges', () {
+    final basic = SubscriptionCatalog.planFor(SubscriptionTier.basic);
+    final pro = SubscriptionCatalog.planFor(SubscriptionTier.pro);
+    final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
+
+    expect(basic.name, 'SwimIQ Basic');
+    expect(basic.tagline, contains('progress'));
+    expect(pro.name, 'SwimIQ Pro');
+    expect(pro.tagline, contains('competitive'));
+    expect(pro.badgeLabel, 'Most Popular');
+    expect(elite.name, 'SwimIQ Elite');
+    expect(elite.badgeLabel, 'Advanced AI Performance');
+    expect(elite.features.any((f) => f.contains('AI Video Stroke Analysis')), isTrue);
+    expect(elite.features.any((f) => f.contains('AI Recruiting Intelligence')), isTrue);
+    expect(basic.priceLabel(BillingCycle.annual), '\$39.99/yr');
+    expect(pro.priceLabel(BillingCycle.annual), '\$89.99/yr');
+    expect(elite.priceLabel(BillingCycle.annual), '\$149.99/yr');
+  });
+
+  test('home tab indices match expected pro gates', () {
+    expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.goals),
+        SubscriptionTier.basic);
+    expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.personalBests),
+        SubscriptionTier.basic);
+    expect(SubscriptionCapabilities.minimumTierForHomeTab(HomeTab.videoLab),
+        SubscriptionTier.pro);
   });
 }

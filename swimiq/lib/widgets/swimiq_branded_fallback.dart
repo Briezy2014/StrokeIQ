@@ -48,18 +48,20 @@ class SwimIqBrandedFallback extends StatelessWidget {
                   _Mark(size: (height ?? 72) * 0.42),
                   const SizedBox(height: 8),
                   const _Wordmark(fontSize: 22),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppConstants.tagline,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
-                  ),
+                  if (AppConstants.tagline.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      AppConstants.tagline,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                    ),
+                  ],
                 ],
               ),
       ),
@@ -69,8 +71,9 @@ class SwimIqBrandedFallback extends StatelessWidget {
 
 enum SwimIqBrandedVariant { icon, hero }
 
-class _Mark extends StatelessWidget {
-  const _Mark({required this.size});
+/// Vector swimmer mark — reliable on Windows Chrome where emoji often breaks.
+class SwimIqPaintedMark extends StatelessWidget {
+  const SwimIqPaintedMark({super.key, required this.size});
 
   final double size;
 
@@ -83,6 +86,17 @@ class _Mark extends StatelessWidget {
         painter: _SwimMarkPainter(),
       ),
     );
+  }
+}
+
+class _Mark extends StatelessWidget {
+  const _Mark({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwimIqPaintedMark(size: size);
   }
 }
 
@@ -141,6 +155,18 @@ class _SwimMarkPainter extends CustomPainter {
         colors: [AppColors.primary, AppColors.primaryDeep],
       ).createShader(Offset.zero & size);
     canvas.drawPath(triangle, trianglePaint);
+
+    // Brand "eye" dot — matches SwimIQ triangle lockup when PNG is missing.
+    canvas.drawCircle(
+      Offset(w * 0.5, h * 0.38),
+      w * 0.09,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.5, h * 0.38),
+      w * 0.045,
+      Paint()..color = AppColors.primaryDeep,
+    );
 
     final swimmer = Path()
       ..moveTo(w * 0.22, h * 0.58)

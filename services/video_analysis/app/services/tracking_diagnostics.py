@@ -108,6 +108,7 @@ def write_annotated_tracking_video(
     target_track_id: str | None,
     frame_interval: int,
     fps: float,
+    max_frames: int | None = None,
 ) -> str | None:
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -132,6 +133,8 @@ def write_annotated_tracking_video(
 
     frame_idx = 0
     while True:
+        if max_frames is not None and frame_idx >= max_frames:
+            break
         ok, frame = cap.read()
         if not ok:
             break

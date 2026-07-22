@@ -43,6 +43,11 @@ def build_report_context(
         for e in payload.get("events") or []:
             events.append(_event_ref(source, e))
 
+    # Tracking-only Elite runs (pose/M5–M7 off) still need citeable metric IDs
+    # so Gemini / local fallback coaching can pass validation.
+    metrics.extend(_tracking_metric_refs(job))
+    events.extend(_tracking_event_refs(job))
+
     evidence: list[EvidenceFrameRef] = []
     for item in evidence_frame_paths or []:
         evidence.append(
@@ -146,4 +151,122 @@ def collect_deterministic_payloads(job: AnalysisJob) -> tuple[list[dict], list[d
             continue
         metrics.extend(list(payload.get("metrics") or []))
         events.extend(list(payload.get("events") or []))
+    for ref in _tracking_metric_refs(job):
+        metrics.append(ref.model_dump())
+    for ref in _tracking_event_refs(job):
+        events.append(ref.model_dump())
     return metrics, events
+
+
+def _tracking_metric_refs(job: AnalysisJob) -> list[DeterministicMetricRef]:
+    tracking = job.tracking or {}
+    quality = tracking.get("quality_summary") or {}
+    target = tracking.get("target") or {}
+    if not quality and not target:
+        return []
+
+    coverage = quality.get("target_coverage")
+    if coverage is None:
+        coverage = target.get("target_coverage")
+    try:
+        coverage_f = float(coverage) if coverage is not None else None
+    except (TypeError, ValueError):
+        coverage_f = None
+
+    processed = quality.get("processed_frames")
+    detected = quality.get("frames_with_detections")
+    try:
+        processed_i = int(processed) if processed is not None else None
+    except (TypeError, ValueError):
+        processed_i = None
+    try:
+        detected_i = int(detected) if detected is not None else None
+    except (TypeError, ValueError):
+        detected_i = None
+
+    conf = float(target.get("target_identity_confidence") or quality.get("mean_confidence") or 0.55)
+    conf = max(0.0, min(1.0, conf))
+    label = "high" if conf >= 0.75 else "moderate" if conf >= 0.45 else "low"
+
+    out: list[DeterministicMetricRef] = []
+    if coverage_f is not None:
+        out.append(
+            DeterministicMetricRef(
+                metric_id="tracking:target_coverage",
+                name="target_coverage",
+                display_name="Swimmer visibility coverage",
+                value=round(coverage_f, 3),
+                unit="fraction",
+                confidence=conf,
+                confidence_label=label,
+                classification="measured",
+                method="rtmdet_tracking",
+            )
+        )
+    if processed_i is not None:
+        out.append(
+            DeterministicMetricRef(
+                metric_id="tracking:processed_frames",
+                name="processed_frames",
+                display_name="Frames analyzed",
+                value=processed_i,
+                unit="frames",
+                confidence=0.9,
+                confidence_label="high",
+                classification="measured",
+                method="rtmdet_tracking",
+            )
+        )
+    if detected_i is not None:
+        out.append(
+            DeterministicMetricRef(
+                metric_id="tracking:frames_with_detections",
+                name="frames_with_detections",
+                display_name="Frames with swimmer detections",
+                value=detected_i,
+                unit="frames",
+                confidence=conf,
+                confidence_label=label,
+                classification="measured",
+                method="rtmdet_tracking",
+            )
+        )
+    return out
+
+
+def _tracking_event_refs(job: AnalysisJob) -> list[DeterministicEventRef]:
+    tracking = job.tracking or {}
+    target = tracking.get("target") or {}
+    observations = list(target.get("observations") or [])
+    if not observations:
+        return []
+    first = observations[0] if isinstance(observations[0], dict) else {}
+    last = observations[-1] if isinstance(observations[-1], dict) else {}
+    out: list[DeterministicEventRef] = []
+    if first.get("frame_number") is not None:
+        out.append(
+            DeterministicEventRef(
+                event_id=f"tracking:first_target:{first.get('frame_number')}",
+                event_type="first_target_observation",
+                timestamp_ms=first.get("timestamp_ms"),
+                frame_number=int(first["frame_number"]),
+                confidence=float(first.get("confidence") or 0.6),
+                confidence_label="moderate",
+                method="rtmdet_tracking",
+            )
+        )
+    if last.get("frame_number") is not None and last.get("frame_number") != first.get(
+        "frame_number"
+    ):
+        out.append(
+            DeterministicEventRef(
+                event_id=f"tracking:last_target:{last.get('frame_number')}",
+                event_type="last_target_observation",
+                timestamp_ms=last.get("timestamp_ms"),
+                frame_number=int(last["frame_number"]),
+                confidence=float(last.get("confidence") or 0.6),
+                confidence_label="moderate",
+                method="rtmdet_tracking",
+            )
+        )
+    return out

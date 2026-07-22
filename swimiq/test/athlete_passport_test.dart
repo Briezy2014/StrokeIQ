@@ -26,13 +26,33 @@ void main() {
         athleteNotes: SwimmerProfile.composeAthleteNotes(
           gpa: '3.92',
           athleteWebsite: 'https://aspyn-swims.example.com',
+          athleteEmail: 'aspyn@example.com',
+          athletePhone: '(614) 555-0199',
           otherInterests: 'Piano, NHS, water polo',
         ),
       );
 
       expect(profile.gpa, '3.92');
       expect(profile.athleteWebsite, 'https://aspyn-swims.example.com');
+      expect(profile.athleteEmail, 'aspyn@example.com');
+      expect(profile.athletePhone, '(614) 555-0199');
+      expect(profile.recruitingEmail, 'aspyn@example.com');
       expect(profile.otherInterests, 'Piano, NHS, water polo');
+    });
+
+    test('recruitingCardName prefers real names over demo slug', () {
+      expect(
+        const SwimmerProfile(
+          swimmerName: 'demo',
+          firstName: 'Aspyn',
+          lastName: 'Williams',
+        ).recruitingCardName(),
+        'Aspyn Williams',
+      );
+      expect(
+        const SwimmerProfile(swimmerName: 'demo').recruitingCardName(),
+        'Add athlete name',
+      );
     });
 
     test('round-trips structured athlete notes metadata', () {

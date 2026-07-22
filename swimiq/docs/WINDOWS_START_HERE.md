@@ -1,71 +1,37 @@
-# Windows — Start SwimIQ (Elite Video Lab)
+# Windows — Start SwimIQ
 
-Use this on the **Kara Williams** Windows PC.
+**Do not use** `cd Desktop\StrokeIQ` in PowerShell. That path often does not exist (OneDrive / renamed folders).
 
-## One-time folder setup
+## Find your real folder
 
-1. Use the clean clone folder: `Desktop\StrokeIQ-Elite`
-2. In File Explorer open: `StrokeIQ-Elite\swimiq\scripts`
-3. Double-click `setup-short-path.bat` (creates drive `S:`)
-
-## Every time you want the app
-
-### A) Make sure `.env` exists
-
-In File Explorer open `StrokeIQ-Elite\swimiq` and double-click:
-
-`make-env.bat`
-
-Put real Supabase values:
-
-```env
-SUPABASE_URL=https://YOURPROJECT.supabase.co
-SUPABASE_ANON_KEY=eyJ...your_anon_key...
-ANALYSIS_API_BASE_URL=http://localhost:8080
-VIDEO_ENGINE_V2=true
-VIDEO_ENGINE_V2_ALLOWLIST=
-VIDEO_ENGINE_V2_DUAL_RUN=false
-```
-
-Save and close Notepad.
-
-### B) Launch
-
-Double-click:
-
-`START-SWIMIQ.bat`
-
-Or in PowerShell:
+If you already use drive **S:** (recommended):
 
 ```powershell
-S:
-cd swimiq
-.\START-SWIMIQ.bat
+cd S:\swimiq
+git checkout main
+git pull origin main
 ```
 
-### C) What “good” looks like
+Or search:
 
-In the black/PowerShell window you must see:
+```powershell
+Get-ChildItem -Path $env:USERPROFILE -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match '\\swimiq\\pubspec\.yaml$' } |
+  Select-Object -ExpandProperty DirectoryName
+```
 
-1. `[OK] .env looks usable`
-2. `Got dependencies!` ← this is only halfway
-3. `Starting Chrome NOW with dart-defines...`
-4. `Launching lib\main.dart on Chrome...`
-5. Browser shows **login**, not the gray gear
+From the **repo root** (parent of `swimiq`), you can also run `FIND-SWIMIQ-FOLDER.ps1` / `FIND-SWIMIQ-FOLDER.bat` when present.
 
-Then sign in as `briezy682014@gmail.com` → Video tab → **Elite Video Lab**
+## Start the app
 
-## Important
+1. Prefer: **`S:\START-SWIMIQ-WITH-ELITE.bat`** (repo root) — starts Elite server + Chrome  
+2. Or: **`S:\swimiq\START-SWIMIQ.bat`** — app only  
+3. Keep windows open. Use **localhost**, not only swimiqapp.com, for local Elite.
 
-- `Got dependencies!` alone means packages installed. It is **not** the app.
-- Do **not** run only `flutter pub get`.
-- Do **not** run plain `flutter run -d chrome` without the launcher (keys won’t load on web).
-- Ignore “31 packages have newer versions…” — that is a notice, not a failure.
+## What the nav should look like (current product)
 
-## Accounts
+- **6 tabs:** Dashboard · PBs · **Log** · Goals · **Elite** (or Video) · Passport  
+- **Log** includes training + meets (not separate Add / Meets tabs)  
+- Passport shows the **recruiting wallet card**
 
-| Role | Login / code |
-|------|----------------|
-| Master | `briezy682014@gmail.com` |
-| Demo | `demo@swimiqapp.com` / `SwimIQ` |
-| Coach | Redeem `COACH-EVAL-14` (or `COACH-TRIAL-30`) in Settings → Plans |
+If you still see separate Log / Add / Meets, you are on an old checkout — run `git pull origin main` after the restore PR is merged.

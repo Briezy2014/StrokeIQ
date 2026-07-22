@@ -1,0 +1,26 @@
+TONIGHT — STOP USING swimiqapp.com FOR THE COACH
+================================================
+
+Why nothing worked:
+- Your Desktop folder never got the GoDaddy helper files I named
+- The live website Analyze is broken on Google's AI key/server
+- Yesterday worked on THIS PC at 127.0.0.1 — not the public site
+
+DO THIS ONLY:
+
+1. Close every swimiqapp.com tab
+2. Start menu → type: powershell → Enter
+3. Open PASTE-IN-POWERSHELL-TONIGHT.txt
+4. Copy the WHOLE script (from $ErrorActionPreference to the end)
+5. Paste into PowerShell → Enter
+6. Wait for Chrome. Address must be 127.0.0.1
+7. Video Lab → Denison 50 Fly → Run AI Swim Analysis
+8. Leave the Elite window open
+
+OPTIONAL (fixes the public website for later — 5 minutes):
+1. https://aistudio.google.com/apikey → Create API key in NEW project
+2. Supabase → Project → Edge Functions → Secrets
+3. Update GEMINI_API_KEY to the new key
+4. Then Analyze on the website may work again
+
+Ambassadors = after coach demo works on 127.0.0.1

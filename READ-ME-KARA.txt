@@ -1,0 +1,12 @@
+SwimIQ - use files already in Desktop\StrokeIQ
+
+ONLY button:
+
+  START-SWIMIQ-WITH-ELITE.bat
+
+Leave the Elite black window OPEN.
+Use localhost / 127.0.0.1 - not swimiqapp.com.
+
+If .env has TWO GEMINI_API_KEY lines, keep only ONE, then run the bat above.
+
+Ignore FIX-*.bat names. Everything important is inside the starter above.

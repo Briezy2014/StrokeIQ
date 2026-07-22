@@ -6,6 +6,7 @@ import '../../../core/services/video_engine_v2_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/video_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/swimmer_data_provider.dart';
 import 'video_job_progress_screen.dart';
 
 /// Bottom sheet / page to confirm stroke/distance/course and start V2 analysis.
@@ -85,12 +86,36 @@ class _VideoEngineV2SetupSheetState
     final analytics = ref.read(videoAnalyticsServiceProvider);
     try {
       final service = ref.read(videoEngineV2ServiceProvider);
+      final health = await service.checkHealth();
+      if (!health.reachable ||
+          !health.mediaToolsReady ||
+          !health.storageConfigured) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(health.message),
+            duration: const Duration(seconds: 12),
+          ),
+        );
+        return;
+      }
+
       final targetTrack = _targetTrackController.text.trim();
+      final swimmerKey = widget.swimmerKey ?? widget.video.swimmer;
+      final swimmerData = ref.read(swimmerDataProvider).value;
+      final resolvedName = widget.displayName?.trim().isNotEmpty == true
+          ? widget.displayName!.trim()
+          : swimmerData?.profile
+                  ?.recruitingCardName(fallbackSwimmerKey: swimmerKey) ??
+              (swimmerKey != null
+                  ? swimmerData?.displayName(swimmerKey)
+                  : null) ??
+              swimmerKey;
       final job = await service.createJob(
         videoId: videoId,
         storagePath: widget.video.storagePath,
-        swimmerKey: widget.swimmerKey ?? widget.video.swimmer,
-        displayName: widget.displayName ?? widget.video.swimmer,
+        swimmerKey: swimmerKey,
+        displayName: resolvedName,
         stroke: _strokeController.text.trim(),
         distanceM: int.tryParse(_distanceController.text.trim()),
         course: _courseController.text.trim(),
@@ -114,7 +139,10 @@ class _VideoEngineV2SetupSheetState
     } on VideoEngineV2Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+        SnackBar(
+          content: Text(e.message),
+          duration: const Duration(seconds: 12),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -146,6 +174,42 @@ class _VideoEngineV2SetupSheetState
           Text(
             widget.video.displayTitle,
             style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Phone videos welcome',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryDark,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Parents and coaches: film from the side when you can, keep the '
+                  'whole body in view, and hold steady. Other angles still get a '
+                  'full Race Scan — body line, breathing, and tempo cues. Better '
+                  'side views unlock more precise underwater / turn / finish notes.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                        color: AppColors.textDark.withValues(alpha: 0.85),
+                      ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           TextFormField(

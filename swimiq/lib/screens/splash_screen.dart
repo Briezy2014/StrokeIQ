@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_constants.dart';
 import '../widgets/swimiq_logo.dart';
+import '../widgets/swimiq_header.dart';
 
 /// Branded splash while auth/session state loads.
 class SplashScreen extends StatelessWidget {
@@ -25,21 +27,14 @@ class SplashScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SwimIqLogo(size: 120, borderRadius: 28),
-              const SizedBox(height: 20),
-              const SwimIqWordmark(fontSize: 36),
-              const SizedBox(height: 8),
-              Text(
-                'Built in the Water. Driven by Possibility.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-              ),
-              const SizedBox(height: 48),
+              const Spacer(),
+              const SwimIqFullLockup(width: 280, borderRadius: 24),
+              const SizedBox(height: 24),
               const CircularProgressIndicator(color: Colors.white),
+              const Spacer(),
+              const SwimIqCopyrightLine(),
+              const SizedBox(height: 16),
             ],
           ),
         ),

@@ -37,10 +37,8 @@ class VideoEventInference {
       course = 'SCM';
     } else if (RegExp(r'\bscy\b').hasMatch(lower)) {
       course = 'SCY';
-    } else if (lower.contains('.mov') || lower.contains('denison')) {
-      // Aspyn 50 fly race footage defaults to LCM unless specified.
-      course = 'LCM';
     }
+    // Do not guess course from filename/extension — wrong guesses confuse uploads.
 
     return (stroke: stroke, distance: distance, course: course);
   }

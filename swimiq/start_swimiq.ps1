@@ -54,7 +54,9 @@ $key = [string]$envMap['SUPABASE_ANON_KEY']
 $api = [string]$envMap['ANALYSIS_API_BASE_URL']
 $v2 = [string]$envMap['VIDEO_ENGINE_V2']
 
-if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://localhost:8080' }
+if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://127.0.0.1:8080' }
+$api = $api -replace 'http://localhost:', 'http://127.0.0.1:'
+# Elite Video Lab on by default. Start START-ELITE-ANALYSIS-SERVER.bat first.
 if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'true' }
 
 Write-Host "SUPABASE_URL=$url"

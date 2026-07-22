@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -57,6 +58,74 @@ class VideoEngineV2Service {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
 
+  /// Unauthenticated ping of Elite `/health` (used before Confirm & Analyze).
+  Future<EliteServerHealth> checkHealth() async {
+    final uri = Uri.parse('$baseUrl/health');
+    try {
+      // No custom headers — keeps this a simple CORS request from Flutter web.
+      final response = await _client.get(uri);
+      if (response.statusCode != 200 || response.body.isEmpty) {
+        return EliteServerHealth(
+          reachable: false,
+          message:
+              'Elite server responded ${response.statusCode} at $baseUrl/health',
+        );
+      }
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) {
+        return EliteServerHealth(
+          reachable: false,
+          message: 'Elite /health returned an unexpected response.',
+        );
+      }
+      final map = Map<String, dynamic>.from(decoded);
+      final status = map['status']?.toString() ?? 'unknown';
+      final ffmpeg = map['ffmpeg_available'] == true;
+      final ffprobe = map['ffprobe_available'] == true;
+      // Require the new health field. Missing = stale Elite server still running.
+      final storageConfigured = map['storage_download_configured'] == true;
+      final version = map['engine_version']?.toString();
+      final ok = status == 'ok' || status == 'degraded';
+      final missingMedia = !ffmpeg || !ffprobe;
+      final staleServer = map['storage_download_configured'] == null;
+      String message;
+      if (!ok) {
+        message = 'Elite server health failed at $baseUrl';
+      } else if (missingMedia) {
+        message =
+            'Elite server is up, but FFmpeg is missing. Restart START-ELITE-ANALYSIS-SERVER.bat after installing FFmpeg.';
+      } else if (staleServer) {
+        message =
+            'Elite server is OUT OF DATE (old process still running). '
+            'Close every Elite window, run START-SWIMIQ-WITH-ELITE.bat, '
+            'then confirm /health includes storage_download_configured.';
+      } else if (!storageConfigured) {
+        message =
+            'Elite server is up, but Supabase storage keys are missing in services/video_analysis/.env. '
+            'Run START-SWIMIQ-WITH-ELITE.bat again so it copies SUPABASE_URL + SUPABASE_ANON_KEY from swimiq/.env.';
+      } else {
+        message = 'Elite server ready at $baseUrl';
+      }
+      return EliteServerHealth(
+        reachable: ok,
+        status: status,
+        engineVersion: version,
+        ffmpegAvailable: ffmpeg,
+        ffprobeAvailable: ffprobe,
+        storageConfigured: storageConfigured,
+        message: message,
+      );
+    } catch (e) {
+      return EliteServerHealth(
+        reachable: false,
+        message:
+            'Elite server is OFF at $baseUrl. '
+            'Double-click START-SWIMIQ-WITH-ELITE.bat, '
+            'leave the Elite black window open, then come back here — this banner refreshes automatically.',
+      );
+    }
+  }
+
   Future<AnalysisJob> createJob({
     required String videoId,
     required String storagePath,
@@ -91,17 +160,20 @@ class VideoEngineV2Service {
         if (notes != null) 'notes': notes,
       },
       'options': {
+        ...?options,
         'target_selection_mode':
             targetTrackId != null ? 'track_id' : 'automatic',
         if (targetTrackId != null) 'target_track_id': targetTrackId,
+        // Launch defaults: coaching always works; sensors enrich when the
+        // phone clip + Elite PC can support them (pose soft-fails safely).
         'generate_gemini_report': generateGeminiReport,
-        'generate_overlay': true,
+        'attach_evidence_images': true,
+        'generate_overlay': false,
         'run_pose_stage': true,
         'run_butterfly_analysis': true,
         'run_underwater_analysis': true,
         'run_turn_analysis': true,
         'run_finish_analysis': true,
-        ...?options,
       },
     };
 
@@ -196,6 +268,26 @@ class VideoEngineV2Service {
     return url;
   }
 
+  /// Build a recruiting clip pack + auto-stitched MP4 reel on Elite.
+  Future<HighlightReelResult> createHighlightReel({
+    required List<Map<String, dynamic>> segments,
+    String title = 'Recruiting Highlight Reel',
+    int maxClipMs = 6000,
+  }) async {
+    final json = await _requestJson(
+      'POST',
+      '/v1/highlight-reels',
+      body: {
+        'title': title,
+        'max_clip_ms': maxClipMs,
+        'segments': segments,
+      },
+      expectedStatuses: const {200},
+      timeout: const Duration(seconds: 180),
+    );
+    return HighlightReelResult.fromJson(json);
+  }
+
   /// Maps backend / HTTP error codes to athlete-facing copy.
   static String userMessageForErrorCode(String? code, {String? fallback}) {
     switch ((code ?? '').toUpperCase()) {
@@ -205,10 +297,17 @@ class VideoEngineV2Service {
         return 'This video format is not supported. Please upload an MP4 (H.264) file.';
       case 'TARGET_SWIMMER_NOT_FOUND':
         return 'We could not find the target swimmer in this video. Try a clearer side view or pick the swimmer track.';
+      case 'TARGET_LOST_EXTENDED':
+        return 'We lost sight of the swimmer for too much of this clip. Use a steadier side view with the full body in frame.';
+      case 'NO_DETECTIONS':
+        return 'We could not detect a swimmer in this video. Film from the side with good light and the full body visible.';
       case 'INSUFFICIENT_POSE':
       case 'POSE_FAILED':
       case 'INSUFFICIENT_POSE_EVIDENCE':
-        return 'Not enough clear pose data was detected to measure technique confidently.';
+      case 'POSE_DEPS_MISSING':
+      case 'POSE_SOFT_SKIP':
+        return 'Phone coaching is ready — tap Retry analysis. '
+            'Extra pose sensors are optional and will enrich the report when available.';
       case 'SERVER_UNAVAILABLE':
       case 'SERVICE_UNAVAILABLE':
         return 'The analysis service is temporarily unavailable. Please try again shortly.';
@@ -217,9 +316,19 @@ class VideoEngineV2Service {
       case 'GEMINI_UNAVAILABLE':
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
-        return 'Coaching report is unavailable right now. Measured metrics are still shown when present.';
+      case 'MISSING_API_KEY':
+      case 'GEMINI_ERROR':
+      case 'INVALID_API_KEY':
+        return 'AI coaching tips are temporarily unavailable. '
+            'Please try Analyze again in a few minutes.';
       case 'UPLOAD_FAILED':
-        return 'Video upload failed. Check your connection and try again.';
+        return 'Could not load your video for analysis. '
+            'Check your connection, stay signed in, and try again.';
+      case 'DOWNLOAD_TIMEOUT':
+        return 'Downloading your video timed out. '
+            'Check Wi-Fi, stay signed in, and try a shorter clip.';
+      case 'FFPROBE_TIMEOUT':
+        return 'Could not read this video file. Re-upload as MP4 (H.264) and try again.';
       case 'AUTHENTICATION_EXPIRED':
       case 'UNAUTHORIZED':
       case 'AUTH_REQUIRED':
@@ -235,11 +344,42 @@ class VideoEngineV2Service {
         return 'Results are not ready yet.';
       case 'VIDEO_TOO_LARGE':
         return 'This video is too large. Please upload a shorter or smaller file.';
+      case 'INVALID_SEGMENT':
+        return 'Tag at least one race moment before building your highlight reel.';
+      case 'REEL_BUILD_FAILED':
+      case 'FFMPEG_UNAVAILABLE':
+        return 'Could not build the highlight reel. Keep Elite running with FFmpeg installed, then try again.';
       default:
-        return fallback?.trim().isNotEmpty == true
-            ? fallback!.trim()
-            : 'Something went wrong with video analysis. Please try again.';
+        return sanitizeUserFacingError(fallback) ??
+            'Something went wrong with video analysis. Please try again.';
     }
+  }
+
+  /// Never show torch/mmpose engineer text to athletes/parents.
+  /// On the public website, also hide local .bat / localhost setup copy.
+  static String? sanitizeUserFacingError(String? raw) {
+    final text = raw?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final lower = text.toLowerCase();
+    if (lower.contains('pose dependency') ||
+        lower.contains('no module named') ||
+        lower.contains('torch') ||
+        lower.contains('mmcv') ||
+        lower.contains('mmpose') ||
+        lower.contains('mmengine') ||
+        lower.contains('mmdet') ||
+        lower.contains('traceback')) {
+      return 'Phone coaching is ready — tap Retry analysis to finish this race report.';
+    }
+    if (Env.isPublicHostedWeb &&
+        (lower.contains('.bat') ||
+            lower.contains('127.0.0.1') ||
+            lower.contains('localhost') ||
+            lower.contains('services/video_analysis'))) {
+      return 'Elite analysis is not ready yet. Please try again in a moment, '
+          'or email support@swimiqapp.com if it keeps failing.';
+    }
+    return text;
   }
 
   Future<Map<String, dynamic>> _requestJson(
@@ -247,6 +387,7 @@ class VideoEngineV2Service {
     String path, {
     Map<String, dynamic>? body,
     Set<int> expectedStatuses = const {200},
+    Duration timeout = const Duration(seconds: 30),
   }) async {
     final token = await _accessTokenGetter();
     if (token == null || token.isEmpty) {
@@ -266,28 +407,33 @@ class VideoEngineV2Service {
 
     http.Response response;
     try {
+      final Future<http.Response> pending;
       switch (method) {
         case 'GET':
-          response = await _client.get(uri, headers: headers);
+          pending = _client.get(uri, headers: headers);
         case 'POST':
-          response = await _client.post(
+          pending = _client.post(
             uri,
             headers: headers,
             body: body == null ? null : jsonEncode(body),
           );
         case 'DELETE':
-          response = await _client.delete(uri, headers: headers);
+          pending = _client.delete(uri, headers: headers);
         default:
           throw VideoEngineV2Exception(
             'Unsupported HTTP method $method',
             errorCode: 'ANALYSIS_FAILED',
           );
       }
+      response = await pending.timeout(timeout);
     } catch (e) {
       if (e is VideoEngineV2Exception) rethrow;
       throw VideoEngineV2Exception(
-        userMessageForErrorCode('SERVER_UNAVAILABLE'),
+        'Cannot reach Elite server at $baseUrl$path. '
+        'Double-click START-SWIMIQ-WITH-ELITE.bat, leave the Elite window open, '
+        'confirm $baseUrl/health loads, then try again. ($e)',
         errorCode: 'SERVER_UNAVAILABLE',
+        retriable: true,
       );
     }
 
@@ -362,5 +508,97 @@ class VideoEngineV2Service {
       default:
         return 'unknown';
     }
+  }
+}
+
+/// Result of pinging the local Elite Video Lab FastAPI `/health` endpoint.
+class EliteServerHealth {
+  const EliteServerHealth({
+    required this.reachable,
+    required this.message,
+    this.status,
+    this.engineVersion,
+    this.ffmpegAvailable,
+    this.ffprobeAvailable,
+    this.storageConfigured = true,
+  });
+
+  final bool reachable;
+  final String message;
+  final String? status;
+  final String? engineVersion;
+  final bool? ffmpegAvailable;
+  final bool? ffprobeAvailable;
+  final bool storageConfigured;
+
+  bool get mediaToolsReady =>
+      ffmpegAvailable == true && ffprobeAvailable == true;
+}
+
+/// Clip pack + auto-stitched recruiting reel from Elite.
+class HighlightReelResult {
+  const HighlightReelResult({
+    required this.reelId,
+    required this.title,
+    required this.reelUrl,
+    required this.downloadToken,
+    required this.message,
+    required this.clips,
+  });
+
+  final String reelId;
+  final String title;
+  final String reelUrl;
+  final String downloadToken;
+  final String message;
+  final List<HighlightReelClip> clips;
+
+  factory HighlightReelResult.fromJson(Map<String, dynamic> json) {
+    final clipsRaw = json['clips'];
+    final clips = <HighlightReelClip>[];
+    if (clipsRaw is List) {
+      for (final item in clipsRaw) {
+        if (item is Map) {
+          clips.add(HighlightReelClip.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
+    return HighlightReelResult(
+      reelId: json['reel_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? 'Recruiting Highlight Reel',
+      reelUrl: json['reel_url']?.toString() ?? '',
+      downloadToken: json['download_token']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
+      clips: clips,
+    );
+  }
+}
+
+class HighlightReelClip {
+  const HighlightReelClip({
+    required this.label,
+    required this.tag,
+    required this.startMs,
+    required this.endMs,
+    required this.fileName,
+    required this.downloadUrl,
+  });
+
+  final String label;
+  final String tag;
+  final int startMs;
+  final int endMs;
+  final String fileName;
+  final String downloadUrl;
+
+  factory HighlightReelClip.fromJson(Map<String, dynamic> json) {
+    return HighlightReelClip(
+      label: json['label']?.toString() ?? '',
+      tag: json['tag']?.toString() ?? '',
+      startMs: (json['start_ms'] as num?)?.round() ?? 0,
+      endMs: (json['end_ms'] as num?)?.round() ?? 0,
+      fileName: json['file_name']?.toString() ?? '',
+      downloadUrl: json['download_url']?.toString() ?? '',
+    );
   }
 }

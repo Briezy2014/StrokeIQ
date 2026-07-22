@@ -1,5 +1,5 @@
 SwimIQ AI & Data Disclosure
-Last updated: July 7, 2026
+Last updated: July 14, 2026
 
 Required disclosure for Apple App Review Guideline 5.1.2(i) — third-party AI
 
@@ -22,7 +22,7 @@ WHAT IS NOT SHARED WITHOUT YOUR ACTION?
 • On-device body mechanics (when available) are processed locally and are not uploaded as raw video for that step.
 
 CONSENT
-The first time you run AI video analysis, SwimIQ shows this disclosure and asks for your explicit permission. For athletes ages 8–12, a parent or guardian must provide this consent. You may decline and continue using non-AI features.
+The first time you run AI video analysis, SwimIQ shows this disclosure and asks for your explicit permission. For athletes ages 8–12, a parent or legal guardian must provide this consent. You may decline and continue using non-AI features.
 
 REVOKE CONSENT
 Contact support@swimiqapp.com or delete your account to stop future AI processing. Clearing app data or signing out removes local consent flags on your device.
@@ -32,8 +32,9 @@ AI output is estimated coaching feedback — not automatic video timing, not a s
 
 QUESTIONS
 privacy@swimiqapp.com
+support@swimiqapp.com
 
-Kara Williams · SwimIQ
+SwimIQ LLC
 199 Harbinger Dr.
 Groveport, OH 43125
 United States

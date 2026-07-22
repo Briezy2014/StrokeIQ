@@ -2,6 +2,8 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swim_video.dart';
+import '../../data/models/swim_video_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../services/usa_motivational_standards_catalog.dart';
 import 'motivational_cut.dart';
@@ -158,23 +160,115 @@ class SwimAnalytics {
     return timeSeconds < previousBest;
   }
 
+  /// SwimIQ Score (0–1000).
+  ///
+  /// Rises with logged practices, meet/PB uploads, goals, and video work.
+  /// Falls after quiet days (inactivity decay) so the rope is not stuck forever.
   static int calculateSwimIqScore({
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
+    List<MeetResult> meetResults = const [],
+    List<SwimVideo> videos = const [],
+    List<SwimVideoAnalysis> analyses = const [],
+    DateTime? now,
   }) {
-    if (raceLogs.isEmpty) return 0;
+    final hasAnyActivity = raceLogs.isNotEmpty ||
+        meetResults.isNotEmpty ||
+        videos.isNotEmpty ||
+        analyses.isNotEmpty;
+    if (!hasAnyActivity) return 0;
 
-    final totalSessions = raceLogs.length;
-    final totalGoals = goals.length;
-    final totalPbs = personalBests(raceLogs).length;
+    final clock = now ?? DateTime.now();
+    final meetPbs = personalBestsFromMeets(meetResults: meetResults);
+    final logPbs = personalBests(raceLogs);
+    final pbCount = meetPbs.isNotEmpty ? meetPbs.length : logPbs.length;
 
-    var score = 500;
-    score += totalSessions * 5;
-    score += totalGoals * 20;
-    score += totalPbs * 25;
+    // Lifetime foundation (capped so older volume alone cannot freeze the score).
+    var score = 350;
+    score += _capped(raceLogs.length, 40) * 5; // max +200
+    score += _capped(goals.length, 8) * 15; // max +120
+    score += _capped(pbCount, 16) * 12; // max +192
+    score += _capped(meetResults.length, 30) * 5; // max +150
+    score += _capped(videos.length + analyses.length, 12) * 8; // max +96
 
-    return score > 1000 ? 1000 : score;
+    // Recent work (last 7 days) — using the app should move the rope up quickly.
+    final weekAgo = clock.subtract(const Duration(days: 7));
+    final recentSessions =
+        raceLogs.where((log) => !log.date.isBefore(weekAgo)).length;
+    final recentMeets =
+        meetResults.where((meet) => !meet.meetDate.isBefore(weekAgo)).length;
+    final recentVideos = videos
+        .where(
+          (video) =>
+              video.createdAt != null && !video.createdAt!.isBefore(weekAgo),
+        )
+        .length;
+    final recentAnalyses = analyses
+        .where(
+          (analysis) =>
+              analysis.createdAt != null &&
+              !analysis.createdAt!.isBefore(weekAgo),
+        )
+        .length;
+    var recentBoost = recentSessions * 12 +
+        recentMeets * 18 +
+        recentVideos * 14 +
+        recentAnalyses * 14;
+    if (recentBoost > 150) recentBoost = 150;
+    score += recentBoost;
+
+    // Inactivity decay: 1 grace day, then −25 pts per quiet day (cap −350).
+    final lastActive = lastActivityDate(
+      raceLogs: raceLogs,
+      meetResults: meetResults,
+      videos: videos,
+      analyses: analyses,
+    );
+    if (lastActive != null) {
+      final quietDays = _dateOnly(clock).difference(_dateOnly(lastActive)).inDays;
+      if (quietDays > 1) {
+        final decay = (quietDays - 1) * 25;
+        score -= decay > 350 ? 350 : decay;
+      }
+    }
+
+    if (score < 0) return 0;
+    if (score > 1000) return 1000;
+    return score;
   }
+
+  /// Most recent practice / meet / video / analysis date, if any.
+  static DateTime? lastActivityDate({
+    required List<RaceLog> raceLogs,
+    List<MeetResult> meetResults = const [],
+    List<SwimVideo> videos = const [],
+    List<SwimVideoAnalysis> analyses = const [],
+  }) {
+    DateTime? latest;
+    void consider(DateTime? value) {
+      if (value == null) return;
+      if (latest == null || value.isAfter(latest!)) latest = value;
+    }
+
+    for (final log in raceLogs) {
+      consider(log.date);
+    }
+    for (final meet in meetResults) {
+      consider(meet.meetDate);
+    }
+    for (final video in videos) {
+      consider(video.createdAt);
+    }
+    for (final analysis in analyses) {
+      consider(analysis.createdAt);
+    }
+    return latest;
+  }
+
+  static int _capped(int value, int max) => value > max ? max : value;
+
+  static DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
   static String bestTime(List<RaceLog> logs) {
     final times = logs.map((log) => log.timeSeconds).where((t) => t > 0);

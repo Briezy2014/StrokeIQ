@@ -23,7 +23,13 @@ from app.utils.logging import get_logger, log_exception, log_stage
 logger = get_logger("video_analysis.pipeline")
 
 
-def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
+def resolve_local_path(
+    job: AnalysisJob,
+    *,
+    settings: Settings,
+    progress_callback=None,
+    cancel_check=None,
+) -> Path:
     if job.local_path:
         return Path(job.local_path).expanduser().resolve()
     if job.storage_path:
@@ -41,9 +47,26 @@ def resolve_local_path(job: AnalysisJob, *, settings: Settings) -> Path:
                 bucket=job.storage_bucket or "swim-videos",
                 storage_path=job.storage_path,
                 dest=dest,
+                user_access_token=getattr(job, "download_access_token", None),
+                progress_callback=progress_callback,
+                cancel_check=cancel_check,
             )
         except SupabaseBridgeError as exc:
-            raise VideoValidationError(exc.code, exc.message, retriable=False) from exc
+            if exc.code == "CANCELLED":
+                raise VideoValidationError(
+                    "CANCELLED",
+                    "Job was cancelled during download",
+                    retriable=False,
+                ) from exc
+            retriable = exc.code in {
+                "SERVER_UNAVAILABLE",
+                "UPLOAD_FAILED",
+                "SERVICE_UNAVAILABLE",
+                "DOWNLOAD_TIMEOUT",
+            }
+            raise VideoValidationError(
+                exc.code, exc.message, retriable=retriable
+            ) from exc
         job.local_path = str(dest.resolve())
         return dest.resolve()
     raise VideoValidationError(
@@ -76,7 +99,52 @@ def run_analysis_pipeline(
         return job
 
     try:
-        job.transition(JobStatus.validating, progress=0.08)
+        needs_download = bool(job.storage_path) and not job.local_path
+        if needs_download:
+            job.transition(JobStatus.downloading, progress=0.05)
+            store.save(job)
+            log_stage(
+                logger,
+                stage=job.stage,
+                job_id=job_id,
+                video_id=video_id,
+                message="Downloading video from storage",
+            )
+
+            def _on_download_progress(fraction: float, label: str) -> None:
+                clamped = max(0.0, min(1.0, float(fraction)))
+                # Keep download stage in the 5–11% band before validating.
+                progress = 0.05 + (clamped * 0.06)
+                previous = job.progress
+                job.transition(JobStatus.downloading, progress=progress)
+                store.save(job)
+                # Log sparsely so large files do not flood the Elite console.
+                if clamped >= 1.0 or progress - previous >= 0.03:
+                    log_stage(
+                        logger,
+                        stage=job.stage,
+                        job_id=job_id,
+                        video_id=video_id,
+                        message=label,
+                    )
+
+            def _download_cancelled() -> bool:
+                latest = store.get(job_id)
+                if latest is not None and latest.cancelled:
+                    job.cancelled = True
+                    return True
+                return bool(job.cancelled)
+
+            path = resolve_local_path(
+                job,
+                settings=settings,
+                progress_callback=_on_download_progress,
+                cancel_check=_download_cancelled,
+            )
+        else:
+            path = resolve_local_path(job, settings=settings)
+
+        job.transition(JobStatus.validating, progress=0.12)
         store.save(job)
         log_stage(
             logger,
@@ -85,8 +153,6 @@ def run_analysis_pipeline(
             video_id=video_id,
             message="Starting video validation",
         )
-
-        path = resolve_local_path(job, settings=settings)
         validated = validate_video(path, settings)
 
         if job.cancelled:
@@ -155,6 +221,13 @@ def run_analysis_pipeline(
         )
 
         art = artifact_dir(settings, job_id)
+
+        def _detection_progress(progress: float) -> None:
+            if job.cancelled:
+                return
+            job.transition(JobStatus.detecting_swimmer, progress=progress)
+            store.save(job)
+
         tracking = run_detection_and_tracking(
             settings=settings,
             job_id=job_id,
@@ -163,10 +236,24 @@ def run_analysis_pipeline(
             artifact_root=art,
             options=options,
             detector=detector,
+            on_progress=_detection_progress,
         )
 
+        # Attach a compact observation sample so coaching/events can cite frames.
+        target_payload = dict(tracking.target or {})
+        if "observations" not in target_payload:
+            tid = target_payload.get("track_id")
+            for tr in tracking.tracks or []:
+                if str(tr.get("track_id")) == str(tid):
+                    obs = list(tr.get("observations") or [])
+                    # Keep payload small — first/mid/last up to 12 samples.
+                    if len(obs) > 12:
+                        step = max(1, len(obs) // 12)
+                        obs = obs[::step][:12]
+                    target_payload["observations"] = obs
+                    break
         job.tracking = {
-            "target": tracking.target,
+            "target": target_payload,
             "quality_summary": tracking.quality_summary,
             "artifact_paths": tracking.artifact_paths,
             "config": tracking.config_versions,
@@ -176,7 +263,9 @@ def run_analysis_pipeline(
         job.model_versions = tracking.model_versions
         job.limitations = list(dict.fromkeys([*job.limitations, *tracking.limitations]))
 
-        # Milestone 3: optional single pose stage (A/B/C). Never auto-advances stages.
+        # Milestone 3: optional pose stage. Soft-fail when torch/mmpose are not
+        # installed so tracking + Gemini coaching still complete for coaches.
+        pose_result = None
         if settings.pose_enabled or bool(options.get("run_pose_stage")):
             stage = str(options.get("pose_stage") or settings.pose_stage or "A").upper()
             if stage not in {"A", "B", "C"}:
@@ -186,16 +275,68 @@ def run_analysis_pipeline(
             pose_source = Path(
                 options.get("pose_source_path") or video_for_detection
             )
-            pose_result = run_pose_stage(
-                settings=settings,
-                stage=stage,  # type: ignore[arg-type]
-                job_id=job_id,
-                video_id=video_id,
-                source_path=pose_source,
-                output_root=art / "pose" / f"stage_{stage}",
-                detector=detector,
-                write_acceptance=bool(options.get("write_pose_acceptance", True)),
-            )
+            try:
+                pose_result = run_pose_stage(
+                    settings=settings,
+                    stage=stage,  # type: ignore[arg-type]
+                    job_id=job_id,
+                    video_id=video_id,
+                    source_path=pose_source,
+                    output_root=art / "pose" / f"stage_{stage}",
+                    detector=detector,
+                    write_acceptance=bool(options.get("write_pose_acceptance", True)),
+                )
+            except PoseStageError as pose_exc:
+                log_exception(
+                    logger,
+                    stage=job.stage,
+                    job_id=job_id,
+                    video_id=video_id,
+                    error=pose_exc,
+                )
+                job.pose = {
+                    "stage": stage,
+                    "status": "skipped",
+                    "skip_reason": pose_exc.error_code,
+                    "skip_message": pose_exc.message,
+                }
+                job.limitations = list(
+                    dict.fromkeys(
+                        [
+                            *job.limitations,
+                            "Detailed pose tools are not installed on this PC yet; "
+                            "continuing with tracking and coaching report.",
+                        ]
+                    )
+                )
+                pose_result = None
+            except Exception as pose_exc:  # noqa: BLE001
+                # Never let raw torch/mmpose import errors kill the coaching report.
+                log_exception(
+                    logger,
+                    stage=job.stage,
+                    job_id=job_id,
+                    video_id=video_id,
+                    error=pose_exc,
+                )
+                job.pose = {
+                    "stage": stage,
+                    "status": "skipped",
+                    "skip_reason": "POSE_SOFT_SKIP",
+                    "skip_message": str(pose_exc),
+                }
+                job.limitations = list(
+                    dict.fromkeys(
+                        [
+                            *job.limitations,
+                            "Pose enrichment skipped for this clip; "
+                            "continuing with phone coaching report.",
+                        ]
+                    )
+                )
+                pose_result = None
+
+        if pose_result is not None:
             summary_path = pose_result.artifact_paths.get("pose_stage_summary")
             coverage = {}
             if summary_path:
@@ -422,11 +563,10 @@ def run_analysis_pipeline(
                     job.model_versions["milestone"] = "7"
                     job.model_versions["turn_finish"] = "framework_v1"
 
-        # Milestone 8: coaching report from structured CV results only (never raw video).
-        # Deterministic metrics remain on the job even when Gemini fails.
-        run_report = settings.gemini_report_enabled or bool(
-            options.get("generate_gemini_report")
-        )
+        # Milestone 8: always produce SwimIQ Elite coaching (never depends on Gemini).
+        # generate_gemini_report remains accepted for API back-compat but coaching
+        # always runs so athletes get a full report 100% of the time.
+        run_report = True
         if run_report:
             if job.status != JobStatus.generating_report:
                 job.transition(JobStatus.generating_report, progress=0.98)
@@ -491,6 +631,7 @@ def run_analysis_pipeline(
         return job
 
     except PoseStageError as exc:
+        # Belt-and-suspenders: pose must never hard-fail coach-facing analysis.
         log_exception(
             logger,
             stage=job.stage,
@@ -498,12 +639,55 @@ def run_analysis_pipeline(
             video_id=video_id,
             error=exc,
         )
-        job.mark_failed(
-            error_code=exc.error_code,
-            message=exc.message,
-            stage=job.stage,
-            retriable=False,
+        job.pose = {
+            "status": "skipped",
+            "skip_reason": exc.error_code,
+            "skip_message": exc.message,
+        }
+        job.limitations = list(
+            dict.fromkeys(
+                [
+                    *job.limitations,
+                    "Detailed pose tools are not installed on this PC yet; "
+                    "continuing with tracking and coaching report.",
+                ]
+            )
         )
+        # Always produce Elite coaching even after pose skip.
+        try:
+            job.transition(JobStatus.generating_report, progress=0.98)
+            store.save(job)
+            art = artifact_dir(settings, job_id)
+            report_result = ReportGenerator(settings=settings).generate_for_job(
+                job,
+                output_dir=art / "report",
+            )
+            job.report = result_to_job_payload(report_result)
+            job.limitations = list(
+                dict.fromkeys([*job.limitations, *report_result.limitations])
+            )
+        except Exception as report_exc:  # noqa: BLE001
+            log_exception(
+                logger,
+                stage=job.stage,
+                job_id=job_id,
+                video_id=video_id,
+                error=report_exc,
+            )
+            # Last-resort: still try a bare elite coach report.
+            try:
+                report_result = ReportGenerator(settings=settings).generate_for_job(
+                    job,
+                    output_dir=artifact_dir(settings, job_id) / "report",
+                )
+                job.report = result_to_job_payload(report_result)
+            except Exception:  # noqa: BLE001
+                job.limitations.append("coaching_report_unavailable")
+        if job.limitations:
+            job.transition(JobStatus.completed_with_limitations, progress=1.0)
+        else:
+            job.transition(JobStatus.completed, progress=1.0)
+        job.error = None
         store.save(job)
         _persist_job_to_supabase(job, settings=settings)
         return job

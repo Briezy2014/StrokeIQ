@@ -1,3 +1,5 @@
+import '../../core/recruiting/meet_history_analytics.dart';
+import '../../core/recruiting/power_index.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
@@ -8,6 +10,7 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swim_schedule_entry.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 import 'swim_time.dart';
@@ -22,6 +25,7 @@ class PassportSnapshot {
     required this.highestCut,
     required this.nextMeet,
     required this.imxScore,
+    required this.powerIndex,
     required this.readiness,
     required this.nextFocus,
     required this.personalBests,
@@ -41,6 +45,7 @@ class PassportSnapshot {
   final String highestCut;
   final String nextMeet;
   final String imxScore;
+  final PowerIndexSnapshot powerIndex;
   final String readiness;
   final String nextFocus;
   final List<String> personalBests;
@@ -55,6 +60,9 @@ class PassportSnapshot {
 class PassportMetrics {
   PassportMetrics._();
 
+  /// Shown when there is no upcoming meet/race on the schedule.
+  static const noUpcomingMeetLabel = 'None scheduled';
+
   static PassportSnapshot build({
     required String swimmerName,
     required SwimmerProfile? profile,
@@ -64,6 +72,8 @@ class PassportMetrics {
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
     required UsaMotivationalStandardsCatalog motivationalStandards,
+    List<SwimScheduleEntry> schedules = const [],
+    DateTime? now,
   }) {
     final userVideos = videos.where((video) => video.isUserFacing).toList();
     final userVideoIds =
@@ -80,6 +90,9 @@ class PassportMetrics {
     final swimIqScore = swimIqScoreValue(
       raceLogs: raceLogs,
       goals: goals,
+      meetResults: meetResults,
+      videos: userVideos,
+      analyses: userAnalyses,
     );
 
     return PassportSnapshot(
@@ -103,8 +116,19 @@ class PassportMetrics {
         catalog: motivationalStandards,
         profile: profile,
       ),
-      nextMeet: nextMeet(meetResults),
+      nextMeet: nextMeet(
+        meetResults: meetResults,
+        schedules: schedules,
+        now: now,
+      ),
       imxScore: imxScore(raceLogs),
+      powerIndex: PowerIndex.calculate(
+        personalBests: meetPbs,
+        profile: profile,
+        catalog: motivationalStandards,
+        meetResults: meetResults,
+        analyses: userAnalyses,
+      ),
       readiness: readiness(
         raceLogs: raceLogs,
         goals: goals,
@@ -143,8 +167,19 @@ class PassportMetrics {
   static int swimIqScoreValue({
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
+    List<MeetResult> meetResults = const [],
+    List<SwimVideo> videos = const [],
+    List<SwimVideoAnalysis> analyses = const [],
+    DateTime? now,
   }) =>
-      SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);
+      SwimAnalytics.calculateSwimIqScore(
+        raceLogs: raceLogs,
+        goals: goals,
+        meetResults: meetResults,
+        videos: videos,
+        analyses: analyses,
+        now: now,
+      );
 
   static String swimIqExplanation({
     required int score,
@@ -152,12 +187,13 @@ class PassportMetrics {
     required List<SwimGoal> goals,
     required int personalBestCount,
   }) {
-    if (raceLogs.isEmpty) {
-      return 'No SwimIQ score yet. Log swim sessions to start building your score.';
+    if (raceLogs.isEmpty && personalBestCount == 0) {
+      return 'No SwimIQ score yet. Log swims, upload best times, or analyze a video to start climbing.';
     }
 
     return 'Score $score from ${raceLogs.length} logged sessions, '
-        '${goals.length} goals, and $personalBestCount personal bests.';
+        '${goals.length} goals, and $personalBestCount personal bests. '
+        'Rises with recent app activity and cools off after quiet days.';
   }
 
   static String currentFocus({
@@ -218,11 +254,77 @@ class PassportMetrics {
     return bestLevel ?? 'No motivational cut matched yet';
   }
 
-  static String nextMeet(List<MeetResult> meetResults) {
-    if (meetResults.isEmpty) return 'No meet results logged yet';
-    final sorted = [...meetResults]
+  static String latestMeet(List<MeetResult> meetResults) {
+    final realMeets = meetResults
+        .where(
+          (result) =>
+              result.meetName.trim().isNotEmpty &&
+              !MeetHistoryAnalytics.isSyntheticMeetName(result.meetName),
+        )
+        .toList();
+    if (realMeets.isEmpty) return 'No meet results logged yet';
+    final sorted = [...realMeets]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
     return sorted.first.meetName;
+  }
+
+  /// Upcoming meet/race from Schedule (never photo-upload placeholders).
+  static String nextMeet({
+    List<MeetResult> meetResults = const [],
+    List<SwimScheduleEntry> schedules = const [],
+    DateTime? now,
+  }) {
+    final upcoming = _upcomingScheduleMeet(schedules, now: now);
+    if (upcoming != null) {
+      final title = upcoming.title.trim();
+      if (title.isEmpty) return noUpcomingMeetLabel;
+      return '$title · ${_formatShortDate(upcoming.scheduleDate)}';
+    }
+    // Do not fall back to meet-result names like "Uploaded best times".
+    return noUpcomingMeetLabel;
+  }
+
+  static SwimScheduleEntry? _upcomingScheduleMeet(
+    List<SwimScheduleEntry> schedules, {
+    DateTime? now,
+  }) {
+    if (schedules.isEmpty) return null;
+    final clock = now ?? DateTime.now();
+    final startOfToday = DateTime(clock.year, clock.month, clock.day);
+    final future = schedules.where((entry) {
+      if (!entry.isMeet && !entry.isRace) return false;
+      if (MeetHistoryAnalytics.isSyntheticMeetName(entry.title)) return false;
+      final day = DateTime(
+        entry.scheduleDate.year,
+        entry.scheduleDate.month,
+        entry.scheduleDate.day,
+      );
+      return !day.isBefore(startOfToday);
+    }).toList()
+      ..sort((a, b) {
+        final byDate = a.scheduleDate.compareTo(b.scheduleDate);
+        if (byDate != 0) return byDate;
+        return (a.startTime ?? '').compareTo(b.startTime ?? '');
+      });
+    return future.isEmpty ? null : future.first;
+  }
+
+  static String _formatShortDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}';
   }
 
   static String readiness({

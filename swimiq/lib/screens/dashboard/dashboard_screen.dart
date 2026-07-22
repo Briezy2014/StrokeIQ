@@ -1,77 +1,94 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
-import '../../core/models/subscription_plan.dart';
+import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/motivational_cut.dart';
-import '../../core/utils/swim_analytics.dart';
-import '../../core/utils/swim_time.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../providers/app_providers.dart';
-import '../../widgets/common_widgets.dart';
-import '../../widgets/schedule_depository_section.dart';
+import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
+import '../../widgets/dashboard_membership_plans_card.dart';
+import '../../widgets/dashboard_cuts_pie_chart.dart';
+import '../../widgets/swimiq_rope_climb_card.dart';
+import '../../widgets/swimiq_media_picker.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../membership/membership_screen.dart';
-import '../race_intelligence/race_intelligence_screen.dart';
+import '../../core/gamification/swimiq_badges.dart';
+import '../../core/gamification/swimiq_daily_progress.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _isUploadingPhoto = false;
+
+  Future<void> _uploadProfilePhoto() async {
+    final picked = await pickSwimIqMedia(
+      context,
+      kind: SwimIqMediaKind.image,
+    );
+    if (picked == null) return;
+
+    setState(() => _isUploadingPhoto = true);
+    final error = await ref.read(swimmerDataProvider.notifier).uploadProfilePhoto(
+          fileName: picked.fileName,
+          bytes: picked.bytes,
+        );
+    if (!mounted) return;
+    setState(() => _isUploadingPhoto = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error == null
+              ? 'Profile photo updated.'
+              : 'Could not upload profile photo: $error',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SwimmerScreen(
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
         final meetResults = data.meetResults;
         final personalBests = data.personalBests;
-        final hasAnyActivity = logs.isNotEmpty || meetResults.isNotEmpty;
 
-        if (!hasAnyActivity) {
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            children: [
-              _DashboardHero(
-                displayName: data.displayName(swimmer),
-                swimIqScore: 0,
-                highestCut: 'Start logging',
-                spotlight: null,
-                profile: data.profile,
-                catalog: data.motivationalStandards,
-              ),
-              const SizedBox(height: 16),
-              const EmptyStateMessage(
-                message:
-                    'No swim sessions or meet results yet. Log training or add a meet result to unlock your dashboard.',
-              ),
-              const SizedBox(height: 20),
-              ScheduleDepositorySection(
-                compact: true,
-                onOpenRaceIntelligence: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RaceIntelligenceScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        }
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final email = ref.watch(currentUserProvider)?.email;
+        final showProFeatures =
+            SubscriptionCapabilities.canUseProFeaturesForEmail(
+          subscription,
+          email,
+        );
 
         final snapshot = data.passportSnapshot(swimmer);
-        final spotlight = SwimAnalytics.spotlightPersonalBest(
-          personalBests: personalBests,
-          catalog: data.motivationalStandards,
-          profile: data.profile,
+        final daily = SwimIqDailyProgress.calculate(
+          raceLogs: logs,
+          meetResults: meetResults,
+          videos: data.userFacingVideos,
+          goals: data.goals,
+          analyses: data.userFacingVideoAnalyses,
+          overallSwimIqScore: data.swimIqScore,
         );
-        final subscription = ref.watch(subscriptionStateProvider).value;
-        final dateFormat = DateFormat.yMMMd();
+        final badges = SwimIqBadgeCatalog.evaluate(
+          daily: daily,
+          raceLogs: logs,
+          meetResults: meetResults,
+          goals: data.goals,
+          personalBests: personalBests,
+          videos: data.userFacingVideos,
+          analyses: data.userFacingVideoAnalyses,
+          profile: data.profile,
+          snapshot: snapshot,
+        );
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -80,87 +97,27 @@ class DashboardScreen extends ConsumerWidget {
             _DashboardHero(
               displayName: data.displayName(swimmer),
               swimIqScore: data.swimIqScore,
-              highestCut: snapshot.highestCut,
-              spotlight: spotlight,
-              profile: data.profile,
+              highestCut: showProFeatures
+                  ? snapshot.highestCut
+                  : (logs.isEmpty ? 'Log swims to score' : 'Upgrade for cuts'),
+              climbPercent: daily.scoreRopeClimbPercent,
+              profilePhotoUrl: data.profile?.profilePhotoUrl,
+              isUploadingPhoto: _isUploadingPhoto,
+              onUploadPhoto: _uploadProfilePhoto,
+            ),
+            const SizedBox(height: 16),
+            SwimIqRopeClimbCard(daily: daily, badges: badges),
+            const SizedBox(height: 12),
+            _CutsMixSection(
+              personalBests: personalBests,
+              raceLogs: logs,
               catalog: data.motivationalStandards,
-            ),
-            const SizedBox(height: 16),
-            _ActivityStrip(
-              sessions: logs.length,
-              goals: data.goals.length,
-              meets: meetResults.length,
-              personalBests: personalBests.length,
-              videos: data.userFacingVideoAnalyses.length,
-            ),
-            const SizedBox(height: 16),
-            ScheduleDepositorySection(
-              compact: true,
-              onOpenRaceIntelligence: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RaceIntelligenceScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            _UpgradeCard(
-              subscriptionLabel: subscription?.statusLabel ?? 'Elite trial',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const MembershipScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Recent Activity',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              profile: data.profile,
+              showProFeatures: showProFeatures,
             ),
             const SizedBox(height: 12),
-            ...personalBests.take(5).map(
-              (pb) {
-                final cut = MotivationalCut.labelForSwim(
-                  catalog: data.motivationalStandards,
-                  profile: data.profile,
-                  stroke: pb.stroke,
-                  distance: pb.distance,
-                  course: pb.course,
-                  timeSeconds: pb.timeSeconds,
-                );
-                return _ActivityTile(
-                  title: pb.displayTitle,
-                  subtitle:
-                      '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)} · $cut cut',
-                  trailing: pb.formattedTime,
-                  highlight: cut == snapshot.highestCut,
-                );
-              },
-            ),
-            if (logs.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Text(
-                'Training Progress',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 240,
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _TimeProgressChart(logs: logs),
-                  ),
-                ),
-              ),
-            ],
+            const DashboardMembershipPlansCard(),
+            const SizedBox(height: 8),
           ],
         );
       },
@@ -173,34 +130,25 @@ class _DashboardHero extends StatelessWidget {
     required this.displayName,
     required this.swimIqScore,
     required this.highestCut,
-    required this.spotlight,
-    required this.profile,
-    required this.catalog,
+    required this.climbPercent,
+    this.profilePhotoUrl,
+    this.isUploadingPhoto = false,
+    this.onUploadPhoto,
   });
 
   final String displayName;
   final int swimIqScore;
   final String highestCut;
-  final PersonalBestEntry? spotlight;
-  final SwimmerProfile? profile;
-  final UsaMotivationalStandardsCatalog catalog;
+  final int climbPercent;
+  final String? profilePhotoUrl;
+  final bool isUploadingPhoto;
+  final VoidCallback? onUploadPhoto;
 
   @override
   Widget build(BuildContext context) {
-    final spotlightCut = spotlight == null
-        ? null
-        : MotivationalCut.labelForSwim(
-            catalog: catalog,
-            profile: profile,
-            stroke: spotlight!.stroke,
-            distance: spotlight!.distance,
-            course: spotlight!.course,
-            timeSeconds: spotlight!.timeSeconds,
-          );
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -209,410 +157,254 @@ class _DashboardHero extends StatelessWidget {
             AppColors.primaryDeep,
             AppColors.primary,
             AppColors.accent,
-            AppColors.surfaceLight,
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'WELCOME BACK, ${displayName.toUpperCase()}',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.88),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$swimIqScore',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 56,
-                      fontWeight: FontWeight.w900,
-                      height: 0.95,
-                    ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
-                  const SizedBox(width: 10),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      'SwimIQ\nScore',
-                      style: TextStyle(
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$swimIqScore',
+                      style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        height: 1.05,
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              _CutBadge(label: highestCut, large: true),
-            ],
-          ),
-          if (spotlight != null) ...[
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SPOTLIGHT PB',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
-                      fontSize: 11,
+                    const SizedBox(width: 8),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'SwimIQ Score',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${spotlight!.displayTitle} · ${spotlight!.course}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${spotlight!.formattedTime} · ${spotlight!.sourceLabel}'
-                    '${spotlight!.meetName != null ? ' · ${spotlight!.meetName}' : ''}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (spotlightCut != null) ...[
-                    const SizedBox(height: 10),
-                    _CutBadge(label: spotlightCut),
                   ],
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _HeroChip(label: 'Highest cut: $highestCut'),
+                    _HeroChip(label: '$climbPercent% up the rope'),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
+          const SizedBox(width: 16),
+          _DashboardPhotoUpload(
+            photoUrl: profilePhotoUrl,
+            isUploading: isUploadingPhoto,
+            onUpload: onUploadPhoto,
+          ),
         ],
       ),
     );
   }
 }
 
-class _CutBadge extends StatelessWidget {
-  const _CutBadge({required this.label, this.large = false});
-
-  final String label;
-  final bool large;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: large ? 14 : 10,
-        vertical: large ? 8 : 6,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: AppColors.primaryDeep,
-          fontWeight: FontWeight.w900,
-          fontSize: large ? 16 : 13,
-        ),
-      ),
-    );
-  }
-}
-
-class _ActivityStrip extends StatelessWidget {
-  const _ActivityStrip({
-    required this.sessions,
-    required this.goals,
-    required this.meets,
-    required this.personalBests,
-    required this.videos,
+class _DashboardPhotoUpload extends StatelessWidget {
+  const _DashboardPhotoUpload({
+    this.photoUrl,
+    this.isUploading = false,
+    this.onUpload,
   });
 
-  final int sessions;
-  final int goals;
-  final int meets;
-  final int personalBests;
-  final int videos;
+  final String? photoUrl;
+  final bool isUploading;
+  final VoidCallback? onUpload;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+    const size = 120.0;
+    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _ChipStat(label: 'Sessions', value: '$sessions'),
-        _ChipStat(label: 'Goals', value: '$goals'),
-        _ChipStat(label: 'Meets', value: '$meets'),
-        _ChipStat(label: 'PBs', value: '$personalBests'),
-        _ChipStat(label: 'AI Videos', value: '$videos'),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isUploading ? null : onUpload,
+            customBorder: const CircleBorder(),
+            child: Ink(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  width: 3,
+                ),
+              ),
+              child: ClipOval(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (hasPhoto)
+                      Image.network(
+                        photoUrl!,
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(0, -0.15),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.person_outline,
+                          color: Colors.white70,
+                          size: 52,
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.person_outline,
+                        color: Colors.white70,
+                        size: 52,
+                      ),
+                    if (isUploading)
+                      Container(
+                        color: Colors.black45,
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: double.infinity,
+                          color: Colors.black54,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Icon(
+                            hasPhoto
+                                ? Icons.photo_camera_outlined
+                                : Icons.add_a_photo_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: isUploading ? null : onUpload,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            isUploading
+                ? 'Uploading...'
+                : (hasPhoto ? 'Change photo' : 'Upload photo'),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _ChipStat extends StatelessWidget {
-  const _ChipStat({required this.label, required this.value});
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({required this.label});
 
   final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.comingSoonBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.comingSoonBorder),
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryDark,
-              letterSpacing: 0.8,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UpgradeCard extends StatelessWidget {
-  const _UpgradeCard({
-    required this.subscriptionLabel,
-    required this.onTap,
-  });
-
-  final String subscriptionLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final elite = SubscriptionCatalog.planFor(SubscriptionTier.elite);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Ink(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.textDark,
-              AppColors.primaryDeep,
-            ],
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    subscriptionLabel.toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                      fontSize: 11,
-                  ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Unlock the Elite wild factor',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'AI video coach, pose metrics, and race intelligence from '
-                    '${elite.priceLabel(BillingCycle.monthly)}.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
-          ],
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
         ),
       ),
     );
   }
 }
 
-class _ActivityTile extends StatelessWidget {
-  const _ActivityTile({
-    required this.title,
-    required this.subtitle,
-    required this.trailing,
-    this.highlight = false,
+class _CutsMixSection extends StatelessWidget {
+  const _CutsMixSection({
+    required this.personalBests,
+    required this.raceLogs,
+    required this.catalog,
+    required this.profile,
+    required this.showProFeatures,
   });
 
-  final String title;
-  final String subtitle;
-  final String trailing;
-  final bool highlight;
+  final List<PersonalBestEntry> personalBests;
+  final List<RaceLog> raceLogs;
+  final UsaMotivationalStandardsCatalog catalog;
+  final SwimmerProfile? profile;
+  final bool showProFeatures;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: highlight ? AppColors.primary : Colors.grey.shade200,
-          width: highlight ? 2 : 1,
-        ),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
-      child: ListTile(
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: DashboardCutsPieChart(
+          personalBests: personalBests,
+          raceLogs: raceLogs,
+          catalog: catalog,
+          profile: profile,
+          showProFeatures: showProFeatures,
         ),
-        subtitle: Text(subtitle),
-        trailing: Text(
-          trailing,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-      ),
-    );
-  }
-}
-
-class _TimeProgressChart extends StatelessWidget {
-  const _TimeProgressChart({required this.logs});
-
-  final List<RaceLog> logs;
-
-  static const _strokeColors = {
-    'Freestyle': Color(0xFF009CFF),
-    'Backstroke': Color(0xFF38B6FF),
-    'Breaststroke': Color(0xFF0077C8),
-    'Butterfly': Color(0xFF0B5CAD),
-    'IM': Color(0xFF0B2D4D),
-    'Free': Color(0xFF009CFF),
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = [...logs]..sort((a, b) => a.date.compareTo(b.date));
-    final strokes = sorted.map((log) => log.stroke).toSet().toList();
-
-    final lineBars = <LineChartBarData>[];
-    for (final stroke in strokes) {
-      final strokeLogs = sorted.where((log) => log.stroke == stroke).toList();
-      final spots = <FlSpot>[];
-      for (var i = 0; i < strokeLogs.length; i++) {
-        spots.add(FlSpot(i.toDouble(), strokeLogs[i].timeSeconds));
-      }
-      lineBars.add(
-        LineChartBarData(
-          spots: spots,
-          isCurved: true,
-          color: _strokeColors[stroke] ?? Colors.blue,
-          barWidth: 3,
-          dotData: const FlDotData(show: true),
-        ),
-      );
-    }
-
-    if (lineBars.isEmpty) {
-      return const Center(child: Text('Not enough data for chart.'));
-    }
-
-    return LineChart(
-      LineChartData(
-        gridData: const FlGridData(show: true),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index < 0 || index >= sorted.length) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    DateFormat.Md().format(sorted[index].date),
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 44,
-              getTitlesWidget: (value, meta) => Text(
-                SwimTime.fromSeconds(value),
-                style: const TextStyle(fontSize: 10),
-              ),
-            ),
-          ),
-          topTitles: const AxisTitles(),
-          rightTitles: const AxisTitles(),
-        ),
-        borderData: FlBorderData(show: false),
-        lineBarsData: lineBars,
       ),
     );
   }

@@ -29,7 +29,9 @@ class StripeCheckoutService {
       if (data is Map && data['error'] != null) {
         throw Exception(data['error'].toString());
       }
-      throw Exception('Checkout failed (${response.status}).');
+      throw Exception(
+        'Checkout failed (${response.status}). Please try again shortly.',
+      );
     }
 
     final data = response.data;

@@ -1,0 +1,85 @@
+WHY NOTHING CHANGES ON SWIMIQAPP.COM
+====================================
+
+Two separate blockers keep showing up:
+
+A) Wi-Fi cannot reach GitHub / pub.dev
+   Symptom: GET-LATEST says
+     "Failed to connect to server" / "git fetch failed"
+   Or PUBLISH says BUILD FAILED / pub.dev lookup failed.
+   Result: your PC never gets the new code, or never builds
+   a NEW zip — so GoDaddy keeps the old site.
+
+B) Old zip uploaded after a failed build
+   Symptom: publish failed earlier, but
+     swimiq\build\swimiq-web-godaddy.zip still exists.
+   Uploading that old zip changes nothing.
+
+------------------------------------------------
+LIVE SITE PROOF (still old until A+B are fixed)
+------------------------------------------------
+  still contains: "under about 50 MB"
+  still contains: "Power Index: coming soon (Elite)"
+  still returns:  video analyze max ~25 MB (413)
+  missing: SWIMIQ-FLUTTER-BUILD.txt with today's commit
+  missing: real Power Index scores / 100 MB phone clips
+
+------------------------------------------------
+FAST FIX FOR VIDEO 413 (25 MB server)
+------------------------------------------------
+Double-click: FIX-VIDEO-413-NOW.bat
+  Downloads 100 MB server code + deploys to Supabase.
+  Does NOT need a full git pull if GitHub raw works.
+
+------------------------------------------------
+DO THIS EXACT SEQUENCE
+------------------------------------------------
+0) FIX NETWORK FIRST
+   Double-click: FIX-NETWORK-NOW.bat
+   OR use phone hotspot until BOTH open in Chrome:
+     https://github.com
+     https://pub.dev
+   If either fails, stop — nothing else will work.
+
+1) Desktop\StrokeIQ → GET-LATEST-FIXED-APP.bat
+   Must finish without [FAIL].
+
+2) Desktop\StrokeIQ → PUBLISH-SWIMIQAPP-COM.bat
+   You MUST see:
+     [OK] On branch: cursor/dryland-power-index-b7ef
+     [OK] New-build proof strings found in main.dart.js
+     BUILD + ZIP DONE
+   If BUILD FAILED / pub.dev error:
+     STOP. Do not upload. Fix network and retry.
+
+3) Only AFTER "BUILD + ZIP DONE":
+   Upload:
+     Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+   Extract into GoDaddy public_html (overwrite all)
+
+4) Raise the VIDEO SERVER limit (25 MB → 100 MB):
+   Desktop\StrokeIQ\KARA-GEMINI-FIX-NOW.bat
+   (same file also lives in Desktop\StrokeIQ\swimiq\ )
+   Must say sync-v12 success.
+   If the file is missing: GET-LATEST failed (GitHub blocked) —
+   use phone hotspot, then GET-LATEST again.
+
+5) Proof it worked — open in Chrome:
+     https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt
+   Must show TODAY'S commit.
+   Hard refresh: Ctrl+Shift+R
+
+------------------------------------------------
+WHERE POWER INDEX APPEARS (after publish)
+------------------------------------------------
+  Athlete Passport — Power Index chip (needs birthday/gender + PBs)
+  College Recruiting Hub — Quick snapshot
+  Recruiting résumé — Power Index line
+  Until publish succeeds, live still says "coming soon (Elite)".
+
+------------------------------------------------
+PHONE VIDEO SIZE (after Edge redeploy)
+------------------------------------------------
+  Cloud analysis accepts phone race clips up to ~100 MB.
+  Redeploy analyze-swim-video (step 4) is required for that.
+  Flutter zip publish alone does NOT raise the server cap.

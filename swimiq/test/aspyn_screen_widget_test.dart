@@ -17,9 +17,11 @@ import 'package:swimiq/screens/dashboard/dashboard_screen.dart';
 import 'package:swimiq/screens/goals/goals_screen.dart';
 import 'package:swimiq/screens/meet_results/meet_results_screen.dart';
 import 'package:swimiq/screens/personal_bests/personal_bests_screen.dart';
+import 'package:swimiq/screens/training_log/training_log_screen.dart';
 import 'package:swimiq/screens/usa_standards/usa_standards_screen.dart';
 import 'package:swimiq/screens/video_lab/video_lab_screen.dart';
 import 'package:swimiq/services/auth_service.dart';
+import 'package:swimiq/widgets/swimiq_logo.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 import 'support/subscription_test_helper.dart';
@@ -76,9 +78,6 @@ SwimmerData _buildHarnessData() {
   );
 
   final meetResults = pbTitles.asMap().entries.map((entry) {
-    final parts = entry.value.split(' ');
-    final distance = int.parse(parts.first);
-    final stroke = parts.sublist(1).join(' ');
     return MeetResult(
       swimmerName: _fixture['swimmer'] as String,
       meetName: _fixture['nextMeet'] as String,
@@ -140,7 +139,9 @@ Widget _screenHarness(Widget screen) {
   _harnessData = _buildHarnessData();
   return ProviderScope(
     overrides: [
-      activeSwimmerProvider.overrideWith((ref) => _fixture['swimmer'] as String),
+      activeSwimmerProvider.overrideWith(
+        (ref) => _fixture['swimmer'] as String,
+      ),
       swimmerDataProvider.overrideWith(_HarnessSwimmerDataNotifier.new),
       currentUserProvider.overrideWith((ref) => null),
       ...subscriptionTestOverrides,
@@ -165,48 +166,46 @@ void main() {
       await tester.pumpAndSettle();
 
       final data = _harnessData!;
-      expect(find.textContaining('WELCOME BACK'), findsOneWidget);
-      expect(find.text('${data.swimIqScore}'), findsOneWidget);
-      expect(find.text('${data.raceLogs.length}'), findsOneWidget);
-      expect(find.text('${data.personalBests.length}'), findsWidgets);
-      expect(find.text('${data.goals.length}'), findsWidgets);
-      expect(find.text('${data.meetResults.length}'), findsOneWidget);
       expect(
-        find.text(data.passportSnapshot(_fixture['swimmer'] as String).highestCut),
-        findsWidgets,
+        find.text(data.displayName(_fixture['swimmer'] as String)),
+        findsOneWidget,
       );
+      expect(find.text('${data.swimIqScore}'), findsOneWidget);
+      expect(find.text('Daily Rope Climb'), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('Unlock the Elite wild factor'),
+        find.text('Cuts mix'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      expect(find.text('Unlock the Elite wild factor'), findsOneWidget);
+      expect(find.text('Cuts mix'), findsOneWidget);
+      expect(find.text('Events & USA cuts'), findsNothing);
+      expect(find.text('Log meets'), findsNothing);
+      expect(find.text('Log tab'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('Choose your SwimIQ plan'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Choose your SwimIQ plan'), findsOneWidget);
+      expect(find.text('Add meet'), findsNothing);
+      expect(find.text('Recent Activity'), findsNothing);
+      expect(find.textContaining('Dryland'), findsNothing);
+      expect(find.text('Unlock the Elite wild factor'), findsNothing);
     });
 
     testWidgets('Athlete Passport', (tester) async {
       await tester.pumpWidget(_screenHarness(const AthletePassportV2Screen()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining(_fixture['displayName'] as String), findsWidgets);
-      expect(find.text('RECRUITING PASSPORT'), findsOneWidget);
+      expect(
+        find.textContaining(_fixture['displayName'] as String),
+        findsWidgets,
+      );
+      expect(find.textContaining('USA:'), findsWidgets);
+      expect(find.textContaining('Upload photo'), findsWidgets);
       expect(find.text('Athlete Passport™ Command Center'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('Recruiting snapshot'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Recruiting snapshot'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('Athlete Status'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Athlete Status'), findsOneWidget);
 
       await tester.scrollUntilVisible(
         find.text('Athlete Details'),
@@ -235,11 +234,11 @@ void main() {
 
       expect(find.text('Video Lab'), findsOneWidget);
       expect(
-        find.textContaining(
-          '${_fixture['userFacingVideoCount']} videos · '
-          '${_fixture['analysisCount']} analyses for '
-          '${_fixture['displayName']}',
-        ),
+        find.textContaining('AI coaching from your race footage'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('${_fixture['userFacingVideoCount']} videos'),
         findsOneWidget,
       );
     });
@@ -248,11 +247,12 @@ void main() {
       await tester.pumpWidget(_screenHarness(const GoalsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Swimmer Goals'), findsOneWidget);
+      expect(find.text('Goals'), findsOneWidget);
       expect(
-        find.textContaining('Target times for ${_fixture['displayName']}'),
+        find.textContaining('Targets, progress & USA cuts for'),
         findsOneWidget,
       );
+      expect(find.text('Goal tracker'), findsOneWidget);
     });
 
     testWidgets('Personal Bests', (tester) async {
@@ -261,10 +261,19 @@ void main() {
 
       final pbCount = _harnessData!.personalBests.length;
       expect(find.text('Personal Bests'), findsOneWidget);
-      expect(
-        find.textContaining('$pbCount events tracked'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('$pbCount official meet PBs'), findsOneWidget);
+      expect(find.text('Upload best times'), findsOneWidget);
+      expect(find.byType(SwimIqCompactMark), findsNothing);
+    });
+
+    testWidgets('Training Log', (tester) async {
+      await tester.pumpWidget(_screenHarness(const TrainingLogScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log'), findsOneWidget);
+      expect(find.text('Training & practices'), findsWidgets);
+      expect(find.text('Meets & results'), findsOneWidget);
+      expect(find.byType(SwimIqCompactMark), findsNothing);
     });
 
     testWidgets('Meet Results', (tester) async {
@@ -272,17 +281,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Meet Results'), findsOneWidget);
-      expect(
-        find.textContaining('Latest meet: ${_fixture['nextMeet']}'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Top cut:'), findsOneWidget);
     });
 
     testWidgets('USA Standards', (tester) async {
       await tester.pumpWidget(_screenHarness(const UsaStandardsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('USA Swimming Standards'), findsOneWidget);
+      expect(find.text('USA Standards'), findsWidgets);
       expect(
         find.textContaining('2024-2028 USA Swimming Motivational Standards'),
         findsOneWidget,

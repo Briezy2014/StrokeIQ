@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/utils/supabase_parsers.dart';
+import '../../core/utils/supabase_table_errors.dart';
 import '../models/meet_result.dart';
 import '../models/race_log.dart';
 import '../models/swim_goal.dart';
@@ -192,9 +193,55 @@ class SwimIqRepository {
   }
 
   Future<SwimVideo> insertSwimVideo(SwimVideo video) async {
+    try {
+      return await _insertSwimVideoRow(video.toInsertJson(), fallback: video);
+    } catch (error) {
+      // Live DB may not have swim_videos.user_id yet (migration 005 not applied).
+      if (SupabaseTableErrors.isMissingColumn(
+            error,
+            columnName: 'user_id',
+            tableName: 'swim_videos',
+          ) &&
+          video.userId != null) {
+        final legacy = Map<String, dynamic>.from(video.toInsertJson())
+          ..remove('user_id');
+        try {
+          return await _insertSwimVideoRow(legacy, fallback: video);
+        } catch (_) {
+          throw Exception(SupabaseTableErrors.missingSwimVideosUserIdMessage());
+        }
+      }
+      rethrow;
+    }
+  }
+
+  Future<SwimVideo> updateSwimVideo(SwimVideo video) async {
+    final id = video.id;
+    if (id == null || id.isEmpty) {
+      throw StateError('Cannot update a video without an id.');
+    }
+    final payload = <String, dynamic>{
+      'storage_path': video.storagePath,
+      'video_url': video.videoUrl,
+      if (video.title != null) 'title': video.title,
+      if (video.notes != null) 'notes': video.notes,
+    };
     final response = await _client
         .from('swim_videos')
-        .insert(video.toInsertJson())
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+    return SwimVideo.fromJson(supabaseRowToMap(response));
+  }
+
+  Future<SwimVideo> _insertSwimVideoRow(
+    Map<String, dynamic> payload, {
+    required SwimVideo fallback,
+  }) async {
+    final response = await _client
+        .from('swim_videos')
+        .insert(payload)
         .select()
         .single();
 
@@ -202,24 +249,35 @@ class SwimIqRepository {
     try {
       return SwimVideo.fromJson(row);
     } catch (_) {
-      return video.copyWith(
+      return fallback.copyWith(
         id: parseUuid(row['id']),
-        swimmer: swimmerFromJson(row).isEmpty ? video.swimmer : swimmerFromJson(row),
-        videoUrl: parseOptionalText(row['video_url']) ?? video.videoUrl,
+        swimmer:
+            swimmerFromJson(row).isEmpty ? fallback.swimmer : swimmerFromJson(row),
+        videoUrl: parseOptionalText(row['video_url']) ?? fallback.videoUrl,
       );
     }
   }
 
   Future<List<SwimVideoAnalysis>> fetchVideoAnalyses(String swimmer) async {
-    final response = await _client
-        .from('swim_video_analyses')
-        .select()
-        .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
-        .order('created_at', ascending: false);
+    try {
+      final response = await _client
+          .from('swim_video_analyses')
+          .select()
+          .or('swimmer.eq.$swimmer,swimmer_name.eq.$swimmer')
+          .order('created_at', ascending: false);
 
-    return supabaseRowsToMaps(response)
-        .map(SwimVideoAnalysis.fromJson)
-        .toList();
+      return supabaseRowsToMaps(response)
+          .map(SwimVideoAnalysis.fromJson)
+          .toList();
+    } catch (error) {
+      if (SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        return [];
+      }
+      rethrow;
+    }
   }
 
   Future<SwimVideoAnalysis?> insertVideoAnalysisOptional(
@@ -239,6 +297,53 @@ class SwimIqRepository {
         .select()
         .single();
     return SwimVideoAnalysis.fromSupabaseRow(response);
+  }
+
+  Future<void> deleteSwimVideo(String videoId) async {
+    try {
+      await _client
+          .from('swim_video_analyses')
+          .delete()
+          .eq('swim_video_id', videoId);
+    } catch (error) {
+      if (!SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        rethrow;
+      }
+    }
+
+    final response = await _client
+        .from('swim_videos')
+        .delete()
+        .eq('id', videoId)
+        .select();
+
+    final rows = supabaseRowsToMaps(response);
+    if (rows.isEmpty) {
+      throw StateError(
+        'Video was not removed from the database. Sign in again and retry.',
+      );
+    }
+  }
+
+  /// Removes saved placeholder analyses (failed Gemini / notes-only) so Video Lab
+  /// does not show stale errors before the user taps Analyze again.
+  Future<void> deletePlaceholderAnalysesForVideo(String videoId) async {
+    try {
+      await _client
+          .from('swim_video_analyses')
+          .delete()
+          .eq('swim_video_id', videoId);
+    } catch (error) {
+      if (!SupabaseTableErrors.isMissingTable(
+        error,
+        tableName: 'swim_video_analyses',
+      )) {
+        rethrow;
+      }
+    }
   }
 
   Future<List<UsaTimeStandard>> fetchUsaStandards() async {

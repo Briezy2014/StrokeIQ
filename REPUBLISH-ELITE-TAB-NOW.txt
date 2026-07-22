@@ -1,0 +1,28 @@
+============================================================
+  FIX: Website says "Video" and uses Gemini — REPUBLISH
+============================================================
+
+Your site IS the real Flutter app. The old publish turned Elite OFF on
+purpose, so the tab said "Video" and analysis used Gemini (broken).
+
+New publish turns Elite UI ON for swimiqapp.com and BLOCKS Gemini there.
+
+DO THIS NOW (Desktop\StrokeIQ):
+
+1) Double-click:  GET-LATEST-FIXED-APP.bat
+2) Double-click:  PUBLISH-SWIMIQAPP-COM.bat
+   Wait until zip finishes.
+3) GoDaddy File Manager → open public_html (double-click it)
+4) Upload:  swimiq\build\swimiq-web-godaddy.zip
+5) Extract / overwrite in public_html
+6) Incognito: https://swimiqapp.com
+7) Sign in: demo@swimiqapp.com / SwimIQ
+8) Confirm the nav tab says:  Elite
+   (NOT Video)
+9) Open Elite — you should see a blue info note about workstation demo
+   You should NOT see "Gemini is watching your video"
+
+THEN text the coach (from COACH-ACCESS.md).
+
+To SHOW live analysis today: Part B — START-SWIMIQ-WITH-ELITE.bat
+and screen-share your local Chrome (localhost), not only the website.

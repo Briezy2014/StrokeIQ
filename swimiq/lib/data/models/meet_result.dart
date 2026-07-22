@@ -43,6 +43,7 @@ class MeetResult {
         'event': event,
         'swim_time': swimTime,
         'course': course,
+        if (notes != null && notes!.trim().isNotEmpty) 'notes': notes,
       };
 
   static String _formatDate(DateTime date) =>

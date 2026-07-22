@@ -1,0 +1,18 @@
+# Windows-friendly pins (prebuilt wheels). Use with:
+#   python -m pip install --upgrade pip wheel
+#   python -m pip install --only-binary=:all: -r requirements-windows.txt
+#
+# Prefer Python 3.11 or 3.12 from https://www.python.org/downloads/
+# Python 3.13+ often fails building older numpy/scipy from source.
+
+fastapi>=0.115.0,<1.0
+uvicorn[standard]>=0.32.0,<1.0
+pydantic>=2.9.0,<3.0
+pydantic-settings>=2.6.0,<3.0
+numpy>=1.26.4,<3.0
+scipy>=1.11.4,<2.0
+matplotlib>=3.8,<4.0
+opencv-python-headless>=4.10.0.84,<5.0
+onnxruntime>=1.17,<2
+httpx>=0.27.0,<1.0
+google-genai>=1.0.0,<3.0

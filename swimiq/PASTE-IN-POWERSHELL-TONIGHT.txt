@@ -1,0 +1,82 @@
+# PASTE THIS WHOLE BLOCK INTO WINDOWS POWERSHELL
+# Start menu → type powershell → Enter → paste → Enter
+# This starts LOCAL SwimIQ for the coach (127.0.0.1). Do NOT use swimiqapp.com.
+
+$ErrorActionPreference = 'Continue'
+$paths = @(
+  "$env:USERPROFILE\Desktop\StrokeIQ",
+  "$env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ",
+  "$env:OneDrive\Desktop\StrokeIQ",
+  "$env:OneDrive\Desktop\StrokeIQ\StrokeIQ"
+)
+$root = $null
+foreach ($p in $paths) {
+  if ($p -and (Test-Path "$p\swimiq\pubspec.yaml")) { $root = $p; break }
+}
+if (-not $root) {
+  Write-Host 'ERROR: Could not find Desktop\StrokeIQ\swimiq' -ForegroundColor Red
+  Write-Host 'In File Explorer open Desktop\StrokeIQ\swimiq and tell Aspyn that path.'
+  Read-Host 'Press Enter'; exit 1
+}
+
+$swimiq = Join-Path $root 'swimiq'
+$elite  = Join-Path $root 'services\video_analysis'
+Write-Host "FOUND: $root" -ForegroundColor Green
+
+# --- Elite server in a second window ---
+if (-not (Test-Path $elite)) {
+  Write-Host "ERROR: Missing $elite" -ForegroundColor Red
+  Read-Host 'Press Enter'; exit 1
+}
+$eliteCmd = @"
+`$ErrorActionPreference='Continue'
+Set-Location '$elite'
+Write-Host 'Elite Video Lab — KEEP THIS WINDOW OPEN' -ForegroundColor Cyan
+if (Test-Path '.\.venv\Scripts\python.exe') { `$py = '.\.venv\Scripts\python.exe' } else { `$py = 'python' }
+& `$py -m uvicorn app.main:app --host 127.0.0.1 --port 8080
+"@
+Start-Process powershell -ArgumentList @('-NoExit','-ExecutionPolicy','Bypass','-Command', $eliteCmd)
+
+Write-Host 'Waiting for Elite on http://127.0.0.1:8080 ...'
+$ready = $false
+for ($i = 1; $i -le 40; $i++) {
+  Start-Sleep -Seconds 3
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8080/health' -TimeoutSec 2
+    if ($r.StatusCode -eq 200) { $ready = $true; break }
+  } catch {}
+  Write-Host "  try $i/40..."
+}
+if (-not $ready) {
+  Write-Host 'Elite did not start. Look at the other PowerShell window for the error.' -ForegroundColor Yellow
+  Write-Host 'Common fix: winget install Gyan.FFmpeg   then run this paste again.'
+  Read-Host 'Press Enter'; exit 1
+}
+Write-Host 'Elite is UP.' -ForegroundColor Green
+
+# --- Flutter app in Chrome on THIS PC ---
+Set-Location $swimiq
+if (-not (Test-Path '.\.env')) {
+  Write-Host 'ERROR: swimiq\.env missing (Supabase keys).' -ForegroundColor Red
+  Read-Host 'Press Enter'; exit 1
+}
+$envMap = @{}
+Get-Content '.\.env' | ForEach-Object {
+  if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
+  $k,$v = $_.Split('=',2)
+  $envMap[$k.Trim()] = $v.Trim().Trim('"').Trim("'")
+}
+$url = $envMap['SUPABASE_URL']
+$key = $envMap['SUPABASE_ANON_KEY']
+$api = $envMap['ANALYSIS_API_BASE_URL']
+if ([string]::IsNullOrWhiteSpace($api)) { $api = 'http://127.0.0.1:8080' }
+$v2 = $envMap['VIDEO_ENGINE_V2']; if ([string]::IsNullOrWhiteSpace($v2)) { $v2 = 'true' }
+
+Write-Host 'Starting Chrome on 127.0.0.1 (first compile can take a few minutes)...'
+flutter pub get
+flutter run -d chrome `
+  --dart-define="SUPABASE_URL=$url" `
+  --dart-define="SUPABASE_ANON_KEY=$key" `
+  --dart-define="VIDEO_ENGINE_V2=$v2" `
+  --dart-define="ANALYSIS_API_BASE_URL=$api" `
+  --dart-define=VIDEO_ENGINE_V2_DUAL_RUN=false

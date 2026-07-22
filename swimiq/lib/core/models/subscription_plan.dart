@@ -10,7 +10,8 @@ class SubscriptionPlan {
     required this.monthlyPriceUsd,
     required this.annualPriceUsd,
     required this.features,
-    required this.isFeatured,
+    this.isFeatured = false,
+    this.badgeLabel,
   });
 
   final SubscriptionTier tier;
@@ -20,6 +21,7 @@ class SubscriptionPlan {
   final double annualPriceUsd;
   final List<String> features;
   final bool isFeatured;
+  final String? badgeLabel;
 
   double priceFor(BillingCycle cycle) =>
       cycle == BillingCycle.monthly ? monthlyPriceUsd : annualPriceUsd;
@@ -30,7 +32,7 @@ class SubscriptionPlan {
     final price = priceFor(cycle);
     return cycle == BillingCycle.monthly
         ? '\$${price.toStringAsFixed(2)}/mo'
-        : '\$${price.toStringAsFixed(0)}/yr';
+        : '\$${price.toStringAsFixed(2)}/yr';
   }
 
   String? savingsLabel(BillingCycle cycle) {
@@ -63,45 +65,61 @@ abstract final class SubscriptionCatalog {
   static const plans = [
     SubscriptionPlan(
       tier: SubscriptionTier.basic,
-      name: 'Basic',
-      tagline: 'Train smarter every day',
+      name: 'SwimIQ Basic',
+      tagline: 'Track your progress, crush your goals, and build momentum every week',
       monthlyPriceUsd: 4.99,
       annualPriceUsd: 39.99,
       isFeatured: false,
       features: [
-        'SwimIQ Dashboard',
-        'Training log',
-        'Goals tracking',
-        'Session history',
+        'Dashboard — rope climb, cuts progress & your weekly snapshot',
+        'Training log — log swims, practices & upload meet/practice photos',
+        'Goals with visual progress charts from your real times',
+        'Weekly Progress Report — see how you\'re trending',
+        'In-app personal bests & full time history',
+        'Progress charts, streaks, badges & milestone celebrations',
+        'Perfect for new club swimmers, recreational athletes & anyone building consistency',
       ],
     ),
     SubscriptionPlan(
       tier: SubscriptionTier.pro,
-      name: 'Pro',
-      tagline: 'Competition-ready analytics',
+      name: 'SwimIQ Pro',
+      tagline: 'The competitive edge — official times, recruiting tools & train smarter outside the pool',
       monthlyPriceUsd: 9.99,
       annualPriceUsd: 89.99,
-      isFeatured: false,
+      isFeatured: true,
+      badgeLabel: 'Most Popular',
       features: [
         'Everything in Basic',
-        'Personal bests + meet results',
-        'Motivational cuts & USA standards',
-        'Athlete Passport',
+        'Official PBs, meet results & USA Swimming motivational cuts',
+        'Athlete Passport & College Recruiting Hub — your digital swim résumé',
+        'Best Times Résumé, Meet History & recruiting snapshot exports',
+        'Video Lab — upload, tag & organize race & technique videos',
+        'AI Dryland Coach — strength, core, mobility & injury prevention (5–15 min sessions)',
+        'Power Index — competitive score from USA cuts, PBs, and progression',
+        'Event-specific improvement tips tied to your actual times',
+        'Goal progression analytics powered by meet results & training logs',
+        'Built for USA Swimming athletes chasing cuts, PRs & college interest',
       ],
     ),
     SubscriptionPlan(
       tier: SubscriptionTier.elite,
-      name: 'Elite',
-      tagline: 'The full SwimIQ performance stack',
+      name: 'SwimIQ Elite',
+      tagline: 'Your AI performance coach — video analysis, race intelligence & recruiting insights',
       monthlyPriceUsd: 19.99,
       annualPriceUsd: 149.99,
-      isFeatured: true,
+      isFeatured: false,
+      badgeLabel: 'Advanced AI Performance',
       features: [
         'Everything in Pro',
-        'Video Lab + SwimIQ AI coach',
-        'Pose metrics & race intelligence',
-        'Priority dashboard insights',
-        'Recruiting center',
+        'AI Video Stroke Analysis — mechanics, kick, catch, turns & underwater',
+        'Pros/cons coach summary with youth-friendly notes & estimated time savings',
+        'Race Intelligence — pacing, split analysis, tempo shifts & fatigue detection',
+        'AI Performance Reports with your top improvement priorities',
+        'Personalized race strategy recommendations for your events',
+        'Season performance insights across meets & training blocks',
+        'AI Recruiting Intelligence — college program match, projections & talking points',
+        'Unlimited SwimIQ AI video analyses in Video Lab',
+        'For serious competitors who want data-driven coaching between pool sessions',
       ],
     ),
   ];

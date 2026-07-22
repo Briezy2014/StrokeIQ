@@ -4,6 +4,9 @@
 
 People cannot install the iPhone/Android app yet, but they **can use SwimIQ in Chrome/Safari** if you put the **Flutter web build** on GoDaddy at **swimiqapp.com**.
 
+**Do not upload `swimiq/website/` (marketing brochure) as the homepage.**  
+That is why the live site was stuck on the old page. Use `PUBLISH-SWIMIQAPP-COM.bat` → upload `build/web` / the zip.
+
 That is how they **see and try the functionality** before the app stores launch.
 
 > **If https://swimiqapp.com shows a security / certificate warning:** the Flutter files may already be uploaded — fix SSL first. See **[WEB_SITE_STATUS.md](WEB_SITE_STATUS.md)**.

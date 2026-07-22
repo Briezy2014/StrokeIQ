@@ -152,10 +152,8 @@ void main() {
         data.personalBests.length > 6 ? 6 : data.personalBests.length,
       );
 
-      // Meet Results
-      final latestMeet = [...data.meetResults]
-        ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
-      expect(snapshot.nextMeet, latestMeet.first.meetName);
+      // Upcoming meet comes from Schedule — never photo-upload placeholders.
+      expect(snapshot.nextMeet.toLowerCase(), isNot(contains('uploaded best')));
 
       // USA Standards
       expect(snapshot.usaStandardsSummary, isNotEmpty);

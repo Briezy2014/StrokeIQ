@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -92,6 +93,7 @@ def run_detection_and_tracking(
     artifact_root: Path,
     options: dict[str, Any] | None = None,
     detector: DetectorAdapter | None = None,
+    on_progress: Callable[[float], None] | None = None,
 ) -> DetectionTrackingResult:
     options = options or {}
     det = build_detector(settings, override=detector)
@@ -107,6 +109,13 @@ def run_detection_and_tracking(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     interval = max(1, int(settings.frame_processing_interval))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    max_duration_s = float(getattr(settings, "max_analysis_duration_s", 0) or 0)
+    max_frame_exclusive: int | None = None
+    if max_duration_s > 0 and fps > 0:
+        max_frame_exclusive = max(1, int(max_duration_s * fps))
+        if total_frames > 0:
+            max_frame_exclusive = min(max_frame_exclusive, total_frames)
 
     tracker = SwimmerTracker(
         max_lost_frames=settings.max_lost_frames,
@@ -121,7 +130,9 @@ def run_detection_and_tracking(
     consecutive_target_misses = 0
     lost_extended = False
     had_target = False
+    truncated_for_speed = False
     selected_track_id: str | None = options.get("target_track_id")
+    last_progress_emit = -1
 
     log_stage(
         logger,
@@ -131,16 +142,25 @@ def run_detection_and_tracking(
         message="Starting detection/tracking loop",
         detector=det.model_name,
         interval=interval,
+        max_analysis_duration_s=max_duration_s or None,
     )
 
     frame_idx = 0
     while True:
+        if max_frame_exclusive is not None and frame_idx >= max_frame_exclusive:
+            # Only mark truncated when we stopped before the real end of the clip.
+            if total_frames <= 0 or max_frame_exclusive < total_frames:
+                truncated_for_speed = True
+            break
+        # Skip decode work on frames we will not infer — much faster on phone clips.
+        if frame_idx % interval != 0:
+            if not cap.grab():
+                break
+            frame_idx += 1
+            continue
         ok, frame = cap.read()
         if not ok:
             break
-        if frame_idx % interval != 0:
-            frame_idx += 1
-            continue
 
         # Optional inference resize for speed; keep coords in original space via scale.
         infer_frame = frame
@@ -189,14 +209,20 @@ def run_detection_and_tracking(
         elif had_target:
             consecutive_target_misses += 1
 
+        # Mark extended loss, but keep reading the clip. Splash, underwater
+        # phases, and phone pans routinely hide the body for longer than a
+        # short threshold; aborting mid-video threw away usable track data.
         if had_target and consecutive_target_misses > settings.max_target_lost_frames:
             lost_extended = True
-            cap.release()
-            raise DetectionError(
-                "TARGET_LOST_EXTENDED",
-                "Target swimmer lost for an extended period; refusing silent continuation",
-                retriable=False,
-            )
+
+        if on_progress is not None:
+            denom = max_frame_exclusive or total_frames or max(frame_idx + 1, 1)
+            pct = min(0.98, (frame_idx + 1) / float(denom))
+            bucket = int(pct * 20)  # emit ~every 5%
+            if bucket != last_progress_emit:
+                last_progress_emit = bucket
+                # Map into detecting_swimmer band 0.45–0.72
+                on_progress(0.45 + (0.27 * pct))
 
         frame_idx += 1
 
@@ -226,12 +252,18 @@ def run_detection_and_tracking(
 
     limitations: list[str] = []
     completed_with_limitations = False
+    if truncated_for_speed and max_duration_s > 0:
+        limitations.append(
+            f"Analyzed the first {max_duration_s:.0f}s of the clip for speed"
+        )
+        completed_with_limitations = True
     if target.uncertain:
         limitations.append(f"Target selection uncertain: {target.reason}")
         completed_with_limitations = True
-    if coverage < 0.85:
+    # Swim footage often has splash/occlusion; only surface very low coverage.
+    if coverage < 0.20:
         limitations.append(
-            f"Target track coverage only {coverage:.0%} of processed frames"
+            "Parts of the race were hard to track clearly (splash, underwater, or camera angle)."
         )
         completed_with_limitations = True
     if frames_with_detections == 0:
@@ -240,9 +272,50 @@ def run_detection_and_tracking(
             "Detector returned no person/swimmer detections for the video",
             retriable=False,
         )
-    if any(e.get("type") == "lost_track" for e in tracker.events):
-        limitations.append("One or more tracks were lost during the clip")
+
+    # Prefer completing with limitations over hard-fail on messy phone clips.
+    # Only refuse when there is no usable target track at all.
+    min_hits = 3
+    usable_track = (
+        target_track is not None and len(target_track.observations) >= min_hits
+    )
+    if not usable_track:
+        # Fall back to any track with enough hits (target selection may be empty).
+        best = max(
+            (t for t in tracker.tracks if t.observations),
+            key=lambda t: len(t.observations),
+            default=None,
+        )
+        if best is not None and len(best.observations) >= min_hits:
+            target_track = best
+            coverage = compute_target_coverage(target_track, processed_frames)
+            target = select_target(
+                tracker.tracks,
+                mode="track_id",
+                track_id=best.track_id,
+                frame_width=width,
+                frame_height=height,
+                min_confidence=0.0,
+            )
+            usable_track = True
+            limitations.append(
+                "Automatic target was weak; used the strongest available track"
+            )
+            completed_with_limitations = True
+
+    if lost_extended or coverage < float(settings.min_usable_target_coverage):
+        limitations.append(
+            "Swimmer was hard to see for part of the clip (splash, underwater, "
+            "or camera movement). Analysis used the clearest portions."
+        )
         completed_with_limitations = True
+
+    if not usable_track:
+        raise DetectionError(
+            "TARGET_LOST_EXTENDED",
+            "The swimmer was not visible clearly enough for a reliable analysis",
+            retriable=False,
+        )
 
     # Artifacts
     det_path = artifact_root / "detections.json"
@@ -290,23 +363,40 @@ def run_detection_and_tracking(
     }, "config": _config_snapshot(settings)})
     write_json(events_path, {"events": tracker.events})
 
-    annotated = write_annotated_tracking_video(
-        video_path=video_path,
-        out_path=annotated_path,
-        tracks=tracker.tracks,
-        target_track_id=target.track_id,
-        frame_interval=interval,
-        fps=fps,
-    )
-    target_frame_paths = save_target_frames(
-        video_path=video_path,
-        out_dir=target_frames_dir,
-        target_track=target_track,
-    )
-
-    if annotated is None:
-        limitations.append("Annotated tracking video could not be written")
-        completed_with_limitations = True
+    # Overlay rewrite is a full second video pass — skip unless explicitly requested.
+    want_overlay = bool(options.get("generate_overlay", False))
+    annotated = None
+    if want_overlay:
+        if on_progress is not None:
+            on_progress(0.70)
+        annotate_interval = interval * max(
+            1, int(getattr(settings, "annotated_frame_stride", 1))
+        )
+        annotated = write_annotated_tracking_video(
+            video_path=video_path,
+            out_path=annotated_path,
+            tracks=tracker.tracks,
+            target_track_id=target.track_id,
+            frame_interval=annotate_interval,
+            fps=fps,
+            max_frames=max_frame_exclusive,
+        )
+        if annotated is None:
+            limitations.append("Annotated tracking video could not be written")
+            completed_with_limitations = True
+    # Skip still extraction on the fast path (no overlay) — big win on short clips.
+    target_frame_paths: list[str] = []
+    if want_overlay:
+        if on_progress is not None:
+            on_progress(0.71)
+        target_frame_paths = save_target_frames(
+            video_path=video_path,
+            out_dir=target_frames_dir,
+            target_track=target_track,
+            max_frames=4,
+        )
+    if on_progress is not None:
+        on_progress(0.72)
 
     return DetectionTrackingResult(
         detections=detections_payload["detections"],
@@ -341,7 +431,10 @@ def _config_snapshot(settings: Settings) -> dict[str, Any]:
         "tracking_confidence_threshold": settings.tracking_confidence_threshold,
         "max_lost_frames": settings.max_lost_frames,
         "max_target_lost_frames": settings.max_target_lost_frames,
+        "min_usable_target_coverage": settings.min_usable_target_coverage,
         "frame_processing_interval": settings.frame_processing_interval,
+        "max_analysis_duration_s": settings.max_analysis_duration_s,
+        "annotated_frame_stride": settings.annotated_frame_stride,
         "inference_resolution": settings.inference_resolution,
         "max_active_tracks": settings.max_active_tracks,
         "detector_backend": settings.detector_backend,

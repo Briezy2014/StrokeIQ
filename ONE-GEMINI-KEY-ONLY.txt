@@ -1,0 +1,13 @@
+ONE Gemini key only
+
+In Desktop\StrokeIQ\swimiq\.env keep exactly ONE line like:
+
+  GEMINI_API_KEY=your_key_here
+
+If you pasted two keys, delete the extra GEMINI_API_KEY= line.
+
+Then run:
+
+  START-SWIMIQ-WITH-ELITE.bat
+
+Do not hunt other FIX-*.bat files.

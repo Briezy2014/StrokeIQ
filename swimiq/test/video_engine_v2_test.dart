@@ -111,8 +111,36 @@ void main() {
         contains('target swimmer'),
       );
       expect(
+        VideoEngineV2Service.userMessageForErrorCode('TARGET_LOST_EXTENDED'),
+        contains('lost sight'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('NO_DETECTIONS'),
+        contains('detect a swimmer'),
+      );
+      expect(
         VideoEngineV2Service.userMessageForErrorCode('INSUFFICIENT_POSE'),
-        contains('pose'),
+        contains('Retry analysis'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('POSE_DEPS_MISSING'),
+        contains('Phone coaching'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode(
+          'INTERNAL_ERROR',
+          fallback:
+              "Pose dependency stack not ready: missing=['torch'] errors=[\"torch: No module named 'torch'\"]",
+        ),
+        contains('Phone coaching'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode(
+          'INTERNAL_ERROR',
+          fallback:
+              "Pose dependency stack not ready: missing=['torch'] errors=[\"torch: No module named 'torch'\"]",
+        ),
+        isNot(contains('No module named')),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('SERVER_UNAVAILABLE'),
@@ -124,11 +152,19 @@ void main() {
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('GEMINI_REPORT_UNAVAILABLE'),
-        contains('report'),
+        contains('GEMINI_API_KEY'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('GEMINI_ERROR'),
+        contains('rejected'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('UPLOAD_FAILED'),
-        contains('upload'),
+        contains('download'),
+      );
+      expect(
+        VideoEngineV2Service.userMessageForErrorCode('DOWNLOAD_TIMEOUT'),
+        contains('timed out'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('AUTHENTICATION_EXPIRED'),
@@ -159,6 +195,14 @@ void main() {
         expect(request.headers['Authorization'], 'Bearer test-token');
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['storage_path'], 'user-1/clip.mp4');
+        final options = body['options'] as Map<String, dynamic>;
+        // Launch phone-friendly defaults: sensors enrich, overlay stays off.
+        expect(options['run_pose_stage'], isTrue);
+        expect(options['run_underwater_analysis'], isTrue);
+        expect(options['run_turn_analysis'], isTrue);
+        expect(options['run_finish_analysis'], isTrue);
+        expect(options['attach_evidence_images'], isTrue);
+        expect(options['generate_overlay'], isFalse);
         return http.Response(
           jsonEncode({
             'job_id': 'job-1',
@@ -206,6 +250,57 @@ void main() {
       );
     });
 
+    test('checkHealth reports reachable Elite server', () async {
+      final service = serviceWith((request) async {
+        expect(request.method, 'GET');
+        expect(request.url.path, '/health');
+        return http.Response(
+          jsonEncode({
+            'status': 'ok',
+            'engine_version': 'elite-0.9.0',
+            'ffmpeg_available': true,
+            'ffprobe_available': true,
+            'storage_download_configured': true,
+          }),
+          200,
+        );
+      });
+      final health = await service.checkHealth();
+      expect(health.reachable, isTrue);
+      expect(health.mediaToolsReady, isTrue);
+      expect(health.storageConfigured, isTrue);
+      expect(health.engineVersion, 'elite-0.9.0');
+    });
+
+    test('checkHealth rejects stale Elite server without storage field', () async {
+      final service = serviceWith((request) async {
+        return http.Response(
+          jsonEncode({
+            'status': 'ok',
+            'engine_version': 'elite-0.9.0',
+            'ffmpeg_available': true,
+            'ffprobe_available': true,
+          }),
+          200,
+        );
+      });
+      final health = await service.checkHealth();
+      expect(health.storageConfigured, isFalse);
+      expect(health.message, contains('OUT OF DATE'));
+    });
+
+    test('checkHealth reports unreachable server', () async {
+      final service = VideoEngineV2Service(
+        client: MockClient((_) async => throw Exception('connection refused')),
+        accessTokenGetter: () async => 'test-token',
+        baseUrl: 'http://analysis.test',
+      );
+      final health = await service.checkHealth();
+      expect(health.reachable, isFalse);
+      expect(health.message, contains('Elite server is OFF'));
+      expect(health.message, contains('START-SWIMIQ-WITH-ELITE.bat'));
+    });
+
     test('unauthorized result access error mapping', () async {
       final service = serviceWith(
         (_) async => http.Response('{"detail":"forbidden"}', 403),
@@ -226,13 +321,13 @@ void main() {
       var calls = 0;
       final service = serviceWith((request) async {
         calls++;
-        final stage = calls == 1 ? 'validating' : 'estimating_pose';
+        final stage = calls == 1 ? 'downloading' : 'estimating_pose';
         return http.Response(
           jsonEncode({
             'job_id': 'job-2',
             'status': stage,
             'stage': stage,
-            'progress': calls == 1 ? 0.1 : 0.4,
+            'progress': calls == 1 ? 0.08 : 0.4,
             'engine_version': 'elote-0.1.0',
             'video_id': 'vid-1',
             'created_at': '2026-07-17T00:00:00Z',
@@ -243,7 +338,7 @@ void main() {
       });
 
       final first = await service.getStatus('job-2');
-      expect(first.stageLabel, 'Validating video');
+      expect(first.stageLabel, 'Downloading video');
       final second = await service.getStatus('job-2');
       expect(second.stageLabel, 'Estimating pose');
       // Progress exists but UI must use stage text, not invent %.

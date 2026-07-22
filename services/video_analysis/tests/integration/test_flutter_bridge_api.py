@@ -142,7 +142,7 @@ def test_report_retrieval_when_present(api_client):
         "report": {
             "status": "validated",
             "summary": "Steady butterfly rhythm.",
-            "model_name": "gemini-2.5-flash",
+            "model_name": "gemini-3.5-flash",
         },
     }
     job.butterfly = {"metrics": [{"name": "stroke_rate", "value": 40, "unit": "strokes/min"}], "events": []}
@@ -152,6 +152,58 @@ def test_report_retrieval_when_present(api_client):
     assert results.status_code == 200
     assert results.json()["report"]["summary"] == "Steady butterfly rhythm."
     assert results.json()["metrics"]
+
+
+def test_nested_stored_coaching_report_is_flattened_for_flutter(api_client):
+    client, store, settings = api_client
+    job = AnalysisJob(
+        job_id=new_job_id(),
+        video_id="vid-3b",
+        engine_version=settings.engine_version,
+        request_payload={},
+    )
+    job.owner_user_id = "local-dev-user"
+    job.report = {
+        "gemini_succeeded": True,
+        "report": {
+            "status": "validated",
+            "model_name": "gemini-3.5-flash",
+            "report": {
+                "summary": "Nested body summary for the coach.",
+                "strengths": [
+                    {
+                        "text": "Steady rhythm through the middle of the pool.",
+                        "confidence_band": "moderate",
+                        "metric_ids": ["tracking:target_coverage"],
+                        "event_ids": [],
+                    }
+                ],
+                "priority_improvements": [
+                    {
+                        "observation": {
+                            "text": "Keep the camera side-on for clearer review.",
+                            "confidence_band": "moderate",
+                            "metric_ids": ["tracking:target_coverage"],
+                            "event_ids": [],
+                        },
+                        "drills": ["Film one length from the side."],
+                    }
+                ],
+                "limitations": ["Depends on video quality and camera angle."],
+                "confidence_statement": "Confidence follows tracking visibility on this clip.",
+                "disclaimer": "Tips depend on video quality and camera angle.",
+            },
+        },
+    }
+    _force_status(job, JobStatus.completed)
+    store.save(job)
+    results = client.get(f"/v1/analyses/{job.job_id}/results")
+    assert results.status_code == 200
+    report = results.json()["report"]
+    assert report["summary"] == "Nested body summary for the coach."
+    assert report["strengths"] == ["Steady rhythm through the middle of the pool."]
+    assert report["priority_improvements"][0]["title"].startswith("Keep the camera")
+    assert report["gemini_succeeded"] is True
 
 
 def test_gemini_failure_keeps_deterministic_metrics(api_client):

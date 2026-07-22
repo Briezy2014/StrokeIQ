@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_event_parser.dart';
 import '../../core/utils/swim_time.dart';
@@ -10,6 +11,8 @@ import '../../data/models/meet_result.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/swimiq_event_card.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -151,9 +154,14 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
+            SwimIqPageHero(
               title: 'Meet Results',
-              subtitle: 'Latest meet: ${snapshot.nextMeet}',
+              subtitle: 'Your meet times and motivational cuts',
+              stats: [
+                if (data.meetResults.isNotEmpty)
+                  SwimIqHeroStat('${data.meetResults.length} results'),
+                SwimIqHeroStat('Top cut: ${snapshot.highestCut}'),
+              ],
             ),
             const SizedBox(height: 16),
             Form(
@@ -242,35 +250,44 @@ class _MeetResultsScreenState extends ConsumerState<MeetResultsScreen> {
                           course: result.course,
                           timeSeconds: result.swimTime,
                         );
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(result.event),
-                      subtitle: Text(
-                        '${result.meetName} · ${result.course} · '
-                        '${dateFormat.format(result.meetDate)} · '
+                  return SwimIqEventCard(
+                    title: result.event,
+                    subtitle:
+                        '${result.meetName} · ${dateFormat.format(result.meetDate)} · '
                         '${cut ?? 'Below B'} cut',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
+                    highlight: cut == snapshot.highestCut,
+                    trailingActions: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
                             SwimTime.fromSeconds(result.swimTime),
-                            style: const TextStyle(fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
-                          PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'delete') _deleteResult(result);
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'delete') _deleteResult(result);
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   );
                 },

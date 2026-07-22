@@ -153,6 +153,33 @@ Change the password in Supabase after your first demo if you want.
 
 ---
 
+# Troubleshooting — "Checkout error: Failed to fetch"
+
+This means the app could not reach the Supabase Edge Function. It is **not** because you have Elite trial access.
+
+**Fix checklist:**
+
+1. Deploy functions (from `swimiq` folder with Supabase CLI linked):
+   ```bash
+   supabase functions deploy create-stripe-checkout
+   supabase functions deploy stripe-webhook
+   ```
+   Or double-click **`DEPLOY-STRIPE-CHECKOUT.bat`** on Windows.
+
+2. Supabase → **Edge Functions → Secrets** — all of these must exist:
+   - `STRIPE_SECRET_KEY` (Stripe test secret `sk_test_...`)
+   - `STRIPE_PRICE_BASIC_MONTHLY` through `STRIPE_PRICE_ELITE_ANNUAL` (6 price IDs)
+   - `STRIPE_WEBHOOK_SECRET` (after webhook is created)
+
+3. Stripe → **Developers → Webhooks** — endpoint must point to your project:
+   `https://bryurwyeosbffvfpdbv.supabase.co/functions/v1/stripe-webhook`
+
+4. **Bank account** is only needed when you go **Live** in Stripe (real money). Test mode works without payouts configured.
+
+5. **Founder / Elite trial accounts** — Briezy login and free Elite trial show **Included** or **Trial** (button disabled). Regular paying customers use **Choose** → Stripe Checkout.
+
+---
+
 # PART F — Go live
 
 1. Stripe: complete business verification + add Bluevine bank

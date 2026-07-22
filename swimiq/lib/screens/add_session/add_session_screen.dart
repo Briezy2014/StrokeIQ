@@ -8,6 +8,7 @@ import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 
@@ -136,10 +137,12 @@ class _AddSessionScreenState extends ConsumerState<AddSessionScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
-            SwimIqScreenHeader(
-              title: 'Add Swim Session',
-              subtitle:
-                  'Log training for ${data.displayName(swimmer)}. Enter times like 35.43, 1:24.32, or 5:31.43.',
+            SwimIqPageHero(
+              title: 'Add Session',
+              subtitle: 'Log training for ${data.displayName(swimmer)}',
+              stats: [
+                SwimIqHeroStat('${data.raceLogs.length} sessions logged'),
+              ],
             ),
             const SizedBox(height: 16),
             Form(

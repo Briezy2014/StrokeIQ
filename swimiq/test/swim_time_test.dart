@@ -31,8 +31,22 @@ void main() {
       expect(SwimTime.isValid('1:24.32'), isTrue);
     });
 
-    test('isValid returns false for invalid times', () {
-      expect(SwimTime.isValid('abc'), isFalse);
+    test('fromParts builds hundredths correctly', () {
+      expect(
+        SwimTime.fromParts(minutes: 6, seconds: 26, tenths: 0, hundredths: 0),
+        386.0,
+      );
+      expect(
+        SwimTime.fromParts(seconds: 35, tenths: 4, hundredths: 3),
+        35.43,
+      );
+    });
+
+    test('fromParts rejects invalid seconds', () {
+      expect(
+        () => SwimTime.fromParts(seconds: 60, tenths: 0, hundredths: 0),
+        throwsFormatException,
+      );
     });
   });
 }

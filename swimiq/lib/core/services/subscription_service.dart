@@ -1,6 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/demo_account_constants.dart';
+import '../constants/founder_account_constants.dart';
+import '../constants/master_account_constants.dart';
 import '../models/subscription_plan.dart';
 
 class SubscriptionState {
@@ -138,6 +141,11 @@ class SubscriptionService {
     );
 
     state = await _mergeServerState(state);
+    // Always force Elite for demo/master even if Supabase row is missing/stale.
+    final email = _client?.auth.currentUser?.email;
+    if (isBuiltInEliteEmail(email)) {
+      state = await _persistFounderElite(state);
+    }
     return state;
   }
 
@@ -146,10 +154,37 @@ class SubscriptionService {
     return current;
   }
 
+  /// Demo + master + founder emails always get full Elite (no paywall).
+  static bool isBuiltInEliteEmail(String? email) {
+    final normalized = email?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return false;
+    return FounderAccountConstants.isFounderEmail(normalized) ||
+        normalized == DemoAccountConstants.email.toLowerCase() ||
+        normalized == MasterAccountConstants.email.toLowerCase();
+  }
+
+  /// Re-apply Elite when auth session is available (call after login / refresh).
+  Future<SubscriptionState> ensureBuiltInEliteIfNeeded(
+    SubscriptionState current, {
+    String? email,
+  }) async {
+    final resolved = email ?? _client?.auth.currentUser?.email;
+    if (!isBuiltInEliteEmail(resolved)) return current;
+    if (current.isDemoMaster &&
+        current.tier == SubscriptionTier.elite &&
+        current.hasActiveServerPlan) {
+      return current;
+    }
+    return _persistFounderElite(current);
+  }
+
   Future<SubscriptionState> _mergeServerState(SubscriptionState local) async {
     final client = _client;
     final user = client?.auth.currentUser;
     if (client == null || user == null) return local;
+
+    final founder = FounderAccountConstants.isFounderEmail(user.email);
+    final builtInElite = isBuiltInEliteEmail(user.email);
 
     try {
       final row = await client
@@ -157,24 +192,50 @@ class SubscriptionService {
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
-      if (row == null) return local;
 
-      final isDemo = row['is_demo_master'] == true;
+      if (row == null) {
+        return builtInElite ? await _persistFounderElite(local) : local;
+      }
+
+      final isDemo =
+          row['is_demo_master'] == true || founder || builtInElite;
       final status = row['status'] as String?;
-      final tier = _parseTier(row['tier'] as String?);
+      final tier = builtInElite
+          ? SubscriptionTier.elite
+          : _parseTier(row['tier'] as String?);
       final cycle = row['billing_cycle'] == BillingCycle.annual.name
           ? BillingCycle.annual
           : BillingCycle.monthly;
 
-      return local.copyWith(
+      final merged = local.copyWith(
         tier: tier,
         billingCycle: cycle,
-        serverStatus: status,
+        serverStatus:
+            builtInElite || status == 'active' || status == 'trialing'
+                ? 'active'
+                : status,
         isDemoMaster: isDemo,
       );
+      if (builtInElite) return _persistFounderElite(merged);
+      return merged;
     } catch (_) {
-      return local;
+      return builtInElite ? await _persistFounderElite(local) : local;
     }
+  }
+
+  SubscriptionState _founderEliteState(SubscriptionState local) {
+    return local.copyWith(
+      tier: SubscriptionTier.elite,
+      billingCycle: BillingCycle.monthly,
+      serverStatus: 'active',
+      isDemoMaster: true,
+    );
+  }
+
+  Future<SubscriptionState> _persistFounderElite(SubscriptionState local) async {
+    final elite = _founderEliteState(local);
+    await _save(elite);
+    return elite;
   }
 
   Future<SubscriptionState> startTrialIfEligible(SubscriptionState current) async {

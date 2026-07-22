@@ -1,0 +1,3 @@
+stop-analyze-fail-snackbars
+silent retries + emergency shrink
+no busy / unavailable customer copy

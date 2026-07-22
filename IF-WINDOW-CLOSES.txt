@@ -1,0 +1,8 @@
+If START-SWIMIQ-WITH-ELITE.bat or the Elite window fails:
+
+1. Read the red [FAIL] line in the window - that is the cause.
+2. Open elite-start.log in the StrokeIQ folder.
+3. Fix that ONE thing (example: install FFmpeg, or fix swimiq\.env).
+4. Run START-SWIMIQ-WITH-ELITE.bat once more.
+
+Do not click a stack of other FIX-*.bat files.

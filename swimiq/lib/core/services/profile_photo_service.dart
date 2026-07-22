@@ -29,4 +29,22 @@ class ProfilePhotoService {
 
     return _client.storage.from(bucketName).getPublicUrl(storagePath);
   }
+
+  Future<String> uploadSchedulePhoto({
+    required String swimmer,
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    final ext = p.extension(fileName).toLowerCase();
+    final safeExt = ext.isEmpty ? '.jpg' : ext;
+    final storagePath = '$swimmer/schedule-${_uuid.v4()}$safeExt';
+
+    await _client.storage.from(bucketName).uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+    return _client.storage.from(bucketName).getPublicUrl(storagePath);
+  }
 }

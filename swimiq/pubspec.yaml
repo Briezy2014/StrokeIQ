@@ -15,6 +15,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   fl_chart: ^0.70.2
   intl: ^0.20.2
+  image_picker: ^1.1.2
   file_picker: ^8.3.7
   video_player: ^2.10.0
   path: ^1.9.0
@@ -23,6 +24,8 @@ dependencies:
   shared_preferences: ^2.5.3
   url_launcher: ^6.3.1
   web: ^1.1.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
   http: ^1.2.2
 
 dev_dependencies:
@@ -33,8 +36,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # Explicit login icon first so Windows/OneDrive never drops the folder entry.
+    - assets/branding/icon.png
+    - assets/branding/logo.png
+    - assets/branding/banner.png
+    - assets/branding/mark.png
     - assets/branding/
     - assets/images/
     - assets/legal/
     - assets/data/usa_time_standards_seed.json
     - assets/data/usa_motivational_standards_2024_2028.json
+    - assets/data/college_recruiting_benchmarks_seed.json

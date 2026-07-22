@@ -56,6 +56,14 @@ a:hover { text-decoration: underline; }
 
 .nav { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: 0.95rem; }
 
+.site-copyright {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 /* Hero */
 .hero {
   padding: 3rem 0 2.5rem;

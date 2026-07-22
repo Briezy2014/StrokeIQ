@@ -34,6 +34,13 @@ class _VideoJobProgressScreenState
     });
   }
 
+  bool _isEarlyFetchStage(AnalysisJob job) {
+    final stage = job.stage.trim().toLowerCase();
+    return stage == 'downloading' ||
+        stage == 'validating' ||
+        stage == 'queued';
+  }
+
   Future<void> _cancel() async {
     setState(() => _cancelling = true);
     try {
@@ -114,13 +121,19 @@ class _VideoJobProgressScreenState
               if (job == null) {
                 return const Center(child: CircularProgressIndicator());
               }
+              // Safety net if listen() missed a terminal transition.
+              if (job.isTerminal) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _goToResults(job);
+                });
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SwimIqScreenHeader(
                     title: 'Elite Video Lab',
                     subtitle:
-                        'Analysis in progress — stage updates as work completes.',
+                        'Analyzing your swim. Short clips usually finish in about 30–60 seconds on this PC.',
                   ),
                   const SizedBox(height: 28),
                   Center(
@@ -145,9 +158,23 @@ class _VideoJobProgressScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Status: ${job.status.replaceAll('_', ' ')}',
+                          'Status: ${job.statusLabel}'
+                          '${job.progress != null ? ' · ${(job.progress! * 100).clamp(0, 100).round()}%' : ''}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                        if (_isEarlyFetchStage(job)) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            'Elite must re-download the clip from cloud storage '
+                            'on this PC (even short videos). If this sits still '
+                            'for more than about a minute, cancel and check Wi-Fi '
+                            '/ that the Elite window is still open, then try again.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.black54,
+                                ),
+                          ),
+                        ],
                         if (job.errorMessage != null) ...[
                           const SizedBox(height: 12),
                           Text(
