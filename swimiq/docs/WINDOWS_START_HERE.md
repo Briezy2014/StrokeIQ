@@ -1,60 +1,37 @@
-# Windows — Start SwimIQ (Elite Video Lab)
+# Windows — Start SwimIQ
 
-Use the folder: `Desktop\StrokeIQ`  
-(not `StrokeIQ-Elite`).
+**Do not use** `cd Desktop\StrokeIQ` in PowerShell. That path often does not exist (OneDrive / renamed folders).
 
-## Every launch (recommended)
+## Find your real folder
 
-1. Double-click:
+If you already use drive **S:** (recommended):
 
-   `Desktop\StrokeIQ\START-SWIMIQ-WITH-ELITE.bat`
-
-2. Keep **both** windows open:
-   - Elite analysis server (`Uvicorn running on http://127.0.0.1:8080`)
-   - SwimIQ Chrome launch window
-
-3. Sign in → **Elite** tab → green **Elite server connected** → **Confirm & Analyze**
-
-That one bat:
-- updates the branch
-- starts the Elite server if needed
-- waits until `http://127.0.0.1:8080/health` works
-- then launches Chrome
-
-## Health check
-
-Open: http://127.0.0.1:8080/health
-
-You want `"ffmpeg_available":true`. If false, run `RESTART-ELITE-AFTER-FFMPEG.bat` after installing FFmpeg.
-
-## `.env` (Flutter)
-
-In `swimiq\.env`:
-
-```env
-SUPABASE_URL=https://YOURPROJECT.supabase.co
-SUPABASE_ANON_KEY=eyJ...your_anon_key...
-ANALYSIS_API_BASE_URL=http://127.0.0.1:8080
-VIDEO_ENGINE_V2=true
-VIDEO_ENGINE_V2_ALLOWLIST=
-VIDEO_ENGINE_V2_DUAL_RUN=false
+```powershell
+cd S:\swimiq
+git checkout main
+git pull origin main
 ```
 
-Use `127.0.0.1` (not `localhost`) so Windows IPv6 does not miss the server.
+Or search:
 
-## Accounts
+```powershell
+Get-ChildItem -Path $env:USERPROFILE -Filter pubspec.yaml -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match '\\swimiq\\pubspec\.yaml$' } |
+  Select-Object -ExpandProperty DirectoryName
+```
 
-| Role | Login / code |
-|------|----------------|
-| Master | `briezy682014@gmail.com` |
-| Demo | `demo@swimiqapp.com` / `SwimIQ` |
-| Coach | Redeem `COACH-EVAL-14` (or `COACH-TRIAL-30`) in Settings → Plans |
+From the **repo root** (parent of `swimiq`), you can also run `FIND-SWIMIQ-FOLDER.ps1` / `FIND-SWIMIQ-FOLDER.bat` when present.
 
-## Coach share link
+## Start the app
 
-Send coaches: **https://swimiqapp.com**  
-Full paste text is in repo root `COACH-ACCESS.md`.
+1. Prefer: **`S:\START-SWIMIQ-WITH-ELITE.bat`** (repo root) — starts Elite server + Chrome  
+2. Or: **`S:\swimiq\START-SWIMIQ.bat`** — app only  
+3. Keep windows open. Use **localhost**, not only swimiqapp.com, for local Elite.
 
-## If Chrome says Failed to fetch / server not ready
+## What the nav should look like (current product)
 
-The Elite server window is closed or crashed. Run `START-SWIMIQ-WITH-ELITE.bat` again and leave the Elite window open.
+- **6 tabs:** Dashboard · PBs · **Log** · Goals · **Elite** (or Video) · Passport  
+- **Log** includes training + meets (not separate Add / Meets tabs)  
+- Passport shows the **recruiting wallet card**
+
+If you still see separate Log / Add / Meets, you are on an old checkout — run `git pull origin main` after the restore PR is merged.
