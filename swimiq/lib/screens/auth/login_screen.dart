@@ -175,9 +175,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const Center(child: SwimIqLoginBrand()),
                             const SizedBox(height: 20),
                             Text(
-                              'Welcome back',
+                              'Sign in to SwimIQ',
                               style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'New here? Tap Create an account below.',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey.shade700),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 24),
