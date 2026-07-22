@@ -155,12 +155,16 @@ void main() {
         contains('GEMINI_API_KEY'),
       );
       expect(
+        VideoEngineV2Service.userMessageForErrorCode('VIDEO_TOO_LONG'),
+        contains('2 minutes'),
+      );
+      expect(
         VideoEngineV2Service.userMessageForErrorCode('GEMINI_ERROR'),
         contains('rejected'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('UPLOAD_FAILED'),
-        contains('download'),
+        contains('load your video'),
       );
       expect(
         VideoEngineV2Service.userMessageForErrorCode('DOWNLOAD_TIMEOUT'),

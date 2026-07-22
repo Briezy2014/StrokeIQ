@@ -16,15 +16,15 @@ echo.
 echo Log: %LOG%
 echo.
 
-echo [1/4] Updating folder from GitHub...
-git -C "%CD%" fetch origin cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
+echo [1/4] Updating folder from GitHub (main)...
+git -C "%CD%" fetch origin main >> "%LOG%" 2>&1
 if errorlevel 1 (
   echo [WARN] git fetch failed - using files already on disk.
 ) else (
-  git -C "%CD%" checkout -f cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
-  if not errorlevel 1 git -C "%CD%" reset --hard origin/cursor/dryland-power-index-b7ef >> "%LOG%" 2>&1
+  git -C "%CD%" checkout -f main >> "%LOG%" 2>&1
+  if not errorlevel 1 git -C "%CD%" reset --hard origin/main >> "%LOG%" 2>&1
 )
-echo [OK] Ready.
+echo [OK] Ready on main.
 echo.
 
 echo [2/4] One GEMINI_API_KEY line only...

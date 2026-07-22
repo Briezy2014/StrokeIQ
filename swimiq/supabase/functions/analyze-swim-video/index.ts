@@ -9,7 +9,7 @@ const MAX_INLINE_BYTES = 12 * 1024 * 1024;
  * Gemini File API supports much larger files; keep a practical product ceiling here.
  */
 const MAX_FILE_API_BYTES = 100 * 1024 * 1024;
-const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v11";
+const CURRENT_FUNCTION_VERSION = "2026-gemini-sync-v12";
 /** Never call these — retired or wrong for new API keys. */
 const BLOCKED_GEMINI_MODELS = [
   "gemini-1.5-flash",
@@ -153,8 +153,9 @@ Deno.serve(async (req) => {
           available_models: PREFERRED_GEMINI_MODELS,
           model_probe_ok: modelProbeOk,
           model_probe_error: modelProbeError,
-          max_video_mb: 25,
+          max_video_mb: Math.round(MAX_FILE_API_BYTES / (1024 * 1024)),
           inline_max_mb: Math.round(MAX_INLINE_BYTES / (1024 * 1024)),
+          file_api_max_mb: Math.round(MAX_FILE_API_BYTES / (1024 * 1024)),
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

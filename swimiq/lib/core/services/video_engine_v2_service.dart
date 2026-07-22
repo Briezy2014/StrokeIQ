@@ -317,10 +317,12 @@ class VideoEngineV2Service {
       case 'REPORT_UNAVAILABLE':
       case 'GEMINI_REPORT_UNAVAILABLE':
       case 'MISSING_API_KEY':
+        return 'AI coaching tips need GEMINI_API_KEY on the Elite server. '
+            'Metrics still save — add the key in services/video_analysis/.env, then retry.';
       case 'GEMINI_ERROR':
       case 'INVALID_API_KEY':
-        return 'AI coaching tips are temporarily unavailable. '
-            'Please try Analyze again in a few minutes.';
+        return 'AI coaching tips were rejected by the model. '
+            'Check GEMINI_API_KEY and try Analyze again in a few minutes.';
       case 'UPLOAD_FAILED':
         return 'Could not load your video for analysis. '
             'Check your connection, stay signed in, and try again.';
@@ -344,6 +346,8 @@ class VideoEngineV2Service {
         return 'Results are not ready yet.';
       case 'VIDEO_TOO_LARGE':
         return 'This video is too large. Please upload a shorter or smaller file.';
+      case 'VIDEO_TOO_LONG':
+        return 'This clip is longer than 2 minutes. Trim it to 2 minutes or less, then Analyze again.';
       case 'INVALID_SEGMENT':
         return 'Tag at least one race moment before building your highlight reel.';
       case 'REEL_BUILD_FAILED':

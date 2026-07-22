@@ -8,27 +8,27 @@ echo ============================================
 echo.
 echo This replaces the OLD marketing website with SwimIQ login.
 echo.
-echo Updating code first (Dryland + Power Index branch)...
-git fetch origin cursor/dryland-power-index-b7ef
+echo Updating code first (main)...
+git fetch origin main
 if errorlevel 1 (
   echo [FAIL] git fetch failed. Check Wi-Fi.
   pause
   exit /b 1
 )
-git checkout -f cursor/dryland-power-index-b7ef
+git checkout -f main
 if errorlevel 1 (
-  echo [FAIL] Could not checkout dryland-power-index branch.
+  echo [FAIL] Could not checkout main.
   pause
   exit /b 1
 )
-git reset --hard origin/cursor/dryland-power-index-b7ef
+git reset --hard origin/main
 if errorlevel 1 (
-  echo [FAIL] Could not reset to latest dryland-power-index.
+  echo [FAIL] Could not reset to latest main.
   pause
   exit /b 1
 )
 echo.
-echo [OK] On branch: cursor/dryland-power-index-b7ef
+echo [OK] On branch: main
 git log -1 --oneline
 echo.
 echo IMPORTANT: After the zip builds, upload the NEW zip only:
