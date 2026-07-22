@@ -49,6 +49,11 @@ class ResultStore:
         with self._lock:
             return list(self._read().keys())
 
+    def list_jobs(self) -> list[AnalysisJob]:
+        with self._lock:
+            data = self._read()
+            return [AnalysisJob.from_dict(d) for d in data.values()]
+
     def clear(self) -> None:
         with self._lock:
             self._write({})

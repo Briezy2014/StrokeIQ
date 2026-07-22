@@ -1,0 +1,36 @@
+{
+  "name": "turn_wall_outside",
+  "kind": "turn",
+  "fps": 30.0,
+  "frame_width": 640,
+  "wall_x": 800.0,
+  "wall_outside": true,
+  "turn_type": "flip",
+  "stroke": "butterfly",
+  "view": "side",
+  "manual_wall_line": {
+    "x": 800.0,
+    "confidence": 0.95,
+    "supporting_frames": [
+      50
+    ]
+  },
+  "wall_contact_frame": null,
+  "push_off_frame": null,
+  "foot_placement_frame": null,
+  "breakout_frame": 78,
+  "first_underwater_kick_frame": 62,
+  "first_surface_stroke_frame": 80,
+  "final_stroke_before_wall_frame": 36,
+  "surface_stroke_entry_frames": [
+    0,
+    18,
+    36,
+    80
+  ],
+  "underwater_kick_frames": [
+    62,
+    74
+  ],
+  "notes": "Manually labeled synthetic flip/open turn sequence."
+}

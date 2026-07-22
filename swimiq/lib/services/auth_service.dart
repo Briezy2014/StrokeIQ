@@ -64,6 +64,9 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 });
 
 final currentUserProvider = Provider<User?>((ref) {
+  // Widget tests and early boot may render before Supabase.initialize().
+  // Avoid touching Supabase.instance.client until it is ready.
+  if (!Supabase.instance.isInitialized) return null;
   return ref.watch(authStateProvider).value?.session?.user;
 });
 

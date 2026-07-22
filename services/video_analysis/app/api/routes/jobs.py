@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 
+from app.api.ownership import assert_can_access
 from app.api.schemas.responses import CancelResponse, JobStatus, RetryResponse
+from app.auth import AuthUser, require_user
 from app.services.job_pipeline import run_analysis_pipeline
 from app.utils.logging import get_logger, log_stage
 
@@ -13,16 +15,22 @@ logger = get_logger("video_analysis.jobs")
 
 
 @router.post("/{job_id}/cancel", response_model=CancelResponse)
-def cancel_job(job_id: str, request: Request) -> CancelResponse:
+async def cancel_job(
+    job_id: str,
+    request: Request,
+    user: AuthUser = Depends(require_user),
+) -> CancelResponse:
     store = request.app.state.store
     job = store.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    assert_can_access(job, user)
 
     if job.status in {
         JobStatus.completed,
         JobStatus.completed_with_limitations,
         JobStatus.failed,
+        JobStatus.cancelled,
     }:
         raise HTTPException(
             status_code=409,
@@ -34,7 +42,6 @@ def cancel_job(job_id: str, request: Request) -> CancelResponse:
         )
 
     job.cancelled = True
-    # If still queued / early, mark failed immediately for observability.
     if job.status in {JobStatus.queued, JobStatus.validating, JobStatus.preprocessing}:
         job.mark_failed(
             error_code="CANCELLED",
@@ -42,6 +49,13 @@ def cancel_job(job_id: str, request: Request) -> CancelResponse:
             stage=job.stage,
             retriable=False,
         )
+    else:
+        # In-flight stages observe the cancelled flag and terminate.
+        from app.domain.jobs import utc_now
+
+        job.status = JobStatus.cancelled
+        job.stage = JobStatus.cancelled.value
+        job.updated_at = utc_now()
     store.save(job)
     log_stage(
         logger,
@@ -58,30 +72,30 @@ def cancel_job(job_id: str, request: Request) -> CancelResponse:
 
 
 @router.post("/{job_id}/retry", response_model=RetryResponse)
-def retry_job(
+async def retry_job(
     job_id: str,
     background_tasks: BackgroundTasks,
     request: Request,
+    user: AuthUser = Depends(require_user),
 ) -> RetryResponse:
     settings = request.app.state.settings
     store = request.app.state.store
     job = store.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    assert_can_access(job, user)
 
     if job.status != JobStatus.failed:
         raise HTTPException(
             status_code=409,
             detail={
                 "error_code": "NOT_RETRIABLE",
-                "message": "Only failed jobs can be retried in Milestone 1",
+                "message": "Only failed jobs can be retried",
                 "job_id": job_id,
             },
         )
 
     if job.error and not job.error.retriable:
-        # Still allow explicit retry from failed validation of missing file after path fix,
-        # but document non-retriable codes.
         if job.error.error_code in {
             "UNSUPPORTED_CODEC",
             "NO_VIDEO_STREAM",
