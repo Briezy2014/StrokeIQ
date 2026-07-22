@@ -196,6 +196,14 @@ def validate_video(path: Path, settings: Settings) -> ValidatedVideo:
             f"Duration {duration_ms}ms below minimum {settings.min_duration_ms}ms",
             retriable=False,
         )
+    max_duration_ms = getattr(settings, "max_duration_ms", 120_000)
+    if duration_ms > max_duration_ms:
+        raise VideoValidationError(
+            "VIDEO_TOO_LONG",
+            f"Duration {duration_ms}ms exceeds maximum {max_duration_ms}ms "
+            f"({max_duration_ms // 1000}s). Trim the clip to 2 minutes or less.",
+            retriable=False,
+        )
 
     nb_frames = stream.get("nb_frames")
     frame_count: int | None

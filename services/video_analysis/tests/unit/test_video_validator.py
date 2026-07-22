@@ -36,3 +36,10 @@ def test_validate_too_large(settings, valid_video: Path):
     with pytest.raises(VideoValidationError) as exc:
         validate_video(valid_video, settings)
     assert exc.value.error_code == "VIDEO_TOO_LARGE"
+
+
+def test_validate_too_long(settings, valid_video: Path):
+    settings.max_duration_ms = 1
+    with pytest.raises(VideoValidationError) as exc:
+        validate_video(valid_video, settings)
+    assert exc.value.error_code == "VIDEO_TOO_LONG"

@@ -18,6 +18,8 @@ Isolated Python FastAPI backend for SwimIQ video analysis.
 
 **Not in Milestone 9:** Removing the legacy Edge Function engine (kept as `video_engine_legacy` until V2 real-video approval).
 
+**Product ceiling:** `max_duration_ms = 120000` (2 minutes). Longer clips return `VIDEO_TOO_LONG`.
+
 ## Pose stages (no auto-advance)
 
 ```bash

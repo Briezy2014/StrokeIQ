@@ -442,24 +442,10 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
               poseMetrics: poseMetrics,
             );
       } on GeminiAnalysisException catch (error) {
+        // Never pretend notes-only local analysis is a successful AI report.
         return error.message;
-      } catch (_) {
-        analysis = ref.read(aiSwimAnalysisServiceProvider).analyze(
-              video: video,
-              raceLogs: current.raceLogs,
-              goals: current.goals,
-              profile: current.profile,
-              standards: current.usaStandards,
-            );
-        if (poseMetrics != null) {
-          analysis = analysis.copyWith(
-            analysisJson: {
-              ...?analysis.analysisJson,
-              'pose_metrics': poseMetrics.toJson(),
-              'engine': 'swimiq-v1-notes-mediapipe',
-            },
-          );
-        }
+      } catch (error) {
+        return 'AI analysis failed: $error';
       }
 
       final analysisWithIds = analysis.copyWith(

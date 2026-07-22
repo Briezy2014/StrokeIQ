@@ -48,13 +48,17 @@ cd ~/StrokeIQ
 
 (Use your real folder path if different.)
 
-3. Switch to the Elite Video Lab branch:
+3. Get the cutover branch (Elote + 2‑minute cap + honest errors):
 
 ```bash
 git fetch origin
-git checkout cursor/elote-m9-flutter-supabase-b7ef
-git pull origin cursor/elote-m9-flutter-supabase-b7ef
+git checkout cursor/video-analysis-elote-cutover-5847
+git pull origin cursor/video-analysis-elote-cutover-5847
 ```
+
+Or after it is merged to `main`: `git checkout main && git pull origin main`
+
+Also see **[PULL_AND_MERGE.md](PULL_AND_MERGE.md)**.
 
 ---
 

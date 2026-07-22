@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     min_height: int = 240
     min_fps: float = 15.0
     min_duration_ms: int = 200
+    # Product ceiling: Elite Video Lab targets race clips of 2 minutes or less.
+    max_duration_ms: int = 120_000
     ffprobe_path: str = "ffprobe"
     ffmpeg_path: str = "ffmpeg"
     log_level: str = "INFO"

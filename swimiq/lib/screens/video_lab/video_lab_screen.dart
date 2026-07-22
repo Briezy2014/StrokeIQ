@@ -173,13 +173,20 @@ class _VideoLabScreenState extends ConsumerState<VideoLabScreen> {
       return;
     }
 
-    // Legacy Gemini / notes analysis path (V2 off, not allowlisted, or dual-run).
+    // Legacy Edge Function path (only when V2 is off or dual-run forced).
     setState(() => _analyzingVideoId = videoId);
     final error = await ref.read(swimmerDataProvider.notifier).analyzeVideo(video);
     if (!mounted) return;
     setState(() => _analyzingVideoId = null);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? 'AI analysis saved.')),
+      SnackBar(
+        content: Text(
+          error == null
+              ? 'AI analysis saved.'
+              : 'Analysis failed: $error',
+        ),
+        backgroundColor: error == null ? null : Colors.red.shade700,
+      ),
     );
   }
 
