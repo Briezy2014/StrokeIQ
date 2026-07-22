@@ -3,6 +3,7 @@ import '../../data/models/swim_schedule_entry.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../core/utils/passport_metrics.dart';
+import '../../core/utils/upcoming_meet_builder.dart';
 import '../../providers/swimmer_data_provider.dart';
 
 class RaceIntelligencePlan {
@@ -128,9 +129,14 @@ class RaceIntelligenceService {
       profile: data.profile,
     );
     final synced = upcoming != null;
+    final series =
+        upcoming == null ? const <SwimScheduleEntry>[] : meetSeriesDays(
+              schedules: data.schedules,
+              anchor: upcoming,
+            );
     final meetLabel = upcoming != null
-        ? '${upcoming.title} · ${_formatDate(upcoming.scheduleDate)}'
-        : 'Next-meet plan (add a meet on Log → Schedule to sync)';
+        ? _meetSeriesLabel(upcoming, series)
+        : 'Next-meet plan (add a meet on Log → Meets to sync)';
 
     final phases = _warmUpPhases(
       focusEvent: focusEvent,
@@ -196,8 +202,16 @@ class RaceIntelligenceService {
       events.add(text);
     }
 
-    for (final line in _parseEventsLine(upcoming?.eventsLine)) {
-      add(line);
+    if (upcoming != null) {
+      final series = meetSeriesDays(
+        schedules: data.schedules,
+        anchor: upcoming,
+      );
+      for (final day in series) {
+        for (final line in _parseEventsLine(day.eventsLine)) {
+          add(line);
+        }
+      }
     }
     for (final goal in data.goals) {
       add(goal.event);
@@ -655,6 +669,24 @@ class RaceIntelligenceService {
       return true;
     }
     return false;
+  }
+
+  static String _meetSeriesLabel(
+    SwimScheduleEntry upcoming,
+    List<SwimScheduleEntry> series,
+  ) {
+    if (series.length <= 1) {
+      final time = upcoming.startTime?.trim();
+      final timePart =
+          time == null || time.isEmpty ? '' : ' · $time';
+      return '${upcoming.title} · ${_formatDate(upcoming.scheduleDate)}$timePart';
+    }
+    final first = series.first.scheduleDate;
+    final last = series.last.scheduleDate;
+    final time = upcoming.startTime?.trim();
+    final timePart =
+        time == null || time.isEmpty ? '' : ' · starts $time';
+    return '${upcoming.title} · ${_formatDate(first)}–${_formatDate(last)}$timePart';
   }
 
   static String _formatDate(DateTime date) {

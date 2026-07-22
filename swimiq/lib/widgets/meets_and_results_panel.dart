@@ -168,8 +168,9 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Log official times, schedule meets, and upload heat sheets '
-                      'or results photos — all in one place.',
+                      'Add upcoming meets (with start time and events — including '
+                      'multi-day meets), log official times, and upload heat sheets '
+                      'so Race Intelligence can sync to your next race.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textDark.withValues(alpha: 0.7),
                             height: 1.4,
@@ -183,8 +184,8 @@ class MeetsAndResultsPanel extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(
-                    'Nothing logged yet. Tap Log meet result to add your first '
-                    'official time, or upload a heat sheet photo.',
+                    'Nothing logged yet. Add an upcoming meet so Race Intelligence '
+                    'can plan your next race day, or log an official meet result.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textDark.withValues(alpha: 0.65),
@@ -289,9 +290,16 @@ class MeetsAndResultsPanel extends ConsumerWidget {
               ],
               if (filteredSchedules.isNotEmpty) ...[
                 Text(
-                  'Scheduled meets & uploaded results',
+                  'Upcoming meets & schedule',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Race Intelligence pulls your next meet, start time, and events from here.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textDark.withValues(alpha: 0.65),
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -319,19 +327,28 @@ class MeetsAndResultsPanel extends ConsumerWidget {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
+                FilledButton.icon(
+                  onPressed: () => showScheduleEntryFormSheet(
+                    context,
+                    initialType: SwimScheduleEntry.typeMeet,
+                    allowedTypes: {SwimScheduleEntry.typeMeet},
+                  ),
+                  icon: const Icon(Icons.event_available_outlined, size: 18),
+                  label: const Text('Add upcoming meet'),
+                ),
                 if (showProFeatures) ...[
-                  FilledButton.icon(
+                  FilledButton.tonalIcon(
                     onPressed: () => showMeetResultFormSheet(context),
                     icon: const Icon(Icons.emoji_events_outlined, size: 18),
                     label: const Text('Log meet result'),
                   ),
-                  FilledButton.tonalIcon(
+                  OutlinedButton.icon(
                     onPressed: () => showPersonalBestUploadChooser(context),
                     icon: const Icon(Icons.upload_outlined, size: 18),
                     label: const Text('Upload best times'),
                   ),
                 ] else ...[
-                  FilledButton.icon(
+                  FilledButton.tonalIcon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const MembershipScreen(),

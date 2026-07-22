@@ -90,6 +90,7 @@ class SwimmerData {
         videos: userFacingVideos,
         videoAnalyses: userFacingVideoAnalyses,
         motivationalStandards: motivationalStandards,
+        schedules: schedules,
       );
 
   SwimmerData copyWith({
@@ -290,8 +291,16 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }
 
   Future<String?> addSchedule(SwimScheduleEntry entry) async {
+    return addSchedules([entry]);
+  }
+
+  Future<String?> addSchedules(List<SwimScheduleEntry> entries) async {
+    if (entries.isEmpty) return 'Nothing to save.';
     try {
-      await ref.read(swimIqRepositoryProvider).insertSchedule(entry);
+      final repository = ref.read(swimIqRepositoryProvider);
+      for (final entry in entries) {
+        await repository.insertSchedule(entry);
+      }
       await refresh();
       return null;
     } catch (error) {
