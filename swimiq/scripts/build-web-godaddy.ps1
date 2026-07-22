@@ -106,17 +106,20 @@ if (-not (Test-Path (Join-Path $webOut 'main.dart.js'))) {
     exit 1
 }
 
-# Prove this is the NEW Dryland/Power Index / 100MB phone-clip build.
+# Prove this is a current main build (not an old zip / marketing site).
+# Strings must match live UI copy in lib/ — update when copy changes.
 $mainText = Get-Content -LiteralPath $mainJs -Raw -ErrorAction Stop
 $mustHave = @(
     'Build highlight package',
-    'Phone race clips up to',
-    'National caliber'
+    'Elite Video Lab',
+    'National caliber',
+    'Phone videos welcome'
 )
 $mustNotHave = @(
     'under about 50 MB',
     'Coming soon — Elite feature',
-    'coming soon (Elite)'
+    'coming soon (Elite)',
+    'Phone race clips up to'
 )
 foreach ($needle in $mustHave) {
     if ($mainText -notlike ("*" + $needle + "*")) {
