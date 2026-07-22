@@ -59,21 +59,23 @@ try {
 
 Write-Host ('Git branch: ' + $gitBranch) -ForegroundColor Cyan
 Write-Host ('Git commit: ' + $gitCommit) -ForegroundColor Cyan
-if ($gitBranch -ne 'cursor/dryland-power-index-b7ef') {
+if ($gitBranch -ne 'main') {
     Write-Host ''
     Write-Host 'ERROR: Wrong git branch for website publish.' -ForegroundColor Red
     Write-Host ('Current: ' + $gitBranch) -ForegroundColor Red
-    Write-Host 'Required: cursor/dryland-power-index-b7ef' -ForegroundColor Yellow
+    Write-Host 'Required: main' -ForegroundColor Yellow
     Write-Host 'Run GET-LATEST-FIXED-APP.bat, then PUBLISH-SWIMIQAPP-COM.bat again.' -ForegroundColor Yellow
     exit 1
 }
 
-# Public website: cloud coaching only (no local Elite URL baked into the build).
+# Public website: use cloud Edge Function path (Gemini legacy).
+# Local Elite (Elote) on 127.0.0.1 cannot be reached from swimiqapp.com visitors.
+# VIDEO_ENGINE_V2 stays false until a public Elote host URL is configured.
 $prodEnv = Join-Path $env:TEMP 'swimiq-godaddy-defines.env'
 @(
     "SUPABASE_URL=$url"
     "SUPABASE_ANON_KEY=$key"
-    'VIDEO_ENGINE_V2=true'
+    'VIDEO_ENGINE_V2=false'
     'VIDEO_ENGINE_V2_DUAL_RUN=false'
 ) | Set-Content -LiteralPath $prodEnv -Encoding ascii
 
