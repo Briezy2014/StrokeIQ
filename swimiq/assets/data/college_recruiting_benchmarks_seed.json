@@ -1,182 +1,4646 @@
 {
-  "version_id": "college-recruiting-benchmarks-2026-v1",
-  "version_label": "SwimIQ College Recruiting Benchmarks (illustrative)",
-  "disclaimer": "Illustrative recruiting time ranges compiled from public meet results and roster trends. Always verify with coaches, SwimCloud, and school recruiting coordinators.",
+  "version_id": "college-recruiting-benchmarks-2026-v2-central-us",
+  "version_label": "SwimIQ Central US College Recruiting Benchmarks (illustrative)",
+  "disclaimer": "Illustrative recruiting time ranges for U.S. / Central U.S. programs, compiled from public meet patterns and roster trends. Always verify with coaches, SwimCloud, and each school\u2019s recruiting coordinator before contacting programs.",
   "programs": [
     {
       "school": "Ohio State University",
       "division": "NCAA D1",
       "conference": "Big Ten",
-      "region": "Ohio",
+      "region": "Central US",
       "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 52.5, "target_seconds": 54.0, "likely_seconds": 55.5},
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 128.0, "target_seconds": 132.0, "likely_seconds": 136.0}
-      ]
-    },
-    {
-      "school": "Ohio University",
-      "division": "NCAA D1",
-      "conference": "MAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 54.5, "target_seconds": 56.5, "likely_seconds": 58.5},
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 135.0, "target_seconds": 140.0, "likely_seconds": 145.0}
-      ]
-    },
-    {
-      "school": "University of Cincinnati",
-      "division": "NCAA D1",
-      "conference": "American",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 54.0, "target_seconds": 56.0, "likely_seconds": 58.0},
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 133.0, "target_seconds": 138.0, "likely_seconds": 143.0}
-      ]
-    },
-    {
-      "school": "Miami University (Ohio)",
-      "division": "NCAA D1",
-      "conference": "MAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 55.0, "target_seconds": 57.0, "likely_seconds": 59.0},
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 136.0, "target_seconds": 141.0, "likely_seconds": 146.0}
-      ]
-    },
-    {
-      "school": "Bowling Green State University",
-      "division": "NCAA D1",
-      "conference": "MAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 138.0, "target_seconds": 144.0, "likely_seconds": 150.0}
-      ]
-    },
-    {
-      "school": "University of Toledo",
-      "division": "NCAA D1",
-      "conference": "MAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 140.0, "target_seconds": 146.0, "likely_seconds": 152.0}
-      ]
-    },
-    {
-      "school": "Kenyon College",
-      "division": "NCAA D3",
-      "conference": "NCAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 56.0, "target_seconds": 58.5, "likely_seconds": 61.0},
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 145.0, "target_seconds": 152.0, "likely_seconds": 160.0}
-      ]
-    },
-    {
-      "school": "Denison University",
-      "division": "NCAA D3",
-      "conference": "NCAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 148.0, "target_seconds": 155.0, "likely_seconds": 165.0}
-      ]
-    },
-    {
-      "school": "Ohio Wesleyan University",
-      "division": "NCAA D3",
-      "conference": "NCAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 152.0, "target_seconds": 162.0, "likely_seconds": 172.0}
-      ]
-    },
-    {
-      "school": "Otterbein University",
-      "division": "NCAA D3",
-      "conference": "OAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 158.0, "target_seconds": 168.0, "likely_seconds": 178.0}
-      ]
-    },
-    {
-      "school": "Mount St. Joseph University",
-      "division": "NCAA D3",
-      "conference": "HCAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 160.0, "target_seconds": 172.0, "likely_seconds": 185.0}
-      ]
-    },
-    {
-      "school": "Ashland University",
-      "division": "NCAA D2",
-      "conference": "GMAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 142.0, "target_seconds": 148.0, "likely_seconds": 155.0}
-      ]
-    },
-    {
-      "school": "Tiffin University",
-      "division": "NCAA D2",
-      "conference": "GMAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 150.0, "target_seconds": 160.0, "likely_seconds": 172.0}
-      ]
-    },
-    {
-      "school": "Walsh University",
-      "division": "NAIA",
-      "conference": "GMAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 155.0, "target_seconds": 168.0, "likely_seconds": 182.0}
-      ]
-    },
-    {
-      "school": "Cedarville University",
-      "division": "NAIA",
-      "conference": "GMAC",
-      "region": "Ohio",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 158.0, "target_seconds": 172.0, "likely_seconds": 188.0}
-      ]
-    },
-    {
-      "school": "Indiana University",
-      "division": "NCAA D1",
-      "conference": "Big Ten",
-      "region": "Midwest",
-      "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 126.0, "target_seconds": 130.0, "likely_seconds": 134.0}
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
       ]
     },
     {
       "school": "University of Michigan",
       "division": "NCAA D1",
       "conference": "Big Ten",
-      "region": "Midwest",
+      "region": "Central US",
       "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 125.0, "target_seconds": 129.0, "likely_seconds": 133.0}
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "Indiana University",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "University of Wisconsin",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "Purdue University",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.13,
+          "target_seconds": 23.8,
+          "likely_seconds": 24.63
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.54,
+          "target_seconds": 52.0,
+          "likely_seconds": 53.82
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.43,
+          "target_seconds": 56.0,
+          "likely_seconds": 57.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.69,
+          "target_seconds": 64.5,
+          "likely_seconds": 66.76
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 122.47,
+          "target_seconds": 126.0,
+          "likely_seconds": 130.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 20.7,
+          "target_seconds": 21.3,
+          "likely_seconds": 22.05
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 45.24,
+          "target_seconds": 46.54,
+          "likely_seconds": 48.17
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.72,
+          "target_seconds": 50.12,
+          "likely_seconds": 51.87
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.11,
+          "target_seconds": 57.73,
+          "likely_seconds": 59.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 109.61,
+          "target_seconds": 112.77,
+          "likely_seconds": 116.72
+        }
+      ]
+    },
+    {
+      "school": "University of Minnesota",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "University of Iowa",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.13,
+          "target_seconds": 23.8,
+          "likely_seconds": 24.63
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.54,
+          "target_seconds": 52.0,
+          "likely_seconds": 53.82
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.43,
+          "target_seconds": 56.0,
+          "likely_seconds": 57.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.69,
+          "target_seconds": 64.5,
+          "likely_seconds": 66.76
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 122.47,
+          "target_seconds": 126.0,
+          "likely_seconds": 130.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 20.7,
+          "target_seconds": 21.3,
+          "likely_seconds": 22.05
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 45.24,
+          "target_seconds": 46.54,
+          "likely_seconds": 48.17
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.72,
+          "target_seconds": 50.12,
+          "likely_seconds": 51.87
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.11,
+          "target_seconds": 57.73,
+          "likely_seconds": 59.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 109.61,
+          "target_seconds": 112.77,
+          "likely_seconds": 116.72
+        }
+      ]
+    },
+    {
+      "school": "University of Illinois",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.13,
+          "target_seconds": 23.8,
+          "likely_seconds": 24.63
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.54,
+          "target_seconds": 52.0,
+          "likely_seconds": 53.82
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.43,
+          "target_seconds": 56.0,
+          "likely_seconds": 57.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.69,
+          "target_seconds": 64.5,
+          "likely_seconds": 66.76
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 122.47,
+          "target_seconds": 126.0,
+          "likely_seconds": 130.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 20.7,
+          "target_seconds": 21.3,
+          "likely_seconds": 22.05
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 45.24,
+          "target_seconds": 46.54,
+          "likely_seconds": 48.17
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.72,
+          "target_seconds": 50.12,
+          "likely_seconds": 51.87
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.11,
+          "target_seconds": 57.73,
+          "likely_seconds": 59.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 109.61,
+          "target_seconds": 112.77,
+          "likely_seconds": 116.72
+        }
+      ]
+    },
+    {
+      "school": "Northwestern University",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "University of Notre Dame",
+      "division": "NCAA D1",
+      "conference": "ACC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "University of Missouri",
+      "division": "NCAA D1",
+      "conference": "SEC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.13,
+          "target_seconds": 23.8,
+          "likely_seconds": 24.63
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.54,
+          "target_seconds": 52.0,
+          "likely_seconds": 53.82
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.43,
+          "target_seconds": 56.0,
+          "likely_seconds": 57.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.69,
+          "target_seconds": 64.5,
+          "likely_seconds": 66.76
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 122.47,
+          "target_seconds": 126.0,
+          "likely_seconds": 130.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 20.7,
+          "target_seconds": 21.3,
+          "likely_seconds": 22.05
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 45.24,
+          "target_seconds": 46.54,
+          "likely_seconds": 48.17
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.72,
+          "target_seconds": 50.12,
+          "likely_seconds": 51.87
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.11,
+          "target_seconds": 57.73,
+          "likely_seconds": 59.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 109.61,
+          "target_seconds": 112.77,
+          "likely_seconds": 116.72
+        }
+      ]
+    },
+    {
+      "school": "University of Louisville",
+      "division": "NCAA D1",
+      "conference": "ACC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.26,
+          "target_seconds": 22.9,
+          "likely_seconds": 23.7
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.79,
+          "target_seconds": 50.2,
+          "likely_seconds": 51.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.49,
+          "target_seconds": 54.0,
+          "likely_seconds": 55.89
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.26,
+          "target_seconds": 62.0,
+          "likely_seconds": 64.17
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.1,
+          "target_seconds": 121.5,
+          "likely_seconds": 125.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 19.93,
+          "target_seconds": 20.5,
+          "likely_seconds": 21.22
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 43.67,
+          "target_seconds": 44.93,
+          "likely_seconds": 46.5
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.98,
+          "target_seconds": 48.33,
+          "likely_seconds": 50.02
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.94,
+          "target_seconds": 55.49,
+          "likely_seconds": 57.43
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 105.7,
+          "target_seconds": 108.74,
+          "likely_seconds": 112.55
+        }
+      ]
+    },
+    {
+      "school": "University of Kentucky",
+      "division": "NCAA D1",
+      "conference": "SEC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.13,
+          "target_seconds": 23.8,
+          "likely_seconds": 24.63
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.54,
+          "target_seconds": 52.0,
+          "likely_seconds": 53.82
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.43,
+          "target_seconds": 56.0,
+          "likely_seconds": 57.96
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.69,
+          "target_seconds": 64.5,
+          "likely_seconds": 66.76
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 122.47,
+          "target_seconds": 126.0,
+          "likely_seconds": 130.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 20.7,
+          "target_seconds": 21.3,
+          "likely_seconds": 22.05
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 45.24,
+          "target_seconds": 46.54,
+          "likely_seconds": 48.17
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.72,
+          "target_seconds": 50.12,
+          "likely_seconds": 51.87
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.11,
+          "target_seconds": 57.73,
+          "likely_seconds": 59.75
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 109.61,
+          "target_seconds": 112.77,
+          "likely_seconds": 116.72
+        }
+      ]
+    },
+    {
+      "school": "University of Cincinnati",
+      "division": "NCAA D1",
+      "conference": "Big 12",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Miami University (Ohio)",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Ohio University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Bowling Green State University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "University of Toledo",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Ball State University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Eastern Michigan University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.91,
+          "target_seconds": 24.6,
+          "likely_seconds": 25.46
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.29,
+          "target_seconds": 53.8,
+          "likely_seconds": 55.68
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 56.38,
+          "target_seconds": 58.0,
+          "likely_seconds": 60.03
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 65.12,
+          "target_seconds": 67.0,
+          "likely_seconds": 69.34
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 127.33,
+          "target_seconds": 131.0,
+          "likely_seconds": 135.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.4,
+          "target_seconds": 22.02,
+          "likely_seconds": 22.79
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 46.8,
+          "target_seconds": 48.15,
+          "likely_seconds": 49.84
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.46,
+          "target_seconds": 51.91,
+          "likely_seconds": 53.73
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.29,
+          "target_seconds": 59.97,
+          "likely_seconds": 62.07
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 113.97,
+          "target_seconds": 117.25,
+          "likely_seconds": 121.35
+        }
+      ]
+    },
+    {
+      "school": "Grand Valley State University",
+      "division": "NCAA D2",
+      "conference": "GLIAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Drury University",
+      "division": "NCAA D2",
+      "conference": "GLVC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Ashland University",
+      "division": "NCAA D2",
+      "conference": "GMAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Truman State University",
+      "division": "NCAA D2",
+      "conference": "GLVC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Wayne State University",
+      "division": "NCAA D2",
+      "conference": "GLIAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Kenyon College",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.3,
+          "target_seconds": 25.0,
+          "likely_seconds": 25.87
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.46,
+          "target_seconds": 55.0,
+          "likely_seconds": 56.92
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.07,
+          "target_seconds": 69.0,
+          "likely_seconds": 71.41
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 130.73,
+          "target_seconds": 134.5,
+          "likely_seconds": 139.21
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.75,
+          "target_seconds": 22.38,
+          "likely_seconds": 23.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 47.85,
+          "target_seconds": 49.23,
+          "likely_seconds": 50.95
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.03,
+          "target_seconds": 61.76,
+          "likely_seconds": 63.92
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 117.01,
+          "target_seconds": 120.38,
+          "likely_seconds": 124.59
+        }
+      ]
+    },
+    {
+      "school": "Denison University",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.3,
+          "target_seconds": 25.0,
+          "likely_seconds": 25.87
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.46,
+          "target_seconds": 55.0,
+          "likely_seconds": 56.92
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.07,
+          "target_seconds": 69.0,
+          "likely_seconds": 71.41
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 130.73,
+          "target_seconds": 134.5,
+          "likely_seconds": 139.21
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.75,
+          "target_seconds": 22.38,
+          "likely_seconds": 23.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 47.85,
+          "target_seconds": 49.23,
+          "likely_seconds": 50.95
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.03,
+          "target_seconds": 61.76,
+          "likely_seconds": 63.92
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 117.01,
+          "target_seconds": 120.38,
+          "likely_seconds": 124.59
+        }
+      ]
+    },
+    {
+      "school": "Washington University in St. Louis",
+      "division": "NCAA D3",
+      "conference": "UAA",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.3,
+          "target_seconds": 25.0,
+          "likely_seconds": 25.87
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.46,
+          "target_seconds": 55.0,
+          "likely_seconds": 56.92
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.07,
+          "target_seconds": 69.0,
+          "likely_seconds": 71.41
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 130.73,
+          "target_seconds": 134.5,
+          "likely_seconds": 139.21
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.75,
+          "target_seconds": 22.38,
+          "likely_seconds": 23.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 47.85,
+          "target_seconds": 49.23,
+          "likely_seconds": 50.95
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.03,
+          "target_seconds": 61.76,
+          "likely_seconds": 63.92
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 117.01,
+          "target_seconds": 120.38,
+          "likely_seconds": 124.59
+        }
+      ]
+    },
+    {
+      "school": "University of Chicago",
+      "division": "NCAA D3",
+      "conference": "UAA",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.3,
+          "target_seconds": 25.0,
+          "likely_seconds": 25.87
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.46,
+          "target_seconds": 55.0,
+          "likely_seconds": 56.92
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.07,
+          "target_seconds": 69.0,
+          "likely_seconds": 71.41
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 130.73,
+          "target_seconds": 134.5,
+          "likely_seconds": 139.21
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.75,
+          "target_seconds": 22.38,
+          "likely_seconds": 23.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 47.85,
+          "target_seconds": 49.23,
+          "likely_seconds": 50.95
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.03,
+          "target_seconds": 61.76,
+          "likely_seconds": 63.92
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 117.01,
+          "target_seconds": 120.38,
+          "likely_seconds": 124.59
+        }
+      ]
+    },
+    {
+      "school": "Case Western Reserve University",
+      "division": "NCAA D3",
+      "conference": "UAA",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 25.47,
+          "target_seconds": 26.2,
+          "likely_seconds": 27.12
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.75,
+          "target_seconds": 62.5,
+          "likely_seconds": 64.69
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 70.47,
+          "target_seconds": 72.5,
+          "likely_seconds": 75.04
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 59.78,
+          "target_seconds": 61.5,
+          "likely_seconds": 63.65
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 138.02,
+          "target_seconds": 142.0,
+          "likely_seconds": 146.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.79,
+          "target_seconds": 23.45,
+          "likely_seconds": 24.27
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.37,
+          "target_seconds": 55.94,
+          "likely_seconds": 57.9
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 63.07,
+          "target_seconds": 64.89,
+          "likely_seconds": 67.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.5,
+          "target_seconds": 55.04,
+          "likely_seconds": 56.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 123.53,
+          "target_seconds": 127.09,
+          "likely_seconds": 131.54
+        }
+      ]
+    },
+    {
+      "school": "Carleton College",
+      "division": "NCAA D3",
+      "conference": "MIAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 25.47,
+          "target_seconds": 26.2,
+          "likely_seconds": 27.12
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.75,
+          "target_seconds": 62.5,
+          "likely_seconds": 64.69
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 70.47,
+          "target_seconds": 72.5,
+          "likely_seconds": 75.04
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 59.78,
+          "target_seconds": 61.5,
+          "likely_seconds": 63.65
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 138.02,
+          "target_seconds": 142.0,
+          "likely_seconds": 146.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.79,
+          "target_seconds": 23.45,
+          "likely_seconds": 24.27
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.37,
+          "target_seconds": 55.94,
+          "likely_seconds": 57.9
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 63.07,
+          "target_seconds": 64.89,
+          "likely_seconds": 67.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.5,
+          "target_seconds": 55.04,
+          "likely_seconds": 56.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 123.53,
+          "target_seconds": 127.09,
+          "likely_seconds": 131.54
+        }
+      ]
+    },
+    {
+      "school": "St. Olaf College",
+      "division": "NCAA D3",
+      "conference": "MIAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 25.47,
+          "target_seconds": 26.2,
+          "likely_seconds": 27.12
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.75,
+          "target_seconds": 62.5,
+          "likely_seconds": 64.69
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 70.47,
+          "target_seconds": 72.5,
+          "likely_seconds": 75.04
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 59.78,
+          "target_seconds": 61.5,
+          "likely_seconds": 63.65
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 138.02,
+          "target_seconds": 142.0,
+          "likely_seconds": 146.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.79,
+          "target_seconds": 23.45,
+          "likely_seconds": 24.27
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.37,
+          "target_seconds": 55.94,
+          "likely_seconds": 57.9
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 63.07,
+          "target_seconds": 64.89,
+          "likely_seconds": 67.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.5,
+          "target_seconds": 55.04,
+          "likely_seconds": 56.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 123.53,
+          "target_seconds": 127.09,
+          "likely_seconds": 131.54
+        }
+      ]
+    },
+    {
+      "school": "Ohio Wesleyan University",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 25.47,
+          "target_seconds": 26.2,
+          "likely_seconds": 27.12
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.75,
+          "target_seconds": 62.5,
+          "likely_seconds": 64.69
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 70.47,
+          "target_seconds": 72.5,
+          "likely_seconds": 75.04
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 59.78,
+          "target_seconds": 61.5,
+          "likely_seconds": 63.65
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 138.02,
+          "target_seconds": 142.0,
+          "likely_seconds": 146.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.79,
+          "target_seconds": 23.45,
+          "likely_seconds": 24.27
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.37,
+          "target_seconds": 55.94,
+          "likely_seconds": 57.9
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 63.07,
+          "target_seconds": 64.89,
+          "likely_seconds": 67.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.5,
+          "target_seconds": 55.04,
+          "likely_seconds": 56.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 123.53,
+          "target_seconds": 127.09,
+          "likely_seconds": 131.54
+        }
+      ]
+    },
+    {
+      "school": "Otterbein University",
+      "division": "NCAA D3",
+      "conference": "OAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 25.47,
+          "target_seconds": 26.2,
+          "likely_seconds": 27.12
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.89,
+          "target_seconds": 57.5,
+          "likely_seconds": 59.51
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.75,
+          "target_seconds": 62.5,
+          "likely_seconds": 64.69
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 70.47,
+          "target_seconds": 72.5,
+          "likely_seconds": 75.04
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 59.78,
+          "target_seconds": 61.5,
+          "likely_seconds": 63.65
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 138.02,
+          "target_seconds": 142.0,
+          "likely_seconds": 146.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 22.79,
+          "target_seconds": 23.45,
+          "likely_seconds": 24.27
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 50.02,
+          "target_seconds": 51.46,
+          "likely_seconds": 53.26
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.37,
+          "target_seconds": 55.94,
+          "likely_seconds": 57.9
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 63.07,
+          "target_seconds": 64.89,
+          "likely_seconds": 67.16
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.5,
+          "target_seconds": 55.04,
+          "likely_seconds": 56.97
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 123.53,
+          "target_seconds": 127.09,
+          "likely_seconds": 131.54
+        }
       ]
     },
     {
       "school": "Wilmington College",
       "division": "NCAA D3",
       "conference": "OAC",
-      "region": "Ohio",
+      "region": "Central US",
       "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 175.0, "target_seconds": 188.0, "likely_seconds": 198.0}
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 26.05,
+          "target_seconds": 26.8,
+          "likely_seconds": 27.74
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.21,
+          "target_seconds": 64.0,
+          "likely_seconds": 66.24
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 72.41,
+          "target_seconds": 74.5,
+          "likely_seconds": 77.11
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 61.24,
+          "target_seconds": 63.0,
+          "likely_seconds": 65.2
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 143.86,
+          "target_seconds": 148.0,
+          "likely_seconds": 153.18
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.32,
+          "target_seconds": 23.99,
+          "likely_seconds": 24.83
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.68,
+          "target_seconds": 57.28,
+          "likely_seconds": 59.28
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 64.81,
+          "target_seconds": 66.68,
+          "likely_seconds": 69.01
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.8,
+          "target_seconds": 56.38,
+          "likely_seconds": 58.35
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 128.75,
+          "target_seconds": 132.46,
+          "likely_seconds": 137.1
+        }
       ]
     },
     {
       "school": "Muskingum University",
       "division": "NCAA D3",
       "conference": "OAC",
-      "region": "Ohio",
+      "region": "Central US",
       "benchmarks": [
-        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 178.0, "target_seconds": 192.0, "likely_seconds": 205.0}
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 26.05,
+          "target_seconds": 26.8,
+          "likely_seconds": 27.74
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.21,
+          "target_seconds": 64.0,
+          "likely_seconds": 66.24
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 72.41,
+          "target_seconds": 74.5,
+          "likely_seconds": 77.11
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 61.24,
+          "target_seconds": 63.0,
+          "likely_seconds": 65.2
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 143.86,
+          "target_seconds": 148.0,
+          "likely_seconds": 153.18
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.32,
+          "target_seconds": 23.99,
+          "likely_seconds": 24.83
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.68,
+          "target_seconds": 57.28,
+          "likely_seconds": 59.28
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 64.81,
+          "target_seconds": 66.68,
+          "likely_seconds": 69.01
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.8,
+          "target_seconds": 56.38,
+          "likely_seconds": 58.35
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 128.75,
+          "target_seconds": 132.46,
+          "likely_seconds": 137.1
+        }
+      ]
+    },
+    {
+      "school": "Tiffin University",
+      "division": "NCAA D2",
+      "conference": "GMAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
+      ]
+    },
+    {
+      "school": "Walsh University",
+      "division": "NAIA",
+      "conference": "G-MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 26.05,
+          "target_seconds": 26.8,
+          "likely_seconds": 27.74
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.21,
+          "target_seconds": 64.0,
+          "likely_seconds": 66.24
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 72.41,
+          "target_seconds": 74.5,
+          "likely_seconds": 77.11
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 61.24,
+          "target_seconds": 63.0,
+          "likely_seconds": 65.2
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 143.86,
+          "target_seconds": 148.0,
+          "likely_seconds": 153.18
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.32,
+          "target_seconds": 23.99,
+          "likely_seconds": 24.83
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.68,
+          "target_seconds": 57.28,
+          "likely_seconds": 59.28
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 64.81,
+          "target_seconds": 66.68,
+          "likely_seconds": 69.01
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.8,
+          "target_seconds": 56.38,
+          "likely_seconds": 58.35
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 128.75,
+          "target_seconds": 132.46,
+          "likely_seconds": 137.1
+        }
+      ]
+    },
+    {
+      "school": "Cedarville University",
+      "division": "NAIA",
+      "conference": "G-MAC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 26.05,
+          "target_seconds": 26.8,
+          "likely_seconds": 27.74
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.15,
+          "target_seconds": 58.8,
+          "likely_seconds": 60.86
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 62.21,
+          "target_seconds": 64.0,
+          "likely_seconds": 66.24
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 72.41,
+          "target_seconds": 74.5,
+          "likely_seconds": 77.11
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 61.24,
+          "target_seconds": 63.0,
+          "likely_seconds": 65.2
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 143.86,
+          "target_seconds": 148.0,
+          "likely_seconds": 153.18
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 23.32,
+          "target_seconds": 23.99,
+          "likely_seconds": 24.83
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.16,
+          "target_seconds": 52.63,
+          "likely_seconds": 54.47
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 55.68,
+          "target_seconds": 57.28,
+          "likely_seconds": 59.28
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 64.81,
+          "target_seconds": 66.68,
+          "likely_seconds": 69.01
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 54.8,
+          "target_seconds": 56.38,
+          "likely_seconds": 58.35
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 128.75,
+          "target_seconds": 132.46,
+          "likely_seconds": 137.1
+        }
+      ]
+    },
+    {
+      "school": "University of Indianapolis",
+      "division": "NCAA D2",
+      "conference": "GLVC",
+      "region": "Central US",
+      "benchmarks": [
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 24.49,
+          "target_seconds": 25.2,
+          "likely_seconds": 26.08
+        },
+        {
+          "gender": "Women",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 53.95,
+          "target_seconds": 55.5,
+          "likely_seconds": 57.44
+        },
+        {
+          "gender": "Women",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 58.32,
+          "target_seconds": 60.0,
+          "likely_seconds": 62.1
+        },
+        {
+          "gender": "Women",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 67.55,
+          "target_seconds": 69.5,
+          "likely_seconds": 71.93
+        },
+        {
+          "gender": "Women",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 57.83,
+          "target_seconds": 59.5,
+          "likely_seconds": 61.58
+        },
+        {
+          "gender": "Women",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 132.19,
+          "target_seconds": 136.0,
+          "likely_seconds": 140.76
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 50,
+          "course": "SCY",
+          "reach_seconds": 21.92,
+          "target_seconds": 22.55,
+          "likely_seconds": 23.34
+        },
+        {
+          "gender": "Men",
+          "stroke": "Freestyle",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 48.28,
+          "target_seconds": 49.67,
+          "likely_seconds": 51.41
+        },
+        {
+          "gender": "Men",
+          "stroke": "Backstroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 52.2,
+          "target_seconds": 53.7,
+          "likely_seconds": 55.58
+        },
+        {
+          "gender": "Men",
+          "stroke": "Breaststroke",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 60.46,
+          "target_seconds": 62.2,
+          "likely_seconds": 64.38
+        },
+        {
+          "gender": "Men",
+          "stroke": "Butterfly",
+          "distance": 100,
+          "course": "SCY",
+          "reach_seconds": 51.76,
+          "target_seconds": 53.25,
+          "likely_seconds": 55.11
+        },
+        {
+          "gender": "Men",
+          "stroke": "IM",
+          "distance": 200,
+          "course": "SCY",
+          "reach_seconds": 118.31,
+          "target_seconds": 121.72,
+          "likely_seconds": 125.98
+        }
       ]
     }
   ]

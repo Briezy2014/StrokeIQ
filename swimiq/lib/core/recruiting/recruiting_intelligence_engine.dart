@@ -1,7 +1,10 @@
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../services/college_recruiting_benchmark_catalog.dart';
+import '../services/usa_motivational_standards_catalog.dart';
+import '../utils/next_cut_progress.dart';
 import '../utils/swim_time.dart';
+import '../utils/swimiq_standards_profile.dart';
 
 /// Recruiting intelligence with benchmark-matched named schools + optional Gemini summary.
 class RecruitingIntelligenceReport {
@@ -75,6 +78,7 @@ class RecruitingIntelligenceEngine {
     required int videoCount,
     required bool passportComplete,
     CollegeRecruitingBenchmarkCatalog? benchmarkCatalog,
+    UsaMotivationalStandardsCatalog? standardsCatalog,
     String? geminiCoachSummary,
   }) {
     final topPb = personalBests.isNotEmpty ? personalBests.first : null;
@@ -106,9 +110,11 @@ class RecruitingIntelligenceEngine {
       ),
       milestones: _milestones(
         profile: profile,
+        personalBests: personalBests,
         topPb: topPb,
         passportComplete: passportComplete,
         videoCount: videoCount,
+        standardsCatalog: standardsCatalog,
       ),
       divisionFit: divisionFit,
       reachSchools: usedNamed
@@ -180,7 +186,7 @@ class RecruitingIntelligenceEngine {
       case 'reach':
         return [
           'Power conference D1 programs (projection — not a guarantee)',
-          'Top-25 ranked programs in your stroke specialty',
+          'Top-ranked Central U.S. programs in your stroke specialty',
         ];
       case 'target':
         return [
@@ -229,7 +235,7 @@ class RecruitingIntelligenceEngine {
   }) {
     final items = <String>[];
     if (meetCount < 4) {
-      items.add('Increase race frequency in championship meets');
+      items.add('Increase race frequency in championship-season meets');
     }
     if (videoCount < 2) {
       items.add('Upload race videos for coach review');
@@ -240,29 +246,74 @@ class RecruitingIntelligenceEngine {
     if (profile?.favoriteEvent == null) {
       items.add('Define a primary recruiting event');
     } else {
-      items.add('Build aerobic base around ${profile!.favoriteEvent}');
+      items.add('Build race readiness around ${profile!.favoriteEvent}');
     }
     return items;
   }
 
+  /// Next milestones prioritize the next USA letter cut (AA / AAA / AAAA),
+  /// not generic “regionals” that most club swimmers can already enter.
   static List<String> _milestones({
     required SwimmerProfile? profile,
+    required List<PersonalBestEntry> personalBests,
     required PersonalBestEntry? topPb,
     required bool passportComplete,
     required int videoCount,
+    UsaMotivationalStandardsCatalog? standardsCatalog,
   }) {
     final items = <String>[];
-    if (topPb != null) {
-      final target = (topPb.timeSeconds * 0.985).clamp(0.01, topPb.timeSeconds);
+
+    if (standardsCatalog != null &&
+        SwimIqStandardsProfile.isReady(profile) &&
+        personalBests.isNotEmpty) {
+      final cutLines = <String>[];
+      for (final pb in personalBests.take(4)) {
+        final progress = NextCutAnalytics.forSwim(
+          catalog: standardsCatalog,
+          profile: profile,
+          stroke: pb.stroke,
+          distance: pb.distance,
+          course: pb.course,
+          timeSeconds: pb.timeSeconds,
+        );
+        if (progress == null) continue;
+        if (progress.atTopCut) {
+          cutLines.add(
+            'Hold AAAA standard in ${pb.displayTitle} ${pb.course} — '
+            'keep racing championship meets for depth',
+          );
+          continue;
+        }
+        if (!progress.hasNextCut) continue;
+        final gap = progress.gapSeconds ?? 0;
+        final gapText = gap <= 0
+            ? 'Cut met'
+            : 'drop ${SwimTime.fromSeconds(gap)}';
+        cutLines.add(
+          'Earn ${progress.nextCut} in ${pb.displayTitle} ${pb.course} '
+          '(now ${progress.currentCutLabel}) — $gapText '
+          'to ${SwimTime.fromSeconds(progress.nextCutTimeSeconds!)}',
+        );
+      }
+      items.addAll(cutLines.take(3));
+    }
+
+    if (items.isEmpty && topPb != null) {
+      final target =
+          (topPb.timeSeconds * 0.985).clamp(0.01, topPb.timeSeconds);
       items.add(
-        'Break ${SwimTime.fromSeconds(target)} in ${topPb.displayTitle}',
+        'Break ${SwimTime.fromSeconds(target)} in ${topPb.displayTitle} '
+        '(~1.5% drop) — add birthday & gender in Passport for AA/AAA cut goals',
       );
     }
-    items.add('Qualify for a regional championship meet');
-    if (videoCount < 2) items.add('Upload two race videos');
+
+    if (videoCount < 2) items.add('Upload two race videos for the highlight reel');
     if (!passportComplete) items.add('Complete Athlete Passport');
     if (profile?.satScore == null && profile?.actScore == null) {
-      items.add('Add SAT/ACT scores when available');
+      items.add('Add SAT/ACT scores when available (families & coaches both use these)');
+    }
+    if (profile?.coachEmail == null || profile!.coachEmail!.trim().isEmpty) {
+      items.add('Add your club coach’s email in Passport (separate from athlete email)');
     }
     return items;
   }
@@ -356,7 +407,7 @@ class RecruitingIntelligenceEngine {
     } else if (primaryStroke.toLowerCase().contains('fly')) {
       lines.add(
         'Distance fly events (200 Fly, 500 Free) often unlock more '
-        'recruiting options than sprint fly.',
+        'recruiting options than sprint fly alone.',
       );
     }
 

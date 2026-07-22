@@ -24,6 +24,7 @@ class CollegeSchoolMatch {
     required this.likelySeconds,
     required this.tier,
     required this.gapToTargetSeconds,
+    this.interestBoost = 0,
   });
 
   final String school;
@@ -37,6 +38,7 @@ class CollegeSchoolMatch {
   final double likelySeconds;
   final CollegeMatchTier tier;
   final double gapToTargetSeconds;
+  final int interestBoost;
 
   String get tierLabel => switch (tier) {
         CollegeMatchTier.reach => 'Reach',
@@ -49,10 +51,10 @@ class CollegeSchoolMatch {
     final gapText = gap <= 0
         ? '${SwimTime.fromSeconds(gap.abs())} under target'
         : '${SwimTime.fromSeconds(gap)} to target';
-    return '$school ($division · $conference) — $eventLabel: '
+    return '$school ($division · $conference · $region) — $eventLabel: '
         'your ${SwimTime.fromSeconds(swimmerTimeSeconds)}, '
         'recruit ~${SwimTime.fromSeconds(reachSeconds)}–${SwimTime.fromSeconds(likelySeconds)} '
-        '($gapText)';
+        '($gapText). Verify on SwimCloud.';
   }
 }
 
@@ -101,6 +103,10 @@ class CollegeRecruitingBenchmarkCatalog {
 
   static const assetPath = 'assets/data/college_recruiting_benchmarks_seed.json';
 
+  /// Skip “reach” matches that are unrealistically far from the program’s likely band.
+  static const maxReachFactor = 1.10;
+  static const maxReachGapSeconds = 8.0;
+
   final String versionLabel;
   final String disclaimer;
   final List<CollegeRecruitingProgram> programs;
@@ -147,25 +153,34 @@ class CollegeRecruitingBenchmarkCatalog {
   List<CollegeSchoolMatch> matchSchools({
     required List<PersonalBestEntry> personalBests,
     required SwimmerProfile? profile,
-    int maxPerTier = 4,
+    int maxPerTier = 5,
   }) {
     final gender = SwimIqGender.standardsGenderOrNull(profile) ?? 'Girls';
-    final normalizedGender = gender.toLowerCase().startsWith('m') ? 'Men' : 'Women';
-    final interests = profile?.collegeInterests?.toLowerCase() ?? '';
+    final normalizedGender =
+        gender.toLowerCase().startsWith('m') ? 'Men' : 'Women';
+    final interestTokens = _interestTokens(profile?.collegeInterests);
+    final hardSchoolFilters = interestTokens
+        .where((token) => !_isBroadRegionToken(token) && token.length >= 4)
+        .toList();
 
     final matches = <CollegeSchoolMatch>[];
     for (final pb in personalBests) {
       for (final program in programs) {
-        if (interests.isNotEmpty) {
-          final haystack =
-              '${program.region} ${program.school} ${program.conference}'
-                  .toLowerCase();
-          final parts = interests
-              .split(RegExp(r'[,;/]'))
-              .map((part) => part.trim().toLowerCase())
-              .where((part) => part.isNotEmpty);
-          if (!parts.any(haystack.contains)) continue;
+        final haystack =
+            '${program.region} ${program.school} ${program.conference}'
+                .toLowerCase();
+
+        // Soft preference: broad regions boost ranking; specific school names
+        // hard-filter. Empty interests → consider all U.S. / Central U.S. programs.
+        if (hardSchoolFilters.isNotEmpty &&
+            !hardSchoolFilters.any(haystack.contains)) {
+          // Still allow if only broad tokens were meant — already filtered above.
+          // If user typed a specific school that doesn't match, skip.
+          final onlyBroad = interestTokens.every(_isBroadRegionToken);
+          if (!onlyBroad) continue;
         }
+
+        final boost = _interestBoost(haystack, interestTokens);
 
         for (final bench in program.benchmarks) {
           if (bench.gender != normalizedGender) continue;
@@ -177,19 +192,22 @@ class CollegeRecruitingBenchmarkCatalog {
           if (bench.course.toUpperCase() != pb.course.toUpperCase()) continue;
 
           final tier = _tierForTime(pb.timeSeconds, bench);
+          if (tier == null) continue;
+
           matches.add(
             CollegeSchoolMatch(
               school: program.school,
               division: program.division,
               conference: program.conference,
               region: program.region,
-              eventLabel: pb.displayTitle + ' ${pb.course}',
+              eventLabel: '${pb.displayTitle} ${pb.course}',
               swimmerTimeSeconds: pb.timeSeconds,
               reachSeconds: bench.reachSeconds,
               targetSeconds: bench.targetSeconds,
               likelySeconds: bench.likelySeconds,
               tier: tier,
               gapToTargetSeconds: pb.timeSeconds - bench.targetSeconds,
+              interestBoost: boost,
             ),
           );
         }
@@ -197,38 +215,161 @@ class CollegeRecruitingBenchmarkCatalog {
     }
 
     matches.sort((a, b) {
+      final boostOrder = b.interestBoost.compareTo(a.interestBoost);
+      if (boostOrder != 0) return boostOrder;
       final tierOrder = a.tier.index.compareTo(b.tier.index);
       if (tierOrder != 0) return tierOrder;
       return a.gapToTargetSeconds.abs().compareTo(b.gapToTargetSeconds.abs());
     });
 
+    // Prefer one best event line per school within each tier.
     final reach = <CollegeSchoolMatch>[];
     final target = <CollegeSchoolMatch>[];
     final likely = <CollegeSchoolMatch>[];
+    final seenReach = <String>{};
+    final seenTarget = <String>{};
+    final seenLikely = <String>{};
+
     for (final match in matches) {
       switch (match.tier) {
         case CollegeMatchTier.reach:
-          if (reach.length < maxPerTier) reach.add(match);
+          if (reach.length < maxPerTier && seenReach.add(match.school)) {
+            reach.add(match);
+          }
         case CollegeMatchTier.target:
-          if (target.length < maxPerTier) target.add(match);
+          if (target.length < maxPerTier && seenTarget.add(match.school)) {
+            target.add(match);
+          }
         case CollegeMatchTier.likely:
-          if (likely.length < maxPerTier) likely.add(match);
+          if (likely.length < maxPerTier && seenLikely.add(match.school)) {
+            likely.add(match);
+          }
       }
     }
 
     return [...reach, ...target, ...likely];
   }
 
-  static CollegeMatchTier _tierForTime(
+  static List<String> _interestTokens(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return const [];
+    return raw
+        .toLowerCase()
+        .split(RegExp(r'[,;/|]'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .map(_normalizeInterestToken)
+        .toList();
+  }
+
+  static String _normalizeInterestToken(String token) {
+    final cleaned = token.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (cleaned.contains('central') ||
+        cleaned == 'midwest' ||
+        cleaned == 'mid west' ||
+        cleaned.contains('united states') ||
+        cleaned == 'usa' ||
+        cleaned == 'u.s.' ||
+        cleaned == 'us') {
+      return 'central us';
+    }
+    // Keep specific school phrases intact before collapsing to state names.
+    const schoolHints = [
+      'ohio state',
+      'michigan',
+      'indiana',
+      'purdue',
+      'wisconsin',
+      'minnesota',
+      'northwestern',
+      'notre dame',
+      'louisville',
+      'kentucky',
+      'missouri',
+      'cincinnati',
+      'miami',
+      'kenyon',
+      'denison',
+      'grand valley',
+      'drury',
+      'chicago',
+      'carleton',
+      'ball state',
+    ];
+    for (final hint in schoolHints) {
+      if (cleaned.contains(hint)) return hint;
+    }
+    if (cleaned == 'ohio' || cleaned.endsWith(' ohio')) return 'ohio';
+    if (cleaned.contains('illinois')) return 'illinois';
+    if (cleaned.contains('iowa')) return 'iowa';
+    return cleaned;
+  }
+
+  static bool _isBroadRegionToken(String token) {
+    const broad = {
+      'central us',
+      'midwest',
+      'ohio',
+      'indiana',
+      'michigan',
+      'illinois',
+      'wisconsin',
+      'minnesota',
+      'missouri',
+      'iowa',
+      'kentucky',
+    };
+    if (broad.contains(token)) return true;
+    return token.contains('big ten') ||
+        token == 'mac' ||
+        token.contains('ncaa') ||
+        token.contains('division');
+  }
+
+  static int _interestBoost(String haystack, List<String> tokens) {
+    if (tokens.isEmpty) return 0;
+    var score = 0;
+    for (final token in tokens) {
+      if (token == 'central us' &&
+          (haystack.contains('central us') ||
+              haystack.contains('midwest') ||
+              haystack.contains('ohio') ||
+              haystack.contains('indiana') ||
+              haystack.contains('michigan') ||
+              haystack.contains('illinois') ||
+              haystack.contains('wisconsin') ||
+              haystack.contains('minnesota') ||
+              haystack.contains('missouri') ||
+              haystack.contains('iowa') ||
+              haystack.contains('kentucky') ||
+              haystack.contains('big ten') ||
+              haystack.contains('mac'))) {
+        score += 2;
+        continue;
+      }
+      if (haystack.contains(token)) score += 3;
+    }
+    return score;
+  }
+
+  /// Returns null when the swimmer is too far from the program to list as a reach.
+  static CollegeMatchTier? _tierForTime(
     double swimmerTime,
     CollegeProgramBenchmark bench,
   ) {
+    final gapPastLikely = swimmerTime - bench.likelySeconds;
+    if (gapPastLikely > maxReachGapSeconds &&
+        swimmerTime > bench.likelySeconds * maxReachFactor) {
+      return null;
+    }
     if (swimmerTime > bench.likelySeconds) return CollegeMatchTier.reach;
     if (swimmerTime > bench.targetSeconds) return CollegeMatchTier.target;
     return CollegeMatchTier.likely;
   }
 
-  List<String> linesForTier(List<CollegeSchoolMatch> matches, CollegeMatchTier tier) {
+  List<String> linesForTier(
+    List<CollegeSchoolMatch> matches,
+    CollegeMatchTier tier,
+  ) {
     return matches
         .where((match) => match.tier == tier)
         .map((match) => '  ◦ ${match.summaryLine}')

@@ -54,7 +54,8 @@ class CollegeRecruitingHubScreen extends ConsumerWidget {
                 club: profile?.team,
                 school: profile?.school,
                 coach: profile?.coachName,
-                coachContact: profile?.coachEmail ?? profile?.recruitingEmail,
+                coachContact: profile?.coachEmail,
+                athleteEmail: profile?.athleteEmail ?? profile?.recruitingEmail,
                 gpa: profile?.gpa,
                 sat: profile?.satScore,
                 act: profile?.actScore,
@@ -165,6 +166,7 @@ class _ProfileSummaryCard extends StatelessWidget {
     this.school,
     this.coach,
     this.coachContact,
+    this.athleteEmail,
     this.gpa,
     this.sat,
     this.act,
@@ -179,6 +181,7 @@ class _ProfileSummaryCard extends StatelessWidget {
   final String? school;
   final String? coach;
   final String? coachContact;
+  final String? athleteEmail;
   final String? gpa;
   final String? sat;
   final String? act;
@@ -216,7 +219,15 @@ class _ProfileSummaryCard extends StatelessWidget {
             Text(line('Club', club)),
             Text(line('High school', school)),
             Text(line('Coach', coach)),
-            Text(line('Coach contact', coachContact)),
+            Text(
+              line(
+                'Coach contact',
+                (coachContact == null || coachContact!.trim().isEmpty)
+                    ? 'Add coach email in Athlete Passport'
+                    : coachContact,
+              ),
+            ),
+            Text(line('Athlete email', athleteEmail)),
             Text(line('GPA', gpa)),
             Text(line('SAT / ACT', sat != null || act != null
                 ? '${sat ?? '—'} / ${act ?? '—'}'

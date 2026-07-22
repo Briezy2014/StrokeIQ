@@ -29,9 +29,9 @@ class RecruitingResumeBuilder {
     _line(buffer, 'Club team', profile?.team);
     _line(buffer, 'High school', profile?.school);
     _line(buffer, 'Coach', profile?.coachName);
-    _line(buffer, 'Coach email', profile?.coachEmail ?? profile?.recruitingEmail);
+    _line(buffer, 'Coach email', profile?.coachEmail);
     _line(buffer, 'Coach phone', profile?.coachPhone);
-    _line(buffer, 'Athlete email', profile?.athleteEmail);
+    _line(buffer, 'Athlete email', profile?.athleteEmail ?? profile?.recruitingEmail);
     _line(buffer, 'Athlete phone', profile?.athletePhone);
     _line(buffer, 'Website', profile?.athleteWebsite);
     _line(buffer, 'USA Swimming ID', profile?.usaSwimmingId);
