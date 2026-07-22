@@ -1,0 +1,21 @@
+============================================================
+  BLACK BANNER = Elite server is OFF
+============================================================
+
+Use this file (it is already in Desktop\StrokeIQ):
+
+  START-SWIMIQ-WITH-ELITE.bat
+
+What happens:
+  1) Updates from GitHub
+  2) Opens Elite black window — LEAVE IT OPEN
+  3) Waits until 127.0.0.1:8080 answers
+  4) Opens Chrome on localhost
+  5) Then click Run Elite Analysis
+
+If START-SWIMIQ-WITH-ELITE.bat is missing, run:
+
+  GET-LATEST-FIXED-APP.bat
+
+Gemini key is ONLY for coaching tips AFTER analysis works.
+============================================================

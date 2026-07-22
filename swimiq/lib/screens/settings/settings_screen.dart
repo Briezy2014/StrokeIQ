@@ -9,6 +9,7 @@ import '../../core/constants/legal_constants.dart';
 import '../legal/legal_document_screen.dart';
 import '../membership/membership_screen.dart';
 import '../../widgets/legal_footer.dart';
+import '../../widgets/swimiq_header.dart';
 import '../../services/auth_service.dart';
 
 /// Account and app settings — Milestone 4.
@@ -21,6 +22,39 @@ class SettingsScreen extends ConsumerWidget {
     await ref.read(authServiceProvider).signOut();
     ref.read(activeSwimmerProvider.notifier).state = null;
     if (context.mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _confirmLogOut(WidgetRef ref, BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Log Out?'),
+          content: const Text(
+            'Are you sure you want to log out?\n'
+            'Your SwimIQ data is securely saved and will be available the next '
+            'time you sign in.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Log Out'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == true && context.mounted) {
+      await _signOut(ref, context);
+    }
   }
 
   Future<void> _openWebLegalUrl(BuildContext context, String url) async {
@@ -41,7 +75,7 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const SwimIqScreenAppBarTitle('Settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -115,8 +149,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap a document to read it inside the app. Web links are for App Store '
-            'and sharing — host the same text at swimiqapp.com when those pages are live.',
+            'Tap a document to read it in the app, or open the web version.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
@@ -200,6 +233,28 @@ class SettingsScreen extends ConsumerWidget {
                     LegalConstants.aiDisclosureWebUrl,
                   ),
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.support_agent_outlined),
+                  title: const Text('Support'),
+                  subtitle: Text(LegalConstants.supportEmail),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _openWebLegalUrl(
+                    context,
+                    LegalConstants.supportMailtoUrl,
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.delete_forever_outlined),
+                  title: const Text('Delete Account'),
+                  subtitle: const Text('Request deletion of your account & data'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _openWebLegalUrl(
+                    context,
+                    LegalConstants.deleteAccountWebUrl,
+                  ),
+                ),
               ],
             ),
           ),
@@ -222,8 +277,8 @@ class SettingsScreen extends ConsumerWidget {
                 const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.waves),
-                  title: Text('Tagline'),
-                  subtitle: Text(AppConstants.tagline),
+                  title: Text('Copyright'),
+                  subtitle: Text(AppConstants.copyright),
                 ),
               ],
             ),
@@ -232,9 +287,9 @@ class SettingsScreen extends ConsumerWidget {
           const LegalFooter(),
           const SizedBox(height: 32),
           FilledButton.icon(
-            onPressed: () => _signOut(ref, context),
+            onPressed: () => _confirmLogOut(ref, context),
             icon: const Icon(Icons.logout),
-            label: const Text('Sign Out'),
+            label: const Text('Log Out'),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,

@@ -1,5 +1,3 @@
-import '../core/constants/demo_account_constants.dart';
-import '../core/constants/master_account_constants.dart';
 import '../core/services/subscription_service.dart';
 import '../core/subscription/subscription_capabilities.dart';
 import 'env.dart';
@@ -11,17 +9,14 @@ abstract final class FeatureFlags {
 
   static bool get videoEngineV2Enabled => Env.videoEngineV2;
 
-  /// Legacy Gemini path stays on when V2 is off, or when dual-run is enabled.
+  /// Legacy Gemini path only when V2 is off, or dual-run is explicitly enabled.
+  /// When V2 is on and dual-run is off, the old Video Lab analyze path is hidden.
   static bool get videoEngineLegacyEnabled =>
       !videoEngineV2Enabled || Env.videoEngineV2DualRun;
 
   /// Built-in accounts that always get Elite Video Lab when V2 is on.
-  static bool isBuiltInEliteVideoAccount(String? email) {
-    final normalized = email?.trim().toLowerCase();
-    if (normalized == null || normalized.isEmpty) return false;
-    return normalized == MasterAccountConstants.email.toLowerCase() ||
-        normalized == DemoAccountConstants.email.toLowerCase();
-  }
+  static bool isBuiltInEliteVideoAccount(String? email) =>
+      SubscriptionService.isBuiltInEliteEmail(email);
 
   /// Allowlist gate for V2 UI. Empty allowlist + V2 on → all users allowed.
   static bool isVideoEngineV2AllowedForEmail(String? email) {

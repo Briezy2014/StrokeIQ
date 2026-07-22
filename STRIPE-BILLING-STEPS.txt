@@ -1,0 +1,59 @@
+SWIMIQ — STRIPE BILLING (ONLY)
+================================
+
+Goal: plan checkout works on swimiqapp.com.
+
+
+----------------------------------------
+STEP 1 — Get latest files
+----------------------------------------
+1. File Explorer → OneDrive → Desktop → StrokeIQ
+2. Double-click: GET-LATEST-FIXED-APP.bat
+3. Wait until it finishes
+
+
+----------------------------------------
+STEP 2 — Turn on Stripe (paste one token)
+----------------------------------------
+1. Double-click: TURN-ON-STRIPE-BILLING.bat
+2. Press any key
+3. Browser opens: Supabase Access Tokens page
+4. Click: Generate new token
+5. Name: SwimIQ Stripe
+6. Copy the token (starts with sbp_)
+7. Click back in the BLACK window
+8. Right-click → Paste → press Enter
+9. Wait for:
+     [OK] create-stripe-checkout
+     [OK] stripe-webhook
+     [OK] Stripe functions deployed
+
+If it says you have too many tokens:
+  delete old cli_Kara... tokens first, then generate a new one.
+
+
+----------------------------------------
+STEP 3 — Stripe webhook
+----------------------------------------
+1. Stripe Dashboard → Test mode ON
+2. Developers → Webhooks → Add endpoint
+3. URL:
+https://bryurwyeosbffvfpdbv.supabase.co/functions/v1/stripe-webhook
+4. Events:
+   checkout.session.completed
+   customer.subscription.updated
+   customer.subscription.deleted
+5. Copy Signing secret (whsec_...)
+6. Supabase → Edge Functions → Secrets
+7. Name: STRIPE_WEBHOOK_SECRET
+8. Paste whsec_ value → Save
+
+
+----------------------------------------
+STEP 4 — Test
+----------------------------------------
+1. https://swimiqapp.com → sign in
+2. Settings → Plans & billing → Choose a plan
+3. Card: 4242 4242 4242 4242
+4. Any future date, any CVC
+5. Plan should become Active

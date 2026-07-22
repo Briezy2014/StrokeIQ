@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/services/ai_swim_analysis_service.dart';
+import 'package:swimiq/core/services/video_analysis_presenter.dart';
 import 'package:swimiq/core/utils/motivational_cut.dart';
 import 'package:swimiq/core/utils/passport_metrics.dart';
 import 'package:swimiq/core/utils/swimiq_standards_profile.dart';
@@ -10,7 +11,9 @@ import 'package:swimiq/data/models/meet_result.dart';
 import 'package:swimiq/data/models/race_log.dart';
 import 'package:swimiq/data/models/swim_goal.dart';
 import 'package:swimiq/data/models/swimmer_profile.dart';
+import 'package:swimiq/data/models/swim_video_analysis.dart';
 import 'package:swimiq/data/models/video_models.dart';
+import 'package:swimiq/providers/swimmer_data_provider.dart';
 
 import 'support/motivational_standards_test_helper.dart';
 
@@ -71,7 +74,7 @@ void main() {
       expect(pbs.first.timeSeconds, 55);
     });
 
-    test('calculates SwimIQ score', () {
+    test('calculates SwimIQ score with recent activity and no decay', () {
       final score = SwimAnalytics.calculateSwimIqScore(
         raceLogs: logs,
         goals: [
@@ -83,8 +86,54 @@ void main() {
             targetDate: DateTime(2026, 6, 1),
           ),
         ],
+        now: DateTime(2026, 2, 2),
       );
-      expect(score, 555);
+      // Foundation 350 + 2*5 sessions + 1*15 goal + 1*12 PB = 387
+      // Recent (within 7d of Feb 2): only Feb 1 log → 1*12 = 12
+      // Jan 1 is outside the week window. Grace day (1 quiet day) → no decay.
+      expect(score, 399);
+    });
+
+    test('SwimIQ score drops after quiet days', () {
+      final active = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 2),
+      );
+      final quiet = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 12),
+      );
+      expect(quiet, lessThan(active));
+      // Active (Feb 2): 350 + 10 sessions + 12 PB + 12 recent = 384
+      // Quiet (Feb 12): foundation 372, no recent boost, 11 days since Feb 1
+      // → (11 - 1 grace) * 25 = −250 → 122. Drop = 262.
+      expect(active - quiet, 262);
+    });
+
+    test('SwimIQ score rises when meet PBs are uploaded', () {
+      final withoutMeets = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 2),
+      );
+      final withMeets = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        meetResults: [
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Invite',
+            event: '50 Butterfly',
+            swimTime: 31.6,
+            course: 'SCY',
+            meetDate: DateTime(2026, 2, 2),
+          ),
+        ],
+        now: DateTime(2026, 2, 2),
+      );
+      expect(withMeets, greaterThan(withoutMeets));
     });
 
     test('calculates seconds to goal', () {
@@ -204,29 +253,110 @@ void main() {
       );
 
       expect(analysis.analysisJson?['event'], '50 Butterfly LCM');
-      expect(analysis.disclaimer, contains('not automatic video measurement'));
+      expect(analysis.disclaimer, contains('Gemini and MediaPipe'));
       expect(analysis.summary, isNot(contains('Overall readiness score')));
+      expect(analysis.summary, isNot(contains('upload review')));
+      expect(analysis.summary, isNot(contains('auto-measured')));
 
       final sections = analysis.coachingSections;
-      expect(sections.keys, contains('Quick Summary'));
-      expect(sections.keys, contains('What the video suggests'));
+      expect(sections.keys, isNot(contains('Quick Summary')));
+      expect(sections.keys, contains('Quick pro from this video'));
+      expect(sections.keys, contains('Quick con from this video'));
+      expect(sections.keys, contains('Goal for your next race'));
+      expect(sections.keys, contains('Top 3 priorities for your next race'));
       expect(sections.keys, contains(
-        'What cannot be confirmed yet without frame-by-frame AI',
+        'Dryland focus (strength · mobility · stability)',
       ));
-      expect(sections.keys, contains('Top 3 priorities for the next practice'));
       expect(sections.keys, contains('Estimated time savings'));
       expect(sections.keys, contains('Coach notes for next race'));
+      expect(sections.keys, isNot(contains('What the video suggests')));
+      expect(
+        sections.keys,
+        isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
+      );
 
-      expect(sections['Quick Summary'], contains('50 Butterfly LCM'));
-      expect(sections['What the video suggests'], contains('0.71'));
-      expect(sections['What the video suggests'],
-          isNot(contains('Reaction time 0.71 off the block')));
-      expect(sections['What cannot be confirmed yet without frame-by-frame AI'],
-          contains('computer vision'));
+      expect(sections['Quick pro from this video'], contains('finish'));
+      expect(sections['Quick pro from this video'], contains('last stroke'));
+      expect(sections['Quick pro from this video'], isNot(contains('flagged')));
+      expect(
+        sections['Quick pro from this video'],
+        isNot(contains('drove full extension')),
+      );
+      expect(
+        sections['Coach notes for next race'],
+        contains('long arm'),
+      );
+      expect(
+        sections['Estimated time savings'],
+        contains('complete last stroke'),
+      );
+      expect(sections['Quick con from this video'], contains('0.71'));
+      expect(sections['Goal for your next race'], isNotEmpty);
+      expect(
+        sections['Dryland focus (strength · mobility · stability)'],
+        contains('dolphin kick on the floor'),
+      );
+      expect(
+        sections['Top 3 priorities for your next race'],
+        isNot(contains('next practice')),
+      );
 
       expect(analysis.topPriorities.length, lessThanOrEqualTo(3));
       expect(analysis.topPriorities, isNotEmpty);
-      expect(sections['Estimated time savings'], contains('estimate'));
+      expect(analysis.techniqueScore, greaterThan(0));
+      expect(analysis.paceScore, greaterThan(0));
+      expect(analysis.overallScore, greaterThan(0));
+      expect(
+        analysis.techniqueScore == analysis.paceScore &&
+            analysis.paceScore == analysis.overallScore,
+        isFalse,
+        reason: 'fallback scores should differ by category',
+      );
+      expect(sections['Estimated time savings'], contains('Combined if you nail these'));
+      expect(sections['Estimated time savings'], isNot(contains('Add detailed upload notes')));
+      expect(sections['Coach notes for next race'], contains('race plan'));
+      expect(sections['Coach notes for next race'], contains('take your marks'));
+      expect(sections['Coach notes for next race'], contains('streamline'));
+      expect(sections['Coach notes for next race'], isNot(contains('arrow position')));
+      expect(sections['Coach notes for next race'], isNot(contains('Event:')));
+      expect(sections['Coach notes for next race'], isNot(contains('PB reference')));
+    });
+
+    test('presenter hides legacy sections and renames practice priorities', () {
+      const legacy = SwimVideoAnalysis(
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM\nOld disclaimer',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 80,
+        paceScore: 78,
+        overallScore: 79,
+        analysisJson: {
+          'disclaimer':
+              'V1 report from upload notes and video metadata only — not automatic video measurement.',
+          'sections': {
+            'Quick Summary': 'This is a 50 Butterfly LCM upload review',
+            'What the video suggests': 'Start phase is flagged',
+            'What cannot be confirmed yet without frame-by-frame AI':
+                'Exact reaction time',
+            'Specific drills': '4 x 25 holding stroke count',
+            'Top 3 priorities for the next practice': '• Practice finishes',
+            'Quick pro from this video': '• Solid breakout timing',
+            'Quick con from this video': '• Head lift on breath',
+          },
+        },
+      );
+
+      final visible = VideoAnalysisPresenter.visibleSections(legacy);
+      expect(visible.keys, isNot(contains('Quick Summary')));
+      expect(visible.keys, isNot(contains('What the video suggests')));
+      expect(
+        visible.keys,
+        isNot(contains('What cannot be confirmed yet without frame-by-frame AI')),
+      );
+      expect(visible.keys, isNot(contains('Specific drills')));
+      expect(visible.keys, contains('Top 3 priorities for your next race'));
+      expect(VideoAnalysisPresenter.friendlyDisclaimer(legacy), isNull);
     });
 
     test('detects legacy rules-engine analyses', () {
@@ -242,6 +372,148 @@ void main() {
       );
       expect(legacy.isLegacyRulesEngine, isTrue);
       expect(legacy.isNotesDriven, isFalse);
+    });
+
+    test('current V1 notes analyses are not treated as legacy', () {
+      const modern = SwimVideoAnalysis(
+        swimVideoId: 'video-1',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM\n• Solid breakout\n• Head lift on breath',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 80,
+        paceScore: 78,
+        overallScore: 79,
+        analysisJson: {
+          'engine': 'swimiq-v1-notes',
+          'sections': {
+            'Quick pro from this video': '• Solid breakout timing',
+            'Quick con from this video': '• Head lift on breath',
+            'Top 3 priorities for your next race': '• Practice finishes',
+          },
+        },
+      );
+
+      expect(modern.isLegacyRulesEngine, isFalse);
+      expect(modern.isNotesDriven, isTrue);
+
+      final data = SwimmerData(
+        raceLogs: const [],
+        goals: const [],
+        meetResults: const [],
+        videos: const [
+          SwimVideo(
+            id: 'video-1',
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/real.mov',
+            title: 'Denison 50 Fly',
+          ),
+        ],
+        videoAnalyses: [modern],
+        usaStandards: testMotivationalCatalog.flatStandards,
+        schedules: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
+      expect(data.analysisForVideo('video-1'), same(modern));
+    });
+
+    test('modern sections without engine are not treated as legacy', () {
+      const fromSupabase = SwimVideoAnalysis(
+        swimVideoId: 'video-2',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM',
+        strengths: 'Strong breakout',
+        improvements: 'Head position',
+        techniqueScore: 82,
+        paceScore: 80,
+        overallScore: 81,
+        analysisJson: {
+          'sections': {
+            'Quick pro from this video': 'Strong breakout timing',
+            'Quick con from this video': 'Head lifts on breath',
+          },
+        },
+      );
+
+      expect(fromSupabase.isLegacyRulesEngine, isFalse);
+    });
+
+    test('analysisForVideo returns newest non-legacy analysis', () {
+      final legacy = SwimVideoAnalysis(
+        id: 'legacy-1',
+        swimVideoId: 'video-3',
+        swimmer: 'Aspyn',
+        summary: 'Overall readiness score 72/100',
+        strengths: 'legacy',
+        improvements: 'legacy',
+        techniqueScore: 72,
+        paceScore: 72,
+        overallScore: 72,
+        createdAt: DateTime(2025, 1, 1),
+        analysisJson: {'engine': 'swimiq-v1-rules'},
+      );
+      final modern = SwimVideoAnalysis(
+        id: 'modern-1',
+        swimVideoId: 'video-3',
+        swimmer: 'Aspyn',
+        summary: '50 Butterfly LCM',
+        strengths: 'Strong breakout',
+        improvements: 'Head position',
+        techniqueScore: 82,
+        paceScore: 80,
+        overallScore: 81,
+        createdAt: DateTime(2026, 7, 1),
+        analysisJson: {
+          'engine': 'swimiq-v2-gemini',
+          'sections': {
+            'Quick pro from this video': 'Strong breakout timing',
+            'Quick con from this video': 'Head lifts on breath',
+          },
+        },
+      );
+
+      final data = SwimmerData(
+        raceLogs: const [],
+        goals: const [],
+        meetResults: const [],
+        videos: const [
+          SwimVideo(
+            id: 'video-3',
+            swimmer: 'Aspyn',
+            storagePath: 'Aspyn/real.mov',
+            title: 'Denison 50 Fly',
+          ),
+        ],
+        videoAnalyses: [legacy, modern],
+        usaStandards: testMotivationalCatalog.flatStandards,
+        schedules: const [],
+        motivationalStandards: testMotivationalCatalog,
+      );
+
+      expect(data.analysisForVideo('video-3'), same(modern));
+    });
+
+    test('parseAnalysisJson accepts json string payloads', () {
+      final parsed = SwimVideoAnalysis.fromJson({
+        'id': 'analysis-1',
+        'swim_video_id': 'video-4',
+        'swimmer': 'Aspyn',
+        'summary': '50 Butterfly LCM',
+        'strengths': 'Strong breakout',
+        'improvements': 'Head position',
+        'technique_score': 82,
+        'pace_score': 80,
+        'overall_score': 81,
+        'analysis_json':
+            '{"engine":"swimiq-v2-gemini","sections":{"Quick pro from this video":"Strong breakout"}}',
+      });
+
+      expect(parsed.isLegacyRulesEngine, isFalse);
+      expect(
+        parsed.coachingSections['Quick pro from this video'],
+        'Strong breakout',
+      );
     });
 
     test('hides integration test uploads from user-facing videos', () {

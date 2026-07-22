@@ -1,0 +1,6 @@
+TONIGHT — open the swimiq folder, then right-click
+TONIGHT-COACH-DEMO.ps1 → Run with PowerShell.
+
+Use 127.0.0.1 in Chrome — NOT swimiqapp.com.
+Leave the Elite window open.
+Denison 50 Fly → Run AI Swim Analysis.

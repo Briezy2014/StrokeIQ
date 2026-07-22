@@ -3,14 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/swim_time.dart';
 import '../../data/models/race_log.dart';
+import '../../data/models/swim_schedule_entry.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/swimmer_data_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/common_widgets.dart';
+import '../../core/subscription/subscription_capabilities.dart';
+import '../../widgets/meets_and_results_panel.dart';
 import '../../widgets/schedule_depository_section.dart';
+import '../../widgets/swim_session_form_sheet.dart';
 import '../../widgets/swimmer_screen.dart';
-import '../../widgets/swimiq_ui.dart';
-import '../race_intelligence/race_intelligence_screen.dart';
+import '../../widgets/swimiq_page_hero.dart';
 
 /// Training log with sessions plus schedule/meet depository.
 class TrainingLogScreen extends ConsumerStatefulWidget {
@@ -21,7 +27,11 @@ class TrainingLogScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
-  int _tabIndex = 1;
+  int get _tabIndex => ref.watch(trainingLogSegmentProvider);
+
+  void _setTabIndex(int index) {
+    ref.read(trainingLogSegmentProvider.notifier).state = index;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,55 +39,121 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
       builder: (context, ref, data, swimmer) {
         final logs = data.raceLogs;
         final dateFormat = DateFormat.yMMMd();
+        final subscription = ref.watch(subscriptionStateProvider).value;
+        final email = ref.watch(currentUserProvider)?.email;
+        final showProFeatures =
+            SubscriptionCapabilities.canUseProFeaturesForEmail(
+          subscription,
+          email,
+        );
+        final snapshot = data.passportSnapshot(swimmer);
 
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SwimIqScreenHeader(
-              title: 'Log & Schedule Depot',
-              subtitle: 'Sessions for ${data.displayName(swimmer)}',
-            ),
-            const SizedBox(height: 12),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Training')),
-                ButtonSegment(value: 1, label: Text('Meets & results')),
-              ],
-              selected: {_tabIndex},
-              onSelectionChanged: (values) {
-                setState(() => _tabIndex = values.first);
-              },
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SwimIqPageHero(
+                    showMark: false,
+                    title: 'Log',
+                    subtitle: 'Training, practices, meets & results',
+                    stats: [
+                      SwimIqHeroStat('${logs.length} sessions'),
+                      SwimIqHeroStat('${data.schedules.length} schedule items'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 0,
+                        label: Text('Training & practices'),
+                      ),
+                      ButtonSegment(value: 1, label: Text('Meets & results')),
+                    ],
+                    selected: {_tabIndex},
+                    onSelectionChanged: (values) {
+                      _setTabIndex(values.first);
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            if (_tabIndex == 0) ...[
-              if (logs.isEmpty)
-                const EmptyStateMessage(
-                  message:
-                      'No swim sessions yet. Use the Add tab to log your first training swim.',
-                )
-              else
-                ...logs.map(
-                  (log) => _TrainingLogTile(
-                    log: log,
-                    dateFormat: dateFormat,
-                    onEdit: () => _editLog(context, ref, log),
-                    onDelete: () => _deleteLog(context, ref, log),
-                  ),
-                ),
-            ] else
-              ScheduleDepositorySection(
-                onOpenRaceIntelligence: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RaceIntelligenceScreen(),
+            Expanded(
+              child: _tabIndex == 0
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _TrainingTabPanel(
+                        logs: logs,
+                        practices: data.schedules
+                            .where(
+                              (entry) =>
+                                  entry.scheduleType ==
+                                  SwimScheduleEntry.typePractice,
+                            )
+                            .toList(),
+                        dateFormat: dateFormat,
+                        onEditLog: (log) => _editLog(context, ref, log),
+                        onDeleteLog: (log) => _deleteLog(context, ref, log),
+                        onDeletePractice: (entry) =>
+                            _deletePractice(context, ref, entry),
+                        onLogSwim: () => showSwimSessionFormSheet(context),
+                        onUploadSwimPhoto: () =>
+                            showSwimSessionFormSheet(context, startWithPhotoPicker: true),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: MeetsAndResultsPanel(
+                        meetResults: data.meetResults,
+                        schedules: data.schedules,
+                        showProFeatures: showProFeatures,
+                        highestCut: snapshot.highestCut,
+                        motivationalStandards: data.motivationalStandards,
+                        profile: data.profile,
+                      ),
                     ),
-                  );
-                },
-              ),
+            ),
           ],
         );
       },
+    );
+  }
+
+  Future<void> _deletePractice(
+    BuildContext context,
+    WidgetRef ref,
+    SwimScheduleEntry entry,
+  ) async {
+    if (entry.id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove practice schedule?'),
+        content: Text('Delete ${entry.title}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final error =
+        await ref.read(swimmerDataProvider.notifier).deleteSchedule(entry.id!);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? 'Practice schedule removed.')),
     );
   }
 
@@ -271,6 +347,162 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
       notesController.dispose();
       distanceController.dispose();
     }
+  }
+}
+
+class _TrainingTabPanel extends StatelessWidget {
+  const _TrainingTabPanel({
+    required this.logs,
+    required this.practices,
+    required this.dateFormat,
+    required this.onEditLog,
+    required this.onDeleteLog,
+    required this.onDeletePractice,
+    required this.onLogSwim,
+    required this.onUploadSwimPhoto,
+  });
+
+  final List<RaceLog> logs;
+  final List<SwimScheduleEntry> practices;
+  final DateFormat dateFormat;
+  final void Function(RaceLog log) onEditLog;
+  final void Function(RaceLog log) onDeleteLog;
+  final void Function(SwimScheduleEntry entry) onDeletePractice;
+  final VoidCallback onLogSwim;
+  final VoidCallback onUploadSwimPhoto;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasContent = logs.isNotEmpty || practices.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 12),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryDeep.withValues(alpha: 0.08),
+                      AppColors.surfaceLight,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Training & practices',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryDeep,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Log swims manually or upload a workout photo. Schedule practices here.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textDark.withValues(alpha: 0.7),
+                            height: 1.4,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (!hasContent)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: EmptyStateMessage(
+                    message:
+                        'No training logged yet. Tap Log swim to enter a time, '
+                        'Upload photo for a workout snapshot, or Add practice to schedule.',
+                  ),
+                ),
+              if (logs.isNotEmpty) ...[
+                Text(
+                  'Swim sessions',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                ...logs.map(
+                  (log) => _TrainingLogTile(
+                    log: log,
+                    dateFormat: dateFormat,
+                    onEdit: () => onEditLog(log),
+                    onDelete: () => onDeleteLog(log),
+                  ),
+                ),
+              ],
+              if (practices.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Scheduled practices',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                ...practices.map(
+                  (entry) => ScheduleEntryTile(
+                    entry: entry,
+                    dateFormat: dateFormat,
+                    onDelete: () => onDeletePractice(entry),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton.icon(
+                  onPressed: onLogSwim,
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: const Text('Log swim'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => showScheduleEntryFormSheet(
+                    context,
+                    initialType: SwimScheduleEntry.typePractice,
+                    allowedTypes: {SwimScheduleEntry.typePractice},
+                  ),
+                  icon: const Icon(Icons.pool_outlined, size: 18),
+                  label: const Text('Add practice'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onUploadSwimPhoto,
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: const Text('Upload photo'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

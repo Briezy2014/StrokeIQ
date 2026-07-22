@@ -70,4 +70,28 @@ abstract final class SwimTime {
       return false;
     }
   }
+
+  /// Builds seconds from structured minute/second/tenth/hundredth parts.
+  static double fromParts({
+    int minutes = 0,
+    required int seconds,
+    required int tenths,
+    required int hundredths,
+  }) {
+    if (minutes < 0) {
+      throw const FormatException('Minutes cannot be negative.');
+    }
+    if (seconds < 0 || seconds > 59) {
+      throw const FormatException('Seconds must be between 0 and 59.');
+    }
+    if (tenths < 0 || tenths > 9) {
+      throw const FormatException('Tenths must be a single digit (0-9).');
+    }
+    if (hundredths < 0 || hundredths > 9) {
+      throw const FormatException('Hundredths must be a single digit (0-9).');
+    }
+
+    final total = (minutes * 60) + seconds + (tenths / 10) + (hundredths / 100);
+    return double.parse(total.toStringAsFixed(2));
+  }
 }

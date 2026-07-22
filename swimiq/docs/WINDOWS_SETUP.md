@@ -13,10 +13,13 @@ SwimIQ avoids heavy native desktop builds. **Gemini video coaching** still runs 
 
 ---
 
-## Easiest fix — use drive `S:`
+## Easiest fix — use drive `S:` and the launcher script
+
+**Do not run `flutter run -d chrome` directly** if your username is `Kara Williams`.  
+The Pub cache path (`C:\Users\Kara Williams\AppData\...`) breaks native hooks.
 
 1. In File Explorer, open your **StrokeIQ** folder (the one that contains the `swimiq` folder).
-2. Double-click **`swimiq\scripts\setup-short-path.bat`**
+2. Double-click **`swimiq\scripts\setup-short-path.bat`** (once per PC reboot).
 3. Open a **new** PowerShell window.
 4. Run:
 
@@ -25,6 +28,10 @@ S:
 cd swimiq
 .\run-chrome.ps1
 ```
+
+Or double-click **`run-chrome.bat`**.
+
+The launcher maps Flutter to `F:\` if needed, project to `S:\swimiq`, and sets **`PUB_CACHE=S:\pub-cache`** (no spaces).
 
 5. Chrome should open with the **Login** screen and SwimIQ logo.
 
@@ -68,11 +75,13 @@ subst S: "C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ"
 Then:
 
 ```powershell
+$env:PUB_CACHE = "S:\pub-cache"
+New-Item -ItemType Directory -Force -Path $env:PUB_CACHE | Out-Null
 $env:Path = "F:\bin;" + $env:Path
 cd S:\swimiq
 flutter clean
 flutter pub get
-flutter run -d chrome
+.\run-chrome.ps1
 ```
 
 ---
@@ -95,7 +104,39 @@ flutter run -d chrome
 
 ---
 
+## Supabase keys required (fixes “assets/.env 404” in Chrome)
+
+Flutter **web** does not load `.env` as a file in the browser. The launcher passes keys via `--dart-define`.
+
+1. In `S:\swimiq`, copy the example file:
+
+```powershell
+copy .env.example .env
+notepad .env
+```
+
+2. In [Supabase](https://supabase.com/dashboard) → your project → **Project Settings** → **API**, paste:
+   - **Project URL** → `SUPABASE_URL=`
+   - **anon public** key → `SUPABASE_ANON_KEY=`
+
+3. Save `.env`, then launch:
+
+```powershell
+.\run-chrome.bat
+```
+
+Do **not** use raw `flutter run -d chrome` — use `run-chrome.bat` so keys and path fixes apply.
+
+---
+
 ## Logos
 
-Brand files live in `assets\branding\` (`swimiq_icon.png`, `swimiq_hero.png`, `swimiq_logo.png`).  
-After replacing them: `flutter clean` then `flutter run -d chrome`.
+One file only — **512×512 square PNG**:
+
+```
+assets\branding\swimiq_icon.png
+```
+
+Drag your PNG onto **`COPY-LOGO.bat`** (also updates web tab icon in `web\favicon.png` and `web\icons\`).
+
+After replacing: close Chrome completely, then run **`LAUNCH-CHROME.bat`** (not hot reload).

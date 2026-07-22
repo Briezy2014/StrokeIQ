@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 PROMPT_VERSION = "elote-gemini-coach-v1"
 REPORT_SCHEMA_VERSION = "coaching_report_v1"
-DEFAULT_MODEL_NAME = "gemini-2.5-flash"
+DEFAULT_MODEL_NAME = "gemini-3.5-flash"
 
 ConfidenceBand = Literal["high", "moderate", "low", "unavailable"]
 

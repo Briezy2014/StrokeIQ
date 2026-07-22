@@ -148,7 +148,9 @@ def _validate_observation(
         elif eid not in available_events:
             result.reject(f"{where}_references_unavailable_event:{eid}")
 
-    # Confidence-aware language
+    # Confidence-aware language:
+    # Block fake certainty on weak evidence. Do NOT require hedge-spam prefixes
+    # like "the available frames may indicate" - that reads as gibberish to families.
     confs: list[float] = []
     for mid in obs.metric_ids:
         m = metric_map.get(mid)
@@ -163,13 +165,13 @@ def _validate_observation(
     if band == "unavailable":
         result.reject(f"{where}_unavailable_band_not_allowed_as_finding")
     if min_conf < 0.45 or band == "low":
-        if not LOW_CUES.search(obs.text):
-            result.reject(f"{where}_low_confidence_requires_cautious_wording")
         if CERTAINTY_PATTERNS.search(obs.text):
             result.reject(f"{where}_claims_certainty_from_low_confidence_evidence")
     elif (0.45 <= min_conf < 0.75) or band == "moderate":
-        if not (MODERATE_CUES.search(obs.text) or LOW_CUES.search(obs.text)):
-            result.reject(f"{where}_moderate_confidence_requires_suggestive_wording")
+        if CERTAINTY_PATTERNS.search(obs.text) and not (
+            MODERATE_CUES.search(obs.text) or LOW_CUES.search(obs.text)
+        ):
+            result.reject(f"{where}_claims_certainty_from_moderate_confidence_evidence")
 
     # Invented / contradicting measurements
     known_values = _known_numeric_values(obs, metric_map, event_map)

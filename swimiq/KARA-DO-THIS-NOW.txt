@@ -1,0 +1,209 @@
+================================================================================
+  KARA — DO THIS NOW (no Command Prompt, no Android Studio)
+================================================================================
+
+*** VIDEO DELETE / ANALYZE BROKEN? READ THIS FIRST ***
+------------------------------------------------------
+You do NOT need a special file name. Use files you ALREADY have:
+
+  1. Double-click  RESTORE-SCRIPTS.bat     (wait for DONE)
+  2. Double-click  KARA-GEMINI-FIX-NOW.bat (creates FIX-VIDEO-DATABASE.bat)
+     OR double-click  KARA-SEE-UPDATES-NOW.bat (pulls updates + creates files)
+
+After step 1 or 2 you should see NEW files in this folder:
+  FIX-VIDEO-DATABASE.bat
+  KARA-PASTE-THIS-IN-SUPABASE.txt
+
+Then:
+  3. Double-click FIX-VIDEO-DATABASE.bat
+  4. Notepad opens — copy SQL — Supabase website — SQL Editor — RUN
+  5. Finish KARA-GEMINI-FIX-NOW.bat (deploy server)
+  6. KARA-CLICK-THIS.bat — Video tab — Delete or Analyze
+
+If git pull fails: open KARA-DO-THIS-NOW.txt on GitHub in Chrome and copy
+the SQL from the bottom of this file after you pull updates.
+
+
+READ THIS FIRST
+---------------
+• You do NOT need Command Prompt for any step below — only double-click files.
+• Do NOT move the project into the android folder. That will BREAK the app.
+  The android folder is only one small piece. The whole project stays in StrokeIQ.
+• Android Studio does NOT fix video AI. Ignore ChatGPT if it says to use android folder.
+
+Your Windows username "Kara Williams" has a SPACE. That breaks Flutter unless you
+run the path fix once (Step A below).
+
+
+================================================================================
+  STEP A — FIX THE SPACE IN "KARA WILLIAMS" (do once)
+================================================================================
+
+1. Open File Explorer (folder icon on taskbar).
+
+2. Go to your StrokeIQ folder. Usually:
+     Desktop → StrokeIQ → swimiq
+   Full path might look like:
+     C:\Users\Kara Williams\OneDrive\Desktop\StrokeIQ\swimiq
+
+3. Inside the swimiq folder, find this file:
+     FIX-KARA-PATHS.bat
+
+4. DOUBLE-CLICK FIX-KARA-PATHS.bat
+   • A black window opens — wait until it says DONE.
+   • If it says ERROR, double-click RESTORE-SCRIPTS.bat first, then try again.
+
+5. This creates C:\SwimIQWork (no spaces). You still open files from your
+   Desktop StrokeIQ folder — the bat files handle the rest.
+
+
+================================================================================
+  STEP B — GET THE LATEST UPDATES (no typing commands)
+================================================================================
+
+1. Same swimiq folder on your Desktop.
+
+2. DOUBLE-CLICK:  KARA-SEE-UPDATES-NOW.bat
+
+3. Wait. It pulls code from GitHub and opens Chrome with SwimIQ.
+   • First time can take 2–3 minutes.
+   • Leave the black window open until Chrome shows the app.
+
+
+================================================================================
+  STEP C — FIX VIDEO DATABASE (do once — BEFORE Gemini deploy)
+================================================================================
+
+If Delete video does not work, or Analyze shows "swim_video_analyses" errors:
+
+1. File Explorer → Desktop → StrokeIQ → swimiq
+
+2. DOUBLE-CLICK one of these (same thing — use whichever you see):
+     FIX-VIDEO-DATABASE.bat
+     KARA-FIX-VIDEO-DATABASE.bat
+
+   If neither file exists:
+     • Double-click RESTORE-SCRIPTS.bat first, OR
+     • Open KARA-PASTE-THIS-IN-SUPABASE.txt (instructions + SQL inside)
+
+3. Notepad opens with SQL. Follow the steps at the top:
+   • Supabase website → SQL Editor → paste → RUN → Success
+
+4. You only do this ONCE per Supabase project.
+
+
+================================================================================
+  STEP D — GEMINI API KEY (you probably did this already)
+================================================================================
+
+1. In Chrome, go to:  https://supabase.com/dashboard
+2. Open your SwimIQ project.
+3. Click the gear (Project Settings) → Edge Functions → Secrets.
+4. You need a secret named exactly:  GEMINI_API_KEY
+   (value = your AIza key from https://aistudio.google.com/apikey)
+
+
+================================================================================
+  STEP E — INSTALL NODE.JS (this is what "step 2" was — then go to F)
+================================================================================
+
+1. In Chrome, go to:  https://nodejs.org
+2. Click the big green button that says LTS (recommended).
+3. Run the downloaded installer — click Next through everything (defaults OK).
+4. RESTART YOUR COMPUTER when it finishes. (Important.)
+
+You do NOT need to open Command Prompt to check Node. Step F checks for you.
+
+
+================================================================================
+  STEP F — AFTER NODE.JS: DEPLOY GEMINI (this is what was missing)
+================================================================================
+
+AFTER your PC restarts:
+
+1. File Explorer → Desktop → StrokeIQ → swimiq
+
+2. DOUBLE-CLICK:  KARA-GEMINI-FIX-NOW.bat
+
+3. Black window opens. Press any key when it says to.
+
+4. STEP 1 — "Installing Supabase tools" — wait, can take 1–2 minutes.
+
+5. STEP 2 — Browser opens for Supabase login.
+   • Sign in with the Google account that owns your SwimIQ Supabase project.
+   • Come back to the black window when login succeeds.
+
+6. STEP 3 — "Link SwimIQ project" — automatic, wait.
+
+7. STEP 4 — "Deploy video analysis" — wait 30–60 seconds.
+
+8. SUCCESS looks like this in the black window:
+     SUCCESS - Server is updated
+
+If it says "Node.js not installed" → redo Step E and restart PC, then run this bat again.
+
+
+================================================================================
+  STEP G — OPEN THE APP
+================================================================================
+
+1. File Explorer → swimiq folder
+
+2. DOUBLE-CLICK:  KARA-CLICK-THIS.bat
+   (or KARA-SEE-UPDATES-NOW.bat if you want updates + Chrome together)
+
+3. Wait for Chrome to show SwimIQ and log in.
+
+
+================================================================================
+  STEP H — TEST VIDEO AI IN THE APP
+================================================================================
+
+1. FIRST: double-click KARA-WHY-GEMINI-FAILS.bat
+   Opens GEMINI-DIAGNOSIS.txt in Notepad (uses Node.js, not PowerShell).
+
+2. In SwimIQ, open the Video tab.
+
+3. Tap:  Analyze on your clip (server check runs automatically)
+
+   GOOD message:
+     Video server ready (version 2026-file-api...)
+
+   BAD — read GEMINI-DIAGNOSIS.txt
+
+4. Tap Analyze on your swim clip AGAIN. Old scores are FAKE — you must re-analyze.
+   Wait up to 90 seconds.
+
+   SUCCESS:
+   • Scores show numbers (72/100), not a dash —
+   • Says "Gemini — frame-by-frame video analysis"
+   • Coaching matches YOUR video
+
+   STILL FAILING:
+   • Scroll to red "Technical error" box — screenshot that text.
+
+5. To delete a video: scroll to the BOTTOM of that video's card.
+   Tap the red-outlined button:  Delete video
+
+
+================================================================================
+  IF YOU ONLY REMEMBER 4 FILES
+================================================================================
+
+  FIX-KARA-PATHS.bat        — once, fixes Kara Williams space problem
+  FIX-VIDEO-DATABASE.bat    — once, fixes Delete + video AI database tables
+  KARA-SEE-UPDATES-NOW.bat  — get latest code + open Chrome
+  KARA-GEMINI-FIX-NOW.bat   — after Node.js install, fixes video AI server
+  KARA-WHY-GEMINI-FAILS.bat — tells you EXACTLY why Gemini still fails
+  KARA-CLICK-THIS.bat       — open SwimIQ in Chrome anytime
+
+
+================================================================================
+  STILL BROKEN? SEND 3 SCREENSHOTS
+================================================================================
+
+1. Supabase website → Edge Functions — show the list
+2. SwimIQ app → message after Analyze (or orange banner if setup still needed)
+3. The black window from KARA-GEMINI-FIX-NOW.bat (last lines)
+
+================================================================================

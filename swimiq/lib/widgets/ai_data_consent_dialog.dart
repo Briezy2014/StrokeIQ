@@ -42,7 +42,8 @@ class AiDataConsentDialog extends StatelessWidget {
             const Text(
               '• Your swim video and related profile context (event, notes, goals) '
               'are sent to SwimIQ secure servers.\n'
-              '• SwimIQ uses Google cloud AI to generate coaching feedback.\n'
+              '• SwimIQ uses Google cloud AI to generate kid- and parent-friendly '
+              'swim coaching feedback (technique only — not medical advice).\n'
               '• Output is AI-generated estimates — not official timing or medical advice.\n'
               '• You can revoke consent anytime in Settings (sign out clears local consent).',
             ),

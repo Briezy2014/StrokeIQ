@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class JobStatus(str, Enum):
     queued = "queued"
+    downloading = "downloading"
     validating = "validating"
     preprocessing = "preprocessing"
     detecting_swimmer = "detecting_swimmer"
@@ -32,6 +33,12 @@ class HealthResponse(BaseModel):
     ffprobe_available: bool
     ffmpeg_path: str
     ffprobe_path: str
+    # Booleans only — never expose secret values.
+    supabase_url_configured: bool = False
+    supabase_anon_configured: bool = False
+    supabase_service_role_configured: bool = False
+    storage_download_configured: bool = False
+    gemini_api_key_configured: bool = False
 
 
 class JobError(BaseModel):

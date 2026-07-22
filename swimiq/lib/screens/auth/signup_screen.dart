@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/models/subscription_plan.dart';
+import '../../core/services/pending_coach_code_storage.dart';
 import '../../core/utils/auth_validators.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/auth_gradient_background.dart';
+import '../../widgets/coach_access_code_dialog.dart';
 import '../../widgets/loading_button.dart';
+import '../../widgets/swimiq_header.dart';
 import '../../widgets/swimiq_logo.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -28,6 +32,25 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _obscureConfirm = true;
   String? _errorMessage;
   String? _successMessage;
+  String? _pendingCoachCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingCoachCode();
+  }
+
+  Future<void> _loadPendingCoachCode() async {
+    final code = await PendingCoachCodeStorage.peek();
+    if (mounted) setState(() => _pendingCoachCode = code);
+  }
+
+  Future<void> _enterCoachCode() async {
+    final code = await showCoachAccessCodeDialog(context);
+    if (code == null || !mounted) return;
+    await PendingCoachCodeStorage.save(code);
+    setState(() => _pendingCoachCode = code);
+  }
 
   @override
   void dispose() {
@@ -48,7 +71,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     });
 
     try {
-      final response = await ref.read(authServiceProvider).signUp(
+      final response = await ref
+          .read(authServiceProvider)
+          .signUp(
             email: _emailController.text,
             password: _passwordController.text,
             displayName: _displayNameController.text,
@@ -82,132 +107,171 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SwimIqHeroBanner(height: 160, borderRadius: 16),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Create your account',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Built in the Water. Driven by Possibility.',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        if (_successMessage != null) ...[
-                          _SuccessBanner(message: _successMessage!),
-                          const SizedBox(height: 16),
-                        ],
-                        if (_errorMessage != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red.shade200),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Center(child: SwimIqLoginBrand()),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Create your account',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade800),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        TextFormField(
-                          controller: _displayNameController,
-                          textInputAction: TextInputAction.next,
-                          textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            labelText: 'Display name (optional)',
-                            prefixIcon: Icon(Icons.person_outline),
-                            hintText: 'Example: Aspyn',
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          autocorrect: false,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: AuthValidators.email,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                            const SizedBox(height: 24),
+                            if (_pendingCoachCode != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.green.shade200,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Coach code saved — after you create your account you will get '
+                                  '${SubscriptionCatalog.coachTrialDays}-day Pro access and '
+                                  '${SubscriptionCatalog.coachElitePeekDays} days of Elite AI preview.',
+                                  style: TextStyle(
+                                    color: Colors.green.shade900,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
+                              const SizedBox(height: 16),
+                            ],
+                            if (_successMessage != null) ...[
+                              _SuccessBanner(message: _successMessage!),
+                              const SizedBox(height: 16),
+                            ],
+                            if (_errorMessage != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.red.shade200,
+                                  ),
+                                ),
+                                child: Text(
+                                  _errorMessage!,
+                                  style: TextStyle(color: Colors.red.shade800),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            TextFormField(
+                              controller: _displayNameController,
+                              textInputAction: TextInputAction.next,
+                              textCapitalization: TextCapitalization.words,
+                              decoration: const InputDecoration(
+                                labelText: 'Display name (optional)',
+                                prefixIcon: Icon(Icons.person_outline),
+                                hintText: 'Example: Aspyn',
                               ),
                             ),
-                          ),
-                          validator: AuthValidators.password,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _confirmPasswordController,
-                          obscureText: _obscureConfirm,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: 'Confirm password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureConfirm
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              autocorrect: false,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email_outlined),
                               ),
-                              onPressed: () => setState(
-                                () => _obscureConfirm = !_obscureConfirm,
+                              validator: AuthValidators.email,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
+                                ),
+                              ),
+                              validator: AuthValidators.password,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirm,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: 'Confirm password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscureConfirm = !_obscureConfirm,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) =>
+                                  AuthValidators.confirmPassword(
+                                    value,
+                                    _passwordController.text,
+                                  ),
+                            ),
+                            const SizedBox(height: 24),
+                            LoadingButton(
+                              label: 'Create Account',
+                              isLoading: _isLoading,
+                              onPressed: _submit,
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: widget.onSwitchToLogin,
+                              child: const Text(
+                                'Already have an account? Sign in',
                               ),
                             ),
-                          ),
-                          validator: (value) => AuthValidators.confirmPassword(
-                            value,
-                            _passwordController.text,
-                          ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _enterCoachCode,
+                              icon: const Icon(Icons.school_outlined, size: 18),
+                              label: Text(
+                                _pendingCoachCode == null
+                                    ? 'Have a coach access code?'
+                                    : 'Change coach code',
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 24),
-                        LoadingButton(
-                          label: 'Create Account',
-                          isLoading: _isLoading,
-                          onPressed: _submit,
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: widget.onSwitchToLogin,
-                          child: const Text('Already have an account? Sign in'),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  const SwimIqCopyrightLine(),
+                ],
               ),
             ),
           ),
@@ -231,10 +295,7 @@ class _SuccessBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.green.shade200),
       ),
-      child: Text(
-        message,
-        style: TextStyle(color: Colors.green.shade800),
-      ),
+      child: Text(message, style: TextStyle(color: Colors.green.shade800)),
     );
   }
 }

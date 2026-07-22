@@ -14,13 +14,21 @@ Future<void> main() async {
   await _loadEnvironment();
 
   if (Env.isConfigured) {
-    await Supabase.initialize(
-      url: SupabaseConfig.url,
-      publishableKey: SupabaseConfig.anonKey,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-      ),
-    );
+    try {
+      await Supabase.initialize(
+        url: SupabaseConfig.url,
+        publishableKey: SupabaseConfig.anonKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+        ),
+      );
+    } catch (e, st) {
+      // Never block app boot on a failed session recover / network blip.
+      // Auth UI can still sign in fresh once connectivity returns.
+      if (kDebugMode) {
+        debugPrint('SwimIQ: Supabase initialize warning: $e\n$st');
+      }
+    }
   } else if (kDebugMode) {
     debugPrint(
       'SwimIQ: Supabase not configured. Copy .env.example to .env or use '

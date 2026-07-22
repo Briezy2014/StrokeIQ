@@ -77,30 +77,22 @@ class SwimPoseMetricsCalculator {
       if (rightAnkle != null && rightAnkle.isVisible) rightAnkleY.add(rightAnkle.y);
     }
 
-    final observations = <String>[
-      'Pose detected in ${frames.length} sampled frame(s).',
-    ];
-
     final avgBodyLine = _average(bodyLineAngles);
-    if (avgBodyLine != null) {
-      observations.add(
-        avgBodyLine.abs() <= 8
-            ? 'Body line stays relatively flat on average (${avgBodyLine.toStringAsFixed(1)}°).'
-            : 'Body line averages ${avgBodyLine.toStringAsFixed(1)}° — check hips staying near the surface.',
-      );
-    }
-
     final avgHipDrop = _average(hipDrops);
-    if (avgHipDrop != null && avgHipDrop > 4) {
-      observations.add('Hip drop detected (avg ${avgHipDrop.toStringAsFixed(1)}).');
-    }
-
+    final avgHeadLift = _average(headLiftScores);
+    final avgElbow = _average(elbowAngles);
     final strokeCycles = _countPeaks(wristY);
-    if (strokeCycles > 0) {
-      observations.add('Estimated $strokeCycles arm-cycle peaks in the sampled clip.');
-    }
-
     final kickSymmetry = _kickSymmetry(leftAnkleY, rightAnkleY);
+
+    final coaching = _buildBodyMechanicsCoaching(
+      avgBodyLine: avgBodyLine,
+      avgHipDrop: avgHipDrop,
+      avgHeadLift: avgHeadLift,
+      avgElbow: avgElbow,
+      kickSymmetry: kickSymmetry,
+      strokeCycles: strokeCycles,
+      framesWithPose: frames.length,
+    );
 
     return SwimPoseMetrics(
       engine: SwimPoseMetrics.engineId,
@@ -108,10 +100,142 @@ class SwimPoseMetricsCalculator {
       framesWithPose: frames.length,
       avgBodyLineAngleDeg: avgBodyLine,
       hipDropDegrees: avgHipDrop,
-      headLiftScore: _average(headLiftScores),
-      avgElbowAngleDeg: _average(elbowAngles),
+      headLiftScore: avgHeadLift,
+      avgElbowAngleDeg: avgElbow,
       estimatedStrokeCycles: strokeCycles > 0 ? strokeCycles : null,
       kickSymmetryScore: kickSymmetry,
+      bodyMechanicsPro: coaching.pro,
+      bodyMechanicsCon: coaching.con,
+      bodyMechanicsSuggestions: coaching.suggestions,
+      observations: coaching.observations,
+    );
+  }
+
+  static _BodyMechanicsCoaching _buildBodyMechanicsCoaching({
+    required double? avgBodyLine,
+    required double? avgHipDrop,
+    required double? avgHeadLift,
+    required double? avgElbow,
+    required double? kickSymmetry,
+    required int strokeCycles,
+    required int framesWithPose,
+  }) {
+    final observations = <String>[
+      'MediaPipe sampled $framesWithPose frame(s) and tracked shoulder, hip, head, elbow, and ankle landmarks.',
+    ];
+    final suggestions = <String>[];
+    String? pro;
+    String? con;
+
+    if (avgBodyLine != null) {
+      final angle = avgBodyLine.abs();
+      observations.add(
+        'Body line angle (shoulder-to-hip): ${angle.toStringAsFixed(1)}° '
+        '(0° = flat streamline; higher = hips or chest out of alignment).',
+      );
+      if (angle <= 8) {
+        pro = 'Flat body line (${angle.toStringAsFixed(1)}°) — hips and chest stay aligned near the surface, '
+            'which helps you carry speed between strokes.';
+      } else {
+        con = 'Body line averages ${angle.toStringAsFixed(1)}° — hips are likely sitting below the shoulders. '
+            'Think "hips up, chest slightly down" to stay long on the water.';
+        suggestions.add(
+          'Press your chest slightly down and lift your hips toward the surface so shoulder, hip, and ankle line up.',
+        );
+      }
+    }
+
+    if (avgHipDrop != null) {
+      observations.add(
+        'Hip drop asymmetry: ${avgHipDrop.toStringAsFixed(1)} '
+        '(lower = even hips; higher = one hip sinking below the other).',
+      );
+      if (avgHipDrop > 4) {
+        con ??= 'Hips are dropping below the body line (asymmetry ${avgHipDrop.toStringAsFixed(1)}). '
+            'Sinking hips create drag — drive the kick from the hips and keep the core tight.';
+        suggestions.add(
+          'Keep hips high near the surface: tighten your core, kick from the hips (not just the knees), '
+          'and avoid letting the lower body "sit" in the water.',
+        );
+      } else if (pro == null) {
+        pro = 'Hips stay relatively even near the surface (drop ${avgHipDrop.toStringAsFixed(1)}) — '
+            'good body position for holding a long streamline.';
+      }
+    }
+
+    if (avgHeadLift != null) {
+      observations.add(
+        'Head lift score: ${avgHeadLift.toStringAsFixed(1)} '
+        '(lower = head down in line with shoulders; higher = head lifting and pulling hips down).',
+      );
+      if (avgHeadLift > 12) {
+        final headCon =
+            'Head lifts above the shoulder line (score ${avgHeadLift.toStringAsFixed(1)}). '
+            'When the head comes up, the hips usually drop — keep the head down and eyes looking at the bottom during streamline and breathing.';
+        con = con == null ? headCon : '$con $headCon';
+        suggestions.add(
+          'Head down, hips up: look at the bottom of the pool between breaths and keep one goggle in the water when you breathe.',
+        );
+      } else if (pro == null || pro.contains('body line')) {
+        pro = pro ??
+            'Head stays low relative to the shoulders (${avgHeadLift.toStringAsFixed(1)}) — '
+                'this helps keep hips up and reduces frontal drag.';
+      }
+    }
+
+    if (avgElbow != null) {
+      observations.add(
+        'Average elbow angle at the arm: ${avgElbow.toStringAsFixed(1)}° '
+        '(early catch often lands near 90–120° depending on stroke).',
+      );
+      if (avgElbow < 70) {
+        suggestions.add(
+          'Elbow is staying quite straight (${avgElbow.toStringAsFixed(1)}°) — aim for a higher elbow on the catch so you pull water with the forearm and hand, not just reach.',
+        );
+      } else if (avgElbow > 150) {
+        suggestions.add(
+          'Elbow angle is very open (${avgElbow.toStringAsFixed(1)}°) — set the catch sooner so the forearm presses back on the water instead of slipping through.',
+        );
+      } else {
+        if (pro == null) {
+          pro = 'Elbow angle (${avgElbow.toStringAsFixed(1)}°) looks in a workable range for an early catch and pull.';
+        }
+      }
+    }
+
+    if (kickSymmetry != null) {
+      observations.add(
+        'Kick symmetry: ${kickSymmetry.toStringAsFixed(0)}/100 '
+        '(100 = even left/right kick amplitude).',
+      );
+      if (kickSymmetry < 70) {
+        final kickCon =
+            'Kick symmetry is ${kickSymmetry.toStringAsFixed(0)}/100 — one side may be kicking stronger or deeper than the other.';
+        con = con == null ? kickCon : '$con $kickCon';
+        suggestions.add(
+          'Balance the kick: equal amplitude left and right, initiate from the hips, and keep ankles relaxed but quick.',
+        );
+      } else if (pro == null) {
+        pro = 'Kick symmetry is ${kickSymmetry.toStringAsFixed(0)}/100 — left and right legs are working evenly.';
+      }
+    }
+
+    if (strokeCycles > 0) {
+      observations.add('Estimated $strokeCycles arm-cycle peaks in the sampled clip.');
+    }
+
+    if (suggestions.isEmpty && con != null) {
+      suggestions.add('Film from the side at pool-deck height so MediaPipe can track body angles more accurately.');
+    }
+
+    if (pro == null && con == null) {
+      pro = 'MediaPipe detected usable body landmarks — review the angle notes above with your coach.';
+    }
+
+    return _BodyMechanicsCoaching(
+      pro: pro,
+      con: con,
+      suggestions: suggestions,
       observations: observations,
     );
   }
@@ -173,4 +297,18 @@ class SwimPoseMetricsCalculator {
   static double _range(List<double> values) {
     return values.reduce(math.max) - values.reduce(math.min);
   }
+}
+
+class _BodyMechanicsCoaching {
+  const _BodyMechanicsCoaching({
+    required this.pro,
+    required this.con,
+    required this.suggestions,
+    required this.observations,
+  });
+
+  final String? pro;
+  final String? con;
+  final List<String> suggestions;
+  final List<String> observations;
 }

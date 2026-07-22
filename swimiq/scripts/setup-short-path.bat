@@ -8,7 +8,7 @@ echo.
 echo Created shortcut drive:
 echo   S:  --^>  %ROOT%
 echo.
-echo NEXT — open a NEW PowerShell window and run:
+echo NEXT - open a NEW PowerShell window and run:
 echo   S:
 echo   cd swimiq
 echo   run-chrome.bat

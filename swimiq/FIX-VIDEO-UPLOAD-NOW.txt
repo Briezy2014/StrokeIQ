@@ -1,0 +1,11 @@
+You are in the swimiq folder.
+
+The real fix file is one folder UP:
+
+  Desktop\StrokeIQ\FIX-VIDEO-UPLOAD-NOW.txt
+
+Or double-click in THIS folder:
+
+  FIX-VIDEO-UPLOAD-NOW.bat
+
+That opens the SQL instructions + Supabase.

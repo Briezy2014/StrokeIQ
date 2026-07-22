@@ -1,30 +1,23 @@
-# swimiqapp.com website files
+# Marketing / legal static pages (NOT the live app homepage)
 
-**Important:** The live site should run the **Flutter web app** (`flutter build web` → `build/web`), not only this brochure folder.
+These files (`index.html`, `privacy.html`, …) are the **old brochure** site.
 
-See:
+**Do not upload `website/` alone to GoDaddy `public_html` if you want coaches to use the real SwimIQ app.**
 
-- `docs/WEB_SITE_STATUS.md` — SSL + current site diagnosis  
-- `docs/WALKTHROUGH_SWIMIQAPP_COM.md` — Flutter upload  
-- `docs/WEB_DEPLOY.md` — GitHub Pages  
+## What goes on https://swimiqapp.com
 
-## Optional / legal pages in this folder
+| Goal | Upload this |
+|------|-------------|
+| Real SwimIQ app (login, dashboard, passport) | Flutter build: `swimiq/build/web/` via `PUBLISH-SWIMIQAPP-COM.bat` |
+| Legal-only copies | `privacy.html` / `terms.html` / `ai.html` (copied automatically by the publish script) |
 
-| File | URL |
-|------|-----|
-| `privacy.html` | https://swimiqapp.com/privacy |
-| `terms.html` | https://swimiqapp.com/terms |
-| `ai.html` | https://swimiqapp.com/ai |
-| `delete-account.html` | https://swimiqapp.com/delete-account |
-| `index.html` | Brochure only — do **not** overwrite Flutter `index.html` unless you want a marketing homepage instead of the app |
+See: `docs/GODADDY_WEBSITE_UPLOAD.md`
 
-Upload legal HTML + `css/` into GoDaddy `public_html` **alongside** the Flutter build.
-
-## After legal text changes
+## Sync legal text from the app
 
 ```bash
 cd swimiq
 python3 website/sync_legal.py
 ```
 
-Re-upload `privacy.html`, `terms.html`, `ai.html`.
+Then re-run the Flutter GoDaddy publish so legal HTML is copied into `build/web`.

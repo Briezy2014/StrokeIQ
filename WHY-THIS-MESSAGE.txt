@@ -1,0 +1,19 @@
+============================================================
+  WHY YOU STILL SEE THE "WORKSTATION" MESSAGE
+============================================================
+
+That red/black message is from OLD files on swimiqapp.com.
+It is NOT a login problem. Master login is fine.
+
+If the address bar says swimiqapp.com - you are on the old site.
+Close it. Use 127.0.0.1 from START-SWIMIQ-WITH-ELITE.bat.
+
+PASS on the fixed app:
+  - Address: 127.0.0.1
+  - Elite subtitle mentions: build Jul19-a
+  - Green/orange Elite server banner (not workstation text)
+
+FAIL (still old website):
+  - Address: swimiqapp.com
+  - Message about workstation / live Elite analysis
+============================================================

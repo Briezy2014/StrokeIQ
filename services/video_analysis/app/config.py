@@ -2,8 +2,21 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _strip_env_str(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    if len(text) >= 2 and (
+        (text[0] == text[-1] == '"') or (text[0] == text[-1] == "'")
+    ):
+        return text[1:-1].strip()
+    return text
 
 
 class Settings(BaseSettings):
@@ -13,7 +26,18 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    engine_version: str = "elote-0.9.0"
+    @field_validator(
+        "supabase_url",
+        "supabase_anon_key",
+        "supabase_service_role_key",
+        "gemini_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _clean_secret_strings(cls, value: Any) -> Any:
+        return _strip_env_str(value)
+
+    engine_version: str = "elite-0.9.0"
     artifact_root: Path = Path("./analysis_artifacts")
     job_store_path: Path = Path("./analysis_artifacts/jobs.json")
     max_video_bytes: int = 524_288_000  # 500 MiB
@@ -30,13 +54,24 @@ class Settings(BaseSettings):
     # Milestone 2 — detection / tracking
     detector_backend: str = "rtmdet_onnx"
     detector_model_path: Path = Path("models/rtmdet-n-person.onnx")
-    min_detection_confidence: float = 0.35
-    tracking_confidence_threshold: float = 0.40
-    max_lost_frames: int = 15
-    max_target_lost_frames: int = 45
-    frame_processing_interval: int = 1
+    # Lower threshold helps splash / distant phone swim footage.
+    min_detection_confidence: float = 0.25
+    tracking_confidence_threshold: float = 0.30
+    max_lost_frames: int = 30
+    # Phone swim clips often lose the body under splash / underwater / pan.
+    # Default allows ~4s at 30fps before marking an extended gap (soft limitation).
+    max_target_lost_frames: int = 120
+    # Soft floor only — below this we still complete with limitations when any
+    # track exists (hard-fail only when there is no usable track at all).
+    min_usable_target_coverage: float = 0.08
+    # Process every Nth frame. Higher = much faster on CPU phone clips.
+    frame_processing_interval: int = 8
     inference_resolution: int = 320
-    max_active_tracks: int = 12
+    max_active_tracks: int = 8
+    # Only analyze the first N seconds of source video (keeps Elite responsive).
+    max_analysis_duration_s: float = 15.0
+    # Write a lighter annotated preview (skip more frames than detection).
+    annotated_frame_stride: int = 4
 
     # Milestone 3 — RTMPose WholeBody
     pose_enabled: bool = False
@@ -87,11 +122,13 @@ class Settings(BaseSettings):
     finish_analysis_enabled: bool = False
 
     # Milestone 8 — Gemini coaching report (structured results only; never raw video)
+    # Optional Gemini enhance only. Default OFF — SwimIQ Elite coaching is always-on.
     gemini_report_enabled: bool = False
     gemini_api_key: str | None = None  # backend env only (GEMINI_API_KEY)
-    gemini_model_name: str = "gemini-2.5-flash"
-    gemini_timeout_s: float = 45.0
-    gemini_max_regenerate_attempts: int = 2
+    gemini_model_name: str = "gemini-3.5-flash"
+    # Keep Gemini short so short clips still finish near 30-60s wall time.
+    gemini_timeout_s: float = 12.0
+    gemini_max_regenerate_attempts: int = 1
     gemini_attach_evidence_images: bool = False
 
     # Milestone 9 — Flutter / Supabase integration (secrets backend-only)

@@ -1,0 +1,11 @@
+Which Gemini key-
+
+Either Google AI Studio style is fine:
+  - starts with AIza...
+  - or starts with AQ....
+
+Put exactly ONE line in Desktop\StrokeIQ\swimiq\.env:
+
+  GEMINI_API_KEY=paste_key_here
+
+Then run START-SWIMIQ-WITH-ELITE.bat and leave Elite open.

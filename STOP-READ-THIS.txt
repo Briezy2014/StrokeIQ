@@ -1,0 +1,33 @@
+============================================================
+  READ THIS - you are one click away
+============================================================
+
+RIGHT NOW if you see a Windows "Open" window in build\ with only "web":
+
+  >>> click CANCEL <<<
+
+Do NOT hunt inside build\web.
+
+------------------------------------------------------------
+OPTION A - zip already on GoDaddy (you showed this earlier)
+------------------------------------------------------------
+1) Go back to GoDaddy File Manager
+2) Open public_html
+3) Click swimiq-web-godaddy.zip once
+4) Click Extract at the top
+5) Overwrite / replace
+6) Incognito https://swimiqapp.com  +  Ctrl+Shift+R
+
+------------------------------------------------------------
+OPTION B - need a new zip on your PC
+------------------------------------------------------------
+1) Close the Open dialog (Cancel)
+2) Open: Desktop\StrokeIQ\swimiq
+3) Double-click: MAKE-ZIP-SIMPLE.bat
+4) File Explorer will highlight swimiq-web-godaddy.zip
+5) GoDaddy public_html → Upload that zip → Extract → overwrite
+6) Incognito https://swimiqapp.com  +  Ctrl+Shift+R
+
+There is NO folder named GoDaddy.
+The file name is: swimiq-web-godaddy.zip
+============================================================

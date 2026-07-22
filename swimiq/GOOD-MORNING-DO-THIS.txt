@@ -1,0 +1,114 @@
+GOOD MORNING — DO THIS IN ORDER
+================================
+(Overnight: code fixes are already in GitHub on branch
+ cursor/dryland-power-index-b7ef. You still must click
+ the cloud steps below — I cannot log into your accounts.)
+
+
+PART A — FIX CLOUD ANALYZE (website + future Android)
+-----------------------------------------------------
+This is the real Analyze fix. Do this first.
+
+A1) New Google AI key (2 min)
+    Phone or PC → https://aistudio.google.com/apikey
+    → Create API key → "Create API key in a new project"
+    → Copy the AIza... key
+
+A2) Put key in Supabase (2 min)
+    https://supabase.com/dashboard
+    → SwimIQ / StrokeIQ project (ref bryurwyeosbffvfpdpbv)
+    → Edge Functions → Secrets
+    → Set GEMINI_API_KEY = the new AIza key
+    → Save
+    → Do NOT create a GEMINI_MODEL secret
+
+A3) Redeploy video server (5–15 min)
+    On the Windows PC, open PowerShell and paste:
+
+    cd $env:USERPROFILE\Desktop\StrokeIQ\swimiq
+    if (-not (Test-Path .\pubspec.yaml)) {
+      cd $env:USERPROFILE\Desktop\StrokeIQ\StrokeIQ\swimiq
+    }
+    npx --yes supabase login
+    npx --yes supabase link --project-ref bryurwyeosbffvfpdpbv
+    npx --yes supabase functions deploy analyze-swim-video --project-ref bryurwyeosbffvfpdpbv
+
+    OR double-click if you see it:
+      FIX-VIDEO-413-NOW.bat
+      or KARA-GEMINI-FIX-NOW.bat
+
+    Success = version 2026-gemini-sync-v12
+
+A4) Test Analyze
+    Open https://swimiqapp.com → Ctrl+Shift+R
+    Video Lab → Denison 50 Fly → Run AI Swim Analysis
+    Keep tab open up to 3 minutes
+    Should finish with coaching — NOT busy / unavailable
+
+
+PART B — FREE SSL (Cloudflare) — optional padlock fix
+-----------------------------------------------------
+Do NOT pay GoDaddy $119 / $215 SSL.
+Do NOT upgrade hosting for SSL.
+
+You were on Cloudflare "Connect your domain".
+
+B1) Domain must be:  swimiqapp.com
+    (NOT www.swimiqapp.com)
+
+B2) Continue → choose Free plan → Continue
+
+B3) Import DNS Automatic → Continue
+
+B4) Cloudflare shows 2 nameservers (like ada.ns.cloudflare.com)
+    Copy both
+
+B5) GoDaddy → Domains → swimiqapp.com → Nameservers
+    → Change to "I'll use my own nameservers"
+    → Paste the 2 Cloudflare nameservers → Save
+
+B6) Back in Cloudflare → Done / check nameservers
+
+B7) Cloudflare → swimiqapp.com → SSL/TLS
+    → encryption mode: Full
+    → Edge Certificates → Always Use HTTPS = On
+
+Wait up to a few hours for nameservers. Padlock should become trusted.
+
+
+PART C — IF YOU NEED A COACH DEMO ON THIS PC TODAY
+--------------------------------------------------
+Use local Elite (does not need cloud deploy):
+
+1) Close every swimiqapp.com tab
+2) PowerShell paste finder first if needed:
+   https://raw.githubusercontent.com/Briezy2014/StrokeIQ/cursor/dryland-power-index-b7ef/OPEN-ON-PHONE-FIND-SWIMIQ.txt
+3) Then coach demo script:
+   https://raw.githubusercontent.com/Briezy2014/StrokeIQ/cursor/dryland-power-index-b7ef/OPEN-ON-PHONE-SwimIQ-Coach-Demo.txt
+4) Notepad → save Desktop as SwimIQ-Coach-Demo.ps1 (All files)
+5) Right-click → Run with PowerShell
+6) Chrome must say 127.0.0.1
+
+
+PART D — DO NOT DO
+------------------
+- Do not buy GoDaddy Standard SSL
+- Do not upgrade to Deluxe just for SSL
+- Do not upload random zips named STARTER
+- Do not expect Android Analyze to work until Part A is done
+  (Android uses the same cloud path as the website)
+
+
+PART E — AFTER ANALYZE WORKS
+----------------------------
+- Ambassador / Rewardful setup for the coach
+- Then Android build
+
+
+LINKS
+-----
+Cloud fix guide:
+https://raw.githubusercontent.com/Briezy2014/StrokeIQ/cursor/dryland-power-index-b7ef/FIX-CLOUD-ANALYZE.txt
+
+Release folder:
+https://github.com/Briezy2014/StrokeIQ/releases/tag/swimiq-web-LATEST

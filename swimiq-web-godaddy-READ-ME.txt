@@ -1,0 +1,6 @@
+If you see this file next to swimiq-web-godaddy.zip:
+
+Upload swimiq-web-godaddy.zip (the Compressed Folder) to GoDaddy
+public_html → Extract → Overwrite → Ctrl+Shift+R
+
+This .txt is instructions only — do not upload the .txt.

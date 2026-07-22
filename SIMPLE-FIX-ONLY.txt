@@ -1,0 +1,16 @@
+THE FILE NAME IS:
+
+  swimiq-web-godaddy.zip
+
+That is the website zip.
+
+NOT GitHub.
+NOT Kara-DOUBLE-CLICK-STARTER.
+NOT DOUBLE-CLICK-ME (that only OPENS the zip).
+NOT anything from the build folder.
+
+EASIEST:
+  1. Double-click DOUBLE-CLICK-ME.vbs  (or FIX.vbs)
+  2. File Explorer highlights swimiq-web-godaddy.zip
+  3. GoDaddy public_html → Upload that zip → Extract → Overwrite
+  4. Ctrl+Shift+R on the app

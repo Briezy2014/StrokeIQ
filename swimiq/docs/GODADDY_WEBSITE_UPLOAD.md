@@ -1,42 +1,62 @@
-# GoDaddy: brochure pages only (optional)
+# Put the REAL Flutter SwimIQ app on swimiqapp.com
 
-**Primary site = Flutter web app.**  
-Parents should use the app via `build/web` on `public_html`. See:
+**Critical:** Do **NOT** upload the `swimiq/website/` marketing folder to the site root.  
+That is the **old brochure**. Coaches need the **Flutter web build** (`build/web` with `main.dart.js`).
 
-- **[WEB_SITE_STATUS.md](WEB_SITE_STATUS.md)** — SSL + what’s wrong with https today  
-- **[WALKTHROUGH_SWIMIQAPP_COM.md](WALKTHROUGH_SWIMIQAPP_COM.md)** — build + upload Flutter  
-- **[WEB_DEPLOY.md](WEB_DEPLOY.md)** — GitHub Pages auto-deploy  
-
-This guide is only for the small **marketing/legal** files in `swimiq/website/`.
-
-| What | Where |
-|------|--------|
-| **Real SwimIQ app** (login, dashboard) | Flutter `build/web` → GoDaddy `public_html` |
-| **Legal / optional brochure** | `swimiq/website/` → same `public_html` (alongside Flutter, not instead of it) |
+| Wrong (old brochure) | Right (real app) |
+|----------------------|------------------|
+| `swimiq/website/index.html` | `swimiq/build/web/index.html` |
+| has `css/site.css` | has **`main.dart.js`** |
+| “Coming soon / features” page | **SwimIQ login** screen |
 
 ---
 
-## Legal files to keep on the domain
+## One-click on Kara’s Windows PC
 
-```
-privacy.html
-terms.html
-ai.html
-delete-account.html
-css/site.css
-```
+1. Double-click:
 
-Upload these into `public_html` **without deleting** Flutter’s `index.html` / `main.dart.js` unless you intend to replace the homepage with the brochure.  
-For App Store / Play Console, privacy + delete-account URLs must work even when the homepage is the Flutter app. Place legal HTML next to Flutter files; Flutter’s `.htaccess` SPA rewrite should exclude real files (Apache serves existing files before rewrite).
+   `Desktop\StrokeIQ\PUBLISH-SWIMIQAPP-COM.bat`
+
+2. Wait for the zip (several minutes).
+
+3. GoDaddy → **File Manager** → **`public_html`**
+
+4. Rename old `index.html` → `index-OLD-MARKETING.html` (or delete old site files)
+
+5. Upload **`swimiq\build\swimiq-web-godaddy.zip`**
+
+6. Extract in `public_html` (overwrite)
+
+7. Confirm these exist in `public_html`:
+   - `main.dart.js`
+   - `flutter_bootstrap.js` or `flutter.js`
+   - `SWIMIQ-FLUTTER-BUILD.txt`
+   - `.htaccess`
+
+8. Open **https://swimiqapp.com** in **Incognito** → you must see **login**, not the brochure.
 
 ---
 
-## SSL (do this first)
+## How to tell what’s live
 
-If https://swimiqapp.com shows a certificate warning, install **AutoSSL / Let’s Encrypt** in cPanel. Details: **WEB_SITE_STATUS.md**.
+| What you see | Meaning |
+|--------------|---------|
+| Marketing / “Coming soon” / feature cards | Still the old `website/` upload |
+| SwimIQ **login** (email/password) | Flutter app is live ✅ |
+| Blank white page | Incomplete upload — missing `canvaskit` / `main.dart.js` |
 
 ---
 
-## Email
+## After every app update you want coaches to see
 
-Forward `support@swimiqapp.com` and `privacy@swimiqapp.com` to your inbox in GoDaddy.
+1. `PUBLISH-SWIMIQAPP-COM.bat` again  
+2. Re-upload / extract the new zip into `public_html`
+
+---
+
+## Legal pages
+
+The publish script also copies `privacy.html`, `terms.html`, `ai.html` into the Flutter build so  
+`https://swimiqapp.com/privacy` still works.
+
+The `swimiq/website/` folder remains for legal sync / marketing drafts only — **not** the homepage.

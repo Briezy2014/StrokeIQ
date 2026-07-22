@@ -1,0 +1,183 @@
+{
+  "version_id": "college-recruiting-benchmarks-2026-v1",
+  "version_label": "SwimIQ College Recruiting Benchmarks (illustrative)",
+  "disclaimer": "Illustrative recruiting time ranges compiled from public meet results and roster trends. Always verify with coaches, SwimCloud, and school recruiting coordinators.",
+  "programs": [
+    {
+      "school": "Ohio State University",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 52.5, "target_seconds": 54.0, "likely_seconds": 55.5},
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 128.0, "target_seconds": 132.0, "likely_seconds": 136.0}
+      ]
+    },
+    {
+      "school": "Ohio University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 54.5, "target_seconds": 56.5, "likely_seconds": 58.5},
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 135.0, "target_seconds": 140.0, "likely_seconds": 145.0}
+      ]
+    },
+    {
+      "school": "University of Cincinnati",
+      "division": "NCAA D1",
+      "conference": "American",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 54.0, "target_seconds": 56.0, "likely_seconds": 58.0},
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 133.0, "target_seconds": 138.0, "likely_seconds": 143.0}
+      ]
+    },
+    {
+      "school": "Miami University (Ohio)",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 55.0, "target_seconds": 57.0, "likely_seconds": 59.0},
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 136.0, "target_seconds": 141.0, "likely_seconds": 146.0}
+      ]
+    },
+    {
+      "school": "Bowling Green State University",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 138.0, "target_seconds": 144.0, "likely_seconds": 150.0}
+      ]
+    },
+    {
+      "school": "University of Toledo",
+      "division": "NCAA D1",
+      "conference": "MAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 140.0, "target_seconds": 146.0, "likely_seconds": 152.0}
+      ]
+    },
+    {
+      "school": "Kenyon College",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 100, "course": "SCY", "reach_seconds": 56.0, "target_seconds": 58.5, "likely_seconds": 61.0},
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 145.0, "target_seconds": 152.0, "likely_seconds": 160.0}
+      ]
+    },
+    {
+      "school": "Denison University",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 148.0, "target_seconds": 155.0, "likely_seconds": 165.0}
+      ]
+    },
+    {
+      "school": "Ohio Wesleyan University",
+      "division": "NCAA D3",
+      "conference": "NCAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 152.0, "target_seconds": 162.0, "likely_seconds": 172.0}
+      ]
+    },
+    {
+      "school": "Otterbein University",
+      "division": "NCAA D3",
+      "conference": "OAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 158.0, "target_seconds": 168.0, "likely_seconds": 178.0}
+      ]
+    },
+    {
+      "school": "Mount St. Joseph University",
+      "division": "NCAA D3",
+      "conference": "HCAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 160.0, "target_seconds": 172.0, "likely_seconds": 185.0}
+      ]
+    },
+    {
+      "school": "Ashland University",
+      "division": "NCAA D2",
+      "conference": "GMAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 142.0, "target_seconds": 148.0, "likely_seconds": 155.0}
+      ]
+    },
+    {
+      "school": "Tiffin University",
+      "division": "NCAA D2",
+      "conference": "GMAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 150.0, "target_seconds": 160.0, "likely_seconds": 172.0}
+      ]
+    },
+    {
+      "school": "Walsh University",
+      "division": "NAIA",
+      "conference": "GMAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 155.0, "target_seconds": 168.0, "likely_seconds": 182.0}
+      ]
+    },
+    {
+      "school": "Cedarville University",
+      "division": "NAIA",
+      "conference": "GMAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 158.0, "target_seconds": 172.0, "likely_seconds": 188.0}
+      ]
+    },
+    {
+      "school": "Indiana University",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Midwest",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 126.0, "target_seconds": 130.0, "likely_seconds": 134.0}
+      ]
+    },
+    {
+      "school": "University of Michigan",
+      "division": "NCAA D1",
+      "conference": "Big Ten",
+      "region": "Midwest",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 125.0, "target_seconds": 129.0, "likely_seconds": 133.0}
+      ]
+    },
+    {
+      "school": "Wilmington College",
+      "division": "NCAA D3",
+      "conference": "OAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 175.0, "target_seconds": 188.0, "likely_seconds": 198.0}
+      ]
+    },
+    {
+      "school": "Muskingum University",
+      "division": "NCAA D3",
+      "conference": "OAC",
+      "region": "Ohio",
+      "benchmarks": [
+        {"gender": "Women", "stroke": "Butterfly", "distance": 200, "course": "LCM", "reach_seconds": 178.0, "target_seconds": 192.0, "likely_seconds": 205.0}
+      ]
+    }
+  ]
+}

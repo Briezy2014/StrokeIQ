@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/legal_constants.dart';
+import '../../widgets/swimiq_header.dart';
 
 class LegalDocumentScreen extends StatelessWidget {
   const LegalDocumentScreen({
@@ -15,7 +16,7 @@ class LegalDocumentScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(document.title),
+        title: SwimIqScreenAppBarTitle(document.title),
       ),
       body: FutureBuilder<String>(
         future: rootBundle.loadString(document.assetPath),
@@ -38,6 +39,8 @@ class LegalDocumentScreen extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 24),
+              const SwimIqCopyrightLine(),
+              const SizedBox(height: 8),
               Text(
                 LegalConstants.settingsFooter,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(

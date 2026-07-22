@@ -137,6 +137,7 @@ void main() {
 
       expect(recommendation.headline, contains('AI Coach'));
       expect(recommendation.detail, contains('Sharpen breakout timing'));
+      expect(recommendation.destination, PassportHubDestination.aiCoach);
       expect(recommendation.priorities, isNotEmpty);
     });
   });

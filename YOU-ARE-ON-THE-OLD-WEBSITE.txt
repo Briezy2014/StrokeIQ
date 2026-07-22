@@ -1,0 +1,38 @@
+============================================================
+  YOUR PHOTO SHOWS swimiqapp.com - THAT IS THE WRONG TAB
+============================================================
+
+If the address bar says swimiqapp.com, Run Elite Analysis will
+show the OLD "workstation" message. That message is baked into
+the OLD website files on GoDaddy. Your Elite server on this PC
+CAN be running (127.0.0.1:8080/health) and still look "broken"
+if you click Run on the swimiqapp.com tab.
+
+PROOF from your screen:
+  - Active tab = swimiqapp.com  --> WRONG for Elite
+  - Other tab  = 127.0.0.1      --> USE THIS ONE
+  - Other tab  = 127.0.0.1:8080 --> Elite health (good)
+
+============================================================
+  DO THIS NOW (works on this PC)
+============================================================
+
+1) CLOSE every tab that says swimiqapp.com
+2) Double-click: START-SWIMIQ-WITH-ELITE.bat
+3) When Chrome opens, look at the address bar
+   It MUST say 127.0.0.1   (not swimiqapp.com)
+4) Elite tab -> Run Elite Analysis
+5) Subtitle should mention: build Jul19-a
+
+============================================================
+  TO UPDATE THE PUBLIC WEBSITE TOO
+============================================================
+
+1) Double-click GET-LATEST-FIXED-APP.bat
+2) Double-click DO-THIS-ONE-THING.bat (or MAKE-GODADDY-ZIP)
+3) Upload/extract the zip in GoDaddy public_html (overwrite)
+4) Open swimiqapp.com in Incognito -> Ctrl+Shift+R
+5) Elite subtitle must say: build Jul19-a
+
+Until you upload, swimiqapp.com stays OLD on purpose.
+============================================================

@@ -1,0 +1,131 @@
+============================================================
+  TODAY — COACH LOOKS AT SWIMIQ (https://swimiqapp.com)
+============================================================
+
+Do these in order. Stay in:  Desktop\StrokeIQ
+(Not StrokeIQ-Elite.)
+
+WHAT THE COACH LINK SHOWS
+  https://swimiqapp.com = full SwimIQ app (login, dashboard, passport, Elite tab)
+  After you re-publish with the latest fix, the tab must say ELITE (not Video).
+  Live Elite stroke analysis still runs on YOUR PC only (Part B / screen-share).
+  Public site no longer uses the broken Gemini analyze path.
+
+------------------------------------------------------------
+PART A — Put the real app on the coach link (do this first)
+------------------------------------------------------------
+
+1) Close Chrome / old SwimIQ / Elite black windows.
+
+2) Double-click:
+     Desktop\StrokeIQ\GET-LATEST-FIXED-APP.bat
+   Wait until it says files are OK.
+
+3) Double-click:
+     Desktop\StrokeIQ\PUBLISH-SWIMIQAPP-COM.bat
+   Wait 3–10 minutes until it finishes and shows a ZIP path.
+   ZIP should be:
+     Desktop\StrokeIQ\swimiq\build\swimiq-web-godaddy.zip
+
+4) Find File Manager in GoDaddy (you will NOT see it on the Domain page)
+
+   You are on Domain Overview right now — that is the wrong screen.
+
+   Do ONE of these:
+
+   PATH A (from the left SwimIQ menu you already see):
+     1. Click  Website  (left sidebar — under Domain)
+     2. Open whatever shows for swimiqapp.com
+     3. Look for  Hosting  /  Manage  /  cPanel  /  File Manager
+
+   PATH B (products list — most reliable):
+     1. Open a new tab:  https://account.godaddy.com/products
+     2. Scroll to section  Web Hosting  (or  Hosting)
+     3. Next to the hosting plan, click  Manage
+     4. Click  File Manager
+     5. Open folder  public_html
+
+   PATH C (if Website opens a site builder only):
+     That means the site may be on GoDaddy Website Builder, not cPanel.
+     Call GoDaddy chat and say:
+       "I need Web Hosting File Manager / public_html for swimiqapp.com
+        so I can upload my own website files."
+
+   If there is NO Web Hosting section at all on My Products,
+   hosting is not on this account yet — stop and use GoDaddy chat
+   (do not keep clicking Domain).
+
+5) In public_html:
+   - Rename old index.html to index-OLD-MARKETING.html
+     (or delete old brochure files if you already know it is the marketing site)
+
+6) Upload:
+     swimiq-web-godaddy.zip
+   into public_html, then Extract / Unzip there (overwrite when asked).
+
+7) Confirm these files exist INSIDE public_html (not only inside a subfolder):
+     main.dart.js
+     flutter_bootstrap.js   (or flutter.js)
+     SWIMIQ-FLUTTER-BUILD.txt
+     .htaccess
+     index.html
+
+   If they landed in public_html\swimiq-web-godaddy\... move the CONTENTS
+   up into public_html so main.dart.js is directly in public_html.
+
+8) Open a PRIVATE / INCOGNITO window:
+     https://swimiqapp.com
+
+   MUST see: SwimIQ LOGIN (email + password)
+   NOT: old “coming soon” / brochure page
+   NOT: blank white page
+
+9) Sign in yourself with the demo account to prove it:
+     Email:    demo@swimiqapp.com
+     Password: SwimIQ
+
+10) In the app:
+     Settings → Plans & billing
+     Redeem:  COACH-EVAL-14
+
+11) ONLY AFTER step 8 shows LOGIN, text the coach:
+
+----- copy / paste -----
+Try SwimIQ here: https://swimiqapp.com
+Demo login: demo@swimiqapp.com / SwimIQ
+In Settings → Plans, redeem coach code: COACH-EVAL-14
+----- end -----
+
+------------------------------------------------------------
+PART B — Elite analysis on YOUR PC (live demo / screen share)
+------------------------------------------------------------
+Use this if you want to SHOW analysis working today (Zoom/screen share).
+The coach link alone cannot run Elite CV until a hosted analysis server exists.
+
+1) Double-click:
+     Desktop\StrokeIQ\START-SWIMIQ-WITH-ELITE.bat
+
+2) Wait for BOTH:
+   - health page / window shows storage_download_configured: true
+   - Chrome opens SwimIQ with Elite connected (green)
+
+3) Keep those windows open. Sign in. Open Elite / Video Lab.
+   Upload a clear SIDE-VIEW clip (full body in frame).
+   Run Elite Analysis.
+
+4) Screen-share that Chrome window to the coach if they need to see analysis.
+
+------------------------------------------------------------
+IF SOMETHING FAILS
+------------------------------------------------------------
+A) Incognito still shows brochure
+   → wrong files uploaded; you need main.dart.js in public_html. Redo Part A 3–8.
+
+B) PUBLISH bat fails
+   → make sure swimiq\.env has real SUPABASE_URL and SUPABASE_ANON_KEY, then rerun Part A step 3.
+
+C) Elite says storage / not connected
+   → double-click FIX-STORAGE.bat, then START-SWIMIQ-WITH-ELITE.bat again.
+
+D) Analysis fails about swimmer not visible
+   → use a clearer side-view clip; that is clip quality, not the site publish.

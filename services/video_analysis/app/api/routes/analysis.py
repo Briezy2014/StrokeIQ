@@ -69,6 +69,26 @@ async def create_analysis(
             },
         )
 
+    access_token = getattr(request.state, "access_token", None)
+    if body.storage_path:
+        from app.services.supabase_bridge import SupabaseBridge
+
+        bridge = SupabaseBridge(settings)
+        if not bridge.can_download(access_token):
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error_code": "SERVER_UNAVAILABLE",
+                    "message": (
+                        "Supabase storage download is not configured on the Elite server. "
+                        "Ensure services/video_analysis/.env has SUPABASE_URL and "
+                        "SUPABASE_ANON_KEY (copied from swimiq/.env), restart "
+                        "START-SWIMIQ-WITH-ELITE.bat, and stay signed in."
+                    ),
+                    "retriable": True,
+                },
+            )
+
     # Production / Flutter mode: never accept arbitrary server filesystem paths.
     if settings.supabase_auth_required and body.local_path:
         raise HTTPException(
@@ -108,6 +128,8 @@ async def create_analysis(
     )
     attach_owner(job, user, athlete_key)
     job.model_versions["engine_name"] = settings.video_engine_name
+    # Keep Flutter session token for storage download when service-role is unset.
+    job.download_access_token = access_token
     store.save(job)
     log_stage(
         logger,
@@ -234,6 +256,21 @@ async def get_job_results(
 
     metrics = []
     phases = []
+    # Tracking-only Elite runs (pose/M5–M7 off) still expose usable metrics.
+    try:
+        from app.services.report.context import collect_deterministic_payloads
+
+        tracking_metrics, _tracking_events = collect_deterministic_payloads(job)
+        for m in tracking_metrics:
+            name = str(m.get("name") or "")
+            if name.startswith("target_") or name in {
+                "target_coverage",
+                "processed_frames",
+                "frames_with_detections",
+            } or str(m.get("metric_id") or "").startswith("tracking:"):
+                metrics.append(m)
+    except Exception:  # noqa: BLE001
+        pass
     if job.butterfly:
         metrics = list(job.butterfly.get("metrics") or [])
         for c in job.butterfly.get("cycles") or []:
@@ -319,8 +356,78 @@ async def get_job_results(
         limitations=job.limitations,
         evidence_frames=evidence,
         model_versions=model_versions,
-        report=(job.report or {}).get("report") if job.report else None,
+        report=_flutter_facing_report(job.report),
         error=job.error,
         created_at=job.created_at,
         metadata_artifact_path=job.metadata_artifact_path,
     )
+
+
+def _flutter_facing_report(job_report: dict | None) -> dict | None:
+    """Flatten StoredCoachingReport into the shape Flutter AnalysisReport expects.
+
+    Pipeline stores: {gemini_succeeded, report: StoredCoachingReport{report: body}}.
+    Flutter reads top-level summary/strengths/priority_improvements strings.
+    """
+    if not isinstance(job_report, dict):
+        return None
+    gemini_ok = bool(job_report.get("gemini_succeeded"))
+    stored = job_report.get("report")
+    if not isinstance(stored, dict):
+        return None
+
+    # Real pipeline shape: StoredCoachingReport with nested CoachingReportBody.
+    body = stored.get("report")
+    if isinstance(body, dict) and (
+        body.get("summary") is not None or body.get("strengths") is not None
+    ):
+        strengths_out: list[str] = []
+        for item in body.get("strengths") or []:
+            if isinstance(item, dict):
+                text = str(item.get("text") or "").strip()
+                if text:
+                    strengths_out.append(text)
+            elif item is not None:
+                strengths_out.append(str(item))
+
+        improvements_out: list[dict] = []
+        for item in body.get("priority_improvements") or []:
+            if not isinstance(item, dict):
+                continue
+            obs = item.get("observation") if isinstance(item.get("observation"), dict) else {}
+            title = str(obs.get("text") or item.get("title") or "").strip()
+            drills = [str(d) for d in (item.get("drills") or []) if str(d).strip()]
+            if title:
+                improvements_out.append({"title": title, "drills": drills})
+
+        # Never surface engineer/Gemini fallback notes to the Flutter report UI.
+        return {
+            "summary": body.get("summary"),
+            "strengths": strengths_out,
+            "priority_improvements": improvements_out,
+            "race_recommendations": list(body.get("race_recommendations") or []),
+            "drills": [],
+            "limitations_statement": None,
+            "confidence_statement": body.get("confidence_statement"),
+            "model": stored.get("model_name") or body.get("model"),
+            "gemini_succeeded": gemini_ok,
+            "failure_code": stored.get("failure_code"),
+            "status": stored.get("status"),
+            "created_at": stored.get("generation_timestamp"),
+        }
+
+    # Already-flat / test shape: summary on the stored dict itself.
+    if stored.get("summary") is not None or stored.get("strengths") is not None:
+        out = dict(stored)
+        out["gemini_succeeded"] = gemini_ok
+        return out
+
+    # Failed report with no body — still pass failure_code for UI messaging.
+    if stored.get("failure_code") or stored.get("status") == "failed":
+        return {
+            "gemini_succeeded": False,
+            "failure_code": stored.get("failure_code"),
+            "status": stored.get("status") or "failed",
+            "model": stored.get("model_name"),
+        }
+    return None

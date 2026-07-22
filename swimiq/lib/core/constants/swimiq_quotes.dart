@@ -1,0 +1,56 @@
+abstract final class SwimIqQuotes {
+  static const dashboard = [
+    '"Built in the water. Driven by possibility — your next PB starts today."',
+    '"Every champion was once a swimmer who refused to give up."',
+    '"Show up, log the work, and let your times tell the story."',
+  ];
+
+  static const personalBests = [
+    '"Speed is built in practice — race day just reveals the work."',
+    '"Every PB starts with showing up when it\'s hard."',
+    '"Champions are built one rep, one race, one brave moment at a time."',
+    '"Your fastest self is waiting on the other side of consistent work."',
+  ];
+
+  static const goals = [
+    '"A goal without a plan is just a wish — write it, train it, race it."',
+    '"Dream big, split smart, finish strong."',
+  ];
+
+  static const trainingLog = [
+    '"Log the work. Trust the process. Let the times tell the story."',
+  ];
+
+  static const meetResults = [
+    '"Every meet is a chance to show coaches what you\'ve built in practice."',
+    '"College recruiters watch consistency across meets, not just one swim."',
+  ];
+
+  static const videoLab = [
+    '"Film doesn\'t lie — use it to sharpen what you feel in the water."',
+    '"One honest video review can unlock your next breakthrough."',
+  ];
+
+  static const addSession = [
+    '"Today\'s session is tomorrow\'s personal best."',
+    '"Champions log the work others skip."',
+  ];
+
+  static const usaStandards = [
+    '"Know your times. Chase your next cut. Put in the work that gets you there."',
+  ];
+
+  static const recruiting = [
+    '"Your passport tells coaches who you are before they ever meet you."',
+    '"Grades, goals, and grit — recruiters notice athletes who show all three."',
+  ];
+
+  static const raceIntelligence = [
+    '"Meet day is won in the warmup lane — execute your plan before you touch the blocks."',
+  ];
+
+  static String pickFor(String swimmer, List<String> pool) {
+    if (pool.isEmpty) return '';
+    return pool[swimmer.hashCode.abs() % pool.length];
+  }
+}

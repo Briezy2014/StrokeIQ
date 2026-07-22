@@ -28,6 +28,30 @@ class SignedUrlResponse(BaseModel):
     expires_in: int
 
 
+def _job_has_report(job: Any) -> bool:
+    payload = job.report or {}
+    if bool(payload.get("gemini_succeeded")):
+        return True
+    stored = payload.get("report")
+    if not isinstance(stored, dict):
+        return False
+    if stored.get("status") == "validated" and isinstance(stored.get("report"), dict):
+        body = stored["report"]
+        if body.get("summary") or body.get("strengths") or body.get("priority_improvements"):
+            return True
+    if stored.get("summary") or stored.get("strengths"):
+        return True
+    return False
+
+
+def _job_has_metrics(job: Any) -> bool:
+    if job.butterfly or job.underwater or job.turn or job.finish:
+        return True
+    tracking = job.tracking or {}
+    quality = tracking.get("quality_summary") or {}
+    return bool(quality.get("target_coverage") is not None or tracking.get("target"))
+
+
 @router.get("/athletes/{swimmer_key}/analyses")
 async def list_athlete_analyses(
     swimmer_key: str,
@@ -50,10 +74,8 @@ async def list_athlete_analyses(
             "created_at": j.created_at.isoformat(),
             "updated_at": j.updated_at.isoformat(),
             "limitations": j.limitations,
-            "has_report": bool((j.report or {}).get("gemini_succeeded")),
-            "has_metrics": bool(
-                j.butterfly or j.underwater or j.turn or j.finish
-            ),
+            "has_report": _job_has_report(j),
+            "has_metrics": _job_has_metrics(j),
         }
         for j in store.list_jobs()
         if (j.owner_user_id in {None, user.user_id, "local-dev-user"})
