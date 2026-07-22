@@ -90,6 +90,7 @@ class SwimmerData {
         videos: userFacingVideos,
         videoAnalyses: userFacingVideoAnalyses,
         motivationalStandards: motivationalStandards,
+        schedules: schedules,
       );
 
   SwimmerData copyWith({

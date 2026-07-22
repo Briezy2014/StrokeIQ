@@ -76,9 +76,9 @@ class RaceIntelligenceService {
     );
     final meetLabel = upcoming != null
         ? '${upcoming.title} · ${_formatDate(upcoming.scheduleDate)}'
-        : snapshot.nextMeet != 'No meets logged'
-            ? snapshot.nextMeet
-            : 'Add a meet or race in your schedule depot';
+        : snapshot.nextMeet.startsWith('Add an upcoming')
+            ? 'Add an upcoming meet on Log → Upcoming schedule'
+            : snapshot.nextMeet;
 
     return RaceIntelligencePlan(
       headline: 'Meet-day plan for ${data.displayName(swimmer)}',

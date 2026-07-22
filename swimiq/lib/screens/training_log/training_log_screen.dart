@@ -12,7 +12,7 @@ import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../race_intelligence/race_intelligence_screen.dart';
 
-/// Training log with sessions plus schedule/meet depository.
+/// Training log plus upcoming meet/practice schedule.
 class TrainingLogScreen extends ConsumerStatefulWidget {
   const TrainingLogScreen({super.key});
 
@@ -21,6 +21,7 @@ class TrainingLogScreen extends ConsumerStatefulWidget {
 }
 
 class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
+  /// Default to upcoming schedule so “add a meet” is obvious.
   int _tabIndex = 1;
 
   @override
@@ -35,14 +36,15 @@ class _TrainingLogScreenState extends ConsumerState<TrainingLogScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             SwimIqScreenHeader(
-              title: 'Log & Schedule Depot',
-              subtitle: 'Sessions for ${data.displayName(swimmer)}',
+              title: 'Log',
+              subtitle:
+                  'Training sessions · Upcoming meets for ${data.displayName(swimmer)}',
             ),
             const SizedBox(height: 12),
             SegmentedButton<int>(
               segments: const [
                 ButtonSegment(value: 0, label: Text('Training')),
-                ButtonSegment(value: 1, label: Text('Meets & results')),
+                ButtonSegment(value: 1, label: Text('Upcoming schedule')),
               ],
               selected: {_tabIndex},
               onSelectionChanged: (values) {

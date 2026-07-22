@@ -8,6 +8,7 @@ import '../../data/models/meet_result.dart';
 import '../../data/models/personal_best_entry.dart';
 import '../../data/models/race_log.dart';
 import '../../data/models/swim_goal.dart';
+import '../../data/models/swim_schedule_entry.dart';
 import '../../data/models/video_models.dart';
 import '../../data/models/swimmer_profile.dart';
 import 'swim_time.dart';
@@ -21,6 +22,7 @@ class PassportSnapshot {
     required this.currentFocus,
     required this.highestCut,
     required this.nextMeet,
+    required this.latestMeet,
     required this.imxScore,
     required this.readiness,
     required this.nextFocus,
@@ -40,6 +42,7 @@ class PassportSnapshot {
   final String currentFocus;
   final String highestCut;
   final String nextMeet;
+  final String latestMeet;
   final String imxScore;
   final String readiness;
   final String nextFocus;
@@ -64,6 +67,7 @@ class PassportMetrics {
     required List<SwimVideo> videos,
     required List<SwimVideoAnalysis> videoAnalyses,
     required UsaMotivationalStandardsCatalog motivationalStandards,
+    List<SwimScheduleEntry> schedules = const [],
   }) {
     final userVideos = videos.where((video) => video.isUserFacing).toList();
     final userVideoIds =
@@ -103,8 +107,9 @@ class PassportMetrics {
         catalog: motivationalStandards,
         profile: profile,
       ),
-      nextMeet: nextMeet(meetResults),
-      imxScore: imxScore(raceLogs),
+      nextMeet: nextMeet(schedules: schedules, meetResults: meetResults),
+      latestMeet: latestMeet(meetResults),
+      imxScore: imxScore(profile: profile),
       readiness: readiness(
         raceLogs: raceLogs,
         goals: goals,
@@ -218,7 +223,43 @@ class PassportMetrics {
     return bestLevel ?? 'No motivational cut matched yet';
   }
 
-  static String nextMeet(List<MeetResult> meetResults) {
+  /// Next upcoming meet/race from the schedule depot (future dates first).
+  static String nextMeet({
+    List<SwimScheduleEntry> schedules = const [],
+    List<MeetResult> meetResults = const [],
+  }) {
+    final upcoming = upcomingMeet(schedules);
+    if (upcoming != null) {
+      final date =
+          '${upcoming.scheduleDate.month}/${upcoming.scheduleDate.day}/${upcoming.scheduleDate.year}';
+      return '${upcoming.title} · $date';
+    }
+    if (meetResults.isEmpty) {
+      return 'Add an upcoming meet on the Log → Upcoming schedule tab';
+    }
+    return 'No upcoming meet scheduled';
+  }
+
+  static SwimScheduleEntry? upcomingMeet(List<SwimScheduleEntry> schedules) {
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+    final upcoming = schedules.where((entry) {
+      final isMeetish = entry.scheduleType == SwimScheduleEntry.typeMeet ||
+          entry.scheduleType == SwimScheduleEntry.typeRace;
+      if (!isMeetish) return false;
+      final day = DateTime(
+        entry.scheduleDate.year,
+        entry.scheduleDate.month,
+        entry.scheduleDate.day,
+      );
+      return !day.isBefore(startOfToday);
+    }).toList()
+      ..sort((a, b) => a.scheduleDate.compareTo(b.scheduleDate));
+    return upcoming.isEmpty ? null : upcoming.first;
+  }
+
+  /// Most recent past meet result name (for Meets tab / history).
+  static String latestMeet(List<MeetResult> meetResults) {
     if (meetResults.isEmpty) return 'No meet results logged yet';
     final sorted = [...meetResults]
       ..sort((a, b) => b.meetDate.compareTo(a.meetDate));
@@ -389,11 +430,16 @@ class PassportMetrics {
         '$bracketLine';
   }
 
-  static String imxScore(List<RaceLog> raceLogs) {
-    if (raceLogs.isEmpty) return 'No stroke data yet';
-    final strokes = raceLogs.map((log) => log.stroke).toSet();
-    if (strokes.length >= 4) return 'IMX tracked (${strokes.length} strokes)';
-    return '${strokes.length}/4 IM strokes logged';
+  /// Official IMX/IMR from passport profile (Swimio / USA Swimming), not practice logs.
+  static String imxScore({SwimmerProfile? profile}) {
+    final imx = profile?.imxScore?.trim();
+    final imr = profile?.imrScore?.trim();
+    final hasImx = imx != null && imx.isNotEmpty;
+    final hasImr = imr != null && imr.isNotEmpty;
+    if (hasImx && hasImr) return 'IMX $imx · IMR $imr';
+    if (hasImx) return 'IMX $imx';
+    if (hasImr) return 'IMR $imr';
+    return 'Enter IMX/IMR from Swimio in Passport';
   }
 
   static SwimVideoAnalysis? _latestAnalysis(List<SwimVideoAnalysis> analyses) {

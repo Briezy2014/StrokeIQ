@@ -27,12 +27,22 @@ void main() {
           gpa: '3.92',
           athleteWebsite: 'https://aspyn-swims.example.com',
           otherInterests: 'Piano, NHS, water polo',
+          imxScore: '2840',
+          imrScore: '1950',
+          swimioUrl:
+              'https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
         ),
       );
 
       expect(profile.gpa, '3.92');
       expect(profile.athleteWebsite, 'https://aspyn-swims.example.com');
       expect(profile.otherInterests, 'Piano, NHS, water polo');
+      expect(profile.imxScore, '2840');
+      expect(profile.imrScore, '1950');
+      expect(
+        profile.swimioUrl,
+        'https://www.myswimio.com/swimmerspage.php?swimmerid=367406',
+      );
     });
 
     test('round-trips structured athlete notes metadata', () {
