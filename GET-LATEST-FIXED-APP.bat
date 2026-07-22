@@ -33,9 +33,9 @@ git fetch origin
 if errorlevel 1 goto :FetchFail
 
 git merge --abort >nul 2>&1
-git checkout -f cursor/dryland-power-index-b7ef
+git checkout -f main
 if errorlevel 1 goto :UpdateFail
-git reset --hard origin/cursor/dryland-power-index-b7ef
+git reset --hard origin/main
 if errorlevel 1 goto :UpdateFail
 
 echo.

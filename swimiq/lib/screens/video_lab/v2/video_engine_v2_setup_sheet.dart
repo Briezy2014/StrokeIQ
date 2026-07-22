@@ -199,9 +199,10 @@ class _VideoEngineV2SetupSheetState
                 const SizedBox(height: 4),
                 Text(
                   'Parents and coaches: film from the side when you can, keep the '
-                  'whole body in view, and hold steady. Other angles still get a '
-                  'full Race Scan — body line, breathing, and tempo cues. Better '
-                  'side views unlock more precise underwater / turn / finish notes.',
+                  'whole body in view, and hold steady. Clips must be 2 minutes or '
+                  'shorter. Other angles still get a full Race Scan — body line, '
+                  'breathing, and tempo cues. Better side views unlock more precise '
+                  'underwater / turn / finish notes.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         height: 1.35,

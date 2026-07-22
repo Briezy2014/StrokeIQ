@@ -67,6 +67,20 @@ class Env {
         : normalized;
   }
 
+  /// True when Elite API points at this machine (not usable from swimiqapp.com).
+  static bool get analysisApiBaseUrlIsLocalhost {
+    try {
+      final host = Uri.parse(analysisApiBaseUrl).host.toLowerCase();
+      return host.isEmpty ||
+          host == 'localhost' ||
+          host == '127.0.0.1' ||
+          host == '::1';
+    } catch (_) {
+      final raw = analysisApiBaseUrl.toLowerCase();
+      return raw.contains('127.0.0.1') || raw.contains('localhost');
+    }
+  }
+
   static bool get videoEngineV2 {
     return _parseBool(
       _preferNonEmpty(_videoEngineV2FromDotenv, _videoEngineV2Define),

@@ -62,6 +62,7 @@ class AnalysisResults {
       case 'INVALID_VIDEO':
       case 'UNSUPPORTED_CODEC':
       case 'VIDEO_TOO_LARGE':
+      case 'VIDEO_TOO_LONG':
         return true;
       default:
         return false;

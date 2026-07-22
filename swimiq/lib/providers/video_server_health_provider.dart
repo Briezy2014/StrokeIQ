@@ -14,15 +14,19 @@ import 'app_providers.dart';
 /// server turns the banner green without a manual Recheck click.
 final videoServerHealthProvider =
     FutureProvider.autoDispose<VideoAnalysisServerHealth>((ref) async {
-  // Public website customers must never see local .bat / 127.0.0.1 setup copy.
-  // Cloud coaching is the website path; local Elite is optional for developers.
+  // Public website cannot reach a laptop Elite server. Never fake "ready".
+  // When V2 is on for a public host, report not ready unless a real remote
+  // ANALYSIS_API_BASE_URL (non-localhost) is configured and healthy.
   if (FeatureFlags.videoEngineV2Enabled) {
-    if (Env.isPublicHostedWeb) {
+    if (Env.isPublicHostedWeb && Env.analysisApiBaseUrlIsLocalhost) {
       return const VideoAnalysisServerHealth(
-        ok: true,
-        message: 'Cloud AI coaching is ready on this website.',
-        functionVersion: 'cloud-coaching',
-        modelProbeOk: true,
+        ok: false,
+        message:
+            'Elite analysis runs on SwimIQ localhost for now. '
+            'On this website, Analyze uses cloud coaching when Elite is off — '
+            'or open SwimIQ on this PC with START-SWIMIQ-WITH-ELITE.bat.',
+        functionVersion: 'public-web-no-local-elite',
+        modelProbeOk: false,
       );
     }
     final elite = await ref.read(videoEngineV2ServiceProvider).checkHealth();
@@ -66,11 +70,16 @@ bool isVideoServerStreamReady(VideoAnalysisServerHealth? health) {
   if (health == null || !health.ok) return false;
   final version = health.functionVersion ?? '';
   if (FeatureFlags.videoEngineV2Enabled) {
+    if (version.contains('public-web-no-local-elite')) return false;
     return version.contains('elite') ||
         version.contains('elote') ||
-        version.contains('video_engine');
+        version.contains('video_engine') ||
+        version.contains('cloud-coaching');
   }
   return version.contains('sync-v9') ||
+      version.contains('sync-v10') ||
+      version.contains('sync-v11') ||
+      version.contains('sync-v12') ||
       version.contains('stream-v4') ||
       version.contains('stream-v5') ||
       version.contains('stream-v6') ||
