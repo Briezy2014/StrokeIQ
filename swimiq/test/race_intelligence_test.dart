@@ -190,5 +190,22 @@ void main() {
       expect(entry.typeLabel, 'Practice');
       expect(entry.toInsertJson()['schedule_type'], 'practice');
     });
+
+    test('fromJson tolerates string ids and omits empty optional fields', () {
+      final entry = SwimScheduleEntry.fromJson({
+        'id': '42',
+        'swimmer_name': 'Aspyn',
+        'schedule_type': 'meet',
+        'title': 'Invite',
+        'schedule_date': '2026-08-01',
+        'start_time': '',
+        'events_line': '50 Free',
+      });
+
+      expect(entry.id, 42);
+      expect(entry.isMeet, isTrue);
+      expect(entry.toInsertJson().containsKey('start_time'), isFalse);
+      expect(entry.toInsertJson()['events_line'], '50 Free');
+    });
   });
 }

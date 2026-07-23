@@ -6,6 +6,7 @@ import '../core/services/gemini_swim_analysis_service.dart';
 import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
+import '../core/utils/supabase_table_errors.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
@@ -190,13 +191,17 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
     );
   }
 
-  Future<void> refresh() async {
+  Future<void> refresh({bool showLoading = true}) async {
     final swimmer = ref.read(activeSwimmerProvider);
     if (swimmer == null || swimmer.isEmpty) {
       state = const AsyncData(null);
       return;
     }
-    state = const AsyncLoading();
+    // Keep the current screen visible during save/update refreshes so the
+    // Log tab does not flash a spinner (or tear down the meet form).
+    if (showLoading) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() => _load(swimmer));
   }
 
@@ -297,34 +302,31 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   Future<String?> addSchedules(List<SwimScheduleEntry> entries) async {
     if (entries.isEmpty) return 'Nothing to save.';
     try {
-      final repository = ref.read(swimIqRepositoryProvider);
-      for (final entry in entries) {
-        await repository.insertSchedule(entry);
-      }
-      await refresh();
+      await ref.read(swimIqRepositoryProvider).insertSchedules(entries);
+      await refresh(showLoading: false);
       return null;
     } catch (error) {
-      return error.toString();
+      return SupabaseTableErrors.scheduleSaveMessage(error);
     }
   }
 
   Future<String?> updateSchedule(SwimScheduleEntry entry) async {
     try {
       await ref.read(swimIqRepositoryProvider).updateSchedule(entry);
-      await refresh();
+      await refresh(showLoading: false);
       return null;
     } catch (error) {
-      return error.toString();
+      return SupabaseTableErrors.scheduleSaveMessage(error);
     }
   }
 
   Future<String?> deleteSchedule(int id) async {
     try {
       await ref.read(swimIqRepositoryProvider).deleteSchedule(id);
-      await refresh();
+      await refresh(showLoading: false);
       return null;
     } catch (error) {
-      return error.toString();
+      return SupabaseTableErrors.scheduleSaveMessage(error);
     }
   }
 

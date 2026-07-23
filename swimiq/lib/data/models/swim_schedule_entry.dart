@@ -45,10 +45,10 @@ class SwimScheduleEntry {
 
   factory SwimScheduleEntry.fromJson(Map<String, dynamic> json) {
     return SwimScheduleEntry(
-      id: json['id'] as int?,
-      swimmerName: json['swimmer_name'] as String? ?? '',
-      scheduleType: json['schedule_type'] as String? ?? typePractice,
-      title: json['title'] as String? ?? '',
+      id: _parseId(json['id']),
+      swimmerName: json['swimmer_name']?.toString() ?? '',
+      scheduleType: json['schedule_type']?.toString() ?? typePractice,
+      title: json['title']?.toString() ?? '',
       scheduleDate: DateTime.tryParse(json['schedule_date']?.toString() ?? '') ??
           DateTime.now(),
       startTime: _nullableText(json['start_time']),
@@ -59,19 +59,22 @@ class SwimScheduleEntry {
     );
   }
 
-  Map<String, dynamic> toInsertJson() => {
-        'swimmer_name': swimmerName,
-        'schedule_type': scheduleType,
-        'title': title,
-        'schedule_date': _formatDate(scheduleDate),
-        if (startTime != null && startTime!.trim().isNotEmpty)
-          'start_time': startTime!.trim(),
-        if (location != null && location!.trim().isNotEmpty)
-          'location': location!.trim(),
-        if (eventsLine != null && eventsLine!.trim().isNotEmpty)
-          'events_line': eventsLine!.trim(),
-        if (notes != null && notes!.trim().isNotEmpty) 'notes': notes!.trim(),
-      };
+  Map<String, dynamic> toInsertJson() {
+    final start = startTime?.trim();
+    final place = location?.trim();
+    final events = eventsLine?.trim();
+    final note = notes?.trim();
+    return {
+      'swimmer_name': swimmerName,
+      'schedule_type': scheduleType,
+      'title': title,
+      'schedule_date': _formatDate(scheduleDate),
+      if (start != null && start.isNotEmpty) 'start_time': start,
+      if (place != null && place.isNotEmpty) 'location': place,
+      if (events != null && events.isNotEmpty) 'events_line': events,
+      if (note != null && note.isNotEmpty) 'notes': note,
+    };
+  }
 
   SwimScheduleEntry copyWith({
     int? id,
@@ -97,6 +100,13 @@ class SwimScheduleEntry {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  static int? _parseId(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 
   static String? _nullableText(dynamic value) {

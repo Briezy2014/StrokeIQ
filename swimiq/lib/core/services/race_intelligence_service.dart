@@ -298,13 +298,11 @@ class RaceIntelligenceService {
       );
     }
     if (meetEvents.isNotEmpty) return meetEvents.first;
-    if (upcoming?.eventsLine?.trim().isNotEmpty == true) {
-      return _parseEventsLine(upcoming!.eventsLine).first;
-    }
+    final fromUpcoming = _parseEventsLine(upcoming?.eventsLine);
+    if (fromUpcoming.isNotEmpty) return fromUpcoming.first;
     if (goals.isNotEmpty) return goals.first.event;
-    if (profile?.favoriteEvent?.trim().isNotEmpty == true) {
-      return profile!.favoriteEvent!.trim();
-    }
+    final favorite = profile?.favoriteEvent?.trim();
+    if (favorite != null && favorite.isNotEmpty) return favorite;
     return snapshot.currentFocus;
   }
 
@@ -325,9 +323,13 @@ class RaceIntelligenceService {
       ),
       RaceTimelineStep(
         label: 'Arrive / check-in',
-        detail: upcoming?.location?.trim().isNotEmpty == true
-            ? 'At ${upcoming!.location!.trim()}'
-            : 'Confirm heat sheet & lane assignments',
+        detail: () {
+          final location = upcoming?.location?.trim();
+          if (location != null && location.isNotEmpty) {
+            return 'At $location';
+          }
+          return 'Confirm heat sheet & lane assignments';
+        }(),
         iconName: 'arrive',
       ),
       RaceTimelineStep(

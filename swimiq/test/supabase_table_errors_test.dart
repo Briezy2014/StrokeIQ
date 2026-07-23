@@ -24,4 +24,12 @@ void main() {
       isTrue,
     );
   });
+
+  test('scheduleSaveMessage is readable when swim_schedules is missing', () {
+    const error = "PostgrestException(message: Could not find the table "
+        "'public.swim_schedules' in the schema cache, code: PGRST205)";
+    final message = SupabaseTableErrors.scheduleSaveMessage(error);
+    expect(message.toLowerCase(), contains('database update'));
+    expect(message.toLowerCase(), isNot(contains('postgrestexception')));
+  });
 }
