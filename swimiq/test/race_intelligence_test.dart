@@ -127,6 +127,53 @@ void main() {
       expect(plan.syncedToSchedule, isFalse);
       expect(plan.nutritionPlan.any((block) => block.mealLabel.contains('Midday')), isTrue);
     });
+
+    test('aggregates events across multi-day upcoming meet', () {
+      final start = DateTime.now().add(const Duration(days: 5));
+      final plan = RaceIntelligenceService.build(
+        data: SwimmerData(
+          raceLogs: const [],
+          goals: const [],
+          meetResults: const [],
+          schedules: [
+            SwimScheduleEntry(
+              swimmerName: 'Aspyn',
+              scheduleType: SwimScheduleEntry.typeMeet,
+              title: 'Age Group Champs',
+              scheduleDate: start,
+              startTime: '8:00 AM',
+              eventsLine: '50 Free SCY',
+            ),
+            SwimScheduleEntry(
+              swimmerName: 'Aspyn',
+              scheduleType: SwimScheduleEntry.typeMeet,
+              title: 'Age Group Champs',
+              scheduleDate: start.add(const Duration(days: 1)),
+              startTime: '9:00 AM',
+              eventsLine: '100 Butterfly SCY',
+            ),
+            SwimScheduleEntry(
+              swimmerName: 'Aspyn',
+              scheduleType: SwimScheduleEntry.typeMeet,
+              title: 'Age Group Champs',
+              scheduleDate: start.add(const Duration(days: 2)),
+              startTime: '7:30 AM',
+              eventsLine: '200 IM SCY',
+            ),
+          ],
+          motivationalStandards: testMotivationalCatalog,
+        ),
+        swimmer: 'Aspyn',
+      );
+
+      expect(plan.syncedToSchedule, isTrue);
+      expect(plan.meetTitle, 'Age Group Champs');
+      expect(plan.meetStartTime, '8:00 AM');
+      expect(plan.meetDayLabel, contains('–'));
+      expect(plan.meetEvents, contains('50 Free SCY'));
+      expect(plan.meetEvents, contains('100 Butterfly SCY'));
+      expect(plan.meetEvents, contains('200 IM SCY'));
+    });
   });
 
   group('SwimScheduleEntry', () {

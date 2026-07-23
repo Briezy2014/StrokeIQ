@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/utils/swimiq_camera_capture.dart';
+import '../core/utils/upcoming_meet_builder.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/swim_schedule_entry.dart';
 import '../providers/app_providers.dart';
@@ -335,12 +336,17 @@ class _ScheduleEntryFormSheetState
   final _locationController = TextEditingController();
   final _eventsController = TextEditingController();
   final _notesController = TextEditingController();
+  final List<TextEditingController> _dayStartTimeControllers = [];
+  final List<TextEditingController> _dayEventsControllers = [];
 
   late String _scheduleType;
   DateTime _scheduleDate = DateTime.now();
+  int _meetDayCount = 1;
   bool _isSaving = false;
   Uint8List? _schedulePhotoBytes;
   String? _schedulePhotoName;
+
+  bool get _isUpcomingMeet => _scheduleType == SwimScheduleEntry.typeMeet;
 
   @override
   void initState() {
@@ -353,6 +359,7 @@ class _ScheduleEntryFormSheetState
     } else {
       _scheduleType = widget.initialType;
     }
+    _syncMeetDayControllers(1);
     if (widget.startWithPhotoPicker) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _pickSchedulePhotoFromFiles());
     }
@@ -365,7 +372,26 @@ class _ScheduleEntryFormSheetState
     _locationController.dispose();
     _eventsController.dispose();
     _notesController.dispose();
+    for (final controller in _dayStartTimeControllers) {
+      controller.dispose();
+    }
+    for (final controller in _dayEventsControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _syncMeetDayControllers(int dayCount) {
+    final count = dayCount.clamp(1, 5);
+    while (_dayStartTimeControllers.length < count) {
+      _dayStartTimeControllers.add(TextEditingController());
+      _dayEventsControllers.add(TextEditingController());
+    }
+    while (_dayStartTimeControllers.length > count) {
+      _dayStartTimeControllers.removeLast().dispose();
+      _dayEventsControllers.removeLast().dispose();
+    }
+    _meetDayCount = count;
   }
 
   Future<void> _pickDate() async {
@@ -374,8 +400,37 @@ class _ScheduleEntryFormSheetState
       initialDate: _scheduleDate,
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: _isUpcomingMeet ? 'Meet start date' : 'Select date',
     );
     if (picked != null) setState(() => _scheduleDate = picked);
+  }
+
+  Future<void> _pickStartTime({required TextEditingController controller}) async {
+    final initial = _parseTimeOfDay(controller.text) ??
+        const TimeOfDay(hour: 8, minute: 0);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: 'Warm-up / session start',
+    );
+    if (picked == null || !mounted) return;
+    setState(() => controller.text = picked.format(context));
+  }
+
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$',
+    ).firstMatch(text);
+    if (match == null) return null;
+    var hour = int.tryParse(match.group(1) ?? '') ?? 0;
+    final minute = int.tryParse(match.group(2) ?? '') ?? 0;
+    final meridian = match.group(3)?.toUpperCase();
+    if (meridian == 'PM' && hour < 12) hour += 12;
+    if (meridian == 'AM' && hour == 12) hour = 0;
+    if (hour > 23 || minute > 59) return null;
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   Future<void> _pickSchedulePhotoFromFiles() async {
@@ -427,19 +482,39 @@ class _ScheduleEntryFormSheetState
       }
     }
 
-    final entry = SwimScheduleEntry(
-      swimmerName: swimmer,
-      scheduleType: _scheduleType,
-      title: _titleController.text.trim(),
-      scheduleDate: _scheduleDate,
-      startTime: _optional(_startTimeController.text),
-      location: _optional(_locationController.text),
-      eventsLine: _optional(_eventsController.text),
-      notes: notes.isEmpty ? null : notes,
-    );
+    final List<SwimScheduleEntry> entries;
+    if (_isUpcomingMeet) {
+      entries = buildUpcomingMeetEntries(
+        swimmerName: swimmer,
+        title: _titleController.text.trim(),
+        location: _optional(_locationController.text),
+        notes: notes.isEmpty ? null : notes,
+        days: [
+          for (var i = 0; i < _meetDayCount; i++)
+            UpcomingMeetDayInput(
+              date: _scheduleDate.add(Duration(days: i)),
+              startTime: _optional(_dayStartTimeControllers[i].text),
+              eventsLine: _optional(_dayEventsControllers[i].text),
+            ),
+        ],
+      );
+    } else {
+      entries = [
+        SwimScheduleEntry(
+          swimmerName: swimmer,
+          scheduleType: _scheduleType,
+          title: _titleController.text.trim(),
+          scheduleDate: _scheduleDate,
+          startTime: _optional(_startTimeController.text),
+          location: _optional(_locationController.text),
+          eventsLine: _optional(_eventsController.text),
+          notes: notes.isEmpty ? null : notes,
+        ),
+      ];
+    }
 
     final error =
-        await ref.read(swimmerDataProvider.notifier).addSchedule(entry);
+        await ref.read(swimmerDataProvider.notifier).addSchedules(entries);
     if (!mounted) return;
     setState(() => _isSaving = false);
 
@@ -455,11 +530,12 @@ class _ScheduleEntryFormSheetState
 
     final messenger = ScaffoldMessenger.of(context);
     if (mounted) Navigator.of(context).pop();
+    final dayPart = entries.length > 1 ? ' (${entries.length} days)' : '';
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          '${_typeLabel(_scheduleType)} saved. '
-          'You can add another or switch tabs.',
+          '${_typeLabel(_scheduleType)}$dayPart saved. '
+          'Race Intelligence will use your next meet.',
         ),
       ),
     );
@@ -539,42 +615,120 @@ class _ScheduleEntryFormSheetState
             const SizedBox(height: 12),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Date'),
+              title: Text(_isUpcomingMeet ? 'Meet start date' : 'Date'),
               subtitle: Text(dateFormat.format(_scheduleDate)),
               trailing: const Icon(Icons.calendar_today),
               onTap: _pickDate,
             ),
-            if (_scheduleType != SwimScheduleEntry.typeRace) ...[
+            if (_isUpcomingMeet) ...[
               const SizedBox(height: 8),
+              Text(
+                'How many days?',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final days in const [1, 2, 3, 4, 5])
+                    ChoiceChip(
+                      label: Text(days == 1 ? '1 day' : '$days days'),
+                      selected: _meetDayCount == days,
+                      onSelected: (_) {
+                        setState(() => _syncMeetDayControllers(days));
+                      },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
               TextFormField(
-                controller: _startTimeController,
+                controller: _locationController,
                 decoration: const InputDecoration(
-                  labelText: 'Start / warm-up time (optional)',
-                  hintText: '9:30 AM warm-up',
+                  labelText: 'Pool / location (optional)',
                 ),
               ),
+              for (var i = 0; i < _meetDayCount; i++) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _meetDayCount == 1
+                      ? 'Meet day details'
+                      : 'Day ${i + 1} · ${dateFormat.format(_scheduleDate.add(Duration(days: i)))}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryDeep,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _dayStartTimeControllers[i],
+                  readOnly: true,
+                  onTap: () => _pickStartTime(
+                    controller: _dayStartTimeControllers[i],
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Start / warm-up time',
+                    hintText: 'Tap to pick time',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.schedule),
+                      onPressed: () => _pickStartTime(
+                        controller: _dayStartTimeControllers[i],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _dayEventsControllers[i],
+                  decoration: const InputDecoration(
+                    labelText: 'Events that day',
+                    hintText: '50 Fly, 100 IM, 200 Free\n(one per line)',
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ] else ...[
+              if (_scheduleType != SwimScheduleEntry.typeRace) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _startTimeController,
+                  readOnly: true,
+                  onTap: () =>
+                      _pickStartTime(controller: _startTimeController),
+                  decoration: InputDecoration(
+                    labelText: 'Start / warm-up time (optional)',
+                    hintText: 'Tap to pick time',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.schedule),
+                      onPressed: () =>
+                          _pickStartTime(controller: _startTimeController),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: 'Pool / location (optional)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _eventsController,
+                decoration: InputDecoration(
+                  labelText: _eventsFieldLabel(),
+                  hintText: _eventsFieldHint(),
+                ),
+                maxLines: 4,
+                validator: _scheduleType == SwimScheduleEntry.typeRace
+                    ? (value) => value?.trim().isEmpty == true
+                        ? 'Add at least one event and result time'
+                        : null
+                    : null,
+              ),
             ],
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: 'Pool / location (optional)',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _eventsController,
-              decoration: InputDecoration(
-                labelText: _eventsFieldLabel(),
-                hintText: _eventsFieldHint(),
-              ),
-              maxLines: 4,
-              validator: _scheduleType == SwimScheduleEntry.typeRace
-                  ? (value) => value?.trim().isEmpty == true
-                      ? 'Add at least one event and result time'
-                      : null
-                  : null,
-            ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _notesController,
