@@ -82,8 +82,21 @@ flutter build appbundle --release --dart-define=SUPABASE_URL=... --dart-define=S
 4. Upload **`app-release.aab`**
 5. Complete store listing: icon, screenshots, privacy policy URL, content rating questionnaire
 
+### Internal / closed testing (community testers)
+
+**Website (swimiqapp.com) uploads do NOT change Play testing links.**  
+GoDaddy / Flutter web work is separate from the Android AAB on Google Play.
+
+| What | Link / ID |
+|------|-----------|
+| **Package name (never change)** | `com.swimiq.swimiq` |
+| **Public store page** (only after Production publish) | `https://play.google.com/store/apps/details?id=com.swimiq.swimiq` |
+| **Internal / closed testing join link** | Created in Play Console → Testing → Internal testing (or Closed testing) → **Testers** → copy **join on the web** / opt-in URL. It looks like `https://play.google.com/apps/internaltest/...` or a Console share link. **That exact URL is owned by Play Console — not by this GitHub repo.** |
+
+**Testers should keep using the Play Console join link you already sent them** unless you create a new testing track and send a new link. Rebuilding the website or merging web/Analyze PRs does not invalidate that Play link.
+
 ### Internal testing (recommended first)
-- **Internal testing** track → add testers by email → upload same `.aab` → testers install via Play link
+- **Internal testing** track → add testers by email → upload same `.aab` → testers install via Play join link above
 
 ---
 
