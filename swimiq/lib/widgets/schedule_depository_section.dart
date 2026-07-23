@@ -414,7 +414,14 @@ class _ScheduleEntryFormSheetState
       helpText: 'Warm-up / session start',
     );
     if (picked == null || !mounted) return;
-    setState(() => controller.text = picked.format(context));
+    setState(() => controller.text = _formatTimeOfDay(picked));
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour12 = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour12:$minute $period';
   }
 
   TimeOfDay? _parseTimeOfDay(String raw) {
@@ -457,66 +464,95 @@ class _ScheduleEntryFormSheetState
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    final swimmer = ref.read(activeSwimmerProvider);
-    if (swimmer == null) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
+    final swimmer = ref.read(activeSwimmerProvider)?.trim();
+    if (swimmer == null || swimmer.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a swimmer before saving a meet.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
+    String? error;
+    var savedCount = 0;
 
-    var notes = _optional(_notesController.text) ?? '';
-    if (_schedulePhotoBytes != null) {
-      try {
-        final url =
-            await ref.read(profilePhotoServiceProvider).uploadSchedulePhoto(
-                  swimmer: swimmer,
-                  fileName: _schedulePhotoName ?? 'schedule.jpg',
-                  bytes: _schedulePhotoBytes!,
-                );
-        notes = notes.isEmpty ? 'Schedule photo: $url' : '$notes\nSchedule photo: $url';
-      } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not upload schedule photo.')),
-          );
+    try {
+      var notes = _optional(_notesController.text) ?? '';
+      if (_schedulePhotoBytes != null) {
+        try {
+          final url =
+              await ref.read(profilePhotoServiceProvider).uploadSchedulePhoto(
+                    swimmer: swimmer,
+                    fileName: _schedulePhotoName ?? 'schedule.jpg',
+                    bytes: _schedulePhotoBytes!,
+                  );
+          notes = notes.isEmpty
+              ? 'Schedule photo: $url'
+              : '$notes\nSchedule photo: $url';
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not upload schedule photo.')),
+            );
+          }
         }
       }
-    }
 
-    final List<SwimScheduleEntry> entries;
-    if (_isUpcomingMeet) {
-      entries = buildUpcomingMeetEntries(
-        swimmerName: swimmer,
-        title: _titleController.text.trim(),
-        location: _optional(_locationController.text),
-        notes: notes.isEmpty ? null : notes,
-        days: [
-          for (var i = 0; i < _meetDayCount; i++)
-            UpcomingMeetDayInput(
-              date: _scheduleDate.add(Duration(days: i)),
-              startTime: _optional(_dayStartTimeControllers[i].text),
-              eventsLine: _optional(_dayEventsControllers[i].text),
-            ),
-        ],
-      );
-    } else {
-      entries = [
-        SwimScheduleEntry(
+      final List<SwimScheduleEntry> entries;
+      if (_isUpcomingMeet) {
+        // Keep controllers and day count in sync before reading.
+        _syncMeetDayControllers(_meetDayCount);
+        entries = buildUpcomingMeetEntries(
           swimmerName: swimmer,
-          scheduleType: _scheduleType,
           title: _titleController.text.trim(),
-          scheduleDate: _scheduleDate,
-          startTime: _optional(_startTimeController.text),
           location: _optional(_locationController.text),
-          eventsLine: _optional(_eventsController.text),
           notes: notes.isEmpty ? null : notes,
-        ),
-      ];
+          days: [
+            for (var i = 0; i < _meetDayCount; i++)
+              UpcomingMeetDayInput(
+                date: _scheduleDate.add(Duration(days: i)),
+                startTime: i < _dayStartTimeControllers.length
+                    ? _optional(_dayStartTimeControllers[i].text)
+                    : null,
+                eventsLine: i < _dayEventsControllers.length
+                    ? _optional(_dayEventsControllers[i].text)
+                    : null,
+              ),
+          ],
+        );
+      } else {
+        entries = [
+          SwimScheduleEntry(
+            swimmerName: swimmer,
+            scheduleType: _scheduleType,
+            title: _titleController.text.trim(),
+            scheduleDate: _scheduleDate,
+            startTime: _optional(_startTimeController.text),
+            location: _optional(_locationController.text),
+            eventsLine: _optional(_eventsController.text),
+            notes: notes.isEmpty ? null : notes,
+          ),
+        ];
+      }
+
+      savedCount = entries.length;
+      error =
+          await ref.read(swimmerDataProvider.notifier).addSchedules(entries);
+    } catch (err) {
+      error = err.toString().contains('Null check operator')
+          ? 'Could not save this meet — check the meet name, days, and times, then try again.'
+          : 'Could not save this meet. Please try again.';
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
 
-    final error =
-        await ref.read(swimmerDataProvider.notifier).addSchedules(entries);
     if (!mounted) return;
-    setState(() => _isSaving = false);
 
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -529,8 +565,8 @@ class _ScheduleEntryFormSheetState
     }
 
     final messenger = ScaffoldMessenger.of(context);
-    if (mounted) Navigator.of(context).pop();
-    final dayPart = entries.length > 1 ? ' (${entries.length} days)' : '';
+    Navigator.of(context).pop();
+    final dayPart = savedCount > 1 ? ' ($savedCount days)' : '';
     messenger.showSnackBar(
       SnackBar(
         content: Text(

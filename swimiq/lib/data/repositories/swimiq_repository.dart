@@ -113,7 +113,14 @@ class SwimIqRepository {
   }
 
   Future<void> insertSchedule(SwimScheduleEntry entry) async {
-    await _client.from('swim_schedules').insert(entry.toInsertJson());
+    await insertSchedules([entry]);
+  }
+
+  Future<void> insertSchedules(List<SwimScheduleEntry> entries) async {
+    if (entries.isEmpty) return;
+    await _client.from('swim_schedules').insert(
+          entries.map((entry) => entry.toInsertJson()).toList(),
+        );
   }
 
   Future<void> updateSchedule(SwimScheduleEntry entry) async {
