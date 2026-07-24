@@ -3,6 +3,7 @@ import '../../data/models/swim_schedule_entry.dart';
 import '../../data/models/swim_video_analysis.dart';
 import '../../data/models/swimmer_profile.dart';
 import '../../core/utils/passport_metrics.dart';
+import '../../core/utils/schedule_meet_resolver.dart';
 import '../../core/utils/upcoming_meet_builder.dart';
 import '../../providers/swimmer_data_provider.dart';
 
@@ -111,7 +112,7 @@ class RaceIntelligenceService {
     String? selectedFocusEvent,
   }) {
     final snapshot = data.passportSnapshot(swimmer);
-    final upcoming = _upcomingMeetOrRace(data.schedules);
+    final upcoming = ScheduleMeetResolver.nextMeetOrRace(data.schedules);
     final latestAnalysis = _latestAnalysis(data.userFacingVideoAnalyses);
     final priorities = latestAnalysis?.topPriorities ?? const <String>[];
     final meetEvents = candidateEvents(
@@ -191,7 +192,7 @@ class RaceIntelligenceService {
     SwimScheduleEntry? upcoming,
     PassportSnapshot? snapshot,
   }) {
-    upcoming ??= _upcomingMeetOrRace(data.schedules);
+    upcoming ??= ScheduleMeetResolver.nextMeetOrRace(data.schedules);
     snapshot ??= data.passportSnapshot(swimmer);
     final events = <String>[];
 
@@ -234,40 +235,6 @@ class RaceIntelligenceService {
         .where((part) => part.isNotEmpty)
         .toList();
     return parts;
-  }
-
-  static SwimScheduleEntry? _upcomingMeetOrRace(
-    List<SwimScheduleEntry> schedules,
-  ) {
-    if (schedules.isEmpty) return null;
-    final today = DateTime.now();
-    final startOfToday = DateTime(today.year, today.month, today.day);
-
-    bool isFuture(SwimScheduleEntry entry) {
-      final day = DateTime(
-        entry.scheduleDate.year,
-        entry.scheduleDate.month,
-        entry.scheduleDate.day,
-      );
-      return !day.isBefore(startOfToday);
-    }
-
-    int compareEntries(SwimScheduleEntry a, SwimScheduleEntry b) {
-      final dateCompare = a.scheduleDate.compareTo(b.scheduleDate);
-      if (dateCompare != 0) return dateCompare;
-      return (a.startTime ?? '').compareTo(b.startTime ?? '');
-    }
-
-    final meetLike = schedules.where((e) => e.isMeet || e.isRace).toList();
-    final futureMeets = meetLike.where(isFuture).toList()..sort(compareEntries);
-    if (futureMeets.isNotEmpty) return futureMeets.first;
-    if (meetLike.isNotEmpty) {
-      meetLike.sort(compareEntries);
-      return meetLike.last;
-    }
-
-    final futureAny = schedules.where(isFuture).toList()..sort(compareEntries);
-    return futureAny.isNotEmpty ? futureAny.first : null;
   }
 
   static SwimVideoAnalysis? _latestAnalysis(List<SwimVideoAnalysis> analyses) {

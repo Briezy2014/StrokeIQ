@@ -39,7 +39,7 @@ class PowerIndexBreakdownCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Power Index breakdown',
+            'How Power Index is calculated',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: AppColors.primaryDeep,
@@ -48,8 +48,8 @@ class PowerIndexBreakdownCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             power.hasEnoughData
-                ? 'Weighted mix of USA cuts, event depth, meet progression, '
-                    'college fit, and video technique.'
+                ? 'Pie slices are formula weights. Legend shows each factor’s '
+                    'current score and how many points it adds to her index.'
                 : (power.missingDataHint ??
                     'Add official PBs plus birthday and gender to calculate '
                         'Power Index.'),

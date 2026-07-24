@@ -47,10 +47,9 @@ class SwimScheduleEntry {
     return SwimScheduleEntry(
       id: _parseId(json['id']),
       swimmerName: json['swimmer_name']?.toString() ?? '',
-      scheduleType: json['schedule_type']?.toString() ?? typePractice,
+      scheduleType: _normalizeType(json['schedule_type']),
       title: json['title']?.toString() ?? '',
-      scheduleDate: DateTime.tryParse(json['schedule_date']?.toString() ?? '') ??
-          DateTime.now(),
+      scheduleDate: _parseScheduleDate(json['schedule_date']),
       startTime: _nullableText(json['start_time']),
       location: _nullableText(json['location']),
       eventsLine: _nullableText(json['events_line']),
@@ -107,6 +106,30 @@ class SwimScheduleEntry {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value.toString());
+  }
+
+  static String _normalizeType(dynamic value) {
+    final raw = value?.toString().trim().toLowerCase() ?? '';
+    if (raw == typeMeet || raw == typeRace || raw == typePractice) return raw;
+    return typePractice;
+  }
+
+  /// Calendar date only (local) so UTC midnight ISO strings do not shift the day.
+  static DateTime _parseScheduleDate(dynamic value) {
+    final text = value?.toString().trim() ?? '';
+    if (text.isEmpty) return DateTime.now();
+    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})').firstMatch(text);
+    if (match != null) {
+      final year = int.tryParse(match.group(1)!);
+      final month = int.tryParse(match.group(2)!);
+      final day = int.tryParse(match.group(3)!);
+      if (year != null && month != null && day != null) {
+        return DateTime(year, month, day);
+      }
+    }
+    final parsed = DateTime.tryParse(text);
+    if (parsed == null) return DateTime.now();
+    return DateTime(parsed.year, parsed.month, parsed.day);
   }
 
   static String? _nullableText(dynamic value) {

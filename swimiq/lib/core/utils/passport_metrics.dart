@@ -3,6 +3,7 @@ import '../../core/recruiting/power_index.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
+import '../../core/utils/schedule_meet_resolver.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
@@ -268,78 +269,17 @@ class PassportMetrics {
     return sorted.first.meetName;
   }
 
-  /// Upcoming meet/race from Schedule (Log → Meets), never photo-upload placeholders.
+  /// Upcoming meet/race from Log → Meets (same resolver as Race Intelligence).
   static String nextMeet({
     List<MeetResult> meetResults = const [],
     List<SwimScheduleEntry> schedules = const [],
     DateTime? now,
   }) {
-    final upcoming = _upcomingScheduleMeet(schedules, now: now);
-    if (upcoming == null) return noUpcomingMeetLabel;
-    final title = upcoming.title.trim();
-    if (title.isEmpty) return noUpcomingMeetLabel;
-    final date = _formatShortDate(upcoming.scheduleDate);
-    final start = upcoming.startTime?.trim();
-    if (start != null && start.isNotEmpty) {
-      return '$title · $date · $start';
-    }
-    return '$title · $date';
-  }
-
-  /// Same selection rules as Race Intelligence: next meet/race from today forward.
-  static SwimScheduleEntry? _upcomingScheduleMeet(
-    List<SwimScheduleEntry> schedules, {
-    DateTime? now,
-  }) {
-    if (schedules.isEmpty) return null;
-    final clock = now ?? DateTime.now();
-    final startOfToday = DateTime(clock.year, clock.month, clock.day);
-
-    bool isFuture(SwimScheduleEntry entry) {
-      final day = DateTime(
-        entry.scheduleDate.year,
-        entry.scheduleDate.month,
-        entry.scheduleDate.day,
-      );
-      return !day.isBefore(startOfToday);
-    }
-
-    final meetLike = schedules
-        .where(
-          (entry) =>
-              (entry.isMeet || entry.isRace) &&
-              !MeetHistoryAnalytics.isSyntheticMeetName(entry.title),
-        )
-        .toList();
-    final futureMeets = meetLike.where(isFuture).toList()
-      ..sort((a, b) {
-        final byDate = a.scheduleDate.compareTo(b.scheduleDate);
-        if (byDate != 0) return byDate;
-        return (a.startTime ?? '').compareTo(b.startTime ?? '');
-      });
-    if (futureMeets.isNotEmpty) return futureMeets.first;
-
-    // Multi-day meets: if day 1 already started, still surface a remaining day.
-    // When every day is past, keep "None scheduled" for the upcoming chip.
-    return null;
-  }
-
-  static String _formatShortDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
+    final upcoming = ScheduleMeetResolver.nextMeetOrRace(schedules, now: now);
+    return ScheduleMeetResolver.formatLabel(
+      upcoming,
+      emptyLabel: noUpcomingMeetLabel,
+    );
   }
 
   static String readiness({

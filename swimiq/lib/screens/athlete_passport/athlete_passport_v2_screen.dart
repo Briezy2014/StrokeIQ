@@ -12,6 +12,7 @@ import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/power_index_breakdown_card.dart';
+import '../../widgets/upcoming_meet_sync_banner.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -397,6 +398,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
             ),
+            const SizedBox(height: 12),
+            UpcomingMeetSyncBanner(schedules: data.schedules),
             const SizedBox(height: 12),
             PowerIndexBreakdownCard(powerIndex: snapshot.powerIndex),
             const SizedBox(height: 10),
