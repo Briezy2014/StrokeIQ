@@ -125,8 +125,9 @@ String _ropeClimbExplanation(SwimIqDailyProgress daily) {
   final scorePercent = (daily.scoreRopePercent * 100).round();
   final boost = daily.todayPoints;
   final inactive = daily.daysInactive;
-  final inactivityNote = inactive > 1
-      ? ' Score is cooling off after $inactive quiet days — log something to climb again.'
+  // Soften copy: short rests are normal; only call out cooling after grace.
+  final inactivityNote = inactive > 3
+      ? ' Score is cooling gently after $inactive quiet days — log something to climb again.'
       : '';
   if (boost > 0) {
     return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
@@ -134,15 +135,21 @@ String _ropeClimbExplanation(SwimIqDailyProgress daily) {
         'Today\'s log adds +$boost boost pts on top (max 100 per day).'
         '$inactivityNote';
   }
-  if (inactive > 1) {
+  if (inactive > 3) {
     return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
         '${SwimIqDailyProgress.ropeScoreMax}) is at $scorePercent% after $inactive quiet days. '
-        'Log a practice, upload best times, or analyze a video to climb again.';
+        'A short rest barely moves the rope — log a practice, upload best times, '
+        'or analyze a video to climb again.';
+  }
+  if (inactive > 0) {
+    return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
+        '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
+        'Rest days are fine — the score stays put for a few quiet days, then cools gently.';
   }
   return 'Your SwimIQ score (${daily.overallSwimIqScore} out of '
       '${SwimIqDailyProgress.ropeScoreMax}) sets your rope height at $scorePercent%. '
       'Log a practice, meet, PB photo, or video today — the score rises with activity '
-      'and drops if you go quiet.';
+      'and only cools gently after several quiet days.';
 }
 
 class _ScorePill extends StatelessWidget {

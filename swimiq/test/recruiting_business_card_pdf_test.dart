@@ -15,6 +15,7 @@ void main() {
       topEvents: const [
         '200 Butterfly 3:10.00 (LCM)',
         '100 Butterfly 1:02.3 (SCY)',
+        '50 Butterfly 28.45 (SCY)',
       ],
       graduationYear: 2032,
     );
@@ -36,6 +37,7 @@ void main() {
       topEvents: const [
         '200 Butterfly 3:10.00 (LCM)',
         '100 Butterfly 1:02.3 (SCY)',
+        '50 Butterfly 28.45 (SCY)',
       ],
       graduationYear: 2032,
     );
@@ -56,6 +58,7 @@ void main() {
       'swimiq.app',
       'aspyn@example.com',
       '614-555-0199',
+      '28.45',
     ]) {
       expect(content, contains(needle), reason: '$needle missing from PDF stream');
     }

@@ -104,12 +104,17 @@ class SwimIqRepository {
         .from('swim_schedules')
         .select()
         .eq('swimmer_name', swimmerName)
-        .order('schedule_date', ascending: true)
-        .order('start_time', ascending: true);
+        .order('schedule_date', ascending: true);
 
-    return (response as List)
+    final entries = (response as List)
         .map((row) => SwimScheduleEntry.fromJson(Map<String, dynamic>.from(row)))
         .toList();
+    entries.sort((a, b) {
+      final byDate = a.scheduleDate.compareTo(b.scheduleDate);
+      if (byDate != 0) return byDate;
+      return (a.startTime ?? '').compareTo(b.startTime ?? '');
+    });
+    return entries;
   }
 
   Future<void> insertSchedule(SwimScheduleEntry entry) async {

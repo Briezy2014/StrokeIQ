@@ -98,6 +98,25 @@ void main() {
     expect(snapshot.score, inInclusiveRange(1, 100));
     expect(snapshot.label, isNotEmpty);
     expect(snapshot.strongestEvent, isNotNull);
+    expect(snapshot.factors, hasLength(5));
+    expect(
+      snapshot.factors.map((f) => f.weightPercent).fold<int>(0, (a, b) => a + b),
+      100,
+    );
+    expect(snapshot.factors.first.label.toLowerCase(), contains('cuts'));
+    expect(
+      snapshot.factors.map((f) => f.id).toList(),
+      ['cuts', 'depth', 'progression', 'college', 'technique'],
+    );
+    for (final factor in snapshot.factors) {
+      expect(factor.explanation.trim(), isNotEmpty);
+    }
+    final college = snapshot.factors.firstWhere((f) => f.id == 'college');
+    expect(college.explanation.toLowerCase(), contains('recruiting'));
+    expect(
+      college.explanation.toLowerCase(),
+      contains('not a scholarship offer'),
+    );
     expect(snapshot.resumeValue, isNot(contains('coming soon')));
     expect(snapshot.displayLine.toLowerCase(), isNot(contains('coming soon')));
   });

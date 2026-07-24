@@ -3,6 +3,7 @@ import '../../core/recruiting/power_index.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/services/usa_motivational_standards_catalog.dart';
 import '../../core/utils/swim_stroke_utils.dart';
+import '../../core/utils/schedule_meet_resolver.dart';
 import '../../core/utils/swimiq_age_group.dart';
 import '../../core/utils/swimiq_gender.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
@@ -193,7 +194,7 @@ class PassportMetrics {
 
     return 'Score $score from ${raceLogs.length} logged sessions, '
         '${goals.length} goals, and $personalBestCount personal bests. '
-        'Rises with recent app activity and cools off after quiet days.';
+        'Rises with recent app activity and cools gently only after several quiet days.';
   }
 
   static String currentFocus({
@@ -268,63 +269,17 @@ class PassportMetrics {
     return sorted.first.meetName;
   }
 
-  /// Upcoming meet/race from Schedule (never photo-upload placeholders).
+  /// Upcoming meet/race from Log → Meets (same resolver as Race Intelligence).
   static String nextMeet({
     List<MeetResult> meetResults = const [],
     List<SwimScheduleEntry> schedules = const [],
     DateTime? now,
   }) {
-    final upcoming = _upcomingScheduleMeet(schedules, now: now);
-    if (upcoming != null) {
-      final title = upcoming.title.trim();
-      if (title.isEmpty) return noUpcomingMeetLabel;
-      return '$title · ${_formatShortDate(upcoming.scheduleDate)}';
-    }
-    // Do not fall back to meet-result names like "Uploaded best times".
-    return noUpcomingMeetLabel;
-  }
-
-  static SwimScheduleEntry? _upcomingScheduleMeet(
-    List<SwimScheduleEntry> schedules, {
-    DateTime? now,
-  }) {
-    if (schedules.isEmpty) return null;
-    final clock = now ?? DateTime.now();
-    final startOfToday = DateTime(clock.year, clock.month, clock.day);
-    final future = schedules.where((entry) {
-      if (!entry.isMeet && !entry.isRace) return false;
-      if (MeetHistoryAnalytics.isSyntheticMeetName(entry.title)) return false;
-      final day = DateTime(
-        entry.scheduleDate.year,
-        entry.scheduleDate.month,
-        entry.scheduleDate.day,
-      );
-      return !day.isBefore(startOfToday);
-    }).toList()
-      ..sort((a, b) {
-        final byDate = a.scheduleDate.compareTo(b.scheduleDate);
-        if (byDate != 0) return byDate;
-        return (a.startTime ?? '').compareTo(b.startTime ?? '');
-      });
-    return future.isEmpty ? null : future.first;
-  }
-
-  static String _formatShortDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
+    final upcoming = ScheduleMeetResolver.nextMeetOrRace(schedules, now: now);
+    return ScheduleMeetResolver.formatLabel(
+      upcoming,
+      emptyLabel: noUpcomingMeetLabel,
+    );
   }
 
   static String readiness({

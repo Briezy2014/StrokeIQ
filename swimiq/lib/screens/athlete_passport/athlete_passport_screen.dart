@@ -274,16 +274,21 @@ class _AthletePassportScreenState extends ConsumerState<AthletePassportScreen> {
                 SwimIqMetricCard(
                   label: 'Upcoming Meet',
                   value: snapshot.nextMeet == PassportMetrics.noUpcomingMeetLabel
-                      ? 'Add on Log → Schedule'
+                      ? 'Add on Log → Meets'
                       : snapshot.nextMeet,
-                ),
-                SwimIqMetricCard(
-                  label: 'IMX / IMR',
-                  value: snapshot.imxScore,
                 ),
                 SwimIqMetricCard(
                   label: 'Readiness',
                   value: snapshot.readiness,
+                ),
+                SwimIqMetricCard(
+                  label: 'Power Index',
+                  value: snapshot.powerIndex.hasEnoughData
+                      ? '${snapshot.powerIndex.score} · ${snapshot.powerIndex.label}'
+                      : 'Add PBs + birthday',
+                  subtitle: snapshot.powerIndex.hasEnoughData
+                      ? snapshot.powerIndex.summary
+                      : snapshot.powerIndex.missingDataHint,
                 ),
               ],
             ),

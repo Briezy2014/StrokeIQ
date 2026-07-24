@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/data/models/personal_best_entry.dart';
 import 'package:swimiq/widgets/athlete_recruiting_business_card.dart';
 
 void main() {
@@ -23,6 +24,7 @@ void main() {
               topEvents: [
                 '50 Butterfly 28.45 (SCY)',
                 '100 Butterfly 1:02.3 (SCY)',
+                '200 Butterfly 2:20.1 (SCY)',
               ],
               graduationYear: 2032,
               usaSwimmingId: 'AB1234E5F',
@@ -47,7 +49,55 @@ void main() {
     expect(find.text('TOP TIMES'), findsOneWidget);
     expect(find.textContaining('GPA 3.85'), findsOneWidget);
     expect(find.textContaining('50 Butterfly'), findsOneWidget);
+    expect(find.textContaining('100 Butterfly'), findsOneWidget);
+    expect(find.textContaining('200 Butterfly'), findsOneWidget);
     expect(find.textContaining('STATE QUALIFIER'), findsOneWidget);
+  });
+
+  test('topEventLines returns up to three personal bests', () {
+    final lines = AthleteRecruitingBusinessCard.topEventLines([
+      PersonalBestEntry(
+        stroke: 'Fly',
+        distance: 50,
+        course: 'SCY',
+        timeSeconds: 28.45,
+        date: DateTime(2026, 3, 1),
+        eventLabel: '50 Fly',
+        source: PersonalBestSource.meet,
+      ),
+      PersonalBestEntry(
+        stroke: 'Fly',
+        distance: 100,
+        course: 'SCY',
+        timeSeconds: 62.3,
+        date: DateTime(2026, 3, 1),
+        eventLabel: '100 Fly',
+        source: PersonalBestSource.meet,
+      ),
+      PersonalBestEntry(
+        stroke: 'Fly',
+        distance: 200,
+        course: 'SCY',
+        timeSeconds: 140.1,
+        date: DateTime(2026, 3, 1),
+        eventLabel: '200 Fly',
+        source: PersonalBestSource.meet,
+      ),
+      PersonalBestEntry(
+        stroke: 'Free',
+        distance: 50,
+        course: 'SCY',
+        timeSeconds: 26.0,
+        date: DateTime(2026, 3, 1),
+        eventLabel: '50 Free',
+        source: PersonalBestSource.meet,
+      ),
+    ]);
+
+    expect(lines, hasLength(3));
+    expect(lines[0], contains('50'));
+    expect(lines[1], contains('100'));
+    expect(lines[2], contains('200'));
   });
 
   testWidgets('AthleteRecruitingBusinessCard shows upload photo action', (
@@ -81,6 +131,7 @@ void main() {
     expect(find.text('A'), findsOneWidget); // cut beside the real top time
     expect(find.text('HIGHEST USA CUT'), findsNothing);
     expect(find.textContaining('50 Butterfly 34.67'), findsOneWidget);
+    expect(find.text('Add 3rd PB'), findsOneWidget);
     await tester.tap(find.text('Add photo'));
     expect(tapped, isTrue);
   });
