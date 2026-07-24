@@ -8,7 +8,7 @@ import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
 import '../data/models/swimmer_profile.dart';
 
-/// Featured dashboard pie — USA cuts mix (Pro) or stroke mix (training logs).
+/// Featured pie — USA cuts mix (Pro) or stroke mix (training logs).
 class DashboardCutsPieChart extends StatelessWidget {
   const DashboardCutsPieChart({
     super.key,
@@ -17,6 +17,10 @@ class DashboardCutsPieChart extends StatelessWidget {
     required this.catalog,
     required this.profile,
     required this.showProFeatures,
+    this.title,
+    this.subtitle,
+    this.emptyMessage,
+    this.showCutBars = false,
   });
 
   final List<PersonalBestEntry> personalBests;
@@ -25,7 +29,15 @@ class DashboardCutsPieChart extends StatelessWidget {
   final SwimmerProfile? profile;
   final bool showProFeatures;
 
-  static const _cutColors = <String, Color>{
+  /// Optional overrides (PBs tab uses friendlier copy).
+  final String? title;
+  final String? subtitle;
+  final String? emptyMessage;
+
+  /// When true, also shows a horizontal bar breakdown under the pie.
+  final bool showCutBars;
+
+  static const cutColors = <String, Color>{
     'AAAA': Color(0xFF7C3AED),
     'AAA': Color(0xFFF59E0B),
     'AA': Color(0xFFEAB308),
@@ -35,24 +47,41 @@ class DashboardCutsPieChart extends StatelessWidget {
     'Below B': Color(0xFFCBD5E1),
   };
 
+  /// Public color lookup for cut badges on PB cards.
+  static Color colorForCut(String cut) =>
+      cutColors[cut] ?? AppColors.primary;
+
   @override
   Widget build(BuildContext context) {
     final slices = showProFeatures && personalBests.isNotEmpty
         ? _cutSlices()
         : _strokeSlices();
 
+    final isCuts = showProFeatures && personalBests.isNotEmpty;
+    final heading = title ?? (isCuts ? 'Cuts mix' : 'Training mix');
+    final support = subtitle ??
+        (isCuts
+            ? 'USA motivational cuts across your best times.'
+            : 'Stroke mix from your recent training logs.');
+
     if (slices.isEmpty) {
-      return _EmptyChart(showProFeatures: showProFeatures);
+      return _EmptyChart(
+        title: heading,
+        subtitle: support,
+        message: emptyMessage ??
+            (showProFeatures
+                ? 'Add official meet times on the Log tab to see your USA cuts breakdown.'
+                : 'Log training sessions to see your stroke mix.'),
+      );
     }
 
     final total = slices.fold<int>(0, (sum, slice) => sum + slice.value);
-    final isCuts = showProFeatures && personalBests.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          isCuts ? 'Cuts mix' : 'Training mix',
+          heading,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: AppColors.primaryDeep,
@@ -60,9 +89,7 @@ class DashboardCutsPieChart extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          isCuts
-              ? 'USA motivational cuts across your best times.'
-              : 'Stroke mix from your recent training logs.',
+          support,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey.shade700,
               ),
@@ -133,6 +160,17 @@ class DashboardCutsPieChart extends StatelessWidget {
               ),
           ],
         ),
+        if (showCutBars && isCuts) ...[
+          const SizedBox(height: 18),
+          ...slices.map(
+            (slice) => _CutBarRow(
+              label: slice.label,
+              count: slice.value,
+              total: total,
+              color: slice.color,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -151,16 +189,24 @@ class DashboardCutsPieChart extends StatelessWidget {
       counts[cut] = (counts[cut] ?? 0) + 1;
     }
 
-    return counts.entries
-        .map(
-          (entry) => _PieSlice(
-            entry.key,
-            entry.value,
-            _cutColors[entry.key] ?? AppColors.primary,
-          ),
-        )
-        .toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    // Stable ladder order so the chart reads like standards, not random.
+    const ladder = ['AAAA', 'AAA', 'AA', 'A', 'BB', 'B', 'Below B'];
+    final ordered = <_PieSlice>[];
+    for (final level in ladder) {
+      final count = counts.remove(level);
+      if (count == null || count <= 0) continue;
+      ordered.add(_PieSlice(level, count, cutColors[level]!));
+    }
+    for (final entry in counts.entries) {
+      ordered.add(
+        _PieSlice(
+          entry.key,
+          entry.value,
+          cutColors[entry.key] ?? AppColors.primary,
+        ),
+      );
+    }
+    return ordered;
   }
 
   List<_PieSlice> _strokeSlices() {
@@ -192,6 +238,66 @@ class DashboardCutsPieChart extends StatelessWidget {
         })
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+  }
+}
+
+class _CutBarRow extends StatelessWidget {
+  const _CutBarRow({
+    required this.label,
+    required this.count,
+    required this.total,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = total <= 0 ? 0.0 : count / total;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: color,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: fraction,
+                minHeight: 12,
+                backgroundColor: color.withValues(alpha: 0.12),
+                color: color,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$count',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -234,9 +340,15 @@ class _LegendChip extends StatelessWidget {
 }
 
 class _EmptyChart extends StatelessWidget {
-  const _EmptyChart({required this.showProFeatures});
+  const _EmptyChart({
+    required this.title,
+    required this.subtitle,
+    required this.message,
+  });
 
-  final bool showProFeatures;
+  final String title;
+  final String subtitle;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +356,7 @@ class _EmptyChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          showProFeatures ? 'Cuts mix' : 'Training mix',
+          title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: AppColors.primaryDeep,
@@ -252,9 +364,7 @@ class _EmptyChart extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          showProFeatures
-              ? 'USA motivational cuts across your best times.'
-              : 'Stroke mix from your recent training logs.',
+          subtitle,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey.shade700,
               ),
@@ -272,9 +382,7 @@ class _EmptyChart extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              showProFeatures
-                  ? 'Add official meet times on the Log tab to see your USA cuts breakdown.'
-                  : 'Log training sessions to see your stroke mix.',
+              message,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey.shade700,
@@ -295,4 +403,54 @@ class _PieSlice {
   final String label;
   final int value;
   final Color color;
+}
+
+/// Shared card wrapper for Dashboard + PBs cuts visuals.
+class CutsMixCard extends StatelessWidget {
+  const CutsMixCard({
+    super.key,
+    required this.personalBests,
+    required this.raceLogs,
+    required this.catalog,
+    required this.profile,
+    required this.showProFeatures,
+    this.title,
+    this.subtitle,
+    this.emptyMessage,
+    this.showCutBars = false,
+  });
+
+  final List<PersonalBestEntry> personalBests;
+  final List<RaceLog> raceLogs;
+  final UsaMotivationalStandardsCatalog catalog;
+  final SwimmerProfile? profile;
+  final bool showProFeatures;
+  final String? title;
+  final String? subtitle;
+  final String? emptyMessage;
+  final bool showCutBars;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: DashboardCutsPieChart(
+          personalBests: personalBests,
+          raceLogs: raceLogs,
+          catalog: catalog,
+          profile: profile,
+          showProFeatures: showProFeatures,
+          title: title,
+          subtitle: subtitle,
+          emptyMessage: emptyMessage,
+          showCutBars: showCutBars,
+        ),
+      ),
+    );
+  }
 }

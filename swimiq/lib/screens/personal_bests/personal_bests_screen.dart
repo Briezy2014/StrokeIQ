@@ -11,6 +11,7 @@ import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/next_cut_progress.dart';
 import '../../core/utils/swimiq_standards_profile.dart';
+import '../../widgets/dashboard_cuts_pie_chart.dart';
 import '../../widgets/next_cut_progress_strip.dart';
 import '../../core/utils/swim_analytics.dart';
 import '../../core/utils/swim_time.dart';
@@ -93,6 +94,28 @@ class PersonalBestsScreen extends ConsumerWidget {
                 const SwimIqStandardsSetupBanner(),
               ],
               const SizedBox(height: 16),
+              CutsMixCard(
+                personalBests: officialBests,
+                raceLogs: data.raceLogs,
+                catalog: data.motivationalStandards,
+                profile: data.profile,
+                showProFeatures: true,
+                title: 'Your USA cuts',
+                subtitle:
+                    'Chart of motivational cuts across your official best times.',
+                emptyMessage:
+                    'Upload best times to see your USA cuts chart.',
+                showCutBars: true,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Best times by event',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDeep,
+                    ),
+              ),
+              const SizedBox(height: 8),
               ...officialBests.map(
                 (pb) {
                   final cut = MotivationalCut.labelForSwim(
@@ -112,14 +135,59 @@ class PersonalBestsScreen extends ConsumerWidget {
                     timeSeconds: pb.timeSeconds,
                   );
                   final sourceDetail = pb.meetName ?? pb.eventLabel;
+                  final cutColor = DashboardCutsPieChart.colorForCut(cut);
                   return SwimIqEventCard(
                     title: pb.displayTitle,
                     subtitle:
                         '${pb.course} · ${pb.sourceLabel} · ${dateFormat.format(pb.date)}\n'
-                        '$sourceDetail · $cut cut',
+                        '$sourceDetail',
                     trailing: pb.formattedTime,
                     highlight:
                         cut == data.passportSnapshot(swimmer).highestCut,
+                    trailingActions: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            pb.formattedTime,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cutColor.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: cutColor.withValues(alpha: 0.45),
+                            ),
+                          ),
+                          child: Text(
+                            cut,
+                            style: TextStyle(
+                              color: cutColor,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     footer: nextCut == null
                         ? null
                         : NextCutProgressStrip(
