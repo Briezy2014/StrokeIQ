@@ -18,6 +18,7 @@ type ExtractRequest = {
   image_base64?: string;
   mime_type?: string;
   course_hint?: string;
+  file_name?: string;
 };
 
 Deno.serve(async (req) => {
@@ -64,13 +65,22 @@ Deno.serve(async (req) => {
     if (mime === "image/jpg") mime = "image/jpeg";
 
     const courseHint = (body.course_hint ?? "").trim().toUpperCase();
+    const fileName = (body.file_name ?? "").trim();
     const prompt =
-      "Extract all personal best rows from this Best Times History screenshot. " +
+      "Extract ALL personal best rows from this Best Times History screenshot " +
+      "(TeamUnify / OnDeck / Swim Cloud style tables). " +
       "Return JSON with times[].event, times[].time, times[].course (SCY/LCM/SCM), " +
-      "times[].date, times[].meet_name, plus detected_course." +
+      "times[].date, times[].meet_name, plus detected_course. " +
+      "Course rules: " +
+      "1) Prefer course labels printed IN THE IMAGE (Long Course Meters, Short Course Yards, LCM, SCY, SCM, or Y/L/S time suffixes). " +
+      "2) Filename hint: " + (fileName || "(none)") + ". " +
+      "If the filename contains Long Course / LCM / Long Coure Meters, use LCM unless the image clearly shows yards. " +
+      "3) course_hint is a LAST RESORT only when the image has no course signal" +
       (["SCY", "LCM", "SCM"].includes(courseHint)
-        ? ` Default course hint if unclear: ${courseHint}.`
-        : "");
+        ? ` (provided hint: ${courseHint}).`
+        : ".") +
+      " Do NOT force every row to the hint when the screenshot shows a different course. " +
+      "Read every event row you can see — do not stop after a few.";
 
     const requestBody = {
       contents: [
@@ -167,7 +177,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        engine: "swimiq-best-times-extract-edge-v2",
+        engine: "swimiq-best-times-extract-edge-v3",
         model: usedModel,
         times,
         detected_course: parsed.detected_course ?? null,
