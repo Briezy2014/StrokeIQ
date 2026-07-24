@@ -18,6 +18,7 @@ class PowerIndexFactor {
     required this.weightPercent,
     required this.componentScore,
     required this.weightedPoints,
+    required this.explanation,
   });
 
   final String id;
@@ -28,6 +29,34 @@ class PowerIndexFactor {
   final int componentScore;
   /// Points this factor adds toward the final index (`component * weight`).
   final double weightedPoints;
+  /// Plain-language meaning of this slice for parents/athletes.
+  final String explanation;
+
+  static const explanations = <String, String>{
+    'cuts':
+        'How fast her official best times are compared with USA Swimming '
+        'motivational cuts (B → BB → A → AA → AAA → AAAA). Faster times vs '
+        'those age-group standards raise this slice the most.',
+    'depth':
+        'How broad her racing portfolio is — more competitive events and '
+        'strokes (not just one specialty) raise this score.',
+    'progression':
+        'Whether meet history shows real improvement over time (dropping '
+        'times across seasons/meets). Steady drops raise this slice; a thin '
+        'meet log stays closer to average.',
+    'college':
+        'How her current times line up with college recruiting time '
+        'benchmarks (likely / target / reach style ranges). This is not a '
+        'scholarship offer or admission decision — it only estimates how '
+        'recruitable her times look today.',
+    'technique':
+        'Signals from SwimIQ video analysis (body mechanics / overall '
+        'technique score). If there is little or no analyzed video yet, '
+        'this stays near a neutral baseline.',
+  };
+
+  static String explanationFor(String id) =>
+      explanations[id] ?? 'Part of the Power Index formula.';
 }
 
 /// Competitive Power Index (0–100) from official times, USA cuts, progression,
@@ -187,6 +216,7 @@ abstract final class PowerIndex {
         weightPercent: weightCuts,
         componentScore: speedScore.round(),
         weightedPoints: speedScore * (weightCuts / 100),
+        explanation: PowerIndexFactor.explanationFor('cuts'),
       ),
       PowerIndexFactor(
         id: 'depth',
@@ -194,6 +224,7 @@ abstract final class PowerIndex {
         weightPercent: weightDepth,
         componentScore: depthBonus.round(),
         weightedPoints: depthBonus * (weightDepth / 100),
+        explanation: PowerIndexFactor.explanationFor('depth'),
       ),
       PowerIndexFactor(
         id: 'progression',
@@ -201,6 +232,7 @@ abstract final class PowerIndex {
         weightPercent: weightProgression,
         componentScore: progressionBonus.round(),
         weightedPoints: progressionBonus * (weightProgression / 100),
+        explanation: PowerIndexFactor.explanationFor('progression'),
       ),
       PowerIndexFactor(
         id: 'college',
@@ -208,6 +240,7 @@ abstract final class PowerIndex {
         weightPercent: weightCollege,
         componentScore: collegeBonus.round(),
         weightedPoints: collegeBonus * (weightCollege / 100),
+        explanation: PowerIndexFactor.explanationFor('college'),
       ),
       PowerIndexFactor(
         id: 'technique',
@@ -215,6 +248,7 @@ abstract final class PowerIndex {
         weightPercent: weightTechnique,
         componentScore: techniqueBonus.round(),
         weightedPoints: techniqueBonus * (weightTechnique / 100),
+        explanation: PowerIndexFactor.explanationFor('technique'),
       ),
     ];
 

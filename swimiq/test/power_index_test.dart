@@ -104,6 +104,19 @@ void main() {
       100,
     );
     expect(snapshot.factors.first.label.toLowerCase(), contains('cuts'));
+    expect(
+      snapshot.factors.map((f) => f.id).toList(),
+      ['cuts', 'depth', 'progression', 'college', 'technique'],
+    );
+    for (final factor in snapshot.factors) {
+      expect(factor.explanation.trim(), isNotEmpty);
+    }
+    final college = snapshot.factors.firstWhere((f) => f.id == 'college');
+    expect(college.explanation.toLowerCase(), contains('recruiting'));
+    expect(
+      college.explanation.toLowerCase(),
+      contains('not a scholarship offer'),
+    );
     expect(snapshot.resumeValue, isNot(contains('coming soon')));
     expect(snapshot.displayLine.toLowerCase(), isNot(contains('coming soon')));
   });

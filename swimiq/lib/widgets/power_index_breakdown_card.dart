@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../core/recruiting/power_index.dart';
 import '../core/theme/app_theme.dart';
 
-/// Explains how Power Index is built — formula pie + current factor scores.
+/// Explains how Power Index is built — formula pie + plain-language meanings.
 class PowerIndexBreakdownCard extends StatelessWidget {
   const PowerIndexBreakdownCard({
     super.key,
@@ -48,8 +48,9 @@ class PowerIndexBreakdownCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             power.hasEnoughData
-                ? 'Pie slices are formula weights. Legend shows each factor’s '
-                    'current score and how many points it adds to her index.'
+                ? 'Each pie slice is a weighted part of the score. Read what '
+                    'each section means below — especially College fit, which '
+                    'is about recruiting time ranges, not offers.'
                 : (power.missingDataHint ??
                     'Add official PBs plus birthday and gender to calculate '
                         'Power Index.'),
@@ -61,7 +62,7 @@ class PowerIndexBreakdownCard extends StatelessWidget {
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 520;
+              final wide = constraints.maxWidth >= 560;
               final chart = SizedBox(
                 height: 200,
                 child: Stack(
@@ -125,18 +126,18 @@ class PowerIndexBreakdownCard extends StatelessWidget {
                       factor: factor,
                       showScores: power.hasEnoughData,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                   ],
                 ],
               );
 
               if (wide) {
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: chart),
+                    Expanded(flex: 5, child: chart),
                     const SizedBox(width: 16),
-                    Expanded(child: legend),
+                    Expanded(flex: 7, child: legend),
                   ],
                 );
               }
@@ -158,43 +159,51 @@ class PowerIndexBreakdownCard extends StatelessWidget {
   static Color _colorFor(String id) =>
       _factorColors[id] ?? AppColors.primary;
 
-  static List<PowerIndexFactor> _placeholderFactors() => const [
-        PowerIndexFactor(
-          id: 'cuts',
-          label: 'USA cuts / speed',
-          weightPercent: PowerIndex.weightCuts,
-          componentScore: 0,
-          weightedPoints: 0,
-        ),
-        PowerIndexFactor(
-          id: 'depth',
-          label: 'Event depth',
-          weightPercent: PowerIndex.weightDepth,
-          componentScore: 0,
-          weightedPoints: 0,
-        ),
-        PowerIndexFactor(
-          id: 'progression',
-          label: 'Meet progression',
-          weightPercent: PowerIndex.weightProgression,
-          componentScore: 0,
-          weightedPoints: 0,
-        ),
-        PowerIndexFactor(
-          id: 'college',
-          label: 'College fit',
-          weightPercent: PowerIndex.weightCollege,
-          componentScore: 0,
-          weightedPoints: 0,
-        ),
-        PowerIndexFactor(
-          id: 'technique',
-          label: 'Video technique',
-          weightPercent: PowerIndex.weightTechnique,
-          componentScore: 0,
-          weightedPoints: 0,
-        ),
+  static List<PowerIndexFactor> _placeholderFactors() => [
+        for (final entry in PowerIndexFactor.explanations.entries)
+          PowerIndexFactor(
+            id: entry.key,
+            label: _labelFor(entry.key),
+            weightPercent: _weightFor(entry.key),
+            componentScore: 0,
+            weightedPoints: 0,
+            explanation: entry.value,
+          ),
       ];
+
+  static String _labelFor(String id) {
+    switch (id) {
+      case 'cuts':
+        return 'USA cuts / speed';
+      case 'depth':
+        return 'Event depth';
+      case 'progression':
+        return 'Meet progression';
+      case 'college':
+        return 'College fit';
+      case 'technique':
+        return 'Video technique';
+      default:
+        return id;
+    }
+  }
+
+  static int _weightFor(String id) {
+    switch (id) {
+      case 'cuts':
+        return PowerIndex.weightCuts;
+      case 'depth':
+        return PowerIndex.weightDepth;
+      case 'progression':
+        return PowerIndex.weightProgression;
+      case 'college':
+        return PowerIndex.weightCollege;
+      case 'technique':
+        return PowerIndex.weightTechnique;
+      default:
+        return 0;
+    }
+  }
 }
 
 class _FactorLegendRow extends StatelessWidget {
@@ -210,48 +219,67 @@ class _FactorLegendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final detail = showScores
-        ? '${factor.weightPercent}% · score ${factor.componentScore} → '
-            '+${factor.weightedPoints.toStringAsFixed(1)}'
+    final scoreLine = showScores
+        ? '${factor.weightPercent}% of formula · score ${factor.componentScore} → '
+            '+${factor.weightedPoints.toStringAsFixed(1)} pts'
         : '${factor.weightPercent}% of formula';
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          margin: const EdgeInsets.only(top: 3),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            margin: const EdgeInsets.only(top: 3),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(3),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                factor.label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                  height: 1.2,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  factor.label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-              Text(
-                detail,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade700,
-                  height: 1.25,
+                const SizedBox(height: 2),
+                Text(
+                  scoreLine,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey.shade800,
+                    height: 1.25,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  factor.explanation,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
