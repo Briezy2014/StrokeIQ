@@ -26,10 +26,10 @@ abstract final class VideoAnalysisPresenter {
     'Quick pro from this video',
     'Quick con from this video',
     'Goal for your next race',
+    'Coach notes for next race',
+    'Estimated time savings',
     'Top 3 priorities for your next race',
     'Dryland focus (strength · mobility · stability)',
-    'Estimated time savings',
-    'Coach notes for next race',
   ];
 
   static Map<String, String> visibleSections(SwimVideoAnalysis analysis) {
