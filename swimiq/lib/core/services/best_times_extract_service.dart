@@ -44,27 +44,41 @@ class BestTimesExtractService {
   }) async {
     final mime = _mimeFromName(fileName);
     final imageBase64 = base64Encode(bytes);
+    final fromName = BestTimesEventParser.courseFromFilename(fileName);
+    // Filename wins over a stale dropdown default (e.g. SCY on an LCM screenshot).
+    final resolvedHint =
+        fromName ?? BestTimesEventParser.normalizeCourse(courseHint);
+
+    final hintsToTry = <String?>[
+      resolvedHint,
+      if (resolvedHint != null) null,
+      for (final alt in const ['LCM', 'SCY', 'SCM'])
+        if (alt != resolvedHint) alt,
+    ];
 
     BestTimesExtractException? edgeError;
-    try {
-      return await _extractViaEdge(
-        imageBase64: imageBase64,
-        mimeType: mime,
-        courseHint: courseHint,
-      );
-    } on BestTimesExtractException catch (e) {
-      // Auth / empty-photo errors should not silently fall through to Elite.
-      if (e.errorCode == 'AUTH_REQUIRED' ||
-          e.errorCode == 'NO_TIMES_FOUND' ||
-          e.errorCode == 'BAD_RESPONSE') {
-        rethrow;
+    for (final hint in hintsToTry) {
+      try {
+        return await _extractViaEdge(
+          imageBase64: imageBase64,
+          mimeType: mime,
+          courseHint: hint,
+          fileName: fileName,
+        );
+      } on BestTimesExtractException catch (e) {
+        if (e.errorCode == 'AUTH_REQUIRED' || e.errorCode == 'BAD_RESPONSE') {
+          rethrow;
+        }
+        edgeError = e;
+        // Keep trying alternate course hints on empty/failed reads.
+        continue;
+      } catch (e) {
+        edgeError = BestTimesExtractException(
+          'Cloud photo reader failed: $e',
+          errorCode: 'EDGE_FAILED',
+        );
+        continue;
       }
-      edgeError = e;
-    } catch (e) {
-      edgeError = BestTimesExtractException(
-        'Cloud photo reader failed: $e',
-        errorCode: 'EDGE_FAILED',
-      );
     }
 
     BestTimesExtractException? eliteError;
@@ -72,11 +86,11 @@ class BestTimesExtractService {
       return await _extractViaElite(
         imageBase64: imageBase64,
         mimeType: mime,
-        courseHint: courseHint,
+        courseHint: resolvedHint,
       );
     } on BestTimesExtractException catch (e) {
       eliteError = e;
-    } catch (e) {
+    } catch (_) {
       eliteError = BestTimesExtractException(
         'Could not reach the Elite server to read this photo.',
         errorCode: 'SERVER_UNAVAILABLE',
@@ -85,7 +99,7 @@ class BestTimesExtractService {
 
     throw BestTimesExtractException(
       _combinedFailureMessage(edgeError: edgeError, eliteError: eliteError),
-      errorCode: edgeError.errorCode ?? eliteError.errorCode ?? 'EXTRACT_FAILED',
+      errorCode: edgeError?.errorCode ?? eliteError.errorCode ?? 'EXTRACT_FAILED',
     );
   }
 
@@ -107,7 +121,7 @@ class BestTimesExtractService {
       return elite;
     }
     return 'Could not read best times from this photo. '
-        'Try a clearer screenshot, or enter times manually. '
+        'Set Course to match the screenshot (LCM vs SCY), then tap Re-read. '
         'If it keeps failing, email support@swimiqapp.com.';
   }
 
@@ -150,7 +164,7 @@ class BestTimesExtractService {
               if (courseHint != null) 'course_hint': courseHint,
             }),
           )
-          .timeout(const Duration(seconds: 12));
+          .timeout(const Duration(seconds: 90));
     } catch (_) {
       throw BestTimesExtractException(
         'Could not reach the Elite server to read this photo.',
@@ -165,6 +179,7 @@ class BestTimesExtractService {
     required String imageBase64,
     required String mimeType,
     String? courseHint,
+    String? fileName,
   }) async {
     FunctionResponse response;
     try {
@@ -174,6 +189,8 @@ class BestTimesExtractService {
           'image_base64': imageBase64,
           'mime_type': mimeType,
           if (courseHint != null) 'course_hint': courseHint,
+          if (fileName != null && fileName.trim().isNotEmpty)
+            'file_name': fileName.trim(),
         },
       );
     } on FunctionException catch (e) {
@@ -191,9 +208,13 @@ class BestTimesExtractService {
           errorCode: 'EDGE_NOT_DEPLOYED',
         );
       }
+      final lower = message.toLowerCase();
+      final noTimes = e.status == 422 ||
+          lower.contains('no swim times') ||
+          lower.contains('no personal best');
       throw BestTimesExtractException(
         _friendlyExtractMessage(message),
-        errorCode: 'EDGE_FAILED',
+        errorCode: noTimes ? 'NO_TIMES_FOUND' : 'EDGE_FAILED',
       );
     }
 
@@ -203,9 +224,13 @@ class BestTimesExtractService {
           ? (data['message'] ?? data['error'] ?? 'Photo extract failed')
               .toString()
           : 'Photo extract failed (${response.status}).';
+      final lower = message.toLowerCase();
+      final noTimes = response.status == 422 ||
+          lower.contains('no swim times') ||
+          lower.contains('no personal best');
       throw BestTimesExtractException(
         _friendlyExtractMessage(message),
-        errorCode: 'EDGE_FAILED',
+        errorCode: noTimes ? 'NO_TIMES_FOUND' : 'EDGE_FAILED',
       );
     }
     final data = response.data;
@@ -219,7 +244,8 @@ class BestTimesExtractService {
         BestTimesExtractResponse.fromJson(Map<String, dynamic>.from(data));
     if (parsed.times.isEmpty) {
       throw BestTimesExtractException(
-        'No swim times were found in that photo.',
+        'No swim times were found in that photo. '
+        'Check that Course matches the screenshot (LCM vs SCY), then tap Re-read.',
         errorCode: 'NO_TIMES_FOUND',
       );
     }

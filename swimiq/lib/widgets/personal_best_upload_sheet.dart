@@ -255,10 +255,14 @@ class _PersonalBestUploadSheetState
   }
 
   Future<void> _onPhotoSelected(Uint8List bytes, String name) async {
+    final fromName = BestTimesEventParser.courseFromFilename(name);
     setState(() {
       _photoBytes = bytes;
       _photoName = name;
       _extractStatus = null;
+      if (fromName != null) {
+        _course = fromName;
+      }
     });
     if (_mode == _EntryMode.multipleFromPhoto) {
       await _extractTimesFromPhoto();
@@ -277,9 +281,16 @@ class _PersonalBestUploadSheetState
       return;
     }
 
+    final fromName = BestTimesEventParser.courseFromFilename(name);
+    if (fromName != null && fromName != _course) {
+      setState(() => _course = fromName);
+    }
+
     setState(() {
       _isExtracting = true;
-      _extractStatus = 'Reading times from your photo…';
+      _extractStatus = fromName == null
+          ? 'Reading times from your photo…'
+          : 'Reading $_course times from your photo…';
     });
 
     try {
@@ -292,11 +303,14 @@ class _PersonalBestUploadSheetState
 
       final detectedCourse =
           BestTimesEventParser.normalizeCourse(extracted.detectedCourse) ??
+              fromName ??
               _course;
       final options = _eventOptions(course: detectedCourse);
       final nextRows = <_BestTimeRow>[];
+      var rawMatched = 0;
 
       for (final item in extracted.times) {
+        rawMatched++;
         final course = BestTimesEventParser.normalizeCourse(item.course) ??
             detectedCourse;
         final event = BestTimesEventParser.matchOption(
@@ -323,8 +337,13 @@ class _PersonalBestUploadSheetState
       if (nextRows.isEmpty) {
         setState(() {
           _isExtracting = false;
-          _extractStatus =
-              'No readable swim times found. Try a clearer screenshot.';
+          _extractStatus = rawMatched == 0
+              ? 'No swim times found. Use a clear Best Times History screenshot '
+                  '(TeamUnify/OnDeck). Set Course to match the photo (LCM vs SCY), '
+                  'then tap Re-read.'
+              : 'Found $rawMatched row(s) but could not match events/times. '
+                  'Your photo looks like ${fromName ?? detectedCourse} — '
+                  'set Course to that, then tap Re-read.';
         });
         return;
       }
@@ -336,7 +355,7 @@ class _PersonalBestUploadSheetState
           ..addAll(nextRows);
         _isExtracting = false;
         _extractStatus =
-            'Loaded ${nextRows.length} times from photo. Review, then save.';
+            'Loaded ${nextRows.length} times from photo ($_course). Review, then save.';
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -349,12 +368,16 @@ class _PersonalBestUploadSheetState
       });
     } on BestTimesExtractException catch (error) {
       if (!mounted) return;
+      final fromFile = BestTimesEventParser.courseFromFilename(name);
+      final tip = fromFile != null && fromFile != _course
+          ? ' Tip: this filename looks like $fromFile — switch Course to $fromFile and Re-read.'
+          : ' Tip: if this is Long Course Meters, set Course to LCM and Re-read.';
       setState(() {
         _isExtracting = false;
-        _extractStatus = error.message;
+        _extractStatus = '${error.message}$tip';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(content: Text('${error.message}$tip')),
       );
     } catch (error) {
       if (!mounted) return;

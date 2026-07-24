@@ -69,19 +69,45 @@ abstract final class BestTimesEventParser {
     if (text == 'Y' ||
         text == 'SCY' ||
         text.contains('YARD') ||
-        text == 'SHORT COURSE YARDS') {
+        text.contains('SHORT COURSE YARD')) {
       return 'SCY';
     }
     if (text == 'L' ||
         text == 'LCM' ||
         text.contains('LONG COURSE') ||
-        text == 'METERS') {
+        text.contains('LONG COURE') || // common filename typo
+        text.contains('LONG COUR') ||
+        (text.contains('LONG') && text.contains('METER'))) {
       return 'LCM';
     }
-    if (text == 'S' || text == 'SCM' || text.contains('SHORT COURSE METER')) {
+    if (text == 'S' ||
+        text == 'SCM' ||
+        text.contains('SHORT COURSE METER') ||
+        (text.contains('SHORT') &&
+            text.contains('METER') &&
+            !text.contains('YARD'))) {
       return 'SCM';
     }
     if (AppConstants.courses.contains(text)) return text;
+    return null;
+  }
+
+  /// Detect SCY / LCM / SCM from a screenshot filename when possible.
+  ///
+  /// Example: `Long Coure Meters 1.png` → `LCM`.
+  static String? courseFromFilename(String? fileName) {
+    final raw = (fileName ?? '').trim();
+    if (raw.isEmpty) return null;
+    final text = raw
+        .toUpperCase()
+        .replaceAll(RegExp(r'[_\-.]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final fromNormalize = normalizeCourse(text);
+    if (fromNormalize != null) return fromNormalize;
+    if (RegExp(r'\bLCM\b').hasMatch(text)) return 'LCM';
+    if (RegExp(r'\bSCM\b').hasMatch(text)) return 'SCM';
+    if (RegExp(r'\bSCY\b').hasMatch(text)) return 'SCY';
     return null;
   }
 

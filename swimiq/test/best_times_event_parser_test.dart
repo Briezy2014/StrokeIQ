@@ -60,6 +60,29 @@ void main() {
       expect(matched?.course, 'SCY');
     });
 
+    test('detects course from Best Times History filenames', () {
+      expect(
+        BestTimesEventParser.courseFromFilename('Long Coure Meters 1.png'),
+        'LCM',
+      );
+      expect(
+        BestTimesEventParser.courseFromFilename('long-course-meters.png'),
+        'LCM',
+      );
+      expect(
+        BestTimesEventParser.courseFromFilename('SCY Best Times.png'),
+        'SCY',
+      );
+      expect(
+        BestTimesEventParser.courseFromFilename('Short Course Meters.png'),
+        'SCM',
+      );
+      expect(
+        BestTimesEventParser.courseFromFilename('random-photo.png'),
+        isNull,
+      );
+    });
+
     test('parses MM/DD/YYYY dates', () {
       expect(
         BestTimesEventParser.parseDate('03/01/2026'),
