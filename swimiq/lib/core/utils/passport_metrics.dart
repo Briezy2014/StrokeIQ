@@ -193,7 +193,7 @@ class PassportMetrics {
 
     return 'Score $score from ${raceLogs.length} logged sessions, '
         '${goals.length} goals, and $personalBestCount personal bests. '
-        'Rises with recent app activity and cools off after quiet days.';
+        'Rises with recent app activity and cools gently only after several quiet days.';
   }
 
   static String currentFocus({

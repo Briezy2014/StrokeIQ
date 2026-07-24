@@ -163,7 +163,8 @@ class SwimAnalytics {
   /// SwimIQ Score (0–1000).
   ///
   /// Rises with logged practices, meet/PB uploads, goals, and video work.
-  /// Falls after quiet days (inactivity decay) so the rope is not stuck forever.
+  /// Falls gently after several quiet days (inactivity decay) so the rope
+  /// cools off without cratering from a normal rest day or two.
   static int calculateSwimIqScore({
     required List<RaceLog> raceLogs,
     required List<SwimGoal> goals,
@@ -217,24 +218,57 @@ class SwimAnalytics {
     if (recentBoost > 150) recentBoost = 150;
     score += recentBoost;
 
-    // Inactivity decay: 1 grace day, then −25 pts per quiet day (cap −350).
+    // Inactivity decay — rest days are normal for swimmers.
+    // Grace: 3 quiet days (no drop). Then gentle cooling, never a freefall.
     final lastActive = lastActivityDate(
       raceLogs: raceLogs,
       meetResults: meetResults,
       videos: videos,
       analyses: analyses,
     );
+    final preDecayScore = score;
     if (lastActive != null) {
-      final quietDays = _dateOnly(clock).difference(_dateOnly(lastActive)).inDays;
-      if (quietDays > 1) {
-        final decay = (quietDays - 1) * 25;
-        score -= decay > 350 ? 350 : decay;
-      }
+      final quietDays =
+          _dateOnly(clock).difference(_dateOnly(lastActive)).inDays;
+      score -= _quietDayDecay(quietDays);
+      // Soft floor: keep most of the earned score after a short rest.
+      // Prevents 590 → 32 style cliffs from a couple quiet days.
+      final floor = _quietScoreFloor(preDecayScore);
+      if (score < floor) score = floor;
     }
 
     if (score < 0) return 0;
     if (score > 1000) return 1000;
     return score;
+  }
+
+  /// Points removed for [quietDays] since last activity (0 = active today).
+  ///
+  /// 0–3 quiet days: no decay (rest / travel / meet recovery).
+  /// Days 4–10: −8 / day.
+  /// Days 11+: −12 / day.
+  /// Hard cap: −180 (was −350 at −25/day).
+  static int _quietDayDecay(int quietDays) {
+    if (quietDays <= 3) return 0;
+    var decay = 0;
+    // Days 4..10 inclusive → up to 7 days * 8 = 56
+    final mildDays = (quietDays - 3).clamp(0, 7);
+    decay += mildDays * 8;
+    // Days 11+ → 12 pts each
+    if (quietDays > 10) {
+      decay += (quietDays - 10) * 12;
+    }
+    return decay > 180 ? 180 : decay;
+  }
+
+  /// Never erase the athlete's foundation after a short break.
+  static int _quietScoreFloor(int preDecayScore) {
+    if (preDecayScore <= 0) return 0;
+    // Keep at least 70% of what they earned before quiet-day cooling.
+    final floor = (preDecayScore * 0.70).round();
+    // Athletes with real history shouldn't fall into the water overnight.
+    if (preDecayScore >= 400 && floor < 280) return 280;
+    return floor;
   }
 
   /// Most recent practice / meet / video / analysis date, if any.
