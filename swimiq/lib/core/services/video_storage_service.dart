@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -114,7 +115,15 @@ class VideoStorageService {
   }
 
   Future<Uint8List> downloadVideoBytes(String storagePath) async {
-    return _client.storage.from(bucketName).download(storagePath);
+    return _client.storage
+        .from(bucketName)
+        .download(storagePath)
+        .timeout(
+          const Duration(seconds: 45),
+          onTimeout: () => throw TimeoutException(
+            'Video download timed out. Check your connection and try Analyze again.',
+          ),
+        );
   }
 
   /// Playback URL for private `swim-videos` objects.

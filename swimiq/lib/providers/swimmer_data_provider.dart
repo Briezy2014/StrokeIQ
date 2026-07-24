@@ -433,10 +433,14 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           final bytes = await ref
               .read(videoStorageServiceProvider)
               .downloadVideoBytes(video.storagePath);
-          poseMetrics = await poseService.analyzeVideoBytes(
+          final rawPose = await poseService.analyzeVideoBytes(
             bytes,
             fileName: video.storagePath,
           );
+          // Never persist "bridge not loaded" scare text as body mechanics.
+          if (rawPose != null && rawPose.hasUsableMetrics) {
+            poseMetrics = rawPose;
+          }
         } catch (_) {
           // Pose metrics are optional; Gemini analysis can still run.
         }

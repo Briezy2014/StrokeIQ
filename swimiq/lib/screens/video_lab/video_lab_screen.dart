@@ -9,6 +9,7 @@ import '../../core/utils/motivational_cut.dart';
 import '../../core/utils/swim_stroke_utils.dart';
 import '../../core/utils/video_event_inference.dart';
 import '../../core/services/video_analytics_service.dart';
+import '../../core/services/video_analysis_presenter.dart';
 import '../../data/models/video_models.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../providers/app_providers.dart';
@@ -481,14 +482,20 @@ class _VideoCardState extends ConsumerState<_VideoCard> {
               ],
               const SizedBox(height: 12),
               if (widget.analysis!.coachingSections.isNotEmpty)
-                ...widget.analysis!.coachingSections.entries.map(
+                ...VideoAnalysisPresenter.visibleSections(widget.analysis!)
+                    .entries
+                    .map(
                   (entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry.key,
+                          entry.key == 'Quick pro from this video'
+                              ? VideoAnalysisPresenter.strengthInsightTitle
+                              : entry.key == 'Quick con from this video'
+                                  ? VideoAnalysisPresenter.workOnInsightTitle
+                                  : entry.key,
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -499,7 +506,7 @@ class _VideoCardState extends ConsumerState<_VideoCard> {
                     ),
                   ),
                 ),
-              if (widget.analysis!.poseMetrics != null) ...[
+              if (widget.analysis!.poseMetrics?.hasUsableMetrics == true) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Body mechanics',
@@ -508,12 +515,29 @@ class _VideoCardState extends ConsumerState<_VideoCard> {
                       ),
                 ),
                 const SizedBox(height: 4),
-                ...widget.analysis!.poseMetrics!.observations.map(
-                  (line) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• $line'),
+                if (widget.analysis!.poseMetrics!.bodyMechanicsPro != null)
+                  Text(
+                    '• Going well: ${widget.analysis!.poseMetrics!.bodyMechanicsPro}',
                   ),
-                ),
+                if (widget.analysis!.poseMetrics!.bodyMechanicsCon != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '• Work on: ${widget.analysis!.poseMetrics!.bodyMechanicsCon}',
+                    ),
+                  ),
+                ...widget.analysis!.poseMetrics!.observations
+                    .where(
+                      (line) =>
+                          !line.toLowerCase().contains('bridge not loaded') &&
+                          !line.toLowerCase().contains('hard refresh'),
+                    )
+                    .map(
+                      (line) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4, top: 4),
+                        child: Text('• $line'),
+                      ),
+                    ),
               ],
             ],
           ],

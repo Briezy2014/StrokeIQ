@@ -161,21 +161,31 @@ class _VideoAnalysisReportState extends State<VideoAnalysisReport> {
                   color: Colors.grey.shade700,
                 ),
           ),
-        if (widget.analysis.poseMetrics != null) ...[
-          const SizedBox(height: 12),
-          _MediaPipeBodyMechanicsCard(metrics: widget.analysis.poseMetrics!),
-        ],
         const SizedBox(height: 12),
         if (!awaitingGemini)
           for (final entry in sections.entries)
-            if (entry.key != 'Coach notes for next race' &&
-                entry.key != 'Quick pro from this video' &&
+            if (entry.key != 'Quick pro from this video' &&
                 entry.key != 'Quick con from this video')
-              _SectionCard(title: entry.key, body: entry.value),
-        _CoachNotesEditor(
-          controller: _coachNotesController,
-          onSave: () => widget.onCoachNotesChanged(_coachNotesController.text),
-        ),
+              if (entry.key == 'Coach notes for next race')
+                _CoachNotesEditor(
+                  controller: _coachNotesController,
+                  onSave: () =>
+                      widget.onCoachNotesChanged(_coachNotesController.text),
+                )
+              else
+                _SectionCard(title: entry.key, body: entry.value),
+        // Body mechanics only when MediaPipe actually measured the athlete.
+        if (widget.analysis.poseMetrics?.hasUsableMetrics == true) ...[
+          const SizedBox(height: 4),
+          _MediaPipeBodyMechanicsCard(metrics: widget.analysis.poseMetrics!),
+        ],
+        // If coach notes section was missing from Gemini output, still offer editor.
+        if (!awaitingGemini &&
+            !sections.containsKey('Coach notes for next race'))
+          _CoachNotesEditor(
+            controller: _coachNotesController,
+            onSave: () => widget.onCoachNotesChanged(_coachNotesController.text),
+          ),
       ],
     );
   }
@@ -270,7 +280,14 @@ class _MediaPipeBodyMechanicsCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            metrics.observations.map((line) => '• $line').join('\n'),
+            metrics.observations
+                .where(
+                  (line) =>
+                      !line.toLowerCase().contains('bridge not loaded') &&
+                      !line.toLowerCase().contains('hard refresh'),
+                )
+                .map((line) => '• $line')
+                .join('\n'),
             style: const TextStyle(height: 1.45),
           ),
         ],

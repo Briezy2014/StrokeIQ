@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import '../../data/models/swim_pose_metrics.dart';
@@ -17,15 +18,10 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
   Uint8List bytes, {
   String? fileName,
 }) async {
+  // Missing bridge = skip body mechanics quietly. Do not scare athletes with
+  // "hard refresh" copy or persist a fake zero-pose report.
   if (!_isBridgeReady()) {
-    return const SwimPoseMetrics(
-      engine: SwimPoseMetrics.engineId,
-      framesSampled: 0,
-      framesWithPose: 0,
-      observations: [
-        'MediaPipe bridge not loaded — hard refresh Chrome (Ctrl+F5), then Analyze again.',
-      ],
-    );
+    return null;
   }
 
   try {
@@ -41,36 +37,19 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
     if (map is! Map) return null;
 
     if (map['ok'] != true) {
-      final err = map['error']?.toString();
-      return SwimPoseMetrics(
-        engine: SwimPoseMetrics.engineId,
-        framesSampled: 0,
-        framesWithPose: 0,
-        observations: [
-          if (err != null && err.isNotEmpty)
-            'MediaPipe: $err'
-          else
-            'MediaPipe could not analyze this clip — try a clearer side-on angle.',
-        ],
-      );
+      // Soft-fail: Gemini coaching still runs without body-mechanics card.
+      return null;
     }
 
     final framesSampled = _asInt(map['framesSampled']);
     final snapshots = _parseSnapshots(map['snapshots']);
 
     if (snapshots.isEmpty) {
-      return SwimPoseMetrics(
-        engine: SwimPoseMetrics.engineId,
-        framesSampled: framesSampled,
-        framesWithPose: 0,
-        observations: const [
-          'MediaPipe could not detect a swimmer body — film side-on with the full body in frame.',
-        ],
-      );
+      return null;
     }
 
     final metrics = SwimPoseMetricsCalculator.compute(snapshots);
-    return SwimPoseMetrics(
+    final result = SwimPoseMetrics(
       engine: metrics.engine,
       framesSampled: framesSampled,
       framesWithPose: snapshots.length,
@@ -85,24 +64,18 @@ Future<SwimPoseMetrics?> analyzeVideoBytesImpl(
       bodyMechanicsSuggestions: metrics.bodyMechanicsSuggestions,
       observations: metrics.observations,
     );
-  } catch (error) {
-    return SwimPoseMetrics(
-      engine: SwimPoseMetrics.engineId,
-      framesSampled: 0,
-      framesWithPose: 0,
-      observations: [
-        'MediaPipe error: $error',
-      ],
-    );
+    return result.hasUsableMetrics ? result : null;
+  } catch (_) {
+    return null;
   }
 }
 
 bool _isBridgeReady() {
-  final global = globalContext.dartify();
-  if (global is Map) {
-    return global.containsKey('swimiqPoseFromVideoBytes');
+  try {
+    return globalContext.has('swimiqPoseFromVideoBytes');
+  } catch (_) {
+    return false;
   }
-  return false;
 }
 
 int _asInt(Object? value) {
