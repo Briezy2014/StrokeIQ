@@ -391,21 +391,12 @@ class _CutsMixSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: DashboardCutsPieChart(
-          personalBests: personalBests,
-          raceLogs: raceLogs,
-          catalog: catalog,
-          profile: profile,
-          showProFeatures: showProFeatures,
-        ),
-      ),
+    return CutsMixCard(
+      personalBests: personalBests,
+      raceLogs: raceLogs,
+      catalog: catalog,
+      profile: profile,
+      showProFeatures: showProFeatures,
     );
   }
 }
