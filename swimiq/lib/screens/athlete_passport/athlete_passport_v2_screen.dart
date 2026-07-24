@@ -349,7 +349,7 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             ? AthleteRecruitingBusinessCard.topEventLines(
                 data.personalBests,
               )
-            : snapshot.personalBests.take(2).toList();
+            : snapshot.personalBests.take(3).toList();
 
         void openRecruitingCenter() {
           Navigator.of(context).push(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/recruiting/recruiting_card_insights.dart';
 import '../core/theme/app_theme.dart';
@@ -44,7 +45,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   static List<String> topEventLines(List<PersonalBestEntry> personalBests) {
     if (personalBests.isEmpty) return const [];
     return personalBests
-        .take(2)
+        .take(3)
         .map((pb) => '${pb.displayTitle}  ${pb.formattedTime}')
         .toList();
   }
@@ -67,6 +68,11 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
       cutValue,
       allowCut: topEvents.length > 1,
     );
+    final eventThree = _eventWithCut(
+      topEvents.length > 2 ? topEvents[2] : 'Add 3rd PB',
+      cutValue,
+      allowCut: topEvents.length > 2,
+    );
     final teamLine =
         team?.trim().isNotEmpty == true ? team!.trim() : 'Add club / team';
     final gradLine =
@@ -75,6 +81,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     final nameLine =
         displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim();
     final websiteLine = _contactOrPlaceholder(website, 'Add website');
+    final websiteUri = _websiteUri(website);
     final emailLine = _contactOrPlaceholder(email, 'Add email');
     final phoneLine = _contactOrPlaceholder(phone, 'Add phone');
     final coachLine = _contactOrPlaceholder(coach, 'Add coach');
@@ -88,7 +95,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: AspectRatio(
-              aspectRatio: 3.5 / 2.35,
+              aspectRatio: 3.5 / 2.5,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
@@ -273,6 +280,9 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                     _ContactLine(
                                       icon: Icons.language,
                                       value: websiteLine,
+                                      onTap: websiteUri == null
+                                          ? null
+                                          : () => _openWebsite(websiteUri),
                                     ),
                                     _ContactLine(
                                       icon: Icons.email_outlined,
@@ -301,17 +311,23 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
                                         letterSpacing: 0.5,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 3),
                                     _PbLine(
                                       label: '1',
                                       value: eventOne.event,
                                       cut: eventOne.cut,
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 3),
                                     _PbLine(
                                       label: '2',
                                       value: eventTwo.event,
                                       cut: eventTwo.cut,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    _PbLine(
+                                      label: '3',
+                                      value: eventThree.event,
+                                      cut: eventThree.cut,
                                     ),
                                   ],
                                 ),
@@ -392,6 +408,24 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     return text.isEmpty ? placeholder : text;
   }
 
+  /// Opens athlete websites entered with or without https://.
+  static Uri? _websiteUri(String? raw) {
+    final text = raw?.trim() ?? '';
+    if (text.isEmpty) return null;
+    if (text.toLowerCase().startsWith('add ')) return null;
+    final withScheme =
+        text.startsWith('http://') || text.startsWith('https://')
+            ? text
+            : 'https://$text';
+    final uri = Uri.tryParse(withScheme);
+    if (uri == null || uri.host.isEmpty) return null;
+    return uri;
+  }
+
+  static Future<void> _openWebsite(Uri uri) async {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   static String _cutDisplayValue(String highestCut) {
     final cut = highestCut.trim();
     if (cut.isEmpty ||
@@ -425,40 +459,57 @@ class _ContactLine extends StatelessWidget {
     required this.icon,
     required this.value,
     this.compact = false,
+    this.onTap,
   });
 
   final IconData icon;
   final String value;
   final bool compact;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final isPlaceholder = value.toLowerCase().startsWith('add ');
-    return Padding(
-      padding: EdgeInsets.only(bottom: compact ? 0 : 1.5),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: compact ? 11 : 11,
-            color: Colors.white.withValues(alpha: isPlaceholder ? 0.55 : 0.9),
-          ),
-          const SizedBox(width: 5),
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    Colors.white.withValues(alpha: isPlaceholder ? 0.62 : 0.95),
-                fontWeight: FontWeight.w700,
-                fontSize: compact ? 10 : 10,
-              ),
+    final isLink = onTap != null && !isPlaceholder;
+    final row = Row(
+      children: [
+        Icon(
+          icon,
+          size: compact ? 11 : 11,
+          color: Colors.white.withValues(alpha: isPlaceholder ? 0.55 : 0.9),
+        ),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isLink
+                  ? AppColors.accent
+                  : Colors.white.withValues(alpha: isPlaceholder ? 0.62 : 0.95),
+              fontWeight: FontWeight.w700,
+              fontSize: compact ? 10 : 10,
+              decoration: isLink ? TextDecoration.underline : null,
+              decorationColor: AppColors.accent,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: compact ? 0 : 1.5),
+      child: isLink
+          ? MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onTap,
+                behavior: HitTestBehavior.opaque,
+                child: row,
+              ),
+            )
+          : row,
     );
   }
 }

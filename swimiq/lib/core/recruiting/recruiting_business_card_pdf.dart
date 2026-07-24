@@ -18,7 +18,7 @@ class RecruitingBusinessCardPdf {
 
   static PdfPageFormat get pageFormat => PdfPageFormat(
         3.5 * PdfPageFormat.inch,
-        2.2 * PdfPageFormat.inch,
+        2.35 * PdfPageFormat.inch,
         marginAll: 6,
       );
 
@@ -53,6 +53,11 @@ class RecruitingBusinessCardPdf {
       cutValue,
       allowCut: topEvents.length > 1,
     );
+    final eventThree = _eventWithCut(
+      topEvents.length > 2 ? topEvents[2] : 'Add 3rd PB',
+      cutValue,
+      allowCut: topEvents.length > 2,
+    );
     final teamLine = _pdfText(
       team?.trim().isNotEmpty == true ? team!.trim() : 'Add club / team',
     );
@@ -63,9 +68,10 @@ class RecruitingBusinessCardPdf {
     final nameLine = _pdfText(
       displayName.trim().isEmpty ? 'Add athlete name' : displayName.trim(),
     );
-    final websiteLine = _pdfText(
-      website?.trim().isNotEmpty == true ? website!.trim() : 'Add website',
-    );
+    final websiteRaw =
+        website?.trim().isNotEmpty == true ? website!.trim() : 'Add website';
+    final websiteLine = _pdfText(websiteRaw);
+    final websiteUrl = _websiteUrl(website);
     final emailLine = _pdfText(
       email?.trim().isNotEmpty == true ? email!.trim() : 'Add email',
     );
@@ -269,15 +275,7 @@ class RecruitingBusinessCardPdf {
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Text(
-                              websiteLine,
-                              maxLines: 1,
-                              style: pw.TextStyle(
-                                color: _muted,
-                                fontSize: 6,
-                                font: pw.Font.helveticaBold(),
-                              ),
-                            ),
+                            _websiteText(websiteLine, websiteUrl),
                             pw.Text(
                               emailLine,
                               maxLines: 1,
@@ -318,6 +316,8 @@ class RecruitingBusinessCardPdf {
                             _pbRow('1', eventOne.event, cut: eventOne.cut),
                             pw.SizedBox(height: 2),
                             _pbRow('2', eventTwo.event, cut: eventTwo.cut),
+                            pw.SizedBox(height: 2),
+                            _pbRow('3', eventThree.event, cut: eventThree.cut),
                           ],
                         ),
                       ),
@@ -353,6 +353,34 @@ class RecruitingBusinessCardPdf {
     );
 
     return doc.save();
+  }
+
+  static String? _websiteUrl(String? raw) {
+    final text = raw?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final withScheme =
+        text.startsWith('http://') || text.startsWith('https://')
+            ? text
+            : 'https://$text';
+    final uri = Uri.tryParse(withScheme);
+    if (uri == null || uri.host.isEmpty) return null;
+    return uri.toString();
+  }
+
+  static pw.Widget _websiteText(String label, String? url) {
+    final text = pw.Text(
+      label,
+      maxLines: 1,
+      style: pw.TextStyle(
+        color: url == null ? _muted : _accent,
+        fontSize: 6,
+        font: pw.Font.helveticaBold(),
+        decoration:
+            url == null ? pw.TextDecoration.none : pw.TextDecoration.underline,
+      ),
+    );
+    if (url == null) return text;
+    return pw.UrlLink(destination: url, child: text);
   }
 
   static String _cutDisplayValue(String highestCut) {
