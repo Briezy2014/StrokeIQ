@@ -193,7 +193,7 @@ class PassportMetrics {
 
     return 'Score $score from ${raceLogs.length} logged sessions, '
         '${goals.length} goals, and $personalBestCount personal bests. '
-        'Rises with recent app activity and cools off after quiet days.';
+        'Rises with recent app activity and cools gently only after several quiet days.';
   }
 
   static String currentFocus({
@@ -268,22 +268,25 @@ class PassportMetrics {
     return sorted.first.meetName;
   }
 
-  /// Upcoming meet/race from Schedule (never photo-upload placeholders).
+  /// Upcoming meet/race from Schedule (Log → Meets), never photo-upload placeholders.
   static String nextMeet({
     List<MeetResult> meetResults = const [],
     List<SwimScheduleEntry> schedules = const [],
     DateTime? now,
   }) {
     final upcoming = _upcomingScheduleMeet(schedules, now: now);
-    if (upcoming != null) {
-      final title = upcoming.title.trim();
-      if (title.isEmpty) return noUpcomingMeetLabel;
-      return '$title · ${_formatShortDate(upcoming.scheduleDate)}';
+    if (upcoming == null) return noUpcomingMeetLabel;
+    final title = upcoming.title.trim();
+    if (title.isEmpty) return noUpcomingMeetLabel;
+    final date = _formatShortDate(upcoming.scheduleDate);
+    final start = upcoming.startTime?.trim();
+    if (start != null && start.isNotEmpty) {
+      return '$title · $date · $start';
     }
-    // Do not fall back to meet-result names like "Uploaded best times".
-    return noUpcomingMeetLabel;
+    return '$title · $date';
   }
 
+  /// Same selection rules as Race Intelligence: next meet/race from today forward.
   static SwimScheduleEntry? _upcomingScheduleMeet(
     List<SwimScheduleEntry> schedules, {
     DateTime? now,
@@ -291,22 +294,34 @@ class PassportMetrics {
     if (schedules.isEmpty) return null;
     final clock = now ?? DateTime.now();
     final startOfToday = DateTime(clock.year, clock.month, clock.day);
-    final future = schedules.where((entry) {
-      if (!entry.isMeet && !entry.isRace) return false;
-      if (MeetHistoryAnalytics.isSyntheticMeetName(entry.title)) return false;
+
+    bool isFuture(SwimScheduleEntry entry) {
       final day = DateTime(
         entry.scheduleDate.year,
         entry.scheduleDate.month,
         entry.scheduleDate.day,
       );
       return !day.isBefore(startOfToday);
-    }).toList()
+    }
+
+    final meetLike = schedules
+        .where(
+          (entry) =>
+              (entry.isMeet || entry.isRace) &&
+              !MeetHistoryAnalytics.isSyntheticMeetName(entry.title),
+        )
+        .toList();
+    final futureMeets = meetLike.where(isFuture).toList()
       ..sort((a, b) {
         final byDate = a.scheduleDate.compareTo(b.scheduleDate);
         if (byDate != 0) return byDate;
         return (a.startTime ?? '').compareTo(b.startTime ?? '');
       });
-    return future.isEmpty ? null : future.first;
+    if (futureMeets.isNotEmpty) return futureMeets.first;
+
+    // Multi-day meets: if day 1 already started, still surface a remaining day.
+    // When every day is past, keep "None scheduled" for the upcoming chip.
+    return null;
   }
 
   static String _formatShortDate(DateTime date) {

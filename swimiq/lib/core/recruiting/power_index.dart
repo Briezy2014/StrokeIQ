@@ -10,6 +10,26 @@ import '../utils/swimiq_standards_profile.dart';
 import '../utils/swim_stroke_utils.dart';
 import 'meet_history_analytics.dart';
 
+/// One weighted factor in the Power Index formula (pie + legend).
+class PowerIndexFactor {
+  const PowerIndexFactor({
+    required this.id,
+    required this.label,
+    required this.weightPercent,
+    required this.componentScore,
+    required this.weightedPoints,
+  });
+
+  final String id;
+  final String label;
+  /// Formula weight as a percent (e.g. 62 for USA cuts).
+  final int weightPercent;
+  /// Raw 0–100 score for this factor before weighting.
+  final int componentScore;
+  /// Points this factor adds toward the final index (`component * weight`).
+  final double weightedPoints;
+}
+
 /// Competitive Power Index (0–100) from official times, USA cuts, progression,
 /// event depth, and optional video technique signals.
 class PowerIndexSnapshot {
@@ -20,6 +40,7 @@ class PowerIndexSnapshot {
     required this.hasEnoughData,
     this.strongestEvent,
     this.eventScores = const [],
+    this.factors = const [],
     this.missingDataHint,
   });
 
@@ -29,6 +50,8 @@ class PowerIndexSnapshot {
   final bool hasEnoughData;
   final String? strongestEvent;
   final List<PowerIndexEventScore> eventScores;
+  /// Weighted formula slices used for the passport explanation chart.
+  final List<PowerIndexFactor> factors;
   final String? missingDataHint;
 
   String get displayLine {
@@ -75,6 +98,13 @@ abstract final class PowerIndex {
     'AAA': 86,
     'AAAA': 96,
   };
+
+  /// Fixed formula weights (percentages must sum to 100).
+  static const weightCuts = 62;
+  static const weightDepth = 12;
+  static const weightProgression = 12;
+  static const weightCollege = 8;
+  static const weightTechnique = 6;
 
   static PowerIndexSnapshot calculate({
     required List<PersonalBestEntry> personalBests,
@@ -150,11 +180,46 @@ abstract final class PowerIndex {
     );
     final techniqueBonus = _techniqueBonus(analyses);
 
-    final raw = (speedScore * 0.62) +
-        (depthBonus * 0.12) +
-        (progressionBonus * 0.12) +
-        (collegeBonus * 0.08) +
-        (techniqueBonus * 0.06);
+    final factors = [
+      PowerIndexFactor(
+        id: 'cuts',
+        label: 'USA cuts / speed',
+        weightPercent: weightCuts,
+        componentScore: speedScore.round(),
+        weightedPoints: speedScore * (weightCuts / 100),
+      ),
+      PowerIndexFactor(
+        id: 'depth',
+        label: 'Event depth',
+        weightPercent: weightDepth,
+        componentScore: depthBonus.round(),
+        weightedPoints: depthBonus * (weightDepth / 100),
+      ),
+      PowerIndexFactor(
+        id: 'progression',
+        label: 'Meet progression',
+        weightPercent: weightProgression,
+        componentScore: progressionBonus.round(),
+        weightedPoints: progressionBonus * (weightProgression / 100),
+      ),
+      PowerIndexFactor(
+        id: 'college',
+        label: 'College fit',
+        weightPercent: weightCollege,
+        componentScore: collegeBonus.round(),
+        weightedPoints: collegeBonus * (weightCollege / 100),
+      ),
+      PowerIndexFactor(
+        id: 'technique',
+        label: 'Video technique',
+        weightPercent: weightTechnique,
+        componentScore: techniqueBonus.round(),
+        weightedPoints: techniqueBonus * (weightTechnique / 100),
+      ),
+    ];
+
+    final raw =
+        factors.fold<double>(0, (sum, factor) => sum + factor.weightedPoints);
     final score = raw.round().clamp(1, 100);
     final strongest = top.first;
     final label = _labelFor(score);
@@ -164,6 +229,7 @@ abstract final class PowerIndex {
       label: label,
       strongestEvent: strongest.eventLabel,
       eventScores: eventScores,
+      factors: factors,
       hasEnoughData: true,
       summary:
           'Power Index $score ($label). Strongest event: ${strongest.eventLabel} '

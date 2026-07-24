@@ -98,6 +98,12 @@ void main() {
     expect(snapshot.score, inInclusiveRange(1, 100));
     expect(snapshot.label, isNotEmpty);
     expect(snapshot.strongestEvent, isNotNull);
+    expect(snapshot.factors, hasLength(5));
+    expect(
+      snapshot.factors.map((f) => f.weightPercent).fold<int>(0, (a, b) => a + b),
+      100,
+    );
+    expect(snapshot.factors.first.label.toLowerCase(), contains('cuts'));
     expect(snapshot.resumeValue, isNot(contains('coming soon')));
     expect(snapshot.displayLine.toLowerCase(), isNot(contains('coming soon')));
   });

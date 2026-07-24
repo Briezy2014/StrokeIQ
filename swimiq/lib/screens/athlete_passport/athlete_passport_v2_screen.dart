@@ -11,6 +11,7 @@ import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
+import '../../widgets/power_index_breakdown_card.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
 import '../../widgets/swimiq_ui.dart';
@@ -396,6 +397,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
             ),
+            const SizedBox(height: 12),
+            PowerIndexBreakdownCard(powerIndex: snapshot.powerIndex),
             const SizedBox(height: 10),
             _CompactAthleteStatusStrip(snapshot: snapshot),
           ],
@@ -787,18 +790,12 @@ class _CompactAthleteStatusStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final upcomingMeet =
         snapshot.nextMeet == PassportMetrics.noUpcomingMeetLabel
-            ? 'Add on Log → Schedule'
+            ? 'Add on Log → Meets'
             : snapshot.nextMeet;
-    final power = snapshot.powerIndex;
     final chips = [
       _StatusChip('Focus', snapshot.currentFocus),
       _StatusChip('Readiness', snapshot.readiness),
       _StatusChip('Upcoming meet', upcomingMeet),
-      _StatusChip(
-        'Power Index',
-        power.hasEnoughData ? '${power.score} · ${power.label}' : 'Add PBs',
-      ),
-      _StatusChip('IMX / IMR', snapshot.imxScore),
     ];
 
     return Wrap(

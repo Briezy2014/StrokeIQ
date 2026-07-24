@@ -71,8 +71,15 @@ class SwimmerData {
   List<PersonalBestEntry> get personalBests =>
       SwimAnalytics.personalBestsFromMeets(meetResults: meetResults);
 
-  int get swimIqScore =>
-      SwimAnalytics.calculateSwimIqScore(raceLogs: raceLogs, goals: goals);
+  /// Same formula as the passport card and rope climb — includes meets,
+  /// videos, and analyses so quiet days do not desync the UI.
+  int get swimIqScore => PassportMetrics.swimIqScoreValue(
+        raceLogs: raceLogs,
+        goals: goals,
+        meetResults: meetResults,
+        videos: userFacingVideos,
+        analyses: userFacingVideoAnalyses,
+      );
 
   String displayName(String swimmerName) {
     final preferred = profile?.preferredName?.trim();

@@ -90,11 +90,25 @@ void main() {
       );
       // Foundation 350 + 2*5 sessions + 1*15 goal + 1*12 PB = 387
       // Recent (within 7d of Feb 2): only Feb 1 log → 1*12 = 12
-      // Jan 1 is outside the week window. Grace day (1 quiet day) → no decay.
+      // Jan 1 is outside the week window. 1 quiet day (within 3-day grace) → no decay.
       expect(score, 399);
     });
 
-    test('SwimIQ score drops after quiet days', () {
+    test('SwimIQ score barely moves after two quiet days', () {
+      final active = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 2),
+      );
+      final twoQuiet = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: logs,
+        goals: const [],
+        now: DateTime(2026, 2, 3), // 2 days since Feb 1 — still in grace
+      );
+      expect(twoQuiet, active);
+    });
+
+    test('SwimIQ score cools gently after a long quiet stretch', () {
       final active = SwimAnalytics.calculateSwimIqScore(
         raceLogs: logs,
         goals: const [],
@@ -106,10 +120,53 @@ void main() {
         now: DateTime(2026, 2, 12),
       );
       expect(quiet, lessThan(active));
-      // Active (Feb 2): 350 + 10 sessions + 12 PB + 12 recent = 384
-      // Quiet (Feb 12): foundation 372, no recent boost, 11 days since Feb 1
-      // → (11 - 1 grace) * 25 = −250 → 122. Drop = 262.
-      expect(active - quiet, 262);
+      // Must not freefall: keep at least 70% of pre-decay score.
+      expect(quiet, greaterThanOrEqualTo((active * 0.70).round()));
+      // Old formula dropped ~262 pts; new gentle cooling is far smaller.
+      expect(active - quiet, lessThan(120));
+    });
+
+    test('high score cannot crater after a short rest', () {
+      // Keep all activity inside the 7-day recent window for both clocks
+      // so the only variable is quiet-day decay (which has a 3-day grace).
+      final richLogs = [
+        for (var i = 0; i < 12; i++)
+          RaceLog(
+            swimmer: 'Aspyn',
+            event: '100 Freestyle',
+            distance: 100,
+            stroke: 'Freestyle',
+            course: 'SCY',
+            timeSeconds: 55.0 - (i % 3),
+            date: DateTime(2026, 2, 1).subtract(Duration(hours: i * 8)),
+          ),
+      ];
+      final meets = [
+        for (var i = 0; i < 8; i++)
+          MeetResult(
+            swimmerName: 'Aspyn',
+            meetName: 'Meet $i',
+            event: '100 Freestyle',
+            swimTime: 54.0 + i,
+            course: 'SCY',
+            meetDate: DateTime(2026, 1, 28).add(Duration(hours: i * 6)),
+          ),
+      ];
+      final hot = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: richLogs,
+        goals: const [],
+        meetResults: meets,
+        now: DateTime(2026, 2, 1),
+      );
+      final rested = SwimAnalytics.calculateSwimIqScore(
+        raceLogs: richLogs,
+        goals: const [],
+        meetResults: meets,
+        now: DateTime(2026, 2, 3), // 2 quiet days — still in grace
+      );
+      expect(hot, greaterThanOrEqualTo(500));
+      expect(rested, hot); // grace window — no quiet-day drop
+      expect(rested, greaterThan(400)); // never 32-style freefall
     });
 
     test('SwimIQ score rises when meet PBs are uploaded', () {

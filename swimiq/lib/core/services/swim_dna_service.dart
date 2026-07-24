@@ -83,9 +83,14 @@ class SwimDnaService {
         insight: 'USA motivational standards from official meet times.',
       ),
       SwimDnaTrait(
-        label: 'IMX / IMR',
-        value: snapshot.imxScore,
-        insight: 'Versatility score from logged training events.',
+        label: 'Power Index',
+        value: snapshot.powerIndex.hasEnoughData
+            ? '${snapshot.powerIndex.score} · ${snapshot.powerIndex.label}'
+            : 'Not calculated yet',
+        insight: snapshot.powerIndex.hasEnoughData
+            ? snapshot.powerIndex.summary
+            : (snapshot.powerIndex.missingDataHint ??
+                'Add official PBs and birthday/gender to calculate.'),
       ),
       SwimDnaTrait(
         label: 'Video coaching',
