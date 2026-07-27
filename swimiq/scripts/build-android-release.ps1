@@ -15,13 +15,15 @@ $env:PUB_CACHE = $pubCache
 Write-Host "PUB_CACHE=$pubCache (same drive as project)" -ForegroundColor Cyan
 
 $keyProps = Join-Path $repoRoot "android\key.properties"
+$keystoreFile = Join-Path $repoRoot "android\keystore\swimiq-upload.jks"
 if (-not (Test-Path $keyProps)) {
     Write-Host ""
-    Write-Host "WARNING: android\key.properties not found." -ForegroundColor Yellow
-    Write-Host "Release will be signed with DEBUG keys (Play upload will fail)." -ForegroundColor Yellow
-    Write-Host "Copy android\key.properties.example and create your upload keystore first." -ForegroundColor Yellow
-    Write-Host "See docs\ANDROID_RELEASE.md" -ForegroundColor Yellow
-    Write-Host ""
+    Write-Host "ERROR: android\key.properties not found." -ForegroundColor Red
+    Write-Host "Run GENERATE-ANDROID-KEYSTORE.bat first." -ForegroundColor Yellow
+    throw "Missing android\key.properties"
+}
+if (-not (Test-Path $keystoreFile)) {
+    throw "Missing android\keystore\swimiq-upload.jks — run GENERATE-ANDROID-KEYSTORE.bat"
 }
 
 $envFile = Join-Path $repoRoot ".env"
@@ -32,8 +34,10 @@ if (-not $SupabaseUrl -and (Test-Path $envFile)) {
     }
 }
 
-if (-not $SupabaseUrl -or -not $SupabaseAnonKey) {
-    throw "SUPABASE_URL and SUPABASE_ANON_KEY are required. Pass -SupabaseUrl / -SupabaseAnonKey or set them in .env"
+if (-not $SupabaseUrl -or -not $SupabaseAnonKey -or
+    $SupabaseUrl -match 'your-project' -or
+    $SupabaseAnonKey -match 'your-supabase-anon-key') {
+    throw "SUPABASE_URL and SUPABASE_ANON_KEY must be REAL values (not placeholders). Fix .env — see FIX-ENV-FOR-PLAY.txt"
 }
 
 Write-Host "Cleaning old build cache..." -ForegroundColor Yellow

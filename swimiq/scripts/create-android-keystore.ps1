@@ -32,20 +32,25 @@ if (-not $keytool) {
     Write-Host ""
     Write-Host "ERROR: keytool not found." -ForegroundColor Red
     Write-Host ""
-    Write-Host "Install Android Studio, then run this script again:" -ForegroundColor Yellow
+    Write-Host "Install Android Studio, then run GENERATE-ANDROID-KEYSTORE.bat instead:" -ForegroundColor Yellow
     Write-Host "  https://developer.android.com/studio" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "Or run keytool manually (paste ONE line that exists on your PC):" -ForegroundColor Yellow
-    Write-Host '  & "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkey -v -keystore android\keystores\swimiq-upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias swimiq'
     exit 1
 }
 
 Write-Host "Using keytool: $keytool" -ForegroundColor Cyan
-New-Item -ItemType Directory -Force -Path (Join-Path $repoRoot "android\keystores") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $repoRoot "android\keystore") | Out-Null
+$keystorePath = Join-Path $repoRoot "android\keystore\swimiq-upload.jks"
 
+if (Test-Path $keystorePath) {
+    Write-Host "Keystore already exists: $keystorePath" -ForegroundColor Yellow
+    exit 0
+}
+
+Write-Host "Prefer GENERATE-ANDROID-KEYSTORE.bat (writes key.properties automatically)." -ForegroundColor Cyan
 & $keytool -genkey -v `
-    -keystore (Join-Path $repoRoot "android\keystores\swimiq-upload-keystore.jks") `
-    -keyalg RSA -keysize 2048 -validity 10000 -alias swimiq
+    -keystore $keystorePath `
+    -keyalg RSA -keysize 2048 -validity 10000 -alias swimiq `
+    -dname "CN=SwimIQ, OU=Mobile, O=SwimIQ LLC, L=Groveport, ST=OH, C=US"
 
 if ($LASTEXITCODE -ne 0) {
     throw "keytool failed with exit code $LASTEXITCODE"
@@ -61,5 +66,5 @@ if (-not (Test-Path $props) -and (Test-Path $example)) {
 }
 
 Write-Host ""
-Write-Host "Keystore created: android\keystores\swimiq-upload-keystore.jks" -ForegroundColor Green
-Write-Host "Next: fill android\key.properties, then run scripts\build-android-release.ps1" -ForegroundColor Green
+Write-Host "Keystore created: $keystorePath" -ForegroundColor Green
+Write-Host "Next: fill android\key.properties, then PLAY-LAUNCH-NOW.bat" -ForegroundColor Green

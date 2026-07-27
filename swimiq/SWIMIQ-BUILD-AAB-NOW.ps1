@@ -32,8 +32,12 @@ Get-Content $envFile | ForEach-Object {
 }
 $url = $url -replace 'https:https//','https://' -replace 'https//','https://'
 if ($url -and $url -notmatch '^https://') { $url = "https://$url" }
-if (-not $url -or -not $key -or $url -match 'your-project') {
-    Write-Host 'ERROR: .env needs SUPABASE_URL and SUPABASE_ANON_KEY' -ForegroundColor Red
+if (-not $url -or -not $key -or $url -match 'your-project' -or $key -match 'your-supabase-anon-key' -or $key -match 'YOUR_ANON') {
+    Write-Host 'ERROR: .env still has placeholder Supabase values.' -ForegroundColor Red
+    Write-Host 'Open S:\swimiq\.env and set REAL values from Supabase → Project Settings → API:' -ForegroundColor Yellow
+    Write-Host '  SUPABASE_URL=https://bryurwyeosbffvfpdpbv.supabase.co' -ForegroundColor White
+    Write-Host '  SUPABASE_ANON_KEY=<anon public key>' -ForegroundColor White
+    Write-Host 'See FIX-ENV-FOR-PLAY.txt' -ForegroundColor Cyan
     Read-Host 'Press Enter'; exit 1
 }
 
@@ -45,12 +49,14 @@ if ($doctor -notmatch '\[√\].*Android toolchain' -and $doctor -notmatch '\[√
 }
 
 if (-not (Test-Path -LiteralPath $keyProps)) {
-    Write-Host ''
-    Write-Host 'WARNING: android\key.properties missing — build will use DEBUG signing.' -ForegroundColor Yellow
-    Write-Host 'Google Play requires a release keystore. Run GENERATE-ANDROID-KEYSTORE.bat first.' -ForegroundColor Yellow
-    Write-Host ''
-} elseif (-not (Test-Path -LiteralPath $keystoreFile)) {
-    Write-Host 'WARNING: keystore file missing at android\keystore\swimiq-upload.jks' -ForegroundColor Yellow
+    Write-Host 'ERROR: android\key.properties missing.' -ForegroundColor Red
+    Write-Host 'Double-click GENERATE-ANDROID-KEYSTORE.bat first.' -ForegroundColor Yellow
+    Read-Host 'Press Enter'; exit 1
+}
+if (-not (Test-Path -LiteralPath $keystoreFile)) {
+    Write-Host 'ERROR: keystore missing at android\keystore\swimiq-upload.jks' -ForegroundColor Red
+    Write-Host 'Double-click GENERATE-ANDROID-KEYSTORE.bat first.' -ForegroundColor Yellow
+    Read-Host 'Press Enter'; exit 1
 }
 
 Write-Host ''

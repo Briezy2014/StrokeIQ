@@ -1,0 +1,33 @@
+FIX .env SO ANDROID OPENS TO LOGIN (not "not connected")
+========================================================
+
+The release AAB does NOT read a magic cloud key by itself.
+You MUST put real Supabase values in S:\swimiq\.env before building.
+
+1) Open Supabase Dashboard
+   https://supabase.com/dashboard/project/bryurwyeosbffvfpdpbv/settings/api
+
+2) Copy:
+   - Project URL
+   - anon public key  (NOT the service_role key)
+
+3) Edit S:\swimiq\.env so it looks exactly like this shape:
+
+SUPABASE_URL=https://bryurwyeosbffvfpdpbv.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....paste-full-anon-key....
+
+VIDEO_ENGINE_V2=false
+ANALYSIS_API_BASE_URL=
+VIDEO_ENGINE_V2_DUAL_RUN=false
+
+4) Save the file.
+
+5) Double-click PLAY-LAUNCH-NOW.bat
+
+If the phone still says "SwimIQ is not connected":
+- You built with placeholder .env
+- Rebuild after fixing .env
+- Or the dart-defines did not pass — always use PLAY-LAUNCH-NOW.bat / SWIMIQ-BUILD-AAB-NOW.bat
+
+NEVER commit .env or the anon key to GitHub.
+NEVER put the service_role key in the app.

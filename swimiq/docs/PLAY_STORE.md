@@ -51,11 +51,13 @@ Files created (never commit to GitHub):
 2. Pull latest code:
 
 ```bat
-cd S:\swimiq
-git pull origin cursor/android-aab-pdf-export-17e8
+S:
+cd \swimiq
+git checkout main
+git pull origin main
 ```
 
-3. Double-click **`SWIMIQ-BUILD-AAB-NOW.bat`**
+3. Double-click **`PLAY-LAUNCH-NOW.bat`** (or `SWIMIQ-BUILD-AAB-NOW.bat`)
 
 Success output:
 ```
