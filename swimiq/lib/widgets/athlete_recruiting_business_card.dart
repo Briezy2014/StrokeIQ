@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/recruiting/recruiting_card_insights.dart';
+import '../core/recruiting/recruiting_top_event.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/personal_best_entry.dart';
 
@@ -30,7 +31,7 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   final int swimIqScore;
   final String highestCut;
   final String? team;
-  final List<String> topEvents;
+  final List<RecruitingTopEvent> topEvents;
   final int? graduationYear;
   final String? profilePhotoUrl;
   final bool isUploadingPhoto;
@@ -54,25 +55,12 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final insights = RecruitingCardInsights.from(
       highestCut: highestCut,
-      topEvents: topEvents,
+      topEvents: RecruitingTopEvent.linesOf(topEvents),
       swimIqScore: swimIqScore,
     );
-    final cutValue = _cutDisplayValue(highestCut);
-    final eventOne = _eventWithCut(
-      topEvents.isNotEmpty ? topEvents.first : 'Add top PB',
-      cutValue,
-      allowCut: topEvents.isNotEmpty,
-    );
-    final eventTwo = _eventWithCut(
-      topEvents.length > 1 ? topEvents[1] : 'Add 2nd PB',
-      cutValue,
-      allowCut: topEvents.length > 1,
-    );
-    final eventThree = _eventWithCut(
-      topEvents.length > 2 ? topEvents[2] : 'Add 3rd PB',
-      cutValue,
-      allowCut: topEvents.length > 2,
-    );
+    final eventOne = _slot(0, 'Add top PB');
+    final eventTwo = _slot(1, 'Add 2nd PB');
+    final eventThree = _slot(2, 'Add 3rd PB');
     final teamLine =
         team?.trim().isNotEmpty == true ? team!.trim() : 'Add club / team';
     final gradLine =
@@ -408,6 +396,14 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
     return text.isEmpty ? placeholder : text;
   }
 
+  ({String event, String? cut}) _slot(int index, String placeholder) {
+    if (index >= topEvents.length) {
+      return (event: placeholder, cut: null);
+    }
+    final row = topEvents[index];
+    return (event: row.line, cut: row.cut);
+  }
+
   /// Opens athlete websites entered with or without https://.
   static Uri? _websiteUri(String? raw) {
     final text = raw?.trim() ?? '';
@@ -424,33 +420,6 @@ class AthleteRecruitingBusinessCard extends StatelessWidget {
 
   static Future<void> _openWebsite(Uri uri) async {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  static String _cutDisplayValue(String highestCut) {
-    final cut = highestCut.trim();
-    if (cut.isEmpty ||
-        cut.toLowerCase().contains('log') ||
-        cut.toLowerCase().contains('setup') ||
-        cut.toLowerCase().contains('no motivational')) {
-      return '';
-    }
-    final match = RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b', caseSensitive: false)
-        .firstMatch(cut);
-    if (match != null) return match.group(1)!.toUpperCase();
-    return cut;
-  }
-
-  static ({String event, String? cut}) _eventWithCut(
-    String event,
-    String cutValue, {
-    bool allowCut = true,
-  }) {
-    final trimmed = event.trim();
-    if (!allowCut || cutValue.isEmpty) return (event: trimmed, cut: null);
-    if (RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b').hasMatch(trimmed)) {
-      return (event: trimmed, cut: null);
-    }
-    return (event: trimmed, cut: cutValue);
   }
 }
 

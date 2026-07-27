@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'recruiting_card_insights.dart';
+import 'recruiting_top_event.dart';
 
 /// Printable wallet-sized recruiting card (3.5" × 2") for coaches.
 class RecruitingBusinessCardPdf {
@@ -27,7 +28,7 @@ class RecruitingBusinessCardPdf {
     required int swimIqScore,
     required String highestCut,
     required String? team,
-    required List<String> topEvents,
+    required List<RecruitingTopEvent> topEvents,
     required int? graduationYear,
     String? gpa,
     String? website,
@@ -39,25 +40,12 @@ class RecruitingBusinessCardPdf {
   }) async {
     final insights = RecruitingCardInsights.from(
       highestCut: highestCut,
-      topEvents: topEvents,
+      topEvents: RecruitingTopEvent.linesOf(topEvents),
       swimIqScore: swimIqScore,
     );
-    final cutValue = _cutDisplayValue(highestCut);
-    final eventOne = _eventWithCut(
-      topEvents.isNotEmpty ? topEvents.first : 'Add top PB',
-      cutValue,
-      allowCut: topEvents.isNotEmpty,
-    );
-    final eventTwo = _eventWithCut(
-      topEvents.length > 1 ? topEvents[1] : 'Add 2nd PB',
-      cutValue,
-      allowCut: topEvents.length > 1,
-    );
-    final eventThree = _eventWithCut(
-      topEvents.length > 2 ? topEvents[2] : 'Add 3rd PB',
-      cutValue,
-      allowCut: topEvents.length > 2,
-    );
+    final eventOne = _slot(topEvents, 0, 'Add top PB');
+    final eventTwo = _slot(topEvents, 1, 'Add 2nd PB');
+    final eventThree = _slot(topEvents, 2, 'Add 3rd PB');
     final teamLine = _pdfText(
       team?.trim().isNotEmpty == true ? team!.trim() : 'Add club / team',
     );
@@ -383,31 +371,16 @@ class RecruitingBusinessCardPdf {
     return pw.UrlLink(destination: url, child: text);
   }
 
-  static String _cutDisplayValue(String highestCut) {
-    final cut = highestCut.trim();
-    if (cut.isEmpty ||
-        cut.toLowerCase().contains('log') ||
-        cut.toLowerCase().contains('setup') ||
-        cut.toLowerCase().contains('no motivational')) {
-      return '';
+  static ({String event, String? cut}) _slot(
+    List<RecruitingTopEvent> topEvents,
+    int index,
+    String placeholder,
+  ) {
+    if (index >= topEvents.length) {
+      return (event: _pdfText(placeholder), cut: null);
     }
-    final match = RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b', caseSensitive: false)
-        .firstMatch(cut);
-    if (match != null) return match.group(1)!.toUpperCase();
-    return _pdfText(cut);
-  }
-
-  static ({String event, String? cut}) _eventWithCut(
-    String event,
-    String cutValue, {
-    bool allowCut = true,
-  }) {
-    final trimmed = _pdfText(event.trim());
-    if (!allowCut || cutValue.isEmpty) return (event: trimmed, cut: null);
-    if (RegExp(r'\b(AAAA|AAA|AA|A|BB|B)\b').hasMatch(trimmed)) {
-      return (event: trimmed, cut: null);
-    }
-    return (event: trimmed, cut: cutValue);
+    final row = topEvents[index];
+    return (event: _pdfText(row.line), cut: row.cut);
   }
 
   static pw.Widget _pbRow(String label, String value, {String? cut}) {

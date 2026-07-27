@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:printing/printing.dart';
 
 import '../core/recruiting/recruiting_business_card_pdf.dart';
+import '../core/recruiting/recruiting_top_event.dart';
+import '../core/theme/app_theme.dart';
 
 class RecruitingCardSnapshot {
   const RecruitingCardSnapshot({
@@ -28,7 +30,7 @@ class RecruitingCardSnapshot {
   final int swimIqScore;
   final String highestCut;
   final String? team;
-  final List<String> topEvents;
+  final List<RecruitingTopEvent> topEvents;
   final int? graduationYear;
   final String fileSafeName;
   final String? gpa;
@@ -121,34 +123,63 @@ class RecruitingCardExportBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 340;
-        final export = OutlinedButton.icon(
-          onPressed: () => _exportPdf(context),
-          icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-          label: Text(compact ? 'PDF' : 'Export PDF'),
-        );
-        final printBtn = FilledButton.icon(
-          onPressed: () => _printCard(context),
-          icon: const Icon(Icons.print_outlined, size: 18),
-          label: Text(compact ? 'Print' : 'Print'),
-        );
-        if (compact) {
-          return Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [export, printBtn],
-          );
-        }
-        return Row(
-          children: [
-            Expanded(child: export),
-            const SizedBox(width: 8),
-            Expanded(child: printBtn),
-          ],
-        );
-      },
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Wallet recruiting card',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDeep,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Small coach handout (business-card size) — not the full passport packet.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  height: 1.3,
+                ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 340;
+              final export = OutlinedButton.icon(
+                onPressed: () => _exportPdf(context),
+                icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                label: Text(compact ? 'Card PDF' : 'Export wallet card'),
+              );
+              final printBtn = FilledButton.icon(
+                onPressed: () => _printCard(context),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                label: Text(compact ? 'Print card' : 'Print wallet card'),
+              );
+              if (compact) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [export, printBtn],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: export),
+                  const SizedBox(width: 8),
+                  Expanded(child: printBtn),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/recruiting/recruiting_business_card_pdf.dart';
+import 'package:swimiq/core/recruiting/recruiting_top_event.dart';
 
 void main() {
   test('recruiting business card PDF generates wallet-sized bytes', () async {
@@ -13,9 +14,9 @@ void main() {
       highestCut: 'BB',
       team: 'Central Ohio Aquatics',
       topEvents: const [
-        '200 Butterfly 3:10.00 (LCM)',
-        '100 Butterfly 1:02.3 (SCY)',
-        '50 Butterfly 28.45 (SCY)',
+        RecruitingTopEvent(line: '200 Butterfly 3:10.00 (LCM)', cut: 'BB'),
+        RecruitingTopEvent(line: '100 Butterfly 1:02.3 (SCY)', cut: 'A'),
+        RecruitingTopEvent(line: '50 Butterfly 28.45 (SCY)', cut: 'A'),
       ],
       graduationYear: 2032,
     );
@@ -35,9 +36,9 @@ void main() {
       email: 'aspyn@example.com',
       phone: '614-555-0199',
       topEvents: const [
-        '200 Butterfly 3:10.00 (LCM)',
-        '100 Butterfly 1:02.3 (SCY)',
-        '50 Butterfly 28.45 (SCY)',
+        RecruitingTopEvent(line: '200 Butterfly 3:10.00 (LCM)', cut: 'BB'),
+        RecruitingTopEvent(line: '100 Butterfly 1:02.3 (SCY)', cut: 'A'),
+        RecruitingTopEvent(line: '50 Butterfly 28.45 (SCY)', cut: 'A'),
       ],
       graduationYear: 2032,
     );
