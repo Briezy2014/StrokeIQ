@@ -1,0 +1,134 @@
+GOOGLE PLAY CONSOLE — COPY/PASTE PACK (SwimIQ)
+==============================================
+Package name: com.swimiq.swimiq
+Default language: English (United States)
+App name: SwimIQ
+Support email: support@swimiqapp.com
+Privacy policy: http://swimiqapp.com/privacy
+  (switch to https:// after SSL is fixed)
+Delete account: http://swimiqapp.com/delete-account
+
+
+----------------------------------------------
+STORE LISTING
+----------------------------------------------
+
+App name (30 chars max):
+SwimIQ
+
+Short description (80 chars max):
+Swim smarter — times, cuts, passport, AI video coaching for competitive swimmers.
+
+Full description:
+SwimIQ is the competitive swimming app built for club athletes, parents, and coaches who want clarity between practice and race day.
+
+Track what matters
+• Log practices and meet results
+• Official personal bests and USA Swimming motivational cuts
+• Visual progress, streaks, and SwimIQ score
+
+Athlete Passport
+• Recruiting-ready athlete snapshot
+• Power Index and top times
+• Shareable Living Passport for coaches
+• Cut-to-College timeline toward the next cut and target schools
+
+AI that coaches, not just scores
+• Video Lab uploads for race and technique clips
+• AI stroke analysis with clear priorities (Elite)
+• Race Intelligence warm-up, nutrition, and meet-day checklist
+• AI Dryland Coach tied to your latest technique needs
+
+For families and coaches
+• Parent Race Pulse — plain-English weekly progress
+• Coach preview access for team evaluation
+• Web + Android so athletes can train anywhere
+
+Plans
+• Basic — logging, goals, progress
+• Pro — official times, passport, recruiting tools, dryland
+• Elite — AI video analysis, Race Intelligence, recruiting insights
+
+Built by a swim family for swimmers chasing cuts, PRs, and college interest.
+
+Website: http://swimiqapp.com
+Support: support@swimiqapp.com
+
+
+----------------------------------------------
+GRAPHICS CHECKLIST (you create these)
+----------------------------------------------
+[ ] App icon 512 x 512 PNG
+[ ] Feature graphic 1024 x 500
+[ ] Phone screenshots (at least 2; aim for 4–8):
+    - Login / Dashboard rope climb
+    - Athlete Passport
+    - Best times / cuts
+    - Video Lab / AI report
+    - Race Intelligence or Dryland
+Capture from a real phone or Android emulator after Internal testing install.
+
+
+----------------------------------------------
+DATA SAFETY (answers to enter)
+----------------------------------------------
+Does the app collect/share user data? YES
+
+Data collected:
+• Personal info: Email address, Name (account / athlete profile)
+• Photos and videos: User-uploaded swim videos and profile photos
+• App activity: In-app actions related to training logs / features used
+• Device or other IDs: as needed for auth/session reliability
+
+Is data encrypted in transit? YES
+Can users request deletion? YES
+  → http://swimiqapp.com/delete-account and privacy@swimiqapp.com
+
+Data shared with third parties?
+• Yes — cloud hosting/auth (Supabase), AI analysis provider when user runs Analyze,
+  and Google Play for billing when subscriptions ship.
+• Do not sell data.
+
+Purpose: App functionality, Account management, Analytics (if crash/usage only),
+Fraud prevention / security.
+
+
+----------------------------------------------
+CONTENT RATING
+----------------------------------------------
+Complete IARC questionnaire in Play Console.
+Expected outcome for SwimIQ (training / sports utility, no violence/gambling/social dating):
+• Typically Everyone or Everyone 10+ depending on answers
+Answer honestly:
+• No user-to-user chat/dating
+• No mature themes intended
+• Users can share athletic performance info
+• Location not required for core features
+• Users may upload photos/videos of athletes (parents manage under-13 accounts)
+
+
+----------------------------------------------
+INTERNAL TESTING (do this first)
+----------------------------------------------
+1) Play Console → Testing → Internal testing → Create release
+2) Upload: S:\swimiq\build\app\outputs\bundle\release\app-release.aab
+3) Add your Gmail (+ 2–3 coach emails) as testers
+4) Copy the Internal testing join link → open on a real Android phone
+5) Install → confirm LOGIN screen (not “not connected”)
+6) Sign in, open Passport, try coach code COACH-EVAL-14
+7) Confirm paid plan buttons say Google Play billing soon (no free Elite unlock)
+
+
+----------------------------------------------
+SUBSCRIPTIONS NOTE (reviewers)
+----------------------------------------------
+Android v1: Elite trial + coach/ambassador preview codes.
+Paid Stripe checkout is web-only until Google Play Billing ships.
+Do not claim in-app paid subscriptions on Android yet.
+
+
+----------------------------------------------
+AFTER INTERNAL TEST PASSES
+----------------------------------------------
+Promote release to Production (or Closed testing first).
+Then send SEND-TO-COACHES-AND-TEAMS.txt
