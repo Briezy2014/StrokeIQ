@@ -260,8 +260,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               icon: const Icon(Icons.school_outlined, size: 18),
                               label: Text(
                                 _pendingCoachCode == null
-                                    ? 'Have a coach access code?'
-                                    : 'Change coach code',
+                                    ? 'Have a coach or ambassador code?'
+                                    : 'Change access code',
                               ),
                             ),
                           ],

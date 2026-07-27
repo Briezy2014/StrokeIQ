@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/env.dart';
+import 'core/models/subscription_plan.dart';
 import 'core/recruiting/living_passport_payload.dart';
+import 'core/services/pending_coach_code_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/app_providers.dart';
 import 'providers/swimmer_data_provider.dart';
@@ -29,6 +31,21 @@ class SwimIqApp extends ConsumerStatefulWidget {
 class _SwimIqAppState extends ConsumerState<SwimIqApp> {
   bool _showSignup = false;
   bool _passwordRecovery = false;
+  var _capturedPromoFromUrl = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _capturePromoCodeFromUrl();
+  }
+
+  Future<void> _capturePromoCodeFromUrl() async {
+    if (_capturedPromoFromUrl) return;
+    _capturedPromoFromUrl = true;
+    final code = SubscriptionCatalog.promoCodeFromUri(Uri.base);
+    if (code == null) return;
+    await PendingCoachCodeStorage.save(code);
+  }
 
   void _toggleAuthMode() {
     setState(() => _showSignup = !_showSignup);

@@ -239,7 +239,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             OutlinedButton.icon(
                               onPressed: _isLoading ? null : _coachAccess,
                               icon: const Icon(Icons.school_outlined, size: 18),
-                              label: const Text('Coach access'),
+                              label: const Text('Coach / ambassador access'),
                             ),
                             if (!kReleaseMode) ...[
                               const SizedBox(height: 8),

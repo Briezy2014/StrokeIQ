@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -206,32 +207,90 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Coach preview access',
+                'Coach / ambassador preview access',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Coaches evaluate SwimIQ before buying for their team:\n'
+                'Coaches and ambassadors evaluate SwimIQ before buying:\n'
                 '• ${SubscriptionCatalog.coachTrialDays}-day Pro access (full analytics & passport)\n'
                 '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
                 '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
-                'Codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}',
+                'Coach codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}\n'
+                'Ambassador code: ${SubscriptionCatalog.ambassadorAccessCode}',
                 style: TextStyle(color: Colors.grey.shade700, height: 1.45),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _coachCodeController,
                 decoration: InputDecoration(
-                  labelText: 'Coach access code',
-                  hintText: SubscriptionCatalog.coachAccessCode,
+                  labelText: 'Coach or ambassador code',
+                  hintText: SubscriptionCatalog.ambassadorAccessCode,
                 ),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: _redeemCoachCode,
-                child: const Text('Unlock coach preview'),
+                child: const Text('Unlock preview'),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Ambassador share link',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Send this link so the code is captured automatically when they open SwimIQ:',
+                style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                SubscriptionCatalog.ambassadorShareUrl,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryDeep,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        const ClipboardData(
+                          text: SubscriptionCatalog.ambassadorShareUrl,
+                        ),
+                      );
+                      if (!mounted) return;
+                      setState(() {
+                        _message = 'Ambassador link copied.';
+                      });
+                    },
+                    icon: const Icon(Icons.link, size: 18),
+                    label: const Text('Copy ambassador link'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        const ClipboardData(
+                          text: SubscriptionCatalog.ambassadorAccessCode,
+                        ),
+                      );
+                      if (!mounted) return;
+                      setState(() {
+                        _message = 'Ambassador code copied.';
+                      });
+                    },
+                    icon: const Icon(Icons.copy_outlined, size: 18),
+                    label: const Text('Copy code'),
+                  ),
+                ],
               ),
               if (_message != null) ...[
                 const SizedBox(height: 16),

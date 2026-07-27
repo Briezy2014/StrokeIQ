@@ -35,8 +35,9 @@ class _CoachAccessCodeDialogState extends State<_CoachAccessCodeDialog> {
       setState(() => _error = 'Enter the coach access code SwimIQ gave you.');
       return;
     }
-    if (!SubscriptionCatalog.isCoachAccessCode(code)) {
-      setState(() => _error = 'That code is not valid. Check with your SwimIQ contact.');
+    if (!SubscriptionCatalog.isPromoAccessCode(code)) {
+      setState(() => _error =
+          'That code is not valid. Check with your SwimIQ contact.');
       return;
     }
     Navigator.pop(context, code.trim().toUpperCase());
@@ -53,7 +54,7 @@ class _CoachAccessCodeDialogState extends State<_CoachAccessCodeDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Enter the coach access code you received from SwimIQ. '
+              'Enter a coach or ambassador access code from SwimIQ. '
               'You will create your own account (or sign in) — the code unlocks '
               '${SubscriptionCatalog.coachTrialDays}-day Pro access and a '
               '${SubscriptionCatalog.coachElitePeekDays}-day Elite AI preview.',
@@ -65,8 +66,8 @@ class _CoachAccessCodeDialogState extends State<_CoachAccessCodeDialog> {
               textCapitalization: TextCapitalization.characters,
               autocorrect: false,
               decoration: InputDecoration(
-                labelText: 'Coach access code',
-                hintText: 'Enter code from SwimIQ',
+                labelText: 'Access code',
+                hintText: 'Coach or ambassador code',
                 errorText: _error,
               ),
               onSubmitted: (_) => _submit(),
