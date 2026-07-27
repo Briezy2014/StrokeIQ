@@ -39,6 +39,8 @@ class AiDrylandCoachScreen extends ConsumerWidget {
                 subtitle: plan.headline,
               ),
               const SizedBox(height: 16),
+              _VideoTechniqueLoopBanner(plan: plan),
+              const SizedBox(height: 12),
               _FocusCard(
                 title: 'Primary stroke focus',
                 body: '${plan.primaryStroke} · ${plan.focusEvent}',
@@ -81,6 +83,69 @@ class AiDrylandCoachScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _VideoTechniqueLoopBanner extends StatelessWidget {
+  const _VideoTechniqueLoopBanner({required this.plan});
+
+  final AiDrylandCoachPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = plan.hasVideoTechniqueLoop;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: active
+            ? const Color(0xFFECFDF5)
+            : AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: active
+              ? const Color(0xFF6EE7B7)
+              : AppColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Dryland ↔ video loop',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDeep,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            active
+                ? 'This plan includes a technique-informed block tied to your latest AI priorities.'
+                : 'Analyze a race clip in Video Lab — dryland will add a technique-informed block from those priorities.',
+            style: TextStyle(
+              color: Colors.grey.shade800,
+              height: 1.35,
+            ),
+          ),
+          if (active) ...[
+            const SizedBox(height: 8),
+            ...plan.videoPriorities.map(
+              (p) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.videocam_outlined, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text(p)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

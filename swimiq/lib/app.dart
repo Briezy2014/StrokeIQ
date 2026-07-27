@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/env.dart';
+import 'core/recruiting/living_passport_payload.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/app_providers.dart';
 import 'providers/swimmer_data_provider.dart';
@@ -13,6 +14,7 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/update_password_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
+import 'widgets/living_passport_qr_card.dart';
 import 'widgets/swimiq_logo.dart';
 import 'widgets/swimiq_header.dart';
 
@@ -38,6 +40,19 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Coach Living Passport QR (`?lp=`) opens without requiring login.
+    final livingPassport = LivingPassportPayload.tryDecode(
+      Uri.base.queryParameters['lp'],
+    );
+    if (livingPassport != null) {
+      return MaterialApp(
+        title: 'SwimIQ Living Passport',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: LivingPassportPublicScreen(payload: livingPassport),
+      );
+    }
+
     if (!Env.isConfigured) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,

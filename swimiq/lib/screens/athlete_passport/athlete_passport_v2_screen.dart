@@ -9,6 +9,8 @@ import '../../core/utils/passport_metrics.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
+import '../../widgets/cut_to_college_timeline_card.dart';
+import '../../widgets/living_passport_qr_card.dart';
 import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/passport_full_export_bar.dart';
@@ -410,6 +412,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
             UpcomingMeetSyncBanner(schedules: data.schedules),
             const SizedBox(height: 12),
             PowerIndexBreakdownCard(powerIndex: snapshot.powerIndex),
+            const SizedBox(height: 12),
+            LivingPassportQrCard(data: data, swimmer: swimmer),
+            const SizedBox(height: 12),
+            CutToCollegeTimelineCard(data: data),
             const SizedBox(height: 10),
             _CompactAthleteStatusStrip(snapshot: snapshot),
           ],
