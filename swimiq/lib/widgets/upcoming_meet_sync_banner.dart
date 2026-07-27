@@ -66,8 +66,8 @@ class UpcomingMeetSyncBanner extends StatelessWidget {
                 Text(
                   synced
                       ? line
-                      : 'Add her meet on Log → Meets so Passport and Race '
-                          'Intelligence stay in sync. '
+                      : 'Add an upcoming meet on Log → Meets so Passport and '
+                          'Race Intelligence stay in sync. '
                           '(${PassportMetrics.noUpcomingMeetLabel})',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade800,
