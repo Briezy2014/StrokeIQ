@@ -256,8 +256,8 @@ class SubscriptionService {
     SubscriptionState current,
     String code,
   ) async {
-    if (!SubscriptionCatalog.isCoachAccessCode(code)) {
-      throw FormatException('Invalid coach access code.');
+    if (!SubscriptionCatalog.isPromoAccessCode(code)) {
+      throw FormatException('Invalid coach or ambassador access code.');
     }
 
     final now = DateTime.now();

@@ -27,6 +27,13 @@ then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_U
 3. Redeem code: **`COACH-EVAL-14`**  
    (legacy code still accepted: `COACH-TRIAL-30`)
 
+## Ambassador code + link
+
+- Code: **`AMBASSADOR-SWIMIQ`**
+- Link: **https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ**
+
+See **`AMBASSADOR-ACCESS.md`** for the full paste text.
+
 ## Master login (owner only — do not share)
 
 `briezy682014@gmail.com`
@@ -43,6 +50,14 @@ then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_U
 Try SwimIQ here: https://swimiqapp.com
 Demo login: demo@swimiqapp.com / SwimIQ
 In Settings → Plans, redeem coach code: COACH-EVAL-14
+```
+
+## Short text you can paste to an ambassador
+
+```
+Join SwimIQ as an ambassador:
+https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ
+Code: AMBASSADOR-SWIMIQ
 ```
 
 (Only send after you confirm Incognito shows **login**, and after login the tab says **Elite**.)
