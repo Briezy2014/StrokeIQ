@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/race_intelligence_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/meet_day_brief_export_bar.dart';
 import '../../widgets/subscription_upgrade_panel.dart';
 import '../../widgets/swim_iq_feature_scaffold.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -53,6 +54,12 @@ class _RaceIntelligenceScreenState extends ConsumerState<RaceIntelligenceScreen>
               padding: const EdgeInsets.all(16),
               children: [
                 _PageHeader(plan: plan),
+                const SizedBox(height: 14),
+                MeetDayBriefExportBar(
+                  plan: plan,
+                  athleteName: data.displayName(swimmer),
+                  fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
+                ),
                 const SizedBox(height: 14),
                 _MeetSyncCard(plan: plan),
                 const SizedBox(height: 14),

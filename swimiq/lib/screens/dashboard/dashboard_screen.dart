@@ -12,6 +12,7 @@ import '../../providers/swimmer_data_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/dashboard_membership_plans_card.dart';
 import '../../widgets/dashboard_cuts_pie_chart.dart';
+import '../../widgets/parent_race_pulse_card.dart';
 import '../../widgets/swimiq_rope_climb_card.dart';
 import '../../widgets/swimiq_media_picker.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -107,6 +108,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             const SizedBox(height: 16),
             SwimIqRopeClimbCard(daily: daily, badges: badges),
+            const SizedBox(height: 12),
+            ParentRacePulseCard(data: data, swimmer: swimmer),
             const SizedBox(height: 12),
             _CutsMixSection(
               personalBests: personalBests,

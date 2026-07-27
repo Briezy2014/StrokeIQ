@@ -29,6 +29,7 @@ class AiDrylandCoachPlan {
     required this.engineLabel,
     required this.sessionsThisWeek,
     required this.focusEvent,
+    this.videoPriorities = const [],
   });
 
   final String headline;
@@ -39,6 +40,11 @@ class AiDrylandCoachPlan {
   final String engineLabel;
   final int sessionsThisWeek;
   final String focusEvent;
+
+  /// Latest AI technique priorities driving the dryland ↔ video loop.
+  final List<String> videoPriorities;
+
+  bool get hasVideoTechniqueLoop => videoPriorities.isNotEmpty;
 }
 
 /// SwimIQ AI Dryland Coach — personalized strength, mobility, and recovery for Pro.
@@ -86,6 +92,7 @@ class AiDrylandCoachService {
       recoveryNotes: _recoveryNotes(sessionsThisWeek),
       injuryPreventionAndStability: _injuryPreventionAndStability(stroke),
       engineLabel: engineLabel,
+      videoPriorities: priorities.take(3).toList(),
     );
   }
 

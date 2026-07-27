@@ -43,6 +43,8 @@ class SwimDnaScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _DnaHeroCard(profile: profile),
                 const SizedBox(height: 16),
+                _TechniquePassportCard(profile: profile),
+                const SizedBox(height: 16),
                 Text(
                   'Your swimming traits',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -114,6 +116,84 @@ class _DnaHeroCard extends StatelessWidget {
                     height: 1.45,
                   ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TechniquePassportCard extends StatelessWidget {
+  const _TechniquePassportCard({required this.profile});
+
+  final SwimDnaProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final priorities = profile.techniquePriorities;
+    return Card(
+      color: AppColors.surfaceLight,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Technique Passport',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryDeep,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              profile.techniquePassportSubtitle ??
+                  'Video priorities auto-update SwimDNA.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                    height: 1.35,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            if (priorities.isEmpty)
+              Text(
+                'No AI priorities yet — analyze a race clip in Video Lab.',
+                style: TextStyle(color: Colors.grey.shade800),
+              )
+            else
+              ...priorities.asMap().entries.map((entry) {
+                final rank = entry.key + 1;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: AppColors.primaryDeep,
+                        child: Text(
+                          '$rank',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),
