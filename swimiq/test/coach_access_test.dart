@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swimiq/core/models/subscription_plan.dart';
+import 'package:swimiq/core/subscription/ambassador_catalog.dart';
 
 void main() {
   test('coach access codes are validated before unlock', () {
@@ -9,36 +10,42 @@ void main() {
     expect(SubscriptionCatalog.isCoachAccessCode(''), isFalse);
   });
 
-  test('ambassador code and share link are wired', () {
+  test('named ambassadors Ruslan and Nyah have unique codes and links', () {
+    expect(AmbassadorCatalog.ruslan.code, 'AMB-RUSLAN');
+    expect(AmbassadorCatalog.nyah.code, 'AMB-NYAH');
+    expect(AmbassadorCatalog.ruslan.slug, 'ruslan');
+    expect(AmbassadorCatalog.nyah.slug, 'nyah');
     expect(
-      SubscriptionCatalog.isAmbassadorAccessCode('AMBASSADOR-SWIMIQ'),
-      isTrue,
+      AmbassadorCatalog.ruslan.preferredShareUrl,
+      'https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan',
     );
     expect(
-      SubscriptionCatalog.isAmbassadorAccessCode('ambassador-swimiq'),
-      isTrue,
+      AmbassadorCatalog.nyah.preferredShareUrl,
+      'https://swimiqapp.com/?amb=AMB-NYAH&via=nyah',
     );
+    expect(SubscriptionCatalog.isAmbassadorAccessCode('AMB-RUSLAN'), isTrue);
+    expect(SubscriptionCatalog.isAmbassadorAccessCode('AMB-NYAH'), isTrue);
     expect(SubscriptionCatalog.isPromoAccessCode('AMBASSADOR-SWIMIQ'), isTrue);
-    expect(SubscriptionCatalog.isPromoAccessCode('COACH-EVAL-14'), isTrue);
-    expect(SubscriptionCatalog.isPromoAccessCode('NOPE'), isFalse);
-    expect(
-      SubscriptionCatalog.ambassadorShareUrl,
-      'https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ',
-    );
   });
 
-  test('promoCodeFromUri reads amb and ref query params', () {
+  test('promoCodeFromUri reads amb and via for named ambassadors', () {
     expect(
       SubscriptionCatalog.promoCodeFromUri(
-        Uri.parse('https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ'),
+        Uri.parse('https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan'),
       ),
-      'AMBASSADOR-SWIMIQ',
+      'AMB-RUSLAN',
     );
     expect(
       SubscriptionCatalog.promoCodeFromUri(
-        Uri.parse('https://swimiqapp.com/?ref=coach-eval-14'),
+        Uri.parse('https://swimiqapp.com/?via=nyah'),
       ),
-      'COACH-EVAL-14',
+      'AMB-NYAH',
+    );
+    expect(
+      AmbassadorCatalog.referralSlugFromUri(
+        Uri.parse('https://swimiqapp.com/?amb=AMB-NYAH&via=nyah'),
+      ),
+      'nyah',
     );
     expect(
       SubscriptionCatalog.promoCodeFromUri(

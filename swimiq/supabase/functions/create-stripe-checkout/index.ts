@@ -11,6 +11,8 @@ type CheckoutRequest = {
   billing_cycle?: string;
   success_url?: string;
   cancel_url?: string;
+  /** Ambassador / Rewardful referral slug (e.g. ruslan, nyah). */
+  referral?: string;
 };
 
 const VALID_TIERS = new Set(["basic", "pro", "elite"]);
@@ -81,6 +83,11 @@ Deno.serve(async (req) => {
     params.set("metadata[supabase_user_id]", userData.user.id);
     params.set("metadata[tier]", tier);
     params.set("metadata[billing_cycle]", cycle);
+    const referral = (body.referral ?? "").trim().toLowerCase();
+    if (referral) {
+      params.set("metadata[ambassador_referral]", referral);
+      params.set("subscription_data[metadata][ambassador_referral]", referral);
+    }
     if (userData.user.email) {
       params.set("customer_email", userData.user.email);
     }

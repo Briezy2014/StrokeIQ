@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/subscription_plan.dart';
+import '../../core/subscription/ambassador_catalog.dart';
 import '../../core/subscription/subscription_billing_policy.dart';
 import '../../core/subscription/subscription_capabilities.dart';
 import '../../core/theme/app_theme.dart';
@@ -219,7 +220,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                 '• ${SubscriptionCatalog.coachElitePeekDays}-day Elite AI sneak peek\n'
                 '• ${SubscriptionCatalog.coachEliteAnalysisLimit} SwimIQ AI video analyses during preview\n\n'
                 'Coach codes: ${SubscriptionCatalog.coachAccessCode} or ${SubscriptionCatalog.legacyCoachAccessCode}\n'
-                'Ambassador code: ${SubscriptionCatalog.ambassadorAccessCode}',
+                'Ambassador codes: ${AmbassadorCatalog.ruslan.code}, ${AmbassadorCatalog.nyah.code}, or ${SubscriptionCatalog.ambassadorAccessCode}',
                 style: TextStyle(color: Colors.grey.shade700, height: 1.45),
               ),
               const SizedBox(height: 12),
@@ -237,14 +238,36 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Ambassador share link',
+                'Named ambassador links (for 30% attribution)',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Send this link so the code is captured automatically when they open SwimIQ:',
+                'Each ambassador gets a unique link. Use these when sending to Ruslan, Nyah, or future ambassadors. '
+                'Connect Rewardful to Stripe so paid checkouts credit the right person.',
+                style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              for (final ambassador in AmbassadorCatalog.named) ...[
+                _AmbassadorShareCard(
+                  ambassador: ambassador,
+                  onCopied: (label) {
+                    setState(() => _message = '$label copied.');
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+              Text(
+                'Shared ambassador link (preview only — not for commissions)',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Send this only when you do not need to track who referred the signup:',
                 style: TextStyle(color: Colors.grey.shade700, height: 1.4),
               ),
               const SizedBox(height: 8),
@@ -269,11 +292,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                       );
                       if (!mounted) return;
                       setState(() {
-                        _message = 'Ambassador link copied.';
+                        _message = 'Shared ambassador link copied.';
                       });
                     },
                     icon: const Icon(Icons.link, size: 18),
-                    label: const Text('Copy ambassador link'),
+                    label: const Text('Copy shared link'),
                   ),
                   OutlinedButton.icon(
                     onPressed: () async {
@@ -284,11 +307,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
                       );
                       if (!mounted) return;
                       setState(() {
-                        _message = 'Ambassador code copied.';
+                        _message = 'Shared ambassador code copied.';
                       });
                     },
                     icon: const Icon(Icons.copy_outlined, size: 18),
-                    label: const Text('Copy code'),
+                    label: const Text('Copy shared code'),
                   ),
                 ],
               ),
@@ -307,6 +330,78 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _AmbassadorShareCard extends StatelessWidget {
+  const _AmbassadorShareCard({
+    required this.ambassador,
+    required this.onCopied,
+  });
+
+  final SwimIqAmbassador ambassador;
+  final void Function(String label) onCopied;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            ambassador.name,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryDeep,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text('Code: ${ambassador.code}'),
+          const SizedBox(height: 4),
+          SelectableText(
+            ambassador.preferredShareUrl,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.primaryDeep,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: ambassador.preferredShareUrl),
+                  );
+                  onCopied('${ambassador.name} link');
+                },
+                icon: const Icon(Icons.link, size: 18),
+                label: Text('Copy ${ambassador.name} link'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: ambassador.code),
+                  );
+                  onCopied('${ambassador.name} code');
+                },
+                icon: const Icon(Icons.copy_outlined, size: 18),
+                label: const Text('Copy code'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

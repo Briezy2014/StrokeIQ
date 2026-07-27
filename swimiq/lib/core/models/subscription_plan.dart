@@ -1,3 +1,5 @@
+import '../subscription/ambassador_catalog.dart';
+
 enum BillingCycle { monthly, annual }
 
 enum SubscriptionTier { trial, basic, pro, elite, coach }
@@ -56,10 +58,10 @@ abstract final class SubscriptionCatalog {
   static const coachAccessCode = 'COACH-EVAL-14';
   static const legacyCoachAccessCode = 'COACH-TRIAL-30';
 
-  /// First-party ambassador promo (same coach preview unlock until Rewardful is live).
+  /// Shared (non-attributable) ambassador preview code.
   static const ambassadorAccessCode = 'AMBASSADOR-SWIMIQ';
 
-  /// Public share link coaches/ambassadors can send.
+  /// Shared ambassador link (not for 30% attribution — use named links).
   static const ambassadorShareUrl =
       'https://swimiqapp.com/?amb=$ambassadorAccessCode';
 
@@ -69,22 +71,24 @@ abstract final class SubscriptionCatalog {
         normalized == legacyCoachAccessCode;
   }
 
-  static bool isAmbassadorAccessCode(String code) {
-    return code.trim().toUpperCase() == ambassadorAccessCode;
-  }
+  static bool isAmbassadorAccessCode(String code) =>
+      AmbassadorCatalog.isAmbassadorAccessCode(code);
 
-  /// Coach preview codes + ambassador code.
+  /// Coach preview codes + all ambassador codes (shared + named).
   static bool isPromoAccessCode(String code) {
     return isCoachAccessCode(code) || isAmbassadorAccessCode(code);
   }
 
-  /// Reads `amb`, `ref`, or `code` from a URL if it is a known promo code.
+  /// Reads `amb`, `ref`, `code`, or `via` from a URL if it is a known promo.
   static String? promoCodeFromUri(Uri uri) {
+    final ambassadorCode = AmbassadorCatalog.promoCodeFromUri(uri);
+    if (ambassadorCode != null) return ambassadorCode;
+
     final raw = uri.queryParameters['amb'] ??
         uri.queryParameters['ref'] ??
         uri.queryParameters['code'];
     if (raw == null || raw.trim().isEmpty) return null;
-    if (!isPromoAccessCode(raw)) return null;
+    if (!isCoachAccessCode(raw)) return null;
     return raw.trim().toUpperCase();
   }
 
