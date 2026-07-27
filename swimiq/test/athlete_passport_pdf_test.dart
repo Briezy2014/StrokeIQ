@@ -67,7 +67,7 @@ void main() {
     for (final needle in [
       'ATHLETE',
       'PASSPORT',
-      'Aspyn',
+      'ASPYN',
       'STATUS',
       'POWER',
       'INDEX',

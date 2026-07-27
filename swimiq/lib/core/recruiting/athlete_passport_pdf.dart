@@ -109,8 +109,8 @@ class AthletePassportPdf {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        '${factor.label} (${factor.weightPercent}%) · '
-                        'score ${factor.componentScore} → '
+                        '${factor.label} (${factor.weightPercent}%) - '
+                        'score ${factor.componentScore} = '
                         '+${factor.weightedPoints.toStringAsFixed(1)}',
                         style: pw.TextStyle(
                           fontSize: 10,
@@ -118,7 +118,7 @@ class AthletePassportPdf {
                         ),
                       ),
                       pw.Text(
-                        factor.explanation,
+                        _pdfSafe(factor.explanation),
                         style: const pw.TextStyle(
                           fontSize: 9,
                           color: PdfColors.grey700,
@@ -184,8 +184,19 @@ class AthletePassportPdf {
       if (profile?.primaryStroke?.trim().isNotEmpty == true)
         profile!.primaryStroke!.trim(),
     ];
-    return parts.isEmpty ? 'Athlete Passport' : parts.join(' · ');
+    return parts.isEmpty ? 'Athlete Passport' : parts.join(' | ');
   }
+
+  /// Helvetica PDF fonts reject arrows / em-dashes.
+  static String _pdfSafe(String text) => text
+      .replaceAll('→', '->')
+      .replaceAll('—', '-')
+      .replaceAll('–', '-')
+      .replaceAll('·', '-')
+      .replaceAll('’', "'")
+      .replaceAll('‘', "'")
+      .replaceAll('“', '"')
+      .replaceAll('”', '"');
 
   static pw.Widget _section(String title, List<pw.Widget> children) {
     return pw.Column(
