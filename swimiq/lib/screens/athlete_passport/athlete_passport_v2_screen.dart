@@ -11,6 +11,7 @@ import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
+import '../../widgets/passport_full_export_bar.dart';
 import '../../widgets/power_index_breakdown_card.dart';
 import '../../widgets/upcoming_meet_sync_banner.dart';
 import '../../widgets/swimiq_page_hero.dart';
@@ -379,6 +380,13 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 profilePhotoUrl: profile?.profilePhotoUrl,
                 fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
               ),
+            ),
+            const SizedBox(height: 10),
+            PassportFullExportBar(
+              snapshot: snapshot,
+              profile: profile,
+              displayName: displayName,
+              fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
             ),
             const SizedBox(height: 10),
             AthleteRecruitingBusinessCard(
