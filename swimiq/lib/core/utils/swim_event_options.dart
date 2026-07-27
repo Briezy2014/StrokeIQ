@@ -22,6 +22,17 @@ class SwimEventOption {
   final String label;
 
   String get meetResultEvent => label;
+
+  @override
+  bool operator ==(Object other) {
+    return other is SwimEventOption &&
+        other.distance == distance &&
+        other.stroke == stroke &&
+        other.course == course;
+  }
+
+  @override
+  int get hashCode => Object.hash(distance, stroke, course);
 }
 
 /// Builds event dropdown choices from USA motivational standards.

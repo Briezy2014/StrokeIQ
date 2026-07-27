@@ -15,6 +15,7 @@ import '../data/models/meet_result.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import 'swim_time_entry_fields.dart';
+import 'swim_event_picker_field.dart';
 import 'swimiq_ui.dart';
 
 enum PersonalBestUploadStart {
@@ -722,24 +723,14 @@ class _PersonalBestUploadSheetState
                           ],
                         ),
                         if (_mode == _EntryMode.manual)
-                          DropdownButtonFormField<SwimEventOption>(
-                            value: currentSelection,
-                            decoration:
-                                const InputDecoration(labelText: 'Event'),
-                            isExpanded: true,
-                            items: eventOptions
-                                .map(
-                                  (option) => DropdownMenuItem(
-                                    value: option,
-                                    child: Text(option.label),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: busy
-                                ? null
-                                : (value) => setState(() => row.event = value),
-                            validator: (value) =>
-                                value == null ? 'Pick an event' : null,
+                          SwimEventPickerField(
+                            options: eventOptions,
+                            selected: row.event ?? currentSelection,
+                            enabled: !busy,
+                            onSelected: (value) =>
+                                setState(() => row.event = value),
+                            validator: (_) =>
+                                row.event == null ? 'Pick an event' : null,
                           )
                         else ...[
                           Text(

@@ -9,11 +9,11 @@ import '../core/constants/app_constants.dart';
 import '../core/utils/swim_event_options.dart';
 import '../core/utils/swimiq_camera_capture.dart';
 import '../core/theme/app_theme.dart';
-import '../core/utils/swim_time.dart';
 import '../data/models/meet_result.dart';
 import '../providers/app_providers.dart';
 import '../providers/swimmer_data_provider.dart';
 import 'swim_time_entry_fields.dart';
+import 'swim_event_picker_field.dart';
 import 'swimiq_ui.dart';
 
 Future<void> showMeetResultFormSheet(
@@ -305,22 +305,13 @@ class _MeetResultFormSheetState extends ConsumerState<MeetResultFormSheet> {
                 'official USA Swimming events.',
               )
             else
-              DropdownButtonFormField<SwimEventOption>(
-                value: currentSelection,
-                decoration: const InputDecoration(labelText: 'Event'),
-                isExpanded: true,
-                items: eventOptions
-                    .map(
-                      (option) => DropdownMenuItem(
-                        value: option,
-                        child: Text(option.label),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _isSaving
-                    ? null
-                    : (value) => setState(() => _selectedEvent = value),
-                validator: (value) => value == null ? 'Pick an event' : null,
+              SwimEventPickerField(
+                options: eventOptions,
+                selected: currentSelection ?? _selectedEvent,
+                enabled: !_isSaving,
+                onSelected: (value) => setState(() => _selectedEvent = value),
+                validator: (_) =>
+                    _selectedEvent == null ? 'Pick an event' : null,
               ),
             const SizedBox(height: 12),
             SwimTimeEntryFields(key: _timeFieldsKey),
