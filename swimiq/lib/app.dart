@@ -6,7 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/env.dart';
 import 'core/models/subscription_plan.dart';
 import 'core/recruiting/living_passport_payload.dart';
+import 'core/services/pending_ambassador_referral_storage.dart';
 import 'core/services/pending_coach_code_storage.dart';
+import 'core/subscription/ambassador_catalog.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/app_providers.dart';
 import 'providers/swimmer_data_provider.dart';
@@ -42,7 +44,12 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
   Future<void> _capturePromoCodeFromUrl() async {
     if (_capturedPromoFromUrl) return;
     _capturedPromoFromUrl = true;
-    final code = SubscriptionCatalog.promoCodeFromUri(Uri.base);
+    final uri = Uri.base;
+    final referral = AmbassadorCatalog.referralSlugFromUri(uri);
+    if (referral != null) {
+      await PendingAmbassadorReferralStorage.save(referral);
+    }
+    final code = SubscriptionCatalog.promoCodeFromUri(uri);
     if (code == null) return;
     await PendingCoachCodeStorage.save(code);
   }

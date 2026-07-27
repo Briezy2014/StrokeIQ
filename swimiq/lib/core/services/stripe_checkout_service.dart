@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/subscription_plan.dart';
+import 'pending_ambassador_referral_storage.dart';
 
 /// Starts a Stripe Checkout session via Supabase Edge Function.
 class StripeCheckoutService {
@@ -13,7 +14,11 @@ class StripeCheckoutService {
     required BillingCycle billingCycle,
     String? successUrl,
     String? cancelUrl,
+    String? referral,
   }) async {
+    final ambassadorReferral =
+        referral ?? await PendingAmbassadorReferralStorage.peek();
+
     final response = await _client.functions.invoke(
       'create-stripe-checkout',
       body: {
@@ -21,6 +26,8 @@ class StripeCheckoutService {
         'billing_cycle': billingCycle.name,
         if (successUrl != null) 'success_url': successUrl,
         if (cancelUrl != null) 'cancel_url': cancelUrl,
+        if (ambassadorReferral != null && ambassadorReferral.isNotEmpty)
+          'referral': ambassadorReferral,
       },
     );
 

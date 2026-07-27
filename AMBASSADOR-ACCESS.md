@@ -1,42 +1,79 @@
-# Ambassador access (share this)
+# SwimIQ ambassadors
 
-## Ambassador code
+## Important: two different jobs
 
-**`AMBASSADOR-SWIMIQ`**
+| Link type | What it does | Unique per person? |
+|-----------|--------------|--------------------|
+| Preview unlock (`?amb=`) | Free 14-day Pro + Elite peek | Optional (shared OK) |
+| Commission / 30% (`?via=` + Rewardful) | Credits paid Stripe sales | **Yes — required** |
 
-Unlocks the same coach preview:
-- 14-day Pro access
-- 7-day Elite AI sneak peek
-- Up to 5 SwimIQ AI video analyses
+Named links below include **both** so one URL does preview unlock **and** is ready for Rewardful attribution.
 
-## Ambassador link (preferred)
+---
 
-**https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ**
+## Ruslan
 
-Opening this link saves the code automatically. Then they sign up / sign in and the preview unlocks.
+| | |
+|--|--|
+| **Code** | `AMB-RUSLAN` |
+| **Share link (send this)** | https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan |
+| **Rewardful token** | `ruslan` |
 
-Also accepted:
-- `https://swimiqapp.com/?ref=AMBASSADOR-SWIMIQ`
-- Manual redeem in **Settings → Plans & billing**
+Paste to Ruslan:
 
-## Coach codes (separate)
+```
+Your SwimIQ ambassador link:
+https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan
+
+Code if needed: AMB-RUSLAN
+(Settings → Plans → Unlock preview)
+```
+
+---
+
+## Nyah
+
+| | |
+|--|--|
+| **Code** | `AMB-NYAH` |
+| **Share link (send this)** | https://swimiqapp.com/?amb=AMB-NYAH&via=nyah |
+| **Rewardful token** | `nyah` |
+
+Paste to Nyah:
+
+```
+Your SwimIQ ambassador link:
+https://swimiqapp.com/?amb=AMB-NYAH&via=nyah
+
+Code if needed: AMB-NYAH
+(Settings → Plans → Unlock preview)
+```
+
+---
+
+## Shared (no commission attribution)
+
+Only use when you do **not** need to know who referred the signup:
+
+- Code: `AMBASSADOR-SWIMIQ`
+- Link: https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ
+
+---
+
+## Coach preview codes (not ambassadors)
 
 | Code | Use |
 |------|-----|
 | `COACH-EVAL-14` | Standard coach preview |
-| `COACH-TRIAL-30` | Legacy coach preview (still works) |
+| `COACH-TRIAL-30` | Legacy coach preview |
 
-## Short text you can paste
+---
 
-```
-Join SwimIQ as an ambassador:
-https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ
+## Adding a new ambassador later
 
-Or open https://swimiqapp.com and redeem code: AMBASSADOR-SWIMIQ
-(Settings → Plans → Unlock preview)
-```
+1. Add them in `swimiq/lib/core/subscription/ambassador_catalog.dart` (name, `AMB-NAME`, slug).
+2. Create the same affiliate in Rewardful with token = that slug.
+3. Merge, rebuild, upload GoDaddy.
+4. Send them `https://swimiqapp.com/?amb=AMB-NAME&via=slug`.
 
-## Note
-
-This is SwimIQ’s first-party ambassador code/link.
-A Rewardful affiliate dashboard can be layered on later without changing this share link.
+Full deploy + Rewardful steps: **`swimiq/docs/REWARDFUL_AND_DEPLOY.md`**

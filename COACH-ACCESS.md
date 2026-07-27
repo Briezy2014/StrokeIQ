@@ -29,10 +29,14 @@ then upload the zip to GoDaddy `public_html` (see `swimiq/docs/GODADDY_WEBSITE_U
 
 ## Ambassador code + link
 
-- Code: **`AMBASSADOR-SWIMIQ`**
-- Link: **https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ**
+Named ambassadors (unique — for 30% attribution after Rewardful):
 
-See **`AMBASSADOR-ACCESS.md`** for the full paste text.
+- **Ruslan:** https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan (`AMB-RUSLAN`)
+- **Nyah:** https://swimiqapp.com/?amb=AMB-NYAH&via=nyah (`AMB-NYAH`)
+
+Shared preview-only: **`AMBASSADOR-SWIMIQ`** · https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ
+
+See **`AMBASSADOR-ACCESS.md`** and **`swimiq/docs/REWARDFUL_AND_DEPLOY.md`**.
 
 ## Master login (owner only — do not share)
 
@@ -54,10 +58,18 @@ In Settings → Plans, redeem coach code: COACH-EVAL-14
 
 ## Short text you can paste to an ambassador
 
+Ruslan:
 ```
-Join SwimIQ as an ambassador:
-https://swimiqapp.com/?amb=AMBASSADOR-SWIMIQ
-Code: AMBASSADOR-SWIMIQ
+Your SwimIQ ambassador link:
+https://swimiqapp.com/?amb=AMB-RUSLAN&via=ruslan
+Code: AMB-RUSLAN
+```
+
+Nyah:
+```
+Your SwimIQ ambassador link:
+https://swimiqapp.com/?amb=AMB-NYAH&via=nyah
+Code: AMB-NYAH
 ```
 
 (Only send after you confirm Incognito shows **login**, and after login the tab says **Elite**.)
