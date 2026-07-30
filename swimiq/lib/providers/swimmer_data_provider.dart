@@ -7,6 +7,7 @@ import '../core/services/usa_motivational_standards_catalog.dart';
 import '../core/utils/passport_metrics.dart';
 import '../core/utils/swim_analytics.dart';
 import '../core/utils/supabase_table_errors.dart';
+import '../data/demo/aspyn_briez_demo_seed.dart';
 import '../data/models/meet_result.dart';
 import '../data/models/personal_best_entry.dart';
 import '../data/models/race_log.dart';
@@ -16,6 +17,7 @@ import '../data/models/swim_schedule_entry.dart';
 import '../data/models/swimmer_profile.dart';
 import '../data/models/video_models.dart';
 import '../data/models/usa_time_standard.dart';
+import '../services/auth_service.dart';
 import 'app_providers.dart';
 
 class SwimmerData {
@@ -148,6 +150,18 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
   }
 
   Future<SwimmerData> _load(String swimmer) async {
+    final motivationalStandards =
+        await ref.read(usaMotivationalStandardsCatalogProvider.future);
+
+    // Coach demo login always shows the filled Aspyn Briez showcase — not an
+    // empty "SwimIQ Demo" profile — so every tab is ready for walkthroughs.
+    final email = ref.read(currentUserProvider)?.email;
+    if (AspynBriezDemoSeed.shouldUse(swimmerKey: swimmer, email: email)) {
+      return AspynBriezDemoSeed.build(
+        motivationalStandards: motivationalStandards,
+      );
+    }
+
     final repository = ref.read(swimIqRepositoryProvider);
 
     final raceLogs = await repository.fetchRaceLogs(swimmer);
@@ -181,8 +195,6 @@ class SwimmerDataNotifier extends AsyncNotifier<SwimmerData?> {
           .toList();
     } catch (_) {}
 
-    final motivationalStandards =
-        await ref.read(usaMotivationalStandardsCatalogProvider.future);
     final usaStandards = motivationalStandards.flatStandards;
 
     return SwimmerData(

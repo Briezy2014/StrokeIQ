@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/demo_account_constants.dart';
 import '../../core/constants/owner_account_constants.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/services/pending_coach_code_storage.dart';
@@ -130,6 +131,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _demoLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authServiceProvider).signIn(
+            email: DemoAccountConstants.email,
+            password: DemoAccountConstants.password,
+          );
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } catch (e) {
+      setState(() => _errorMessage = AuthErrorMapper.fromException(e));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _ownerLogin() async {
     setState(() {
       _isLoading = true;
@@ -240,6 +260,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: _isLoading ? null : _coachAccess,
                               icon: const Icon(Icons.school_outlined, size: 18),
                               label: const Text('Coach / ambassador access'),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _demoLogin,
+                              icon: const Icon(Icons.visibility_outlined, size: 18),
+                              label: const Text(
+                                'Coach demo — Aspyn Briez (full profile)',
+                              ),
                             ),
                             if (!kReleaseMode) ...[
                               const SizedBox(height: 8),

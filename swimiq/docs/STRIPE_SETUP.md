@@ -126,7 +126,7 @@ Supabase → **Authentication → Users → Add user**
 | Email | `demo@swimiqapp.com` |
 | Password | `SwimIQ` |
 | Auto-confirm | Yes |
-| Metadata | `{"display_name":"SwimIQ Demo"}` |
+| Metadata | `{"display_name":"SwimIQ Demo"}` (app remaps this to **Aspyn Briez**) |
 
 ## 2. Grant Elite access
 
@@ -134,10 +134,12 @@ SQL Editor → run `supabase/seed_demo_master.sql`
 
 ## 3. Login on swimiqapp.com
 
-Click **Coach demo login** or sign in with:
+Click **Coach demo — Aspyn Briez (full profile)** or sign in with:
 
 - **Email:** `demo@swimiqapp.com`
 - **Password:** `SwimIQ`
+
+This loads a fully filled showcase athlete (**Aspyn Briez**) across Dashboard, PBs, Log/Meets, Goals, Video Lab + AI feedback, and Passport/recruiting — see `DEMO-ASPYN-BRIEZ-FOR-COACH.txt`.
 
 Change the password in Supabase after your first demo if you want.
 

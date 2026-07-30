@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/env.dart';
+import 'core/constants/demo_account_constants.dart';
 import 'core/models/subscription_plan.dart';
 import 'core/recruiting/living_passport_payload.dart';
 import 'core/services/pending_ambassador_referral_storage.dart';
@@ -145,10 +146,12 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               ref.read(activeSwimmerProvider.notifier).state = swimmerKey;
               final user = session.user;
+              final preferredName = DemoAccountConstants.isDemoEmail(user.email)
+                  ? DemoAccountConstants.athleteName
+                  : user.userMetadata?['display_name'] as String?;
               await ref.read(swimmerDataProvider.notifier).ensureSwimmerProfileLinked(
                     swimmerName: swimmerKey,
-                    preferredName:
-                        user.userMetadata?['display_name'] as String?,
+                    preferredName: preferredName,
                     email: user.email,
                   );
               await ref.read(subscriptionStateProvider.notifier).refreshFromServer();

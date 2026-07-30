@@ -1,0 +1,33 @@
+SEND THIS TO COACH — Aspyn Briez full SwimIQ demo
+=================================================
+
+What it is
+----------
+A filled showcase profile for "Aspyn Briez" so a coach can click through every
+tab and see what consistent SwimIQ use looks like (PBs, meets, goals, schedule,
+Video Lab AI feedback, Athlete Passport / recruiting, cuts, SwimDNA, Dryland).
+
+How to open it
+--------------
+1. Go to: http://swimiqapp.com
+2. Tap:  Coach demo — Aspyn Briez (full profile)
+   OR sign in with:
+      Email:    demo@swimiqapp.com
+      Password: SwimIQ
+
+What to show the coach (quick tour)
+-----------------------------------
+1. Dashboard — SwimIQ score, cuts, upcoming meet, recent activity
+2. PBs — official best times from meets + motivational cuts
+3. Log — training sessions + Upcoming schedule (practices + meets)
+4. Goals — event goals with progress vs current times
+5. Video Lab — race videos with AI coaching feedback (priorities + drills)
+6. Passport — recruiting snapshot (GPA, IMX/IMR, school, team, coach),
+              Power Index, Cut-to-College, Living Passport tools
+
+Notes
+-----
+- Data is showcase / made-up for demos (not Aspyn's live Supabase times).
+- After merge + GoDaddy republish, hard-refresh the site before the coach visit.
+- Demo account needs Elite demo-master flag (seed_demo_master.sql) so Pro/Elite
+  tabs unlock.
