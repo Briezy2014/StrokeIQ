@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/constants/demo_account_constants.dart';
 import '../providers/app_providers.dart';
 
 /// Email/password authentication via Supabase Auth.
@@ -78,6 +79,10 @@ class AuthService {
 
   /// Maps an authenticated user to the swimmer key used in race_logs.
   static String swimmerKeyForUser(User user) {
+    // Coach demo always opens the filled Aspyn Briez showcase profile.
+    if (DemoAccountConstants.isDemoEmail(user.email)) {
+      return DemoAccountConstants.athleteName;
+    }
     final displayName = user.userMetadata?['display_name'] as String?;
     if (displayName != null && displayName.trim().isNotEmpty) {
       return displayName.trim();
