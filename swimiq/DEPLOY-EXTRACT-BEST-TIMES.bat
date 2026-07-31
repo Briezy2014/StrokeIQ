@@ -10,7 +10,7 @@ echo This lets Upload best times work WITHOUT local Elite.
 echo.
 echo BEFORE running:
 echo   1. Supabase - Edge Functions - Secrets must include GEMINI_API_KEY
-echo   2. supabase login + link to project bryurwyeosbffvfpdbv
+echo   2. supabase login + link to project bryurwyeosbffvfpdpbv
 echo.
 pause
 
@@ -27,7 +27,7 @@ exit /b 0
 echo.
 echo [ERROR] Deploy failed.
 echo   supabase login
-echo   supabase link --project-ref bryurwyeosbffvfpdbv
+echo   supabase link --project-ref bryurwyeosbffvfpdpbv
 echo   supabase functions deploy extract-best-times
 pause
 exit /b 1

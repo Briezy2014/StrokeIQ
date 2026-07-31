@@ -135,6 +135,17 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     state = AsyncData(next);
   }
 
+  /// Polls after Stripe Checkout success until the webhook unlocks the plan
+  /// (or attempts are exhausted).
+  Future<void> refreshAfterCheckoutSuccess({int attempts = 8}) async {
+    for (var i = 0; i < attempts; i++) {
+      await refreshFromServer();
+      final current = state.value;
+      if (current != null && current.hasActiveServerPlan) return;
+      await Future<void>.delayed(Duration(milliseconds: 700 + (i * 200)));
+    }
+  }
+
   String? _liveAuthEmail() {
     try {
       if (!Supabase.instance.isInitialized) return null;

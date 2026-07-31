@@ -31,7 +31,10 @@ class SubscriptionState {
   final bool isDemoMaster;
 
   bool get hasActiveServerPlan =>
-      serverStatus == 'active' || serverStatus == 'trialing';
+      serverStatus == 'active' ||
+      serverStatus == 'trialing' ||
+      // Stripe retries failed invoices while past_due — keep access during recovery.
+      serverStatus == 'past_due';
 
   bool get isTrialActive =>
       trialEndsAt != null && DateTime.now().isBefore(trialEndsAt!);
@@ -210,10 +213,9 @@ class SubscriptionService {
       final merged = local.copyWith(
         tier: tier,
         billingCycle: cycle,
-        serverStatus:
-            builtInElite || status == 'active' || status == 'trialing'
-                ? 'active'
-                : status,
+        serverStatus: builtInElite || _isPaidLikeStatus(status)
+            ? (status == 'past_due' ? 'past_due' : 'active')
+            : status,
         isDemoMaster: isDemo,
       );
       if (builtInElite) return _persistFounderElite(merged);
@@ -236,6 +238,12 @@ class SubscriptionService {
     final elite = _founderEliteState(local);
     await _save(elite);
     return elite;
+  }
+
+  static bool _isPaidLikeStatus(String? status) {
+    return status == 'active' ||
+        status == 'trialing' ||
+        status == 'past_due';
   }
 
   Future<SubscriptionState> startTrialIfEligible(SubscriptionState current) async {
