@@ -48,8 +48,9 @@
       margin: 0;
       background: linear-gradient(160deg, #0B2D4D 0%, #0B5CAD 45%, #009CFF 100%);
       font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-      color: #fff;
     }
+    /* Keep boot splash styles scoped — do not set body color/font-size that
+       can leak onto Flutter web semantic DOM overlays. */
     #swimiq-boot {
       min-height: 100%;
       display: flex;
@@ -59,6 +60,7 @@
       padding: 24px;
       text-align: center;
       box-sizing: border-box;
+      color: #fff;
     }
     #swimiq-boot h1 {
       margin: 0 0 8px;
