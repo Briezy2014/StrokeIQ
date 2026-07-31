@@ -43,7 +43,8 @@ class LivingPassportQrCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Coaches scan this code to open a live snapshot: SwimIQ score, '
-            'Power Index, top times, upcoming meet, and latest technique priorities.',
+            'Power Index, top times, upcoming meet, and latest technique priorities. '
+            'Tip: use http://swimiqapp.com if HTTPS shows Coming Soon.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,
                   height: 1.35,

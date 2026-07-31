@@ -84,7 +84,9 @@ class _CutToCollegeTimelineCardState extends State<CutToCollegeTimelineCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Seconds to the next USA cut and target-school recruiting window.',
+            'Seconds to the next USA cut and target-school recruiting window. '
+            'College lines compare your official PB to that event’s recruit window '
+            '(your time is shown).',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade700,
                 ),

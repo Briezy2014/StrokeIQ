@@ -107,10 +107,18 @@ class LivingPassportPayload {
 
   String shareUrl({Uri? base}) {
     final origin = base ?? Uri.base;
+    var scheme = origin.scheme.isEmpty ? 'https' : origin.scheme;
+    var host = origin.host.isEmpty ? 'swimiqapp.com' : origin.host;
+    // GoDaddy HTTPS can still show the Coming Soon page — coach QR links use
+    // http so scans open the real Flutter Living Passport view.
+    if (host == 'swimiqapp.com' || host == 'www.swimiqapp.com') {
+      scheme = 'http';
+      host = 'swimiqapp.com';
+    }
     final root = Uri(
-      scheme: origin.scheme.isEmpty ? 'https' : origin.scheme,
-      host: origin.host.isEmpty ? 'swimiqapp.com' : origin.host,
-      port: origin.hasPort ? origin.port : null,
+      scheme: scheme,
+      host: host,
+      port: origin.hasPort && host != 'swimiqapp.com' ? origin.port : null,
       path: '/',
       queryParameters: {'lp': encode()},
     );

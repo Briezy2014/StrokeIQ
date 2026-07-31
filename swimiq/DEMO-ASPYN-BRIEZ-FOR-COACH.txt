@@ -27,7 +27,11 @@ What to show the coach (quick tour)
 
 Notes
 -----
-- Data is showcase / made-up for demos (not Aspyn's live Supabase times).
+- Showcase demo times are realistic age-group times (e.g. 100 Fly SCY ~1:12,
+  200 Fly LCM ~3:07) so Cut-to-College / Kenyon windows are honest — not fantasy
+  college times.
+- Living Passport QR opens a no-login coach snapshot via ?lp= on
+  http://swimiqapp.com (use http if HTTPS shows Coming Soon).
 - After merge + GoDaddy republish, hard-refresh the site before the coach visit.
 - Demo account needs Elite demo-master flag (seed_demo_master.sql) so Pro/Elite
   tabs unlock.
