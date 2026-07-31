@@ -131,9 +131,7 @@ async function handleSubscriptionChange(
     return;
   }
 
-  const normalizedStatus = status === "active" || status === "trialing"
-    ? status
-    : "canceled";
+  const normalizedStatus = normalizeSubscriptionStatus(status);
 
   await upsertSubscription(supabase, {
     user_id: userId,
@@ -145,6 +143,27 @@ async function handleSubscriptionChange(
     status: normalizedStatus,
     current_period_end: currentPeriodEnd,
   });
+}
+
+/** Keep Stripe's paid-like states; only map truly ended subs to canceled. */
+function normalizeSubscriptionStatus(status: string): string {
+  switch (status) {
+    case "active":
+    case "trialing":
+    case "past_due":
+      return status;
+    case "canceled":
+    case "unpaid":
+    case "incomplete":
+    case "incomplete_expired":
+    case "paused":
+      return status === "canceled" || status === "unpaid" ||
+          status === "incomplete_expired"
+        ? "canceled"
+        : status;
+    default:
+      return status || "canceled";
+  }
 }
 
 async function upsertSubscription(

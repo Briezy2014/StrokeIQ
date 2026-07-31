@@ -174,7 +174,7 @@ This means the app could not reach the Supabase Edge Function. It is **not** bec
    - `STRIPE_WEBHOOK_SECRET` (after webhook is created)
 
 3. Stripe → **Developers → Webhooks** — endpoint must point to your project:
-   `https://bryurwyeosbffvfpdbv.supabase.co/functions/v1/stripe-webhook`
+   `https://bryurwyeosbffvfpdpbv.supabase.co/functions/v1/stripe-webhook`
 
 4. **Bank account** is only needed when you go **Live** in Stripe (real money). Test mode works without payouts configured.
 

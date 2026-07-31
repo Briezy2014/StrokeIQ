@@ -8,7 +8,7 @@ echo ========================================
 echo  Stripe billing deploy (SwimIQ)
 echo ========================================
 echo.
-echo Project: bryurwyeosbffvfpdbv
+echo Project: bryurwyeosbffvfpdpbv
 echo.
 echo When asked, paste a Supabase access token.
 echo Browser will open the token page for you.

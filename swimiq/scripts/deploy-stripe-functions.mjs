@@ -19,7 +19,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PROJECT_REF = 'bryurwyeosbffvfpdbv';
+const PROJECT_REF = 'bryurwyeosbffvfpdpbv';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TOKEN_FILE = path.join(os.homedir(), '.supabase', 'access-token');
 const ERROR_LOG = path.join(ROOT, '..', 'STRIPE-DEPLOY-ERROR.txt');

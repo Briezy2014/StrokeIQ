@@ -168,8 +168,24 @@ class _SwimIqAppState extends ConsumerState<SwimIqApp> {
           }
 
           if (kIsWeb && Uri.base.queryParameters['checkout'] == 'success') {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(subscriptionStateProvider.notifier).refreshFromServer();
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              await ref
+                  .read(subscriptionStateProvider.notifier)
+                  .refreshAfterCheckoutSuccess();
+              if (!context.mounted) return;
+              final unlocked =
+                  ref.read(subscriptionStateProvider).value?.hasActiveServerPlan ??
+                      false;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    unlocked
+                        ? 'Payment received — your plan is now active.'
+                        : 'Payment received. If your plan is not unlocked yet, '
+                            'pull to refresh or sign out and back in.',
+                  ),
+                ),
+              );
             });
           }
           if (kIsWeb && Uri.base.queryParameters['checkout'] == 'cancel') {

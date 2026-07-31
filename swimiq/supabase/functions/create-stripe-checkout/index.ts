@@ -88,6 +88,11 @@ Deno.serve(async (req) => {
       params.set("metadata[ambassador_referral]", referral);
       params.set("subscription_data[metadata][ambassador_referral]", referral);
     }
+    // Keep tier/cycle on the Subscription object so renewal webhooks never
+    // fall back to "basic" if checkout.session.completed is delayed.
+    params.set("subscription_data[metadata][supabase_user_id]", userData.user.id);
+    params.set("subscription_data[metadata][tier]", tier);
+    params.set("subscription_data[metadata][billing_cycle]", cycle);
     if (userData.user.email) {
       params.set("customer_email", userData.user.email);
     }

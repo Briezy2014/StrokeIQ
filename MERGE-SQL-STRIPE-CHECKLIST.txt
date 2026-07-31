@@ -1,0 +1,274 @@
+MERGE + SQL + STRIPE CHECKLIST (copy/paste)
+==========================================
+Do this BEFORE sending the Aspyn Briez demo to a coach,
+and BEFORE taking real subscriber money.
+
+
+============================================================
+PART 1 — MERGE LINKS (open these)
+============================================================
+
+1) Aspyn Briez full coach demo (REQUIRED for filled demo):
+https://github.com/Briezy2014/StrokeIQ/pull/113
+
+   On that page:
+   - Click "Ready for review" (if it still says Draft)
+   - Click "Merge pull request" → Confirm
+
+2) Stripe billing unlock fixes (REQUIRED so paying users stay unlocked):
+https://github.com/Briezy2014/StrokeIQ/pull/114
+   (If #114 is not open yet, use the branch
+    cursor/fix-stripe-billing-unlock-5847)
+
+Merge ORDER: #113 first (demo), then #114 (billing), then rebuild GoDaddy.
+
+
+============================================================
+PART 2 — SQL TO RUN (Supabase → SQL Editor → New query)
+============================================================
+Project (CORRECT ref):
+https://supabase.com/dashboard/project/bryurwyeosbffvfpdpbv/sql/new
+
+Run SQL A, then B. (C only if a real customer paid but stayed locked.)
+
+
+------------------------------------------------------------
+SQL A — Create subscriptions table (safe if already exists)
+------------------------------------------------------------
+COPY EVERYTHING BETWEEN THE LINES:
+
+---------- BEGIN SQL A ----------
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  user_id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  tier text NOT NULL DEFAULT 'basic',
+  billing_cycle text NOT NULL DEFAULT 'monthly',
+  status text NOT NULL DEFAULT 'inactive',
+  is_demo_master boolean NOT NULL DEFAULT false,
+  current_period_end timestamptz,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS user_subscriptions_stripe_customer_idx
+  ON user_subscriptions (stripe_customer_id);
+
+ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users read own subscription" ON user_subscriptions;
+
+CREATE POLICY "Users read own subscription"
+  ON user_subscriptions
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+---------- END SQL A ----------
+
+
+------------------------------------------------------------
+SQL B — Unlock Aspyn coach demo (Elite, no Stripe charge)
+------------------------------------------------------------
+PREREQUISITE: Auth user exists
+  Supabase → Authentication → Users → Add user (if missing)
+  Email: demo@swimiqapp.com
+  Password: SwimIQ
+  Auto Confirm: ON
+  User metadata JSON: {"display_name":"SwimIQ Demo"}
+
+---------- BEGIN SQL B ----------
+INSERT INTO user_subscriptions (
+  user_id,
+  tier,
+  billing_cycle,
+  status,
+  is_demo_master
+)
+SELECT
+  id,
+  'elite',
+  'monthly',
+  'active',
+  true
+FROM auth.users
+WHERE email = 'demo@swimiqapp.com'
+ON CONFLICT (user_id) DO UPDATE SET
+  tier = EXCLUDED.tier,
+  billing_cycle = EXCLUDED.billing_cycle,
+  status = EXCLUDED.status,
+  is_demo_master = EXCLUDED.is_demo_master,
+  updated_at = now();
+
+-- Confirm it worked (should return 1 row):
+SELECT u.email, s.tier, s.status, s.is_demo_master
+FROM user_subscriptions s
+JOIN auth.users u ON u.id = s.user_id
+WHERE u.email = 'demo@swimiqapp.com';
+---------- END SQL B ----------
+
+
+------------------------------------------------------------
+SQL C — Manual unlock if someone PAID but app stayed locked
+------------------------------------------------------------
+Only if Stripe Dashboard shows a paid subscription and the app
+still says locked. Replace the cus_/sub_/email/tier values.
+
+---------- BEGIN SQL C ----------
+INSERT INTO user_subscriptions (
+  user_id,
+  stripe_customer_id,
+  stripe_subscription_id,
+  tier,
+  billing_cycle,
+  status,
+  is_demo_master,
+  current_period_end
+)
+SELECT
+  id,
+  'cus_REPLACE_ME',
+  'sub_REPLACE_ME',
+  'elite',          -- or basic / pro
+  'monthly',        -- or annual
+  'active',
+  false,
+  now() + interval '30 days'
+FROM auth.users
+WHERE email = 'customer@example.com'
+ON CONFLICT (user_id) DO UPDATE SET
+  stripe_customer_id = EXCLUDED.stripe_customer_id,
+  stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+  tier = EXCLUDED.tier,
+  billing_cycle = EXCLUDED.billing_cycle,
+  status = EXCLUDED.status,
+  is_demo_master = false,
+  current_period_end = EXCLUDED.current_period_end,
+  updated_at = now();
+---------- END SQL C ----------
+
+
+============================================================
+PART 3 — STRIPE TRIPLE-CHECK (so subscribers actually pay)
+============================================================
+
+CORRECT webhook URL (note: ...fpdpbv... with a "p" before bv):
+https://bryurwyeosbffvfpdpbv.supabase.co/functions/v1/stripe-webhook
+
+WRONG (typo — do NOT use — payments would charge but never unlock):
+https://bryurwyeosbffvfpdbv.supabase.co/functions/v1/stripe-webhook
+
+
+A) Stripe Dashboard → Developers → Webhooks
+   [ ] Endpoint URL = the CORRECT URL above
+   [ ] Events enabled:
+         checkout.session.completed
+         customer.subscription.updated
+         customer.subscription.deleted
+   [ ] Copy Signing secret (whsec_...)
+
+
+B) Supabase → Project Settings → Edge Functions → Secrets
+   [ ] STRIPE_SECRET_KEY = sk_test_... (Test) or sk_live_... (Live)
+   [ ] STRIPE_WEBHOOK_SECRET = whsec_... matching that same mode
+   [ ] STRIPE_PRICE_BASIC_MONTHLY
+   [ ] STRIPE_PRICE_BASIC_ANNUAL
+   [ ] STRIPE_PRICE_PRO_MONTHLY
+   [ ] STRIPE_PRICE_PRO_ANNUAL
+   [ ] STRIPE_PRICE_ELITE_MONTHLY
+   [ ] STRIPE_PRICE_ELITE_ANNUAL
+
+   Sandbox (Test) Price IDs already in docs:
+     BASIC monthly  price_1TqfCpAGTU3uDC7zn2vtpFFO
+     BASIC annual   price_1TqfEGAGTU3uDC7ziSbknFdT
+     PRO monthly    price_1TqfIIAGTU3uDC7zJkgA90xR
+     PRO annual     price_1TqfJ2AGTU3uDC7zlYPp9evf
+     ELITE monthly  price_1TqfK8AGTU3uDC7zaL5Zj3UQ
+     ELITE annual   price_1TqfLCAGTU3uDC7zSrjzvNuW
+
+   [ ] Test secret keys are ONLY used with Test price IDs
+   [ ] Live secret keys are ONLY used with Live price IDs
+       (never mix Test + Live)
+
+
+C) Redeploy Stripe Edge Functions after #114 merges
+   On Windows (S:\swimiq):
+     Double-click TURN-ON-STRIPE-BILLING.bat
+   Or from a terminal with a Supabase access token:
+     npx supabase functions deploy create-stripe-checkout --project-ref bryurwyeosbffvfpdpbv
+     npx supabase functions deploy stripe-webhook --project-ref bryurwyeosbffvfpdpbv
+
+
+D) TEST payment (do this before telling anyone to pay for real)
+   1. Open Incognito → http://swimiqapp.com
+   2. Create a NEW throwaway account (NOT demo@ / NOT founder email)
+   3. Settings → Plans & billing → Choose Pro or Elite
+   4. Card: 4242 4242 4242 4242 · any future date · any CVC
+   5. After success you should see: "Payment received — your plan is now active."
+   6. Confirm in Supabase SQL:
+
+---------- BEGIN VERIFY PAYMENT SQL ----------
+SELECT u.email, s.tier, s.status, s.stripe_subscription_id, s.updated_at
+FROM user_subscriptions s
+JOIN auth.users u ON u.id = s.user_id
+ORDER BY s.updated_at DESC
+LIMIT 10;
+---------- END VERIFY PAYMENT SQL ----------
+
+   7. Stripe Dashboard → Payments / Subscriptions shows the charge
+   8. Webhooks → that endpoint → recent delivery = 200 OK
+
+
+E) LIVE money (only when Test above is perfect)
+   [ ] Stripe → Activate account + add Bluevine bank (IN Stripe only)
+   [ ] Create Live products/prices (same $ amounts)
+   [ ] Put Live price IDs into Supabase secrets
+   [ ] Put sk_live_... into STRIPE_SECRET_KEY
+   [ ] Create a NEW Live webhook to the CORRECT URL + new whsec_
+   [ ] Trusted HTTPS on swimiqapp.com (Stripe Live prefers https success URLs)
+   [ ] Until SSL is fixed, keep testing on http:// and Test mode
+
+
+============================================================
+PART 4 — GODADDY (after merges)
+============================================================
+PowerShell:
+  S:
+  cd \swimiq
+  git checkout main
+  git pull origin main
+
+Then:
+  Double-click S:\swimiq\SWIMIQ-BUILD-GODADDY-NOW.bat
+  Wait for S:\swimiq\build\swimiq-web-godaddy.zip
+
+GoDaddy File Manager → public_html:
+  1. Delete all files EXCEPT cgi-bin
+  2. Upload zip → Extract → Overwrite
+  3. Confirm main.dart.js exists
+
+Incognito check:
+  http://swimiqapp.com
+  Tap: Coach demo — Aspyn Briez (full profile)
+  OR demo@swimiqapp.com / SwimIQ
+  Confirm tabs are FULL (PBs, Video feedback, Passport)
+
+
+============================================================
+PART 5 — SEND TO COACH (only after Part 4 works)
+============================================================
+> Open http://swimiqapp.com
+> Tap "Coach demo — Aspyn Briez (full profile)"
+> Or sign in: demo@swimiqapp.com / SwimIQ
+>
+> This is a filled sample profile showing consistent SwimIQ use —
+> times, goals, video feedback, and the recruiting passport.
+
+
+============================================================
+DO NOT TEST BILLING WITH THESE EMAILS
+============================================================
+They unlock Elite for free (by design):
+  demo@swimiqapp.com
+  owner@swimiqapp.com
+  briezy682014@gmail.com
+
+Use a brand-new email when testing that people actually get charged.
