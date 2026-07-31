@@ -44,9 +44,13 @@ class RecruitingCardExportBar extends StatelessWidget {
   const RecruitingCardExportBar({
     super.key,
     required this.snapshot,
+    this.showLabels = true,
   });
 
   final RecruitingCardSnapshot snapshot;
+
+  /// When false, only the action buttons are shown (parent supplies titles).
+  final bool showLabels;
 
   Future<Uint8List?> _loadPhotoBytes() async {
     final url = snapshot.profilePhotoUrl?.trim();
@@ -127,25 +131,52 @@ class RecruitingCardExportBar extends StatelessWidget {
         final export = OutlinedButton.icon(
           onPressed: () => _exportPdf(context),
           icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-          label: Text(compact ? 'PDF' : 'Export PDF'),
+          label: Text(
+            compact
+                ? 'PDF'
+                : (showLabels ? 'Export wallet card' : 'Export PDF'),
+          ),
         );
         final printBtn = FilledButton.icon(
           onPressed: () => _printCard(context),
           icon: const Icon(Icons.print_outlined, size: 18),
           label: Text(compact ? 'Print' : 'Print'),
         );
-        if (compact) {
-          return Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [export, printBtn],
-          );
-        }
-        return Row(
+        final actions = compact
+            ? Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [export, printBtn],
+              )
+            : Row(
+                children: [
+                  Expanded(child: export),
+                  const SizedBox(width: 8),
+                  Expanded(child: printBtn),
+                ],
+              );
+
+        if (!showLabels) return actions;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: export),
-            const SizedBox(width: 8),
-            Expanded(child: printBtn),
+            Text(
+              'Wallet card',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'One-page recruiting handout.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                    height: 1.3,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            actions,
           ],
         );
       },
