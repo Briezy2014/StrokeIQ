@@ -24,8 +24,11 @@ class CutToCollegeStep {
   bool get isMet => gapSeconds <= 0;
 
   String get gapLabel {
-    if (isMet) return 'Met';
-    return '${SwimTime.fromSeconds(gapSeconds)} to go';
+    if (isMet) {
+      return kind.startsWith('college') ? 'At/under target' : 'Met';
+    }
+    final prefix = kind.startsWith('college') ? 'to target' : 'to go';
+    return '${SwimTime.fromSeconds(gapSeconds)} $prefix';
   }
 }
 
@@ -109,8 +112,10 @@ abstract final class CutToCollegeService {
             kind: 'college_target',
             title: '${bestTarget.school} (${bestTarget.tierLabel})',
             detail:
-                '${bestTarget.eventLabel}: recruit window '
-                '${SwimTime.fromSeconds(bestTarget.reachSeconds)}-'
+                '${bestTarget.eventLabel}: your '
+                '${SwimTime.fromSeconds(bestTarget.swimmerTimeSeconds)} · '
+                'recruit window '
+                '${SwimTime.fromSeconds(bestTarget.reachSeconds)}–'
                 '${SwimTime.fromSeconds(bestTarget.likelySeconds)}',
             gapSeconds: bestTarget.gapToTargetSeconds,
             eventLabel: bestTarget.eventLabel,
