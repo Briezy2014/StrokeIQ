@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swimiq/core/recruiting/recruiting_top_event.dart';
 import 'package:swimiq/data/models/personal_best_entry.dart';
+import 'package:swimiq/data/models/swimmer_profile.dart';
 import 'package:swimiq/widgets/athlete_recruiting_business_card.dart';
 
+import 'support/motivational_standards_test_helper.dart';
+
 void main() {
+  setUpAll(() async {
+    await loadTestMotivationalCatalog();
+  });
+
   testWidgets('AthleteRecruitingBusinessCard shows wallet recruiting fields', (
     tester,
   ) async {
@@ -22,9 +30,15 @@ void main() {
               email: 'aspyn@example.com',
               phone: '(614) 555-0199',
               topEvents: [
-                '50 Butterfly 28.45 (SCY)',
-                '100 Butterfly 1:02.3 (SCY)',
-                '200 Butterfly 2:20.1 (SCY)',
+                RecruitingTopEvent(line: '50 Butterfly 28.45 (SCY)', cut: 'A'),
+                RecruitingTopEvent(
+                  line: '100 Butterfly 1:02.3 (SCY)',
+                  cut: 'BB',
+                ),
+                RecruitingTopEvent(
+                  line: '200 Butterfly 2:20.1 (SCY)',
+                  cut: 'BB',
+                ),
               ],
               graduationYear: 2032,
               usaSwimmingId: 'AB1234E5F',
@@ -43,6 +57,7 @@ void main() {
     expect(find.text('https://swimiq.app/aspyn'), findsOneWidget);
     expect(find.text('aspyn@example.com'), findsOneWidget);
     expect(find.text('(614) 555-0199'), findsOneWidget);
+    expect(find.text('A'), findsOneWidget);
     expect(find.text('BB'), findsWidgets);
     expect(find.text('HIGHEST USA CUT'), findsNothing);
     expect(find.text('Motivational standard'), findsNothing);
@@ -100,6 +115,45 @@ void main() {
     expect(lines[2], contains('200'));
   });
 
+  test('per-event cuts do not copy overall highest cut onto slower swims', () {
+    final profile = SwimmerProfile(
+      swimmerName: 'Aspyn',
+      birthday: DateTime(2014, 6, 8),
+      athleteNotes: SwimmerProfile.composeAthleteNotes(gender: 'Female'),
+    );
+    final events = RecruitingTopEvent.fromPersonalBests(
+      personalBests: [
+        PersonalBestEntry(
+          stroke: 'Butterfly',
+          distance: 50,
+          course: 'SCY',
+          timeSeconds: 34.67,
+          date: DateTime(2026, 3, 1),
+          eventLabel: '50 Butterfly',
+          source: PersonalBestSource.meet,
+        ),
+        PersonalBestEntry(
+          stroke: 'Butterfly',
+          distance: 200,
+          course: 'SCY',
+          timeSeconds: 187.83, // 3:07.83
+          date: DateTime(2026, 3, 1),
+          eventLabel: '200 Butterfly',
+          source: PersonalBestSource.meet,
+        ),
+      ],
+      catalog: testMotivationalCatalog,
+      profile: profile,
+    );
+
+    expect(events, hasLength(2));
+    expect(events[0].cut, isNot(equals(events[1].cut)),
+        reason: '50 and 200 Fly must not share one pasted cut badge');
+    // 3:07 SCY for 11-12 girls should not be an A if standards say BB.
+    expect(events[1].cut, isNot(equals('A')));
+    expect(events[1].cut, anyOf(equals('BB'), equals('B'), isNull));
+  });
+
   testWidgets('AthleteRecruitingBusinessCard shows upload photo action', (
     tester,
   ) async {
@@ -117,7 +171,7 @@ void main() {
               gpa: '4.0',
               website: null,
               topEvents: const [
-                '50 Butterfly 34.67',
+                RecruitingTopEvent(line: '50 Butterfly 34.67', cut: 'A'),
               ],
               onUploadPhoto: () => tapped = true,
             ),

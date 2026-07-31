@@ -12,6 +12,7 @@ import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/cut_to_college_timeline_card.dart';
 import '../../widgets/living_passport_qr_card.dart';
 import '../../widgets/recruiting_card_export_bar.dart';
+import '../../core/recruiting/recruiting_top_event.dart';
 import '../../widgets/passport_hub.dart';
 import '../../widgets/passport_full_export_bar.dart';
 import '../../widgets/power_index_breakdown_card.dart';
@@ -346,13 +347,11 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final dateFormat = DateFormat('MM/dd/yyyy');
 
         final snapshot = data.passportSnapshot(swimmer);
-        final topEvents = AthleteRecruitingBusinessCard.topEventLines(
-          data.personalBests,
-        ).isNotEmpty
-            ? AthleteRecruitingBusinessCard.topEventLines(
-                data.personalBests,
-              )
-            : snapshot.personalBests.take(3).toList();
+        final topEvents = RecruitingTopEvent.fromPersonalBests(
+          personalBests: data.personalBests,
+          catalog: data.motivationalStandards,
+          profile: profile,
+        );
 
         void openRecruitingCenter() {
           Navigator.of(context).push(

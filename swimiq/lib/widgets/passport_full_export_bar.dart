@@ -103,12 +103,12 @@ class PassportFullExportBar extends StatelessWidget {
               final export = OutlinedButton.icon(
                 onPressed: () => _exportPdf(context),
                 icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                label: Text(compact ? 'Passport PDF' : 'Export full passport'),
+                label: Text(compact ? 'Packet PDF' : 'Export passport packet'),
               );
               final printBtn = FilledButton.icon(
                 onPressed: () => _printPdf(context),
                 icon: const Icon(Icons.print_outlined, size: 18),
-                label: Text(compact ? 'Print' : 'Print full passport'),
+                label: Text(compact ? 'Print packet' : 'Print passport packet'),
               );
               if (compact) {
                 return Wrap(
