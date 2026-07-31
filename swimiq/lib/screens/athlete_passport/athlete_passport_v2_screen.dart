@@ -11,10 +11,10 @@ import '../../screens/recruiting/college_recruiting_hub_screen.dart';
 import '../../widgets/athlete_recruiting_business_card.dart';
 import '../../widgets/cut_to_college_timeline_card.dart';
 import '../../widgets/living_passport_qr_card.dart';
-import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/passport_hub.dart';
-import '../../widgets/passport_full_export_bar.dart';
+import '../../widgets/passport_share_panel.dart';
 import '../../widgets/power_index_breakdown_card.dart';
+import '../../widgets/recruiting_card_export_bar.dart';
 import '../../widgets/upcoming_meet_sync_banner.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -365,8 +365,8 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
         final cardBlock = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            RecruitingCardExportBar(
-              snapshot: RecruitingCardSnapshot(
+            PassportSharePanel(
+              cardSnapshot: RecruitingCardSnapshot(
                 displayName: displayName,
                 swimIqScore: snapshot.swimIqScore,
                 highestCut: snapshot.highestCut,
@@ -382,28 +382,10 @@ class _AthletePassportV2ScreenState extends ConsumerState<AthletePassportV2Scree
                 profilePhotoUrl: profile?.profilePhotoUrl,
                 fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
               ),
-            ),
-            const SizedBox(height: 10),
-            PassportFullExportBar(
-              snapshot: snapshot,
+              passportSnapshot: snapshot,
               profile: profile,
               displayName: displayName,
               fileSafeName: swimmer.replaceAll(RegExp(r'[^\w\-]'), '_'),
-            ),
-            const SizedBox(height: 10),
-            AthleteRecruitingBusinessCard(
-              displayName: displayName,
-              swimIqScore: snapshot.swimIqScore,
-              highestCut: snapshot.highestCut,
-              team: profile?.team,
-              gpa: profile?.gpa,
-              website: profile?.athleteWebsite,
-              email: profile?.athleteEmail,
-              phone: profile?.athletePhone,
-              coach: profile?.coachName,
-              graduationYear: profile?.graduationYear,
-              profilePhotoUrl: profile?.profilePhotoUrl,
-              usaSwimmingId: profile?.usaSwimmingId,
               topEvents: topEvents,
               isUploadingPhoto: _isUploadingPhoto,
               onUploadPhoto: _uploadProfilePhoto,
