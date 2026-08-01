@@ -11,6 +11,7 @@ import '../../providers/swimmer_data_provider.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/goal_progress_visuals.dart';
 import '../../widgets/goals_progress_chart.dart';
+import '../../widgets/swim_event_picker_field.dart';
 import '../../widgets/swimiq_page_hero.dart';
 import '../../widgets/swimiq_ui.dart';
 import '../../widgets/swimmer_screen.dart';
@@ -287,31 +288,15 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                     ?.copyWith(color: Colors.grey.shade700),
                               )
                             else
-                              DropdownButtonFormField<SwimEventOption>(
-                                key: ValueKey(
-                                  'goal-event-$_course-${currentSelection?.label}',
-                                ),
-                                initialValue: currentSelection,
-                                decoration: const InputDecoration(
-                                  labelText: 'Event',
-                                  helperText:
-                                      'Same USA Swimming events used for cuts on PBs & Dashboard',
-                                ),
-                                isExpanded: true,
-                                items: eventOptions
-                                    .map(
-                                      (option) => DropdownMenuItem(
-                                        value: option,
-                                        child: Text(option.label),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: _isSaving
-                                    ? null
-                                    : (value) =>
-                                        setState(() => _selectedEvent = value),
-                                validator: (value) =>
-                                    value == null ? 'Pick an event' : null,
+                              SwimEventPickerField(
+                                options: eventOptions,
+                                selected: currentSelection ?? _selectedEvent,
+                                enabled: !_isSaving,
+                                onSelected: (value) =>
+                                    setState(() => _selectedEvent = value),
+                                validator: (_) => _selectedEvent == null
+                                    ? 'Pick an event'
+                                    : null,
                               ),
                             const SizedBox(height: 12),
                             TextFormField(
