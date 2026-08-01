@@ -86,8 +86,8 @@ class RaceOpportunityMeter {
       : 'Phone coaching';
 
   String get modeSubtitle => mode == RaceScanMode.sensorBoosted
-      ? 'Extra body-line / race timing locked from this clip where the camera allowed it.'
-      : 'Built for phone race videos — body line, breathing, and tempo cues even when angles aren’t perfect.';
+      ? 'Extra timing from this clip where the camera allowed it.'
+      : 'Tap a row for what happened, the next-race fix, and drills.';
 
   String get potentialLabel {
     if (potentialLowSec == null || potentialHighSec == null) {
@@ -128,10 +128,8 @@ class RaceOpportunityMeterBuilder {
     final allocated = _allocateOpportunity(scored, potential);
     final raceIq = _raceIq(allocated);
     final caption = mode == RaceScanMode.sensorBoosted
-        ? 'Where time can still be found — tap a row for the cue and drills. '
-            'Green rows look solid; yellow/red still have time on the table.'
-        : 'Where time can still be found on this phone race video — tap a row '
-            'for the cue and drills. Perfect camera angles not required.';
+        ? 'Green is solid. Yellow/red still have time on the table.'
+        : 'Green is solid. Yellow/red still have time on the table.';
 
     return RaceOpportunityMeter(
       segments: allocated,
@@ -259,20 +257,33 @@ class RaceOpportunityMeterBuilder {
       swim.add(_defaultSwimDrill(id, stroke));
     }
 
+    final whatHappened = _whatHappened(
+      id: id,
+      signal: signal,
+      improvement: hitImprovement?.title,
+      raceLine: hitRace,
+      strength: hitStrength,
+    );
+    var nextRaceCue = _nextCue(
+      id: id,
+      signal: signal,
+      improvement: hitImprovement?.title,
+      raceLine: hitRace,
+      stroke: stroke,
+    );
+    // Never show the same sentence in both boxes.
+    if (nextRaceCue.toLowerCase().trim() == whatHappened.toLowerCase().trim()) {
+      nextRaceCue = signal == OpportunitySignal.lockedIn
+          ? _defaultKeepCue(id)
+          : _defaultNextCue(id, stroke);
+    }
+
     return _ScoredSegment(
       id: id,
       label: _labelFor(id),
       signal: signal,
-      whatHappened: hitImprovement?.title ??
-          hitRace ??
-          hitStrength ??
-          _defaultLockedCopy(id),
-      nextRaceCue: _nextCue(
-        id: id,
-        improvement: hitImprovement?.title,
-        raceLine: hitRace,
-        stroke: stroke,
-      ),
+      whatHappened: whatHappened,
+      nextRaceCue: nextRaceCue,
       swimDrills: swim,
       drylandDrills: dryland,
       mentionedByAnalysis: mentioned,
@@ -418,6 +429,32 @@ class RaceOpportunityMeterBuilder {
     }
   }
 
+  /// Pro/con of what showed up on this race — never a duplicate of next-race cue.
+  static String _whatHappened({
+    required String id,
+    required OpportunitySignal signal,
+    required String? improvement,
+    required String? raceLine,
+    required String? strength,
+  }) {
+    final diagnosis = _cleanCopy(improvement);
+    if (diagnosis != null) {
+      return diagnosis;
+    }
+
+    final observation = _cleanCopy(raceLine);
+    if (observation != null && !_looksLikeCueOnly(observation)) {
+      return observation;
+    }
+
+    final pro = _cleanCopy(strength);
+    if (pro != null) {
+      return pro;
+    }
+
+    return _defaultLockedCopy(id);
+  }
+
   static String _defaultLockedCopy(String id) {
     switch (id) {
       case 'reaction':
@@ -441,29 +478,168 @@ class RaceOpportunityMeterBuilder {
     }
   }
 
+  /// Actionable next-race suggestion — must differ from [whatHappened].
   static String _nextCue({
     required String id,
+    required OpportunitySignal signal,
     required String? improvement,
     required String? raceLine,
     required String stroke,
   }) {
-    if (improvement != null && improvement.trim().isNotEmpty) {
-      return 'Next race: ${improvement.trim()}';
+    final diagnosis = _cleanCopy(improvement);
+    if (diagnosis != null) {
+      return _suggestionFromDiagnosis(diagnosis, id: id, stroke: stroke);
     }
-    if (raceLine != null && raceLine.trim().isNotEmpty) {
-      return raceLine.trim();
+
+    final race = _cleanCopy(raceLine);
+    if (race != null) {
+      final cue = _cueFromRaceLine(race);
+      if (cue != null) return cue;
     }
+
+    if (signal == OpportunitySignal.lockedIn) {
+      return _defaultKeepCue(id);
+    }
+    return _defaultNextCue(id, stroke);
+  }
+
+  static String? _cleanCopy(String? raw) {
+    if (raw == null) return null;
+    var text = raw.trim();
+    if (text.isEmpty) return null;
+    text = text.replaceFirst(
+      RegExp(r'^next race:\s*', caseSensitive: false),
+      '',
+    );
+    text = text.replaceFirst(
+      RegExp(r'^race cue:\s*', caseSensitive: false),
+      '',
+    );
+    return text.trim().isEmpty ? null : text.trim();
+  }
+
+  static bool _looksLikeCueOnly(String text) {
+    final lower = text.toLowerCase();
+    return lower.startsWith('kick ') ||
+        lower.startsWith('breathe ') ||
+        lower.startsWith('hold ') ||
+        lower.startsWith('press ') ||
+        lower.startsWith('keep ');
+  }
+
+  static String? _cueFromRaceLine(String raceLine) {
+    final lower = raceLine.toLowerCase();
+    // "First 15m: tight underwater…" is observation — turn into a cue.
+    if (lower.contains('first 15') || lower.contains('underwater')) {
+      return 'Stay tight underwater, then break out into a tempo you can hold.';
+    }
+    if (lower.contains('kick on entry') || lower.contains('second kick')) {
+      return 'Kick as the hands enter — one timing thought only.';
+    }
+    if (lower.contains('breathe late') || lower.contains('press the chest')) {
+      return 'Breathe late and low — press the chest so the hips stay up.';
+    }
+    if (_looksLikeCueOnly(raceLine)) {
+      return raceLine.endsWith('.') ? raceLine : '$raceLine.';
+    }
+    return null;
+  }
+
+  static String _suggestionFromDiagnosis(
+    String diagnosis, {
+    required String id,
+    required String stroke,
+  }) {
+    final parts = diagnosis
+        .split(RegExp(r'[.!?]'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    // Prefer a trailing imperative sentence if the model already wrote one.
+    if (parts.length >= 2) {
+      final last = parts.last;
+      final lastLower = last.toLowerCase();
+      if (!lastLower.startsWith('your') &&
+          !lastLower.startsWith('the') &&
+          !lastLower.startsWith('this') &&
+          !lastLower.startsWith('when')) {
+        return last.endsWith('.') ? last : '$last.';
+      }
+    }
+
+    final lower = diagnosis.toLowerCase();
+    if (lower.contains('second kick') ||
+        lower.contains('kick on entry') ||
+        lower.contains('kick-on-entry')) {
+      return 'Kick as the hands enter — one timing thought only.';
+    }
+    if (lower.contains('hips') &&
+        (lower.contains('breath') || lower.contains('head'))) {
+      return 'Breathe late and low — press the chest so the hips stay up.';
+    }
+    if (lower.contains('early catch') || lower.contains('catch')) {
+      return 'Get pressure on the water earlier in each stroke.';
+    }
+    if (lower.contains('tempo') || lower.contains('rhythm')) {
+      return 'Hold the same tempo you can finish with.';
+    }
+    if (lower.contains('underwater') || lower.contains('dolphin')) {
+      return 'Stay tight underwater, then break out on race tempo.';
+    }
+    if (lower.contains('turn') || lower.contains('wall')) {
+      return 'Explode off the wall, then settle into stroke.';
+    }
+    if (lower.contains('finish') || lower.contains('touch')) {
+      return 'Long last stroke — kick through the touch.';
+    }
+    return _defaultNextCue(id, stroke);
+  }
+
+  static String _defaultKeepCue(String id) {
+    switch (id) {
+      case 'reaction':
+        return 'Keep the same aggressive, clean start.';
+      case 'underwater':
+        return 'Keep the underwater piece automatic.';
+      case 'pullout':
+        return 'Keep the same pullout timing.';
+      case 'breakout':
+        return 'Keep connecting breakout into stroke.';
+      case 'tempo':
+        return 'Keep this tempo — don’t chase a faster one mid-race.';
+      case 'breathing':
+        return 'Keep the same quiet breathing pattern.';
+      case 'turns':
+        return 'Keep turns simple and explosive.';
+      case 'finish':
+        return 'Keep finishing long through the touch.';
+      default:
+        return 'Keep this segment simple and automatic.';
+    }
+  }
+
+  static String _defaultNextCue(String id, String stroke) {
     switch (id) {
       case 'breathing':
         return stroke.toLowerCase().contains('butter')
-            ? 'Next race: breathe late and low — keep hips up.'
-            : 'Next race: quiet head, one clean breath pattern.';
+            ? 'Breathe late and low — keep hips up.'
+            : 'Quiet head, one clean breath pattern.';
       case 'tempo':
-        return 'Next race: hold the same tempo you can finish with.';
+        return 'Hold the same tempo you can finish with.';
       case 'finish':
-        return 'Next race: long last stroke — kick through the touch.';
+        return 'Long last stroke — kick through the touch.';
+      case 'underwater':
+        return 'Stay tight underwater, then break out on race tempo.';
+      case 'reaction':
+        return 'Attack the start — same dive, tight streamline.';
+      case 'breakout':
+        return 'Break out into a tempo you can hold.';
+      case 'turns':
+        return 'Explode off the wall, then settle into stroke.';
+      case 'pullout':
+        return 'Count the glide — don’t rush the first stroke.';
       default:
-        return 'Next race: keep this segment simple and automatic.';
+        return 'One clear focus for this segment — nothing else.';
     }
   }
 

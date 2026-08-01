@@ -86,7 +86,9 @@ void main() {
     expect(find.text('RACE SCAN'), findsOneWidget);
     expect(find.text('Phone coaching'), findsOneWidget);
     expect(find.textContaining('Where time can still be found'), findsWidgets);
-    expect(find.textContaining('phone race video'), findsWidgets);
+    expect(find.textContaining('phone race video'), findsNothing);
+    expect(find.textContaining('parents & coaches'), findsNothing);
+    expect(find.textContaining('Effort map for phone'), findsNothing);
     expect(find.text('Breathing'), findsOneWidget);
     expect(find.textContaining('RACE IQ'), findsOneWidget);
     expect(find.text('Start / UW'), findsOneWidget);
