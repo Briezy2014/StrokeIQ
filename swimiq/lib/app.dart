@@ -19,7 +19,7 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/update_password_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
-import 'widgets/living_passport_qr_card.dart';
+import 'widgets/living_passport_public_screen.dart';
 import 'widgets/swimiq_logo.dart';
 import 'widgets/swimiq_header.dart';
 

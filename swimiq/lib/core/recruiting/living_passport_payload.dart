@@ -4,7 +4,42 @@ import '../../data/models/swim_video_analysis.dart';
 import '../../providers/swimmer_data_provider.dart';
 import '../utils/passport_metrics.dart';
 
+/// One compact Power Index factor for the coach Living Passport chart.
+class LivingPassportPowerFactor {
+  const LivingPassportPowerFactor({
+    required this.id,
+    required this.label,
+    required this.score,
+    required this.weightPercent,
+  });
+
+  final String id;
+  final String label;
+  final int score;
+  final int weightPercent;
+
+  Map<String, dynamic> toJson() => {
+        'i': id,
+        'l': label,
+        's': score,
+        'w': weightPercent,
+      };
+
+  factory LivingPassportPowerFactor.fromJson(Map<String, dynamic> json) {
+    return LivingPassportPowerFactor(
+      id: json['i']?.toString() ?? 'factor',
+      label: json['l']?.toString() ?? 'Factor',
+      score: int.tryParse('${json['s']}') ?? 0,
+      weightPercent: int.tryParse('${json['w']}') ?? 0,
+    );
+  }
+}
+
 /// Compact Living Passport payload for QR / coach share links.
+///
+/// Intentionally small so phone cameras can scan the QR reliably. The public
+/// coach screen renders charts from these embedded fields — it does not open
+/// the logged-in athlete dashboard.
 class LivingPassportPayload {
   const LivingPassportPayload({
     required this.displayName,
@@ -17,6 +52,12 @@ class LivingPassportPayload {
     required this.latestTechniquePriorities,
     required this.generatedAtIso,
     this.latestClipLabel,
+    this.powerIndexScore,
+    this.powerIndexLabel,
+    this.powerFactors = const [],
+    this.strongestEvent,
+    this.currentFocus,
+    this.usaStandardsSummary,
   });
 
   final String displayName;
@@ -29,6 +70,26 @@ class LivingPassportPayload {
   final List<String> latestTechniquePriorities;
   final String generatedAtIso;
   final String? latestClipLabel;
+  final int? powerIndexScore;
+  final String? powerIndexLabel;
+  final List<LivingPassportPowerFactor> powerFactors;
+  final String? strongestEvent;
+  final String? currentFocus;
+  final String? usaStandardsSummary;
+
+  int get resolvedPowerIndexScore {
+    if (powerIndexScore != null) return powerIndexScore!;
+    final match = RegExp(r'(\d+)\s*/\s*100').firstMatch(powerIndexLine);
+    return int.tryParse(match?.group(1) ?? '') ?? 0;
+  }
+
+  String get resolvedPowerIndexLabel {
+    final explicit = powerIndexLabel?.trim();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+    final parts = powerIndexLine.split('·');
+    if (parts.length >= 2) return parts[1].trim();
+    return powerIndexLine;
+  }
 
   Map<String, dynamic> toJson() => {
         'n': displayName,
@@ -42,9 +103,37 @@ class LivingPassportPayload {
         'g': generatedAtIso,
         if (latestClipLabel != null && latestClipLabel!.trim().isNotEmpty)
           'l': latestClipLabel,
+        if (powerIndexScore != null) 'ps': powerIndexScore,
+        if (powerIndexLabel != null && powerIndexLabel!.trim().isNotEmpty)
+          'pl': powerIndexLabel,
+        if (powerFactors.isNotEmpty)
+          'pf': powerFactors.map((f) => f.toJson()).toList(),
+        if (strongestEvent != null && strongestEvent!.trim().isNotEmpty)
+          'se': strongestEvent,
+        if (currentFocus != null && currentFocus!.trim().isNotEmpty)
+          'f': currentFocus,
+        if (usaStandardsSummary != null &&
+            usaStandardsSummary!.trim().isNotEmpty)
+          'u': _shortStandards(usaStandardsSummary!),
       };
 
   factory LivingPassportPayload.fromJson(Map<String, dynamic> json) {
+    final factorsRaw = json['pf'];
+    final factors = <LivingPassportPowerFactor>[];
+    if (factorsRaw is List) {
+      for (final item in factorsRaw) {
+        if (item is Map<String, dynamic>) {
+          factors.add(LivingPassportPowerFactor.fromJson(item));
+        } else if (item is Map) {
+          factors.add(
+            LivingPassportPowerFactor.fromJson(
+              item.map((k, v) => MapEntry(k.toString(), v)),
+            ),
+          );
+        }
+      }
+    }
+
     return LivingPassportPayload(
       displayName: json['n']?.toString() ?? 'Athlete',
       swimIqScore: int.tryParse('${json['s']}') ?? 0,
@@ -58,6 +147,12 @@ class LivingPassportPayload {
           (json['v'] as List?)?.map((e) => e.toString()).toList() ?? const [],
       generatedAtIso: json['g']?.toString() ?? '',
       latestClipLabel: json['l']?.toString(),
+      powerIndexScore: int.tryParse('${json['ps']}'),
+      powerIndexLabel: json['pl']?.toString(),
+      powerFactors: factors,
+      strongestEvent: json['se']?.toString(),
+      currentFocus: json['f']?.toString(),
+      usaStandardsSummary: json['u']?.toString(),
     );
   }
 
@@ -78,11 +173,29 @@ class LivingPassportPayload {
       powerIndexLine: power.hasEnoughData
           ? '${power.score} / 100 · ${power.label}'
           : 'Not calculated',
-      topTimes: snapshot.personalBests.take(3).toList(),
+      topTimes: snapshot.personalBests.take(5).toList(),
       latestTechniquePriorities:
           latest?.topPriorities.take(3).toList() ?? const [],
       generatedAtIso: DateTime.now().toUtc().toIso8601String(),
       latestClipLabel: clip,
+      powerIndexScore: power.hasEnoughData ? power.score : null,
+      powerIndexLabel: power.hasEnoughData ? power.label : null,
+      powerFactors: power.hasEnoughData
+          ? power.factors
+              .take(5)
+              .map(
+                (f) => LivingPassportPowerFactor(
+                  id: f.id,
+                  label: f.label,
+                  score: f.componentScore,
+                  weightPercent: f.weightPercent,
+                ),
+              )
+              .toList()
+          : const [],
+      strongestEvent: power.strongestEvent,
+      currentFocus: snapshot.currentFocus,
+      usaStandardsSummary: snapshot.usaStandardsSummary,
     );
   }
 
@@ -123,6 +236,12 @@ class LivingPassportPayload {
       queryParameters: {'lp': encode()},
     );
     return root.toString();
+  }
+
+  static String _shortStandards(String full) {
+    final first = full.split('\n').first.trim();
+    if (first.length <= 120) return first;
+    return '${first.substring(0, 117)}...';
   }
 
   static SwimVideoAnalysis? _latestAnalysis(List<SwimVideoAnalysis> analyses) {
