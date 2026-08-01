@@ -57,14 +57,39 @@ try {
     Pop-Location
 }
 
+$gitSubject = 'unknown'
+try {
+    Push-Location $repoRoot
+    $gitSubject = (git log -1 --pretty=format:%s 2>$null | Out-String).Trim()
+    Write-Host ''
+    Write-Host '========================================' -ForegroundColor Cyan
+    Write-Host ' LATEST COMMITS ON THIS PC' -ForegroundColor Cyan
+    Write-Host '========================================' -ForegroundColor Cyan
+    git --no-pager log -8 --oneline
+    Write-Host ''
+} catch {
+    # ignore — still print branch/commit below
+} finally {
+    Pop-Location
+}
+
 Write-Host ('Git branch: ' + $gitBranch) -ForegroundColor Cyan
-Write-Host ('Git commit: ' + $gitCommit) -ForegroundColor Cyan
+Write-Host ('Git commit: ' + $gitCommit + '  ' + $gitSubject) -ForegroundColor Cyan
+Write-Host ''
+Write-Host 'This publish should include (already on main):' -ForegroundColor Yellow
+Write-Host '  - Coach demo Aspyn Briez (#113)' -ForegroundColor Yellow
+Write-Host '  - Passport Share & print (#115)' -ForegroundColor Yellow
+Write-Host '  - Honest recruiting times (#116)' -ForegroundColor Yellow
+Write-Host '  - Dryland header contrast (#117)' -ForegroundColor Yellow
+Write-Host '  - Stripe unlock / correct project ref (#114)' -ForegroundColor Yellow
+Write-Host ''
 if ($gitBranch -ne 'main') {
     Write-Host ''
     Write-Host 'ERROR: Wrong git branch for website publish.' -ForegroundColor Red
     Write-Host ('Current: ' + $gitBranch) -ForegroundColor Red
     Write-Host 'Required: main' -ForegroundColor Yellow
-    Write-Host 'Run GET-LATEST-FIXED-APP.bat, then PUBLISH-SWIMIQAPP-COM.bat again.' -ForegroundColor Yellow
+    Write-Host 'Run Desktop\StrokeIQ\PUBLISH-SWIMIQAPP-COM.bat (it pulls main first).' -ForegroundColor Yellow
+    Write-Host 'Do NOT use KARA-SEE-UPDATES-NOW.bat for GoDaddy — that is an old branch.' -ForegroundColor Yellow
     exit 1
 }
 
@@ -113,7 +138,9 @@ $mustHave = @(
     'Build highlight package',
     'Elite Video Lab',
     'National caliber',
-    'Phone videos welcome'
+    'Phone videos welcome',
+    'Aspyn Briez',
+    'Share & print'
 )
 $mustNotHave = @(
     'under about 50 MB',
