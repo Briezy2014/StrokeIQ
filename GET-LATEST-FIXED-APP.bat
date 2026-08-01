@@ -1,25 +1,18 @@
 @echo off
 setlocal
-title SwimIQ - Get latest + open upload zip
+title SwimIQ - Get latest from GitHub
 cd /d "%~dp0"
 
 echo.
 echo ============================================
-echo   SwimIQ — get latest files
+echo   SwimIQ — get latest from GitHub (main)
 echo   Folder: %CD%
 echo ============================================
 echo.
-
-REM If the upload zip is already here, skip GitHub entirely.
-if exist "%CD%\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip" (
-  if exist "%CD%\DOUBLE-CLICK-ME.vbs" (
-    echo [OK] Website zip is already in this folder.
-    echo Opening it now — NO website download needed.
-    echo.
-    wscript "%CD%\DOUBLE-CLICK-ME.vbs"
-    exit /b 0
-  )
-)
+echo NOTE: An old zip in UPLOAD-TO-GODADDY is NOT
+echo the latest app. We always pull GitHub first.
+echo For coaches, build fresh with PUBLISH-SWIMIQAPP-COM.bat
+echo.
 
 if not exist ".git" goto :NoGit
 
@@ -28,7 +21,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "try { $r = Invoke-WebRequest -Uri 'https://github.com' -UseBasicParsing -TimeoutSec 12; if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) { exit 0 } else { exit 1 } } catch { exit 1 }"
 if errorlevel 1 goto :NetworkFail
 
-echo Updating from GitHub...
+echo Updating from GitHub (main)...
 git fetch origin
 if errorlevel 1 goto :FetchFail
 
@@ -40,40 +33,32 @@ if errorlevel 1 goto :UpdateFail
 
 echo.
 echo ============================================
-echo   File check after update
+echo   LATEST CODE ON THIS PC (must see these)
 echo ============================================
-set MISSING=0
-
-call :CheckFile "DOUBLE-CLICK-ME.vbs"
-call :CheckFile "UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip"
-call :CheckFile "UPLOAD-TO-GODADDY\READ-ME-UPLOAD-STEPS.txt"
-
+git log -8 --oneline
 echo.
-if "%MISSING%"=="1" goto :MissingFiles
-
+echo You should see recent lines like:
+echo   - Dryland Coach header contrast (#117)
+echo   - demo recruiting times honest (#116)
+echo   - Passport Share / export UI (#115)
+echo   - Stripe unlock / project ref (#114)
+echo   - Aspyn Briez coach demo (#113)
+echo.
 echo ============================================
-echo Latest files are ready.
+echo   NEXT STEP FOR GODADDY
 echo ============================================
 echo.
-echo NEXT: opening DOUBLE-CLICK-ME.vbs
-echo That highlights UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip
+echo Do NOT upload UPLOAD-TO-GODADDY\*.zip unless you
+echo know it was built TODAY from this pull.
 echo.
-if exist "%CD%\DOUBLE-CLICK-ME.vbs" (
-  wscript "%CD%\DOUBLE-CLICK-ME.vbs"
-  exit /b 0
-)
-echo Open UPLOAD-TO-GODADDY and upload swimiq-web-godaddy.zip
+echo Double-click this instead (builds a NEW zip):
+echo   PUBLISH-SWIMIQAPP-COM.bat
+echo.
+echo That creates:
+echo   swimiq\build\swimiq-web-godaddy.zip
+echo.
 pause
 exit /b 0
-
-:CheckFile
-if exist "%~1" (
-  echo [OK] %~1
-  goto :eof
-)
-echo [BAD] %~1
-set MISSING=1
-goto :eof
 
 :NoGit
 echo [FAIL] This is not the StrokeIQ git folder.
@@ -87,47 +72,20 @@ echo ============================================
 echo   Cannot reach GitHub right now
 echo ============================================
 echo.
-if exist "%CD%\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip" (
-  echo But your folder ALREADY has the website zip.
-  echo Opening it now — skip GitHub.
-  echo.
-  if exist "%CD%\DOUBLE-CLICK-ME.vbs" (
-    wscript "%CD%\DOUBLE-CLICK-ME.vbs"
-    exit /b 0
-  )
-  explorer.exe "%CD%\UPLOAD-TO-GODADDY"
-  exit /b 0
-)
+echo Use phone hotspot, then run this again.
+echo Do NOT upload an old UPLOAD-TO-GODADDY zip —
+echo it may be missing Aspyn / Passport / Dryland fixes.
 echo.
-echo No local zip found yet. Use phone hotspot, then run again.
-echo Or open UPLOAD-TO-GODADDY if the zip is already there.
-echo.
-if exist "%CD%\UPLOAD-TO-GODADDY" explorer.exe "%CD%\UPLOAD-TO-GODADDY"
 pause
 exit /b 1
 
 :FetchFail
-echo [FAIL] git fetch failed.
-if exist "%CD%\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip" (
-  echo Using the zip already in UPLOAD-TO-GODADDY...
-  if exist "%CD%\DOUBLE-CLICK-ME.vbs" wscript "%CD%\DOUBLE-CLICK-ME.vbs"
-  exit /b 0
-)
+echo [FAIL] git fetch failed. Check Wi-Fi / GitHub login.
 pause
 exit /b 1
 
 :UpdateFail
 echo [FAIL] Could not update files from GitHub.
-if exist "%CD%\UPLOAD-TO-GODADDY\swimiq-web-godaddy.zip" (
-  echo Using the zip already in UPLOAD-TO-GODADDY...
-  if exist "%CD%\DOUBLE-CLICK-ME.vbs" wscript "%CD%\DOUBLE-CLICK-ME.vbs"
-  exit /b 0
-)
-pause
-exit /b 1
-
-:MissingFiles
-echo [FAIL] Some files are still missing after update.
-if exist "%CD%\UPLOAD-TO-GODADDY" explorer.exe "%CD%\UPLOAD-TO-GODADDY"
+echo Try FIX-GIT-PULL.bat, then run this again.
 pause
 exit /b 1

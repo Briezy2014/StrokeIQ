@@ -78,7 +78,10 @@ Write-Host '5. Confirm public_html/SWIMIQ-FLUTTER-BUILD.txt shows TODAY commit' 
 Write-Host '6. Open https://swimiqapp.com/SWIMIQ-FLUTTER-BUILD.txt' -ForegroundColor Cyan
 Write-Host '7. Hard refresh login page Ctrl+Shift+R (or Incognito)' -ForegroundColor Cyan
 Write-Host ''
-Write-Host 'PROOF live updated: that .txt file commit changes, and Video Lab accepts phone clips up to 100 MB (not 25/50 MB).' -ForegroundColor Yellow
+Write-Host 'PROOF live updated:' -ForegroundColor Yellow
+Write-Host '  - SWIMIQ-FLUTTER-BUILD.txt commit matches what PowerShell printed' -ForegroundColor Yellow
+Write-Host '  - Login shows Coach demo — Aspyn Briez' -ForegroundColor Yellow
+Write-Host '  - Passport has Share & print' -ForegroundColor Yellow
 Write-Host ''
 try { explorer.exe /select,$zipPath } catch {}
 Read-Host 'Press Enter to close'

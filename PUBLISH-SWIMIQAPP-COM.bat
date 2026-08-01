@@ -29,7 +29,21 @@ if errorlevel 1 (
 )
 echo.
 echo [OK] On branch: main
-git log -1 --oneline
+echo.
+echo ============================================
+echo   LATEST CODE ON THIS PC (must see these)
+echo ============================================
+git log -8 --oneline
+echo.
+echo You should see recent lines like:
+echo   - Dryland Coach header contrast (#117)
+echo   - demo recruiting times honest (#116)
+echo   - Passport Share / export UI (#115)
+echo   - Stripe unlock / project ref (#114)
+echo   - Aspyn Briez coach demo (#113)
+echo.
+echo If those are MISSING above, stop — Wi-Fi/GitHub pull failed.
+echo Do NOT upload an old zip from UPLOAD-TO-GODADDY.
 echo.
 echo IMPORTANT: After the zip builds, upload the NEW zip only:
 echo   swimiq\build\swimiq-web-godaddy.zip
